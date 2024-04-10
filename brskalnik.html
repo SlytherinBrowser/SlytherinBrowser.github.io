@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="Slytherin.png">
+    <title>SlytherinBrowser</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+            font-family: 'Arial', sans-serif;
+            color: #fff; /* White text color */
+        }
+
+        #logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+        }
+
+        #searchForm {
+            background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
+            border: 2px solid #fff; /* White border */
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #search {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
+            border: 2px solid #fff; /* White border */
+            padding: 20px;
+            font-size: 18px;
+            width: 300px;
+            border-radius: 10px;
+            color: #fff; /* White text color */
+            outline: none;
+            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+        }
+
+        #search:focus {
+            border-color: #007bff;
+            background: linear-gradient(to right, #e74c3c, #2980b9);
+        }
+
+        #submitBtn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        #submitBtn:hover {
+            background-color: #2980b9;
+        }
+
+        #dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 999;
+            width: auto;
+            max-width: calc(100% - 40px);
+        }
+
+        .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-size: cover;
+            cursor: pointer;
+        }
+
+        .icon:hover {
+            transform: scale(1.1);
+        }
+
+        #topBar {
+            position: fixed;
+            top: 0;
+            right: -2;
+            width: 2cm;
+            height: 0.5cm;
+            background-color: black;
+            border-radius: 0.25cm;
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+        }
+         #topBar:hover{
+          width: 7cm;
+          height: 2cm;
+          border-radius: 0.25;
+         }
+    </style>
+</head>
+
+<body>
+
+    <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
+    <img id="logo" src="Slytherin.png"></img>
+
+    <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
+        <label for="search">SlytherinBrowser:</label>
+       <input type="search" id="search" name="search" placeholder="Vnesite iskalni pojem..." oninput="checkForRotation(); checkForReminder();">
+
+        <input type="submit" id="submitBtn" value="Išči">
+    </form>
+
+    <img id="logo" src="Slytherin.png"></img>
+
+      <div id="dock">
+          <a href="https://chat.openai.com/" target="_blank" class="icon" style="background-image: url('chatgpt.png');"></a>
+          <a href="https://drive.google.com/" class="icon" target="_blank" style="background-image: url('drive.png');"></a>
+          <a href="https://mail.google.com/" class="icon" target="_blank" style="background-image: url('gmail.png');"></a>
+          <a href="https://www.youtube.com/" class="icon" target="_blank" style="background-image: url('yt.png');"></a>
+      </div>
+
+    <script>
+let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("search").focus();
+
+    const topBar = document.getElementById("topBar");
+
+    // Dodajamo poslušalca dogodkov za hover na zgornji trak
+    topBar.addEventListener("mouseenter", function() {
+        const lastSearch = localStorage.getItem("lastSearch");
+        if (lastSearch) {
+            topBar.innerText = lastSearch;
+        }
+
+        // Ustavi interval za osveževanje ure, če je aktiven
+        clearInterval(intervalId);
+    });
+
+    // Dodajamo poslušalca dogodkov za izhod iz hoverja na zgornji trak
+    topBar.addEventListener("mouseleave", function() {
+        showCurrentTime(); // Prikaz trenutnega časa
+
+        // Ponovno zaženi interval za osveževanje ure
+        intervalId = setInterval(showCurrentTime, 60000); // Osveži uro vsako minuto
+    });
+
+    // Dodajamo poslušalca dogodkov za klik na zgornji trak
+    topBar.addEventListener("click", function() {
+        openLastSearch();
+    });
+
+    // Začetno zagon osveževanja ure
+    intervalId = setInterval(showCurrentTime, 1); // Osveži uro vsako minuto
+});
+
+function showCurrentTime() {
+    const currentTime = new Date();
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const formattedTime = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+
+    document.getElementById("topBar").innerText = formattedTime;
+}
+
+function openLastSearch() {
+    const lastSearch = localStorage.getItem("lastSearch");
+
+    if (lastSearch) {
+        const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(lastSearch);
+        window.open(searchUrl, '_blank');
+    } else {
+        alert("Ni zadnjega iskanja.");
+    }
+}
+
+function searchSlytherinBrowser() {
+    const searchTerm = document.getElementById("search").value.trim();
+
+    if (searchTerm !== "") {
+        if (searchTerm.startsWith("*")) {
+            addShortcut();
+        } else {
+            const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
+            window.open(searchUrl, '_blank');
+            localStorage.setItem("lastSearch", searchTerm);
+        }
+        document.getElementById("search").value = ""; // Počisti iskalno polje
+    }
+}
+
+
+</script>
+</body>
+</html>
