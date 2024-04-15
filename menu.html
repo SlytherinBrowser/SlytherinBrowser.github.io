@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seznam Aplikacij</title>
+    <style>
+        /* Slog za oblikovanje seznama */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .app-list {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            list-style-type: none;
+            padding: 0;
+        }
+        .app-item {
+            width: 200px;
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .app-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Seznam Aplikacij</h1>
+
+    <ul class="app-list">
+        <!-- Microsoft Word -->
+        <li class="app-item">
+            <a href="https://www.microsoft.com/en-us/microsoft-365/word" target="_blank">
+                <p>Microsoft Word</p>
+            </a>
+        </li>
+
+          <li class="app-item">
+            <a href="ugibanje.html" target="_blank">
+                <p>Guesses</p>
+            </a>
+        </li>
+
+        <!-- Google Translate -->
+        <li class="app-item">
+            <a href="https://translate.google.com/" target="_blank">
+                <p>Google Translate</p>
+            </a>
+        </li>
+
+        <!-- Remove.bg (Background Remover) -->
+        <li class="app-item">
+            <a href="https://www.remove.bg/" target="_blank">
+                <p>Remove.bg</p>
+            </a>
+        </li>
+
+        <!-- Adobe Premiere Pro -->
+        <li class="app-item">
+            <a href="https://www.adobe.com/products/premiere.html" target="_blank">
+                <p>Adobe Premiere Pro</p>
+            </a>
+        </li>
+
+        <!-- Spotify -->
+        <li class="app-item">
+            <a href="https://www.spotify.com/" target="_blank">
+                <p>Spotify</p>
+            </a>
+        </li>
+    </ul>
+
+</body>
+</html>

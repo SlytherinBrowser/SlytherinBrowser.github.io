@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uganjevanje igre</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            border-radius: 50%;
+            padding: 40px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at center, #00f, #000 70%);
+            animation: pulse 1s infinite alternate;
+            box-shadow: 0 0 10px 5px #00f, 0 0 20px 10px rgba(0, 0, 255, 0.5);
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.2);
+            }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        #gameSelection {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            font-size: 16px;
+            padding: 12px 24px;
+            background-color: #00f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #ff4136;
+        }
+
+        #gameContainer {
+            display: none;
+        }
+
+        p#message {
+            font-size: 18px;
+            margin-top: 20px;
+            color: #fff;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        p#correctGuesses {
+            /* Dodan stil za pravilno uganjene črke */
+            font-size: 18px;
+            margin-top: 20px;
+            color: #00f;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="gameContainer">
+        <h1 id="gameTitle"></h1>
+        <p>Vnesite črko ali število, odvisno od izbrane igre:</p>
+        <input type="text" id="guess" onkeypress="handleKeyPress(event)">
+        <button onclick="checkInput()">Preveri</button>
+        <p id="message"></p>
+        <p id="correctGuesses"></p>
+    </div>
+
+    <div class="container" id="gameSelection">
+        <p>Izberite igro:</p>
+        <button onclick="selectGame(1)">Uganjevanje števila</button>
+        <button onclick="selectGame(2)">Uganjevanje besede</button>
+    </div>
+
+    <script>
+        let selectedGame = 0; // 0 represents no game selected
+
+        const words = [
+            "banana", "programming", "javascript", "elephant", "university", "computer", "apple",
+            "telefon", "računalnik", "tablica", "televizija", "pametnaura", "fotoaparat", "zvočnik", "prenosnipolnilec", "miška", "tipkovnica",
+            "majica", "hlače", "krilo", "pulover", "jakna", "obleka", "čevlji", "copati", "kapa", "rokavice",
+            "pizza", "hamburger", "sendvič", "pomfri", "testenine", "juha", "sendvič", "sushi", "salata", "tortilja"
+        ];
+
+        function selectGame(gameNumber) {
+            selectedGame = gameNumber;
+            document.getElementById("gameSelection").style.display = "none";
+            document.getElementById("gameContainer").style.display = "block";
+
+            if (selectedGame === 1) {
+                initializeNumberGame();
+            } else if (selectedGame === 2) {
+                initializeWordGame();
+            }
+        }
+
+        function initializeNumberGame() {
+            document.getElementById("gameTitle").textContent = "Uganjevanje števila";
+            const secretNumber = Math.floor(Math.random() * 100) + 1;
+            let attempts = 0;
+
+            window.checkInput = function () {
+                const guess = parseInt(document.getElementById("guess").value);
+
+                if (isNaN(guess) || guess < 1 || guess > 100) {
+                    document.getElementById("message").textContent = "Vnesite veljavno število med 1 in 100.";
+                    return;
+                }
+
+                attempts++;
+
+                if (guess === secretNumber) {
+                    document.getElementById("message").textContent = `Čestitke! Uganili ste število ${secretNumber} v ${attempts} poskusih.`;
+                } else if (guess < secretNumber) {
+                    document.getElementById("message").textContent = "Poskusite višje.";
+                } else {
+                    document.getElementById("message").textContent = "Poskusite nižje.";
+                }
+                document.getElementById("message").style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            };
+        }
+
+        function initializeWordGame() {
+            document.getElementById("gameTitle").textContent = "Uganjevanje besede";
+            const wordToGuess = words[Math.floor(Math.random() * words.length)];
+            let guessedLetters = [];
+            let attempts = 0;
+
+            window.checkInput = function () {
+                if (selectedGame === 1) {
+                    checkGuess();
+                } else if (selectedGame === 2) {
+                    checkLetter();
+                }
+            };
+
+            window.checkGuess = function () {
+                const guess = parseInt(document.getElementById("guess").value);
+
+                if (isNaN(guess) || guess < 1 || guess > 100) {
+                    document.getElementById("message").textContent = "Vnesite veljavno število med 1 in 100.";
+                    return;
+                }
+
+                attempts++;
+
+                if (guess === secretNumber) {
+                    document.getElementById("message").textContent = `Čestitke! Uganili ste število ${secretNumber} v ${attempts} poskusih.`;
+                } else if (guess < secretNumber) {
+                    document.getElementById("message").textContent = "Poskusite višje.";
+                } else {
+                    document.getElementById("message").textContent = "Poskusite nižje.";
+                }
+                document.getElementById("message").style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            };
+
+            window.checkLetter = function () {
+                const letter = document.getElementById("guess").value.toLowerCase();
+
+                if (!letter.match(/[a-z]/) || letter.length !== 1) {
+                    document.getElementById("message").textContent = "Vnesite veljavno črko.";
+                    return;
+                }
+
+                if (guessedLetters.includes(letter)) {
+                    document.getElementById("message").textContent = "To črko ste že poskusili.";
+                    return;
+                }
+
+                attempts++;
+                guessedLetters.push(letter);
+
+                if (wordToGuess.includes(letter)) {
+                    updateCorrectGuesses();
+                    if (isWordGuessed()) {
+                        document.getElementById("message").textContent = `Čestitke! Uganili ste besedo "${wordToGuess}" v ${attempts} poskusih.`;
+                    } else {
+                        document.getElementById("message").textContent = `Bravo! Črka "${letter}" je v besedi.`;
+                    }
+                } else {
+                    document.getElementById("message").textContent = `Črka "${letter}" ni v besedi. Poskusite znova.`;
+                }
+                document.getElementById("message").style.animation = 'fadeIn 0.5s ease-in-out forwards';
+            };
+
+            window.updateCorrectGuesses = function () {
+                const wordDisplay = wordToGuess.split('').map(letter => (guessedLetters.includes(letter) ? letter : "_")).join(" ");
+                document.getElementById("correctGuesses").textContent = wordDisplay;
+            };
+
+            window.isWordGuessed = function () {
+                return wordToGuess.split('').every(letter => guessedLetters.includes(letter));
+            };
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkInput();
+            }
+        }
+    </script>
+</body>
+
+</html>
