@@ -194,6 +194,13 @@
         .day:hover {
             background-color: #f0f0f0;
         }
+        .today {
+    background-color: #0078d7; /* Example background color for today's date */
+    color: white; /* Text color for today's date */
+    font-weight: bold; /* Bold font for today's date */
+    border-radius: 50%; /* Rounded border for today's date */
+}
+
     </style>
 </head>
 
@@ -370,6 +377,50 @@ function searchSlytherinBrowser() {
         currentDate.setMonth(currentDate.getMonth() + 1);
         renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
     }
+function renderCalendar(month, year) {
+    const monthNames = [
+        'Januar', 'Februar', 'Marec', 'April', 'Maj', 'Junij',
+        'Julij', 'Avgust', 'September', 'Oktober', 'November', 'December'
+    ];
+
+    const daysOfWeek = ['Po', 'To', 'Sr', 'Če', 'Pe', 'So', 'Ne'];
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
+
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = '';
+
+    // Dodajanje dnevov prejšnjega meseca, če je potrebno
+    for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('day', 'disabled');
+        calendarBody.appendChild(dayElement);
+    }
+
+    // Dodajanje dnevov za trenutni mesec
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayElement = document.createElement('div');
+        dayElement.textContent = day;
+        dayElement.classList.add('day');
+        
+        // Check if it's today's date
+        if (
+            year === currentDate.getFullYear() &&
+            month === currentDate.getMonth() &&
+            day === currentDate.getDate()
+        ) {
+            dayElement.classList.add('today'); // Apply a special class for today's date
+        }
+
+        calendarBody.appendChild(dayElement);
+    }
+
+    // Prikaz modala s koledarjem
+    document.getElementById('calendar').style.display = 'block';
+}
 
 </script>
 </body>
