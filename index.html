@@ -200,6 +200,37 @@
     font-weight: bold; /* Bold font for today's date */
     border-radius: 0%; /* Rounded border for today's date */
 }
+.calculator-container {
+    display: none;
+    position: fixed;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+#display1 {
+    width: 200px;
+    padding: 10px;
+    font-size: 18px;
+}
+
+.trigger-button {
+    position: fixed;
+    bottom: 20px;
+    left: 80px;
+    width: 50px;
+    height: 50px;
+    color: #000000;
+    background-color: #0078d7;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+     cursor: pointer;
+ }
 
     </style>
 </head>
@@ -243,6 +274,10 @@
 </div>
 </div>
  <button id="menu"onclick="menuking()">MENU</button>
+  <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()">Calc</div>
+    <div class="calculator-container" id="calculator-container">
+        <input type="text" id="display1" readonly>
+    </div>
     <script>
 
  function menuking() {
@@ -389,6 +424,57 @@ function nextMonth() {
 
     renderCalendar(prevMonth, prevYear);
 }
+  let display = document.getElementById('display1');
+let calculatorContainer = document.getElementById('calculator-container');
+
+function toggleCalculator() {
+    if (calculatorContainer.style.display === 'none') {
+        calculatorContainer.style.display = 'block';
+        calculatorContainer.style.top = `${document.getElementById('trigger-button').getBoundingClientRect().top - calculatorContainer.offsetHeight - 10}px`;
+        calculatorContainer.style.left = `${document.getElementById('trigger-button').getBoundingClientRect().left}px`;
+    } else {
+        calculatorContainer.style.display = 'none';
+    }
+}
+
+document.addEventListener('keydown', function(event) {
+    const key = event.key;
+    const validKeys = /[0-9+\-*\/.=]|Enter|Backspace|Escape/;
+
+    if (!validKeys.test(key)) {
+        return;
+    }
+
+    if (key === 'Enter') {
+        calculate();
+    } else if (key === 'Backspace') {
+        clearDisplay();
+    } else if (key === '=') {
+        calculate();
+    } else if (key === 'Escape') {
+        clearDisplay();
+    } else {
+        appendToDisplay(key);
+    }
+});
+
+function appendToDisplay(value) {
+    display.value += value;
+}
+
+function clearDisplay() {
+    display.value = '';
+}
+
+function calculate() {
+    try {
+        let result = eval(display.value);
+        display.value = result;
+    } catch (error) {
+        display.value = 'Error';
+    }
+}
+    
 </script>
 </body>
 </html>
