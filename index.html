@@ -214,6 +214,8 @@
     width: 200px;
     padding: 10px;
     font-size: 18px;
+    left: 30px;
+    bottom: 50px;
 }
 
 .trigger-button {
@@ -443,15 +445,21 @@ function nextMonth() {
 
     renderCalendar(prevMonth, prevYear);
 }
-  let display = document.getElementById('display1');
+ let display = document.getElementById('display');
 let calculatorContainer = document.getElementById('calculator-container');
 
 function toggleCalculator() {
     if (calculatorContainer.style.display === 'none') {
+        // Prikaz kalkulatorja
         calculatorContainer.style.display = 'block';
-        calculatorContainer.style.top = `${document.getElementById('trigger-button').getBoundingClientRect().top - calculatorContainer.offsetHeight - 10}px`;
-        calculatorContainer.style.left = `${document.getElementById('trigger-button').getBoundingClientRect().left}px`;
+
+        // Položaj kalkulatorja glede na gumb
+        let triggerButton = document.getElementById('trigger-button');
+        let triggerButtonRect = triggerButton.getBoundingClientRect();
+        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 2) + (triggerButton.offsetHeight / 2)}px`;
+        calculatorContainer.style.left = `${triggerButtonRect.right}px`;
     } else {
+        // Skritje kalkulatorja
         calculatorContainer.style.display = 'none';
     }
 }
@@ -493,7 +501,7 @@ function calculate() {
         display.value = 'Error';
     }
 }
-    
+   
 </script>
 </body>
 </html>
