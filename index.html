@@ -276,7 +276,7 @@
  <button id="menu"onclick="menuking()">MENU</button>
   <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()">Calc</div>
     <div class="calculator-container" id="calculator-container">
-        <input type="text" id="display1" readonly>
+        <input type="text" id="display" readonly>
     </div>
     <script>
 
@@ -346,13 +346,32 @@ function searchSlytherinBrowser() {
         if (searchTerm.startsWith("*")) {
             addShortcut();
         } else {
-            const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
-            window.open(searchUrl, '_blank');
-            localStorage.setItem("lastSearch", searchTerm);
+            let urlToOpen = searchTerm;
+
+            // Preverimo, ali vneseni izraz izgleda kot URL
+            if (!isURL(searchTerm)) {
+                // Če ne izgleda kot URL, oblikujemo Google iskalni URL
+                const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
+                window.open(searchUrl, '_blank');
+                localStorage.setItem("lastSearch", searchTerm);
+            } else {
+                // Če izgleda kot URL, odpremo URL v novem zavihku
+                if (!urlToOpen.startsWith("http://") && !urlToOpen.startsWith("https://")) {
+                    urlToOpen = "http://" + urlToOpen; // Dodamo privzeti protokol, če ni naveden
+                }
+                window.open(urlToOpen, '_blank');
+            }
         }
         document.getElementById("search").value = ""; // Počisti iskalno polje
     }
 }
+
+function isURL(text) {
+    // Preverimo, ali vneseni izraz izgleda kot URL
+    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    return urlRegex.test(text);
+}
+
  let currentDate = new Date();
 
     function renderCalendar(month, year) {
