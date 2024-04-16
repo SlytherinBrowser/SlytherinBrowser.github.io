@@ -389,6 +389,34 @@ function nextMonth() {
 
     renderCalendar(prevMonth, prevYear);
 }
+        // Funkcija za prilagajanje glede na velikost zaslona
+function adjustLayoutForScreenSize() {
+    const screenWidth = window.innerWidth;
+
+    if (screenWidth < 600) {
+        // Prilagoditve za majhne zaslone (manj kot 600px širine)
+        // Na primer, spremembe v CSS ali HTML
+        document.body.style.fontSize = '14px'; // Spremeni velikost pisave za manjše zaslone
+        // Dodajte druge prilagoditve po potrebi...
+    } else if (screenWidth >= 600 && screenWidth < 1024) {
+        // Prilagoditve za srednje velike zaslone (med 600px in 1024px širine)
+        // Na primer, spremembe v CSS ali HTML
+        document.body.style.fontSize = '16px'; // Spremeni velikost pisave za srednje velike zaslone
+        // Dodajte druge prilagoditve po potrebi...
+    } else {
+        // Prilagoditve za večje zaslone (več kot 1024px širine)
+        // Na primer, spremembe v CSS ali HTML
+        document.body.style.fontSize = '18px'; // Spremeni velikost pisave za večje zaslone
+        // Dodajte druge prilagoditve po potrebi...
+    }
+}
+
+// Dodajanje dogodka za spremembo velikosti okna (resize event)
+window.addEventListener('resize', adjustLayoutForScreenSize);
+
+// Takojšnje prilagajanje ob nalaganju strani
+adjustLayoutForScreenSize();
+
 </script>
 </body>
 </html>
