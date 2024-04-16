@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beležke in opravila</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        li input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .delete-btn {
+            height: 40px;
+            width: 70px;
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Beležke in opravila</h1>
+
+        <div id="notes">
+            <h2>Beležke</h2>
+            <textarea id="noteInput" cols="30" rows="5"></textarea>
+            <button onclick="addNote()">Dodaj beležko</button>
+            <ul id="noteList">
+                <!-- Tukaj bodo prikazane beležke -->
+            </ul>
+        </div>
+
+        <div id="tasks">
+            <h2>Opravila</h2>
+            <input id="taskInput" type="text" placeholder="Dodaj novo opravilo">
+            <button onclick="addTask()">Dodaj opravilo</button>
+            <ul id="taskList">
+                <!-- Tukaj bodo prikazana opravila -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+       // Funkcija za dodajanje beležke
+function addNote() {
+    const noteInput = document.getElementById('noteInput');
+    const noteText = noteInput.value.trim();
+
+    if (noteText !== '') {
+        const noteList = document.getElementById('noteList');
+        const noteItem = createItemWithDeleteButton(noteText, 'notes');
+        noteList.appendChild(noteItem);
+
+        saveToLocalStorage('notes', noteList);
+
+        noteInput.value = '';
+    }
+}
+
+// Funkcija za dodajanje opravila
+function addTask() {
+    const taskInput = document.getElementById('taskInput');
+    const taskText = taskInput.value.trim();
+
+    if (taskText !== '') {
+        const taskList = document.getElementById('taskList');
+        const taskItem = createItemWithCheckboxAndDeleteButton(taskText, 'tasks');
+        taskList.appendChild(taskItem);
+
+        saveToLocalStorage('tasks', taskList);
+
+        taskInput.value = '';
+    }
+}
+
+// Funkcija za ustvarjanje elementa <li> z gumbom za odstranjevanje
+function createItemWithDeleteButton(textContent, key) {
+    const listItem = document.createElement('li');
+    listItem.textContent = textContent;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Odstrani';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.onclick = function() {
+        listItem.remove();
+        removeFromLocalStorage(key, textContent);
+    };
+
+    listItem.appendChild(deleteBtn);
+    return listItem;
+}
+
+// Funkcija za ustvarjanje elementa <li> s checkboxom in gumbom za odstranjevanje
+function createItemWithCheckboxAndDeleteButton(taskText, key) {
+    const listItem = document.createElement('li');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+            listItem.style.textDecoration = 'line-through';
+        } else {
+            listItem.style.textDecoration = 'none';
+        }
+        updateLocalStorage();
+    });
+
+    const taskLabel = document.createElement('label');
+    taskLabel.textContent = taskText;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Odstrani';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.onclick = function() {
+        listItem.remove();
+        removeFromLocalStorage(key, taskText);
+    };
+
+    listItem.appendChild(checkbox);
+    listItem.appendChild(taskLabel);
+    listItem.appendChild(deleteBtn);
+
+    return listItem;
+}
+
+// Funkcija za shranjevanje v localStorage
+function saveToLocalStorage(key, list) {
+    const items = [];
+    list.childNodes.forEach(item => {
+        if (item.nodeName === 'LI') {
+            const textContent = item.textContent.replace('Odstrani', '').trim();
+            items.push(textContent);
+        }
+    });
+    localStorage.setItem(key, JSON.stringify(items));
+}
+
+// Funkcija za odstranjevanje iz localStorage
+function removeFromLocalStorage(key, value) {
+    const items = JSON.parse(localStorage.getItem(key)) || [];
+    const index = items.indexOf(value);
+    if (index !== -1) {
+        items.splice(index, 1);
+        localStorage.setItem(key, JSON.stringify(items));
+    }
+}
+
+// Funkcija za nalaganje beležk in opravil iz localStorage ob nalaganju strani
+window.onload = function() {
+    loadFromLocalStorage('notes', 'noteList', createItemWithDeleteButton);
+    loadFromLocalStorage('tasks', 'taskList', createItemWithCheckboxAndDeleteButton);
+};
+
+// Funkcija za obnovo seznama iz localStorage
+function loadFromLocalStorage(key, listId, createItemFunc) {
+    const items = JSON.parse(localStorage.getItem(key)) || [];
+    const itemList = document.getElementById(listId);
+
+    items.forEach(item => {
+        const listItem = createItemFunc(item, key);
+        itemList.appendChild(listItem);
+    });
+}
+
+// Funkcija za posodobitev localStorage po spremembi (označitev opravila)
+function updateLocalStorage() {
+    const taskList = document.getElementById('taskList');
+    saveToLocalStorage('tasks', taskList);
+}
+
+    </script>
+</body>
+</html>
