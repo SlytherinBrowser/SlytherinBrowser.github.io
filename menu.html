@@ -4,66 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
-     <style>
-        /* Oblikovanje glavnega naslova */
-        h1 {
-            text-align: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            margin-bottom: 30px;
-        }
+      <style>
+    /* Glavni naslov */
+    h1 {
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        margin-bottom: 30px;
+    }
 
-        /* Oblikovanje seznama aplikacij */
-        .app-list {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
+    /* Seznam aplikacija */
+    .app-list {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0;
+    }
 
-        /* Oblikovanje posameznega elementa aplikacije */
-        .app-item {
-            width: 180px;
-            padding: 20px;
-            margin: 10px;
-            text-align: center;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            background-color: #f9f9f9;
-            transition: transform 0.3s ease;
-        }
+    /* Stil pojedinačne aplikacije */
+    .app-item {
+        width: 200px;
+        padding: 20px;
+        margin: 20px;
+        text-align: center;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        background-color: #ffffff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
 
-        .app-item:hover {
-            transform: translateY(-5px);
-        }
+    .app-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
 
-        /* Oblikovanje slike ikone aplikacije */
-        .app-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            margin-bottom: 10px;
-        }
+    /* Stil ikone aplikacije */
+    .app-item img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
 
-        /* Oblikovanje besedila aplikacije */
-        .app-item p {
-            font-weight: bold;
-            color: #444;
-        }
+    /* Stil naslova aplikacije */
+    .app-item h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #333;
+    }
 
-        /* Oblikovanje povezav */
-        .app-item a {
-            text-decoration: none;
-            color: #007bff;
-        }
+    /* Stil opisa aplikacije */
+    .app-item p {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
 
-        .app-item a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    /* Stil poveznice */
+    .app-item a {
+        display: inline-block;
+        text-decoration: none;
+        color: #007bff;
+        font-weight: bold;
+        transition: color 0.2s ease;
+    }
+
+    .app-item a:hover {
+        color: #0056b3;
+    }
+</style>
 </head>
 <body>
     <h1>Seznam Aplikacij</h1>
