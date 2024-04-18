@@ -210,12 +210,10 @@
     z-index: 999;
 }
 
-#display1 {
+#display {
     width: 200px;
-    padding: 10px;
-    font-size: 18px;
-    left: 30px;
-    bottom: 50px;
+    padding: 5px;
+    font-size: 15px;
 }
 
 .trigger-button {
@@ -456,8 +454,8 @@ function toggleCalculator() {
         // Položaj kalkulatorja glede na gumb
         let triggerButton = document.getElementById('trigger-button');
         let triggerButtonRect = triggerButton.getBoundingClientRect();
-        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 2) + (triggerButton.offsetHeight / 2)}px`;
-        calculatorContainer.style.left = `${triggerButtonRect.right}px`;
+        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 0.7) + (triggerButton.offsetHeight / 2)}px`;
+        calculatorContainer.style.left = `${triggerButtonRect.right/1.7}px`;
     } else {
         // Skritje kalkulatorja
         calculatorContainer.style.display = 'none';
