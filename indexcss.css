@@ -21,6 +21,7 @@
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
+            display: grid;
         }
 
         label {
@@ -49,6 +50,7 @@
         #submitBtn {
     padding: 10px 20px;
     background-color: #3498db;
+    display: grid;
     color: #fff;
     border: none;
     border-radius: 5px;
