@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentina</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            border: 2px solid #e8498d;
+            border-radius: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative; /* Dodali smo relativni položaj za lažje upravljanje slike */
+        }
+
+        .box {
+            width: 250px;
+            height: 250px;
+            border: 2px solid #e8498d;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .emoji {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+
+        .text {
+            font-size: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        #elapsedTime {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e8498d;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #e8498d;
+            margin-bottom: 20px;
+        }
+        #ab{
+         position: fixed;
+         top: 20%;
+         left: 23%;
+        }
+         #bc{
+         position: fixed;
+         top: 20%;
+         right: 23%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Moja sreča, moj ponos, moja ljubezen</h1>
+        
+        <div class="box" onmouseover="showLovePoem()" onmouseout="hideLovePoem()">
+            <span class="emoji">❤️</span>
+            <div class="text" id="lovePoem">
+                My love for you is deep and true,<br>
+                Like the ocean wide and blue.<br>
+                With you, my heart feels light as a feather,<br>
+                Let's cherish our love together forever.
+            </div>
+        </div>
+        <div class="box" onmouseover="showElapsedTime()" onmouseout="hideElapsedTime()">
+            <span class="emoji">📅</span>
+            <div class="text" id="elapsedTime">
+                Time elapsed since 11.4.2024:
+            </div>
+        </div>
+
+        <!-- Dodaten okvir za sliko -->
+            <img id="ab" src="vll.png" width="270">
+            <img id="bc" src="vll.png" width="270">
+
+
+    <script>
+        function showLovePoem() {
+            const lovePoem = document.getElementById('lovePoem');
+            lovePoem.style.display = 'block';
+        }
+
+        function hideLovePoem() {
+            const lovePoem = document.getElementById('lovePoem');
+            lovePoem.style.display = 'none';
+        }
+
+        function showElapsedTime() {
+            const elapsedTime = document.getElementById('elapsedTime');
+            elapsedTime.style.display = 'block';
+            updateElapsedTime();
+            setInterval(updateElapsedTime, 1000);
+        }
+
+        function hideElapsedTime() {
+            const elapsedTime = document.getElementById('elapsedTime');
+            elapsedTime.style.display = 'none';
+            clearInterval(updateElapsedTime);
+        }
+
+        function updateElapsedTime() {
+            const targetDate = new Date('4/11/2024').getTime();
+            const now = new Date().getTime();
+            const difference = now - targetDate;
+
+            const seconds = Math.floor(difference / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            const formattedTime = `${days} days, ${hours % 24} hours, ${minutes % 60} minutes, ${seconds % 60} seconds`;
+            
+            document.getElementById('elapsedTime').textContent = formattedTime;
+        }
+    </script>
+</body>
+</html>
