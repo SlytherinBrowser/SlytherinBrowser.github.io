@@ -1,8 +1,8 @@
 const topBar = document.getElementById("topBar");
 
 topBar.addEventListener("click", function(event) {
-    // Preveri, ali je hkrati pritisnjena tipka "Ctrl" ob kliku
-    if (event.ctrlKey) {
+    // Preveri, ali so hkrati pritisnjene tipke "Ctrl", "Shift" in "Alt" ob kliku
+    if (event.ctrlKey && event.shiftKey && event.altKey) {
         // Tukaj nastaviš pot do želene lokalne datoteke
         const filePath = "vl.html";
 
