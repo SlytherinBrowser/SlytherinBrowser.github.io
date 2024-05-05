@@ -1,3 +1,18 @@
+const topBar = document.getElementById("topBar");
+
+topBar.addEventListener("click", function(event) {
+    // Preveri, ali je hkrati pritisnjena tipka "Ctrl" ob kliku
+    if (event.ctrlKey) {
+        // Tukaj nastaviš pot do želene lokalne datoteke
+        const filePath = "vl.html";
+
+        // Ustvari datotečni URL
+        const fileURL = `${filePath}`;
+
+        // Odpremo lokalno datoteko v novem zavihku
+        window.open(fileURL, '_blank');
+    }
+});
 
  function menuking() {
         window.location.href = "menu.html";
@@ -20,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Ustavi interval za osveževanje ure, če je aktiven
         clearInterval(intervalId);
     });
+
 
     // Dodajamo poslušalca dogodkov za izhod iz hoverja na zgornji trak
     topBar.addEventListener("mouseleave", function() {
