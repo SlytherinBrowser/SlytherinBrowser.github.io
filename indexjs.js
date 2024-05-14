@@ -220,7 +220,12 @@ document.addEventListener('keydown', function(event) {
 });
 
 function appendToDisplay(value) {
-    display.value += value;
+    // Check if the value is '**' and replace it with the exponentiation symbol '**'
+    if (value === '**') {
+        display.value += '^'; // Use '^' as an alternative symbol for exponentiation
+    } else {
+        display.value += value;
+    }
 }
 
 function clearDisplay() {
