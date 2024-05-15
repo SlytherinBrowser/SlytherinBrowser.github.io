@@ -179,7 +179,7 @@ function nextMonth() {
     renderCalendar(prevMonth, prevYear);
     
 }
- let display = document.getElementById('display');
+let display = document.getElementById('display');
 let calculatorContainer = document.getElementById('calculator-container');
 
 function toggleCalculator() {
@@ -190,17 +190,21 @@ function toggleCalculator() {
         // Položaj kalkulatorja glede na gumb
         let triggerButton = document.getElementById('trigger-button');
         let triggerButtonRect = triggerButton.getBoundingClientRect();
-        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 0.7) + (triggerButton.offsetHeight / 2)}px`;
-        calculatorContainer.style.left = `${triggerButtonRect.right/1.7}px`;
+        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 0.9) + (triggerButton.offsetHeight / 2)}px`;
+        calculatorContainer.style.left = `${triggerButtonRect.right / 1.7}px`;
     } else {
         // Skritje kalkulatorja
         calculatorContainer.style.display = 'none';
     }
 }
 
+document.getElementById("al").onclick = function() {
+    alert("Vnesite številko in izberite sestav iz katerega pretvarjate in v katerega želite pretvoriti. če želite potence vpišite število potem vpišite ** nato pa število in enter.");
+};
+
 document.addEventListener('keydown', function(event) {
     const key = event.key;
-    const validKeys = /[0-9+\-*\/.=]|Enter|Backspace|Escape/;
+    const validKeys = /[0-9a-fA-F+\-*\/.=]|Enter|Backspace|Escape/;
 
     if (!validKeys.test(key)) {
         return;
@@ -208,11 +212,11 @@ document.addEventListener('keydown', function(event) {
 
     if (key === 'Enter') {
         calculate();
-    } else if (key === 'Backspace') {
-        clearDisplay();
+    } else if (key === 'Spacebar') {
+        backspaceDisplay();
     } else if (key === '=') {
         calculate();
-    } else if (key === 'Escape') {
+    } else if (key === 'Backspace') {
         clearDisplay();
     } else {
         appendToDisplay(key);
@@ -228,6 +232,10 @@ function appendToDisplay(value) {
     }
 }
 
+function backspaceDisplay() {
+    display.value = display.value.slice(0, -1);
+}
+
 function clearDisplay() {
     display.value = '';
 }
@@ -239,4 +247,65 @@ function calculate() {
     } catch (error) {
         display.value = 'Error';
     }
+}
+
+function convert() {
+    const fromBase = document.getElementById("aa").value;
+    const toBase = document.getElementById("bb").value;
+    const input = display.value.trim();
+
+    if (input === "") {
+        alert("Prosim vnesite številko za pretvorbo.");
+        return;
+    }
+
+    let number;
+    try {
+        switch (fromBase) {
+            case "binary":
+                number = parseInt(input, 2);
+                break;
+            case "octal":
+                number = parseInt(input, 8);
+                break;
+            case "hex":
+                number = parseInt(input, 16);
+                break;
+            case "decimal":
+                number = parseInt(input, 10);
+                break;
+            default:
+                alert("Neveljaven vhodni sestav.");
+                return;
+        }
+    } catch (error) {
+        alert("Napaka pri pretvorbi vhodnega sestava. Preverite pravilnost vnosa.");
+        return;
+    }
+
+    if (isNaN(number)) {
+        alert("Napaka: Vneseno ni veljavna številka v izbranem sestavu.");
+        return;
+    }
+
+    let result;
+    switch (toBase) {
+        case "binary":
+            result = number.toString(2);
+            break;
+        case "octal":
+            result = number.toString(8);
+            break;
+        case "hex":
+            result = number.toString(16).toUpperCase();
+            break;
+        case "decimal":
+            result = number.toString(10);
+            break;
+        default:
+            alert("Neveljaven ciljni sestav.");
+            return;
+    }
+
+    display.value = result;
 }
