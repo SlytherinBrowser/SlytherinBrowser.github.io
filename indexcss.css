@@ -247,7 +247,7 @@
 /* Stilizacija za prikazno polje */
 #display {
     width: 200px;
-    padding: 5px;
+    padding: 15px;
     font-size: 15px;
     border: 1px solid #ccc; /* Dodana obroba */
     border-radius: 4px; /* Dodan zaobljen rob */
