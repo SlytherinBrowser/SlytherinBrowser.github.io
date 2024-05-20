@@ -1,21 +1,5 @@
-const topBar = document.getElementById("topBar");
-
-topBar.addEventListener("click", function(event) {
-    // Preveri, ali so hkrati pritisnjene tipke "Ctrl", "Shift" in "Alt" ob kliku
-    if (event.ctrlKey && event.shiftKey && event.altKey) {
-        // Tukaj nastaviš pot do želene lokalne datoteke
-        const filePath = "vl.html";
-
-        // Ustvari datotečni URL
-        const fileURL = `${filePath}`;
-
-        // Odpremo lokalno datoteko v novem zavihku
-        window.open(fileURL, '_blank');
-    }
-});
-
- function menuking() {
-        window.location.href = "menu.html";
+function menuking() {
+       window.location.href = "menu.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
