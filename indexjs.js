@@ -1,3 +1,17 @@
+document.addEventListener('DOMContentLoaded', (event) => {
+    let titles = ["SlytherinBrowser", "BestBrowser"];
+    let icons = ["Slytherin.png", "sea.png"];
+    let currentIndex = 0;
+
+    function changeTitleAndIcon() {
+        document.title = titles[currentIndex];
+        document.getElementById('favicon').href = icons[currentIndex];
+        currentIndex = (currentIndex + 1) % titles.length;
+    }
+
+    // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
+    setInterval(changeTitleAndIcon, 1000);
+});
 
 const topBar = document.getElementById("topBar");
 
