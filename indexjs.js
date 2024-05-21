@@ -258,53 +258,88 @@ function convert() {
         return;
     }
 
-    let number;
-    try {
-        switch (fromBase) {
-            case "binary":
-                number = parseInt(input, 2);
-                break;
-            case "octal":
-                number = parseInt(input, 8);
-                break;
-            case "hex":
-                number = parseInt(input, 16);
-                break;
-            case "decimal":
-                number = parseInt(input, 10);
-                break;
-            default:
-                alert("Neveljaven vhodni sestav.");
-                return;
-        }
-    } catch (error) {
-        alert("Napaka pri pretvorbi vhodnega sestava. Preverite pravilnost vnosa.");
-        return;
-    }
-
-    if (isNaN(number)) {
-        alert("Napaka: Vneseno ni veljavna številka v izbranem sestavu.");
-        return;
-    }
-
-    let result;
-    switch (toBase) {
+      let number;
+try {
+    switch (fromBase) {
         case "binary":
-            result = number.toString(2);
+            number = parseInt(input, 2);
             break;
         case "octal":
-            result = number.toString(8);
+            number = parseInt(input, 8);
             break;
         case "hex":
-            result = number.toString(16).toUpperCase();
+            number = parseInt(input, 16);
             break;
         case "decimal":
-            result = number.toString(10);
+            number = parseInt(input, 10);
+            break;
+        case "3":
+            number = parseInt(input, 3);
+            break;
+        case "4":
+            number = parseInt(input, 4);
+            break;
+        case "5":
+            number = parseInt(input, 5);
+            break;
+        case "6":
+            number = parseInt(input, 6);
+            break;
+        case "7":
+            number = parseInt(input, 7);
+            break;
+        case "9":
+            number = parseInt(input, 9);
             break;
         default:
-            alert("Neveljaven ciljni sestav.");
+            alert("Neveljaven vhodni sestav.");
             return;
     }
+} catch (error) {
+    alert("Napaka pri pretvorbi vhodnega sestava. Preverite pravilnost vnosa.");
+    return;
+}
 
+if (isNaN(number)) {
+    alert("Napaka: Vneseno ni veljavna številka v izbranem sestavu.");
+    return;
+}
+
+let result;
+switch (toBase) {
+    case "binary":
+        result = number.toString(2);
+        break;
+    case "octal":
+        result = number.toString(8);
+        break;
+    case "hex":
+        result = number.toString(16).toUpperCase();
+        break;
+    case "decimal":
+        result = number.toString(10);
+        break;
+    case "3":
+        result = number.toString(3);
+        break;
+    case "4":
+        result = number.toString(4);
+        break;
+    case "5":
+        result = number.toString(5);
+        break;
+    case "6":
+        result = number.toString(6);
+        break;
+    case "7":
+        result = number.toString(7);
+        break;
+    case "9":
+        result = number.toString(9);
+        break;
+    default:
+        alert("Neveljaven ciljni sestav.");
+        return;
+}
     display.value = result;
 }
