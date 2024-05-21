@@ -1,3 +1,4 @@
+
 const topBar = document.getElementById("topBar");
 
 topBar.addEventListener("click", function(event) {
@@ -13,8 +14,9 @@ topBar.addEventListener("click", function(event) {
         window.open(fileURL, '_blank');
     }
 });
-function menuking() {
-       window.location.href = "menu.html";
+
+ function menuking() {
+        window.location.href = "menu.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
@@ -258,7 +260,7 @@ function convert() {
         return;
     }
 
-      let number;
+    let number;
 try {
     switch (fromBase) {
         case "binary":
@@ -341,5 +343,7 @@ switch (toBase) {
         alert("Neveljaven ciljni sestav.");
         return;
 }
+
+
     display.value = result;
 }
