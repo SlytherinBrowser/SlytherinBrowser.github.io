@@ -53,25 +53,37 @@
     <button id="al">?</button>
     <input type="text" id="display" readonly>
     <div>
-        <label for="aa">Izberi iz:</label>
-        <select id="aa">
-            <option value="decimal">Decimal</option>
-            <option value="binary">Binary</option>
-            <option value="octal">Octal</option>
-            <option value="hex">Hex</option>
-        </select>
-    </div>
-    <div>
-        <label for="bb">Pretvori v:</label>
-        <select id="bb">
-            <option value="decimal">Decimal</option>
-            <option value="binary">Binary</option>
-            <option value="octal">Octal</option>
-            <option value="hex">Hex</option>
-        </select>
-    </div>
-    <button onclick="convert()">Pretvori</button>
-    <button onclick="clearDisplay()">Počisti</button>
+         <label for="aa">Izberi iz:</label>
+<select id="aa">
+    <option value="decimal">Decimal</option>
+    <option value="binary">Binary</option>
+    <option value="octal">Octal</option>
+    <option value="hex">Hex</option>
+    <option value="3">Base 3</option>
+    <option value="4">Base 4</option>
+    <option value="5">Base 5</option>
+    <option value="6">Base 6</option>
+    <option value="7">Base 7</option>
+    <option value="9">Base 9</option>
+</select>
+
+<div>
+    <label for="bb">Pretvori v:</label>
+    <select id="bb">
+        <option value="decimal">Decimal</option>
+        <option value="binary">Binary</option>
+        <option value="octal">Octal</option>
+        <option value="hex">Hex</option>
+        <option value="3">Base 3</option>
+        <option value="4">Base 4</option>
+        <option value="5">Base 5</option>
+        <option value="6">Base 6</option>
+        <option value="7">Base 7</option>
+        <option value="9">Base 9</option>
+    </select>
+</div>
+<button onclick="convert()">Pretvori</button>
+<button onclick="clearDisplay()">Počisti</button>
 </div>
 
     <script src="indexjs.js"></script>
