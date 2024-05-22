@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+8document.addEventListener('DOMContentLoaded', (event) => {
     let titles = ["SlytherinBrowser", "BestBrowser"];
     let icons = ["Slytherin.png", "sea.png"];
     let currentIndex = 0;
@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
-    setInterval(changeTitleAndIcon, 1000);
+    setInterval(changeTitleAndIcon, 3000);
 });
 
 const topBar = document.getElementById("topBar");
