@@ -1,4 +1,4 @@
-8document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', (event) => {
     let titles = ["SlytherinBrowser", "BestBrowser"];
     let icons = ["Slytherin.png", "sea.png"];
     let currentIndex = 0;
