@@ -25,7 +25,7 @@ topBar.addEventListener("click", function(event) {
         const fileURL = `${filePath}`;
 
         // Odpremo lokalno datoteko v novem zavihku
-        window.open(fileURL, 'load.html');
+        window.open(fileURL, '_blank');
     }
 });
 
