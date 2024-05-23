@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    let titles = ["SlytherinBrowser", "BROWSE HERE!!"];
+    let titles = ["SlytherinBrowser", "BestBrowser"];
     let icons = ["Slytherin.png", "sea.png"];
     let currentIndex = 0;
 
@@ -10,27 +10,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
-    setInterval(changeTitleAndIcon, 3000);
-});
-
-const topBar = document.getElementById("topBar");
-
-topBar.addEventListener("click", function(event) {
-    // Preveri, ali so hkrati pritisnjene tipke "Ctrl", "Shift" in "Alt" ob kliku
-    if (event.ctrlKey && event.shiftKey && event.altKey) {
-        // Tukaj nastaviš pot do želene lokalne datoteke
-        const filePath = "vl.html";
-
-        // Ustvari datotečni URL
-        const fileURL = `${filePath}`;
-
-        // Odpremo lokalno datoteko v novem zavihku
-        window.open(fileURL, '_blank');
-    }
+    setInterval(changeTitleAndIcon, 1000);
 });
 
  function menuking() {
         window.location.href = "menu.html";
+    }
+function lock() {
+        window.location.href = "lock.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
