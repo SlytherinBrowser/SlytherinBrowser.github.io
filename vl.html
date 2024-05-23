@@ -31,12 +31,14 @@
 
         .boxes {
             display: flex;
+            flex-direction: column;
             gap: 20px;
             margin-top: 20px;
+            width: 100%;
         }
 
         .box {
-            width: 250px;
+            width: 100%;
             height: 250px;
             border: 2px solid #e8498d;
             border-radius: 20px;
@@ -161,35 +163,34 @@
         }
 
         const quotes = [
-    "Love is composed of a single soul inhabiting two bodies. - Aristotle",
-    "Love recognizes no barriers. It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope. - Maya Angelou",
-    "To love and be loved is to feel the sun from both sides. - David Viscott",
-    "The best thing to hold onto in life is each other. - Audrey Hepburn",
-    "You are my heart, my life, my one and only thought. - Arthur Conan Doyle",
-    "In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine. - Maya Angelou",
-    "I love you not only for what you are, but for what I am when I am with you. - Roy Croft",
-    "Love is when the other person's happiness is more important than your own. - H. Jackson Brown Jr.",
-    "I have waited for this opportunity for more than half a century, to repeat to you once again my vow of eternal fidelity and everlasting love. - Gabriel Garcia Marquez",
-    "You know you're in love when you can't fall asleep because reality is finally better than your dreams. - Dr. Seuss",
-    "Whatever our souls are made of, his and mine are the same. - Emily Brontë",
-    "Love is a friendship set to music. - Joseph Campbell",
-    "If I know what love is, it is because of you. - Hermann Hesse",
-    "You are the finest, loveliest, tenderest, and most beautiful person I have ever known—and even that is an understatement. - F. Scott Fitzgerald",
-    "I saw that you were perfect, and so I loved you. Then I saw that you were not perfect and I loved you even more. - Angelita Lim",
-    "I love you, not only for what you are, but for what I am when I am with you. - Elizabeth Barrett Browning",
-    "To love is nothing. To be loved is something. But to love and be loved, that’s everything. - T. Tolis",
-    "True love is rare, and it’s the only thing that gives life real meaning. - Nicholas Sparks",
-    "I would rather spend one lifetime with you, than face all the ages of this world alone. - J.R.R. Tolkien",
-    "The best love is the kind that awakens the soul; that makes us reach for more, that plants the fire in our hearts and brings peace to our minds. - Nicholas Sparks"
-];
+            "Love is composed of a single soul inhabiting two bodies. - Aristotle",
+            "Love recognizes no barriers. It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope. - Maya Angelou",
+            "To love and be loved is to feel the sun from both sides. - David Viscott",
+            "The best thing to hold onto in life is each other. - Audrey Hepburn",
+            "You are my heart, my life, my one and only thought. - Arthur Conan Doyle",
+            "In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine. - Maya Angelou",
+            "I love you not only for what you are, but for what I am when I am with you. - Roy Croft",
+            "Love is when the other person's happiness is more important than your own. - H. Jackson Brown Jr.",
+            "I have waited for this opportunity for more than half a century, to repeat to you once again my vow of eternal fidelity and everlasting love. - Gabriel Garcia Marquez",
+            "You know you're in love when you can't fall asleep because reality is finally better than your dreams. - Dr. Seuss",
+            "Whatever our souls are made of, his and mine are the same. - Emily Brontë",
+            "Love is a friendship set to music. - Joseph Campbell",
+            "If I know what love is, it is because of you. - Hermann Hesse",
+            "You are the finest, loveliest, tenderest, and most beautiful person I have ever known—and even that is an understatement. - F. Scott Fitzgerald",
+            "I saw that you were perfect, and so I loved you. Then I saw that you were not perfect and I loved you even more. - Angelita Lim",
+            "I love you, not only for what you are, but for what I am when I am with you. - Elizabeth Barrett Browning",
+            "To love is nothing. To be loved is something. But to love and be loved, that’s everything. - T. Tolis",
+            "True love is rare, and it’s the only thing that gives life real meaning. - Nicholas Sparks",
+            "I would rather spend one lifetime with you, than face all the ages of this world alone. - J.R.R. Tolkien",
+            "The best love is the kind that awakens the soul; that makes us reach for more, that plants the fire in our hearts and brings peace to our minds. - Nicholas Sparks"
+        ];
 
-
-       function showRandomQuote() {
-    const randomIndex = Math.floor(Math.random() * quotes.length);
-    const quoteElement = document.getElementById('randomQuote');
-    quoteElement.textContent = quotes[randomIndex];
-    quoteElement.style.display = 'block';
-}
+        function showRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quoteElement = document.getElementById('randomQuote');
+            quoteElement.textContent = quotes[randomIndex];
+            quoteElement.style.display = 'block';
+        }
 
         function hideRandomQuote() {
             const quoteElement = document.getElementById('randomQuote');
