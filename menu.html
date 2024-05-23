@@ -5,17 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
      <style>
+        div.naslov{
+            position: sticky;
+            top: 0;
+        }
     /* Glavni naslov */
     h1 {
+        background-color: white;
         text-align: center;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        border: solid;
+        border-bottom-left-radius: 10cm;
+        border-bottom-right-radius: 10cm;
+        font-family: 'myfont';
         color: #333;
         margin-bottom: 30px;
     }
-
+@font-face{
+    font-family: myfont;
+    src: url(Jaro-Regular.ttf);
+}
     /* Seznam aplikacija */
     .app-list {
-        display: flex;
+        display: grid;
+        border: solid;
         justify-content: center;
         align-items: flex-start;
         flex-wrap: wrap;
@@ -71,6 +83,7 @@
         display: inline-block;
         text-decoration: none;
         color: #007bff;
+        font-family: myfont;
         font-weight: bold;
         transition: color 0.2s ease;
     }
@@ -82,8 +95,9 @@
 
 </head>
 <body>
+    <div class="naslov">
     <h1>Seznam Aplikacij</h1>
-
+</div>
     <ul class="app-list">
         <!-- Microsoft Word -->
         <li class="app-item">
