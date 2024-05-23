@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         currentIndex = (currentIndex + 1) % titles.length;
     }
 
-    // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
-    setInterval(changeTitleAndIcon, 1000);
+    // Spreminjanje naslova in ikone vsake 3 sekunde (3000 ms)
+    setInterval(changeTitleAndIcon, 3000);
 });
 
  function menuking() {
