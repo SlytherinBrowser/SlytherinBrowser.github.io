@@ -1,3 +1,4 @@
+	
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,92 +6,165 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moje spletni dnevnik</title>
     <style>
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f4f4f4;
-        margin: 20px;
-        text-align: center;
-    }
+     body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2980b9, #2c3e50);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
 
-    h1 {
-        color: #333;
-    }
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
 
-    #vnos {
-        width: 70%;
-        padding: 10px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 16px;
-    }
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 36px;
+        }
 
-    button {
-        padding: 10px;
-        font-size: 16px;
-        background-color: #4caf50;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+        #vnos, #modal-vnos {
+            width: calc(100% - 40px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
 
-    button:hover {
-        background-color: #45a049;
-    }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #27ae60;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-    #seznam-vnosov {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
+        button:hover {
+            background-color: #219653;
+        }
 
-    .vnos {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        text-align: left;
-        position: relative;
-    }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+#seznam-vnosov {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #ccc; /* Dodal okvir med vnose */
+    border-radius: 5px;
+    overflow: hidden; /* Preprečimo, da se preseže okvir */
+}
 
-    .vnos:hover {
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
+.vnos {
+    background-color: BLACK;
+    padding: 15px;
+    border-bottom: 1px solid #ccc; /* Dodal rob za ločevanje med vnosi */
+    transition: all 0.3s ease;
+}
 
-    .delete-btn {
-        color: #fff;
-        background-color: #e53935;
-        border: none;
-        padding: 5px;
-        margin-left: 5px;
-        cursor: pointer;
-        border-radius: 50%;
-        position: absolute;
-        top: 5px;
-        right: 5px;
-    }
+.vnos:last-child {
+    border-bottom: none; /* Odstranil rob spodnjega vnosa */
+}
 
-    #modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        justify-content: center;
-        align-items: center;
-    }
+.vnos:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
 
-    #modal {
-        background: #fff;
-        padding: 20px;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    }
+.delete-btn {
+    color: #fff;
+    background-color: #e74c3c;
+    border: none;
+    padding: 5px;
+    margin-left: 5px; /* Dodal razmik med gumbom za brisanje in besedilom */
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.1);
+}
+
+
+        #modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 999; /* Postavil sem višjo vrednost indeksa za prikaz nad drugimi elementi */
+}
+
+#modal {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    width: 400px; /* Fiksna širina modalnega okna */
+    text-align: center;
+    position: relative;
+    overflow /* Preprečimo, da bi se vsebina raztegnila preko modalnega okna */
+    max-height: 80%; /* Omejitev največje višine modalnega okna */
+    overflow-y: auto; /* Dodal sem možnost vertikalnega drsenja, če je vsebina previsoka */
+}
+
+#modal h2 {
+    margin-bottom: 20px;
+    color: #333; /* Spremenil barvo naslova na temnejšo */
+}
+
+#modal-vnos {
+    width: calc(100% - 40px);
+    padding: 10px;
+    margin: 10px 0 20px; /* Spremenil robove za boljšo berljivost */
+    border: 1px solid #ccc; /* Dodal rob za jasnost */
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#modal button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-right: 10px; /* Povečal sem desni rob gumba za ločitev od besedila */
+}
+
+#modal button:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
 
     </style>
 
