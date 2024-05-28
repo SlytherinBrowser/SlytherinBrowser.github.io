@@ -9,15 +9,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         currentIndex = (currentIndex + 1) % titles.length;
     }
 
-    // Spreminjanje naslova in ikone vsake 3 sekunde (3000 ms)
-    setInterval(changeTitleAndIcon, 3000);
+    // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
+    setInterval(changeTitleAndIcon, 1000);
 });
 
  function menuking() {
         window.location.href = "menu.html";
     }
 function lock() {
-        window.location.href = "lock1.html";
+        window.location.href = "lock.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
@@ -212,7 +212,7 @@ document.addEventListener('keydown', function(event) {
         return;
     }
 
-   f (key === 'Enter') {
+    if (key === 'Enter') {
         calculate();
     } else if (key === 'Backspace') {
         backspaceDisplay();
