@@ -212,13 +212,13 @@ document.addEventListener('keydown', function(event) {
         return;
     }
 
-    if (key === 'Enter') {
+   f (key === 'Enter') {
         calculate();
-    } else if (key === 'Spacebar') {
+    } else if (key === 'Backspace') {
         backspaceDisplay();
     } else if (key === '=') {
         calculate();
-    } else if (key === 'Backspace') {
+    } else if (key === 'Escape') {
         clearDisplay();
     } else {
         appendToDisplay(key);
