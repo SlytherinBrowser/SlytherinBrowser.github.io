@@ -7,9 +7,9 @@
     <title>Uganjevanje igre</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #fff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212;
+            color: #E0E0E0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,28 +18,16 @@
         }
 
         .container {
-            border-radius: 50%;
+            border-radius: 16px;
             padding: 40px;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle at center, #00f, #000 70%);
-            animation: pulse 1s infinite alternate;
-            box-shadow: 0 0 10px 5px #00f, 0 0 20px 10px rgba(0, 0, 255, 0.5);
+            width: 320px;
+            background: linear-gradient(145deg, #1f1f1f, #383838);
+            box-shadow: 10px 10px 20px #0e0e0e, -10px -10px 20px #2e2e2e;
             text-align: center;
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            100% {
-                transform: scale(1.2);
-            }
-        }
-
         h1 {
-            color: #333;
+            color: #FFB74D;
             margin-bottom: 20px;
         }
 
@@ -48,24 +36,33 @@
             font-size: 16px;
         }
 
-        #gameSelection {
+        input {
             font-size: 18px;
-            margin-bottom: 20px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            width: calc(100% - 22px);
+            box-sizing: border-box;
         }
 
         button {
             font-size: 16px;
             padding: 12px 24px;
-            background-color: #00f;
-            color: #fff;
+            background-color: #FFB74D;
+            color: #121212;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
         }
 
         button:hover {
-            background-color: #ff4136;
+            background-color: #FF9800;
+            transform: scale(1.05);
         }
 
         #gameContainer {
@@ -75,16 +72,15 @@
         p#message {
             font-size: 18px;
             margin-top: 20px;
-            color: #fff;
+            color: #FFB74D;
             opacity: 0;
             animation: fadeIn 0.5s ease-in-out forwards;
         }
 
         p#correctGuesses {
-            /* Dodan stil za pravilno uganjene črke */
             font-size: 18px;
             margin-top: 20px;
-            color: #00f;
+            color: #FFB74D;
         }
 
         @keyframes fadeIn {
@@ -109,6 +105,7 @@
         <button onclick="checkInput()">Preveri</button>
         <p id="message"></p>
         <p id="correctGuesses"></p>
+        <button onclick="goBack()">Nazaj</button>
     </div>
 
     <div class="container" id="gameSelection">
@@ -121,10 +118,18 @@
         let selectedGame = 0; // 0 represents no game selected
 
         const words = [
-            "banana", "programming", "javascript", "elephant", "university", "computer", "apple",
-            "telefon", "računalnik", "tablica", "televizija", "pametnaura", "fotoaparat", "zvočnik", "prenosnipolnilec", "miška", "tipkovnica",
-            "majica", "hlače", "krilo", "pulover", "jakna", "obleka", "čevlji", "copati", "kapa", "rokavice",
-            "pizza", "hamburger", "sendvič", "pomfri", "testenine", "juha", "sendvič", "sushi", "salata", "tortilja"
+            // Fruit
+            "banana", "apple", "orange", "grape", "strawberry", "blueberry", "mango", "pineapple",
+            // Technology
+            "programming", "javascript", "computer", "internet", "smartphone", "tablet", "keyboard", "monitor",
+            // Animals
+            "elephant", "giraffe", "lion", "tiger", "kangaroo", "panda", "zebra", "rhinoceros",
+            // University
+            "university", "lecture", "homework", "professor", "student", "library", "campus", "degree",
+            // Clothing
+            "shirt", "pants", "skirt", "sweater", "jacket", "dress", "shoes", "slippers", "hat", "gloves",
+            // Food
+            "pizza", "hamburger", "sandwich", "fries", "pasta", "soup", "sushi", "salad", "tortilla"
         ];
 
         function selectGame(gameNumber) {
@@ -242,6 +247,14 @@
             if (event.key === 'Enter') {
                 checkInput();
             }
+        }
+
+        function goBack() {
+            document.getElementById("gameContainer").style.display = "none";
+            document.getElementById("gameSelection").style.display = "block";
+            document.getElementById("message").textContent = "";
+            document.getElementById("correctGuesses").textContent = "";
+            document.getElementById("guess").value = "";
         }
     </script>
 </body>
