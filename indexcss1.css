@@ -180,24 +180,26 @@ label {
     fill: #ffffff;
 }
 
-       /* Stilizacija za koledar */
+/* Stilizacija za koledar */
 .calendar-container {
     position: fixed;
     bottom: 80px;
     right: 0px;
     width: 320px;
-    background-color: black;
+    background-color: #333;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Senčenje */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Senčenje */
     display: none;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    transition: box-shadow 0.3s, transform 0.3s; /* Dodajanje prehoda za senčenje in transformacijo */
 }
 
 .calendar-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6); /* Povečano senčenje ob hoverju */
+    transform: scale(1.02); /* Rahla povečava ob hoverju */
 }
-        .calendar-header {
-    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+
+.calendar-header {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
     color: white;
     padding: 15px;
     border-top-left-radius: 20px;
@@ -205,7 +207,7 @@ label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .calendar-header button {
@@ -213,49 +215,54 @@ label {
     border: none;
     color: white;
     font-size: 24px;
-    cursor: pointer;
+        cursor: pointer;
     transition: transform 0.3s, color 0.3s;
+}
+
+.calendar-header button:hover {
+    color: #ffeb3b; /* Sprememba barve ob hoverju */
+    transform: scale(1.2); /* Rahla povečava ob hoverju */
 }
 
 .calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     border-top: 1px solid #ccc;
-    background: #fafafa;
+    background: #333;
 }
 
 .day {
     padding: 15px;
     text-align: center;
-    border-right: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-right: 1px solid #555;
+    border-bottom: 1px solid #555;
     font-size: 16px;
-    color: #444; /* Temnejša barva besedila za boljši kontrast */
+    color: #ddd; /* Svetlejša barva besedila za boljši kontrast */
     cursor: pointer;
     transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
 }
 
 .day:hover {
-    background-color: #ffe3c3;
+    background-color: #80deea; /* Svetlo modra barva ob hoverju */
     transform: scale(1.1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .today {
-    background: linear-gradient(135deg, #43cea2, #185a9d);
+    background: linear-gradient(135deg, #ff6f61, #de6262);
     color: white;
     font-weight: bold;
     border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     transform: scale(1.15);
 }
 
 .day:nth-child(7n+1) {
-    color: #d32f2f; /* Barva za nedelje */
+    color: #e57373; /* Barva za nedelje */
 }
 
 .day:nth-child(7n) {
-    color: #1976d2; /* Barva za sobote */
+    color: #64b5f6; /* Barva za sobote */
 }
 
 /* Stilizacija za kalkulator */
@@ -263,16 +270,17 @@ label {
     display: none;
     position: fixed;
     padding: 20px;
-    border: 5px solid black; /* Popravljena nastavitev obrobe */
+    border: 5px solid #000; /* Črna obroba */
     border-radius: 5px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8); /* Senčenje */
+    background-color: #000; /* Črna ozadje */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Senčenje */
     z-index: 999;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    transition: box-shadow 0.3s, transform 0.3s; /* Dodajanje prehoda za senčenje in transformacijo */
 }
 
 .calculator-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8); /* Povečano senčenje ob hoverju */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6); /* Povečano senčenje ob hoverju */
+    transform: scale(1.02); /* Rahla povečava ob hoverju */
 }
 
 /* Stilizacija za prikazno polje */
@@ -280,9 +288,11 @@ label {
     width: 200px;
     padding: 15px;
     font-size: 15px;
-    border: 1px solid #ccc; /* Dodana obroba */
-    border-radius: 4px; /* Dodan zaobljen rob */
+    border: 1px solid #ccc; /* Svetla obroba za kontrast */
+    border-radius: 4px; /* Zaobljen rob */
     text-align: right; /* Poravnava besedila desno */
+    background-color: #000; /* Črna ozadje */
+    color: #fff; /* Bela barva besedila */
 }
 
 /* Slog za gumbe in druge elemente znotraj kalkulatorja */
@@ -292,13 +302,16 @@ label {
     margin: 5px;
     padding: 10px;
     font-size: 16px;
-    border: 1px solid #ccc;
+    border: 1px solid #ccc; /* Svetla obroba za kontrast */
     border-radius: 4px;
+    background-color: #000; /* Črna ozadje */
+    color: #fff; /* Bela barva besedila */
+    transition: background-color 0.3s, color 0.3s; /* Dodajanje prehoda za barve */
 }
 
 .calculator-container input {
     width: calc(100% - 22px); /* Prilagodite širino vhodnega polja */
-    text-align: right; /* Poravnajte besedilo v desno za boljši prikaz številk */
+    text-align: right; /* Poravnava besedila desno */
 }
 
 .calculator-container select {
@@ -306,14 +319,16 @@ label {
 }
 
 .calculator-container button {
-    background-color: #4CAF50; /* Zelena barva gumba */
-    color: white; /* Bela barva besedila na gumbu */
+    background-color: #000; /* Črna ozadje gumba */
+    color: #fff; /* Bela barva besedila */
     cursor: pointer;
 }
 
 .calculator-container button:hover {
-    background-color: #45a049; /* Temnejša zelena barva ob prehodu miške */
+    background-color: #333; /* Temnejša črna barva ob prehodu miške */
+    color: #fff; /* Ohranitev bele barve besedila ob hoverju */
 }
+
 
 .trigger-button {
     position: fixed;
