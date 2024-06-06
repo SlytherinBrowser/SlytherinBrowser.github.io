@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         window.location.href = "menu.html";
     }
 function lock() {
-        window.location.href = "lock.html";
+        window.location.href = "lock1.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
@@ -80,10 +80,15 @@ function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
 
     if (searchTerm !== "") {
-        if (searchTerm.startsWith("*")) {
+        if (searchTerm.startsWith("*style:normal")) {
+            applyMode("normal");
+        } else if (searchTerm.startsWith("*style:modern")) {
+            applyMode("modern");
+        } else if (searchTerm.startsWith("*")) {
             addShortcut();
         } else {
             let urlToOpen = searchTerm;
+             location.reload(); // Osveži stran po preklopu načina
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
@@ -102,6 +107,36 @@ function searchSlytherinBrowser() {
         document.getElementById("search").value = ""; // Počisti iskalno polje
     }
 }
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const savedMode = localStorage.getItem("mode") || "normal";
+    applyMode(savedMode);
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.shiftKey && event.key === "*") {
+        const currentMode = localStorage.getItem("mode") || "normal";
+        const newMode = currentMode === "normal" ? "modern" : "normal";
+        applyMode(newMode);
+        location.reload(); // Osveži stran po preklopu načina
+    }
+});
+
+function applyMode(mode) {
+    const normalStylesheet = document.getElementById("normalStylesheet");
+    const modernStylesheet = document.getElementById("modernStylesheet");
+
+    if (mode === "normal") {
+        normalStylesheet.disabled = false;
+        modernStylesheet.disabled = true;
+    } else {
+        normalStylesheet.disabled = true;
+        modernStylesheet.disabled = false;
+    }
+
+    localStorage.setItem("mode", mode);
+}
+
 
 function isURL(text) {
     // Preverimo, ali vneseni izraz izgleda kot URL
@@ -349,31 +384,3 @@ switch (toBase) {
     display.value = result;
 }
 
- document.addEventListener('DOMContentLoaded', (event) => {
-            const savedMode = localStorage.getItem("mode") || "normal";
-            applyMode(savedMode);
-        });
-
-        document.addEventListener("keydown", function(event) {
-            if (event.shiftKey && event.key === "*") {
-                const currentMode = localStorage.getItem("mode") || "normal";
-                const newMode = currentMode === "normal" ? "modern" : "normal";
-                applyMode(newMode);
-                location.reload(); // Osveži stran po preklopu načina
-            }
-        });
-
-        function applyMode(mode) {
-            const normalStylesheet = document.getElementById("normalStylesheet");
-            const modernStylesheet = document.getElementById("modernStylesheet");
-
-            if (mode === "normal") {
-                normalStylesheet.disabled = false;
-                modernStylesheet.disabled = true;
-            } else {
-                normalStylesheet.disabled = true;
-                modernStylesheet.disabled = false;
-            }
-
-            localStorage.setItem("mode", mode);
-        }
