@@ -1,4 +1,4 @@
-  body {
+            body {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -16,7 +16,7 @@
             color: #2C3E50;
         }
         .p:hover{
-            color: black;
+            color: White;
         }
 
         #logo {
