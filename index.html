@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+7<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -85,5 +85,28 @@
 <button onclick="convert()">Pretvori</button>
 <button onclick="clearDisplay()">Počisti</button>
 </div>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBs566_cZ_c1YnwzB6VBJ6snnJVCv3olUQ",
+    authDomain: "brskalniksly.firebaseapp.com",
+    projectId: "brskalniksly",
+    storageBucket: "brskalniksly.appspot.com",
+    messagingSenderId: "355828142509",
+    appId: "1:355828142509:web:35cd50dd0ac484101c9124",
+    measurementId: "G-5PQJE3ZPQQ"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
