@@ -10,14 +10,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
-    setInterval(changeTitleAndIcon, 1000);
+    setInterval(changeTitleAndIcon, 3000);
 });
 
  function menuking() {
         window.location.href = "menu.html";
     }
 function lock() {
-        window.location.href = "lock.html";
+        window.location.href = "lock1.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
@@ -348,3 +348,32 @@ switch (toBase) {
 
     display.value = result;
 }
+
+ document.addEventListener('DOMContentLoaded', (event) => {
+            const savedMode = localStorage.getItem("mode") || "normal";
+            applyMode(savedMode);
+        });
+
+        document.addEventListener("keydown", function(event) {
+            if (event.shiftKey && event.key === "*") {
+                const currentMode = localStorage.getItem("mode") || "normal";
+                const newMode = currentMode === "normal" ? "modern" : "normal";
+                applyMode(newMode);
+                location.reload(); // Osveži stran po preklopu načina
+            }
+        });
+
+        function applyMode(mode) {
+            const normalStylesheet = document.getElementById("normalStylesheet");
+            const modernStylesheet = document.getElementById("modernStylesheet");
+
+            if (mode === "normal") {
+                normalStylesheet.disabled = false;
+                modernStylesheet.disabled = true;
+            } else {
+                normalStylesheet.disabled = true;
+                modernStylesheet.disabled = false;
+            }
+
+            localStorage.setItem("mode", mode);
+        }
