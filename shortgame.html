@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spomin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+            width: 100%;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        #memory-game {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .memory-card {
+            width: 80px;
+            height: 80px;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .memory-card.flipped {
+            background-color: var(--card-color);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .memory-card:hover {
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Spomin</h1>
+    </header>
+    <main>
+        <div id="memory-game">
+            <!-- Kartice za igro spomina bodo dodane tukaj -->
+        </div>
+    </main>
+
+    <script>
+        const colorsArray = [
+            '#FF5733', '#33FF57', '#3357FF', '#FF33A8', '#FFC733', '#33FFF7', '#8D33FF', '#FF8333',
+            '#C70039', '#581845', '#900C3F', '#DAF7A6', '#FFC300', '#FF5733', '#C70039', '#581845',
+            '#900C3F', '#DAF7A6', '#FFC300', '#33FF57', '#3357FF', '#FF33A8', '#FFC733', '#33FFF7'
+        ];
+
+        const gameGrid = colorsArray.concat(colorsArray).sort(() => 0.5 - Math.random());
+
+        const game = document.getElementById('memory-game');
+
+        gameGrid.forEach((color, index) => {
+            const card = document.createElement('div');
+            card.classList.add('memory-card');
+            card.dataset.color = color;
+            card.style.setProperty('--card-color', color);
+            card.addEventListener('click', flipCard);
+            game.appendChild(card);
+        });
+
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+            this.style.backgroundColor = this.dataset.color;
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.color === secondCard.dataset.color;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+
+            resetBoard();
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                firstCard.style.backgroundColor = '#ddd';
+                secondCard.style.backgroundColor = '#ddd';
+
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard] = [null, null];
+            lockBoard = false;
+        }
+    </script>
+</body>
+</html>

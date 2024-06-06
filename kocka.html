@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Igra Metanje Kovanca in Kocke</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #6dd5ed, #2193b0);
+            color: #fff;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        .result {
+            margin: 20px 0;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .buttons {
+            display: flex;
+            gap: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff9800;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        .coin, .dice {
+            margin-top: 20px;
+            font-size: 2em;
+        }
+        .coin {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #ffd700, #b8860b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dice {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: 2px solid #000;
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Igra Metanje Kovanca in Kocke</h1>
+    <div class="game-container">
+        <div class="result" id="result">Rezultat se bo prikazal tukaj</div>
+        <div class="buttons">
+            <button onclick="throwCoin()">Vrzi Kovanec</button>
+            <button onclick="rollDice()">Vrzi Kocko</button>
+        </div>
+        <div class="coin" id="coin" style="display: none;"></div>
+        <div class="dice" id="dice" style="display: none;"></div>
+    </div>
+
+    <script>
+        function throwCoin() {
+            const resultElement = document.getElementById('result');
+            const coinElement = document.getElementById('coin');
+            const diceElement = document.getElementById('dice');
+            diceElement.style.display = 'none';
+            const result = Math.random() < 0.5 ? 'Glava' : 'Cifra';
+            resultElement.textContent = 'Rezultat kovanca: ' + result;
+            coinElement.textContent = result === 'Glava' ? 'G' : 'C';
+            coinElement.style.display = 'flex';
+        }
+
+        function rollDice() {
+            const resultElement = document.getElementById('result');
+            const coinElement = document.getElementById('coin');
+            const diceElement = document.getElementById('dice');
+            coinElement.style.display = 'none';
+            const result = Math.floor(Math.random() * 6) + 1;
+            resultElement.textContent = 'Rezultat kocke: ' + result;
+            diceElement.textContent = result;
+            diceElement.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
+
