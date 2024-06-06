@@ -8,7 +8,16 @@ body {
     font-family: 'Roboto', sans-serif;
     color: #ffffff;
 }
-
+.p{
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 2px;
+            color: #1d1f21;
+        }
+        .p:hover{
+            color: white;
+        }
 #logo {
     width: 100px;
     height: 100px;
