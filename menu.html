@@ -4,166 +4,262 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
-     <style>
-        div.naslov{
-            position: sticky;
-            top: 0;
+    <style>
+        body {
+            font-family: 'myfont', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
         }
-    /* Glavni naslov */
-    h1 {
-        background-color: white;
-        text-align: center;
-        border: solid;
-        border-bottom-left-radius: 10cm;
-        border-bottom-right-radius: 10cm;
-        font-family: 'myfont';
-        color: #333;
-        margin-bottom: 30px;
-    }
-@font-face{
-    font-family: myfont;
-    src: url(Jaro-Regular.ttf);
+
+        @font-face {
+            font-family: myfont;
+            src: url(Jaro-Regular.ttf);
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            justify-content: center;
+            background-color: #333;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+            font-family: myfont;
+            cursor: pointer;
+            transition: background-color 0.3s, border-radius 0.3s;
+        }
+
+        .navbar a:hover {
+            background-color: #575757;
+            border-radius: 4px;
+        }
+
+        /* Main title */
+        h1 {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            margin: 0;
+            border-bottom: 2px solid #333;
+            border-bottom-left-radius: 10cm;
+            border-bottom-right-radius: 10cm;
+        }
+
+        /* App list styling */
+        .app-list {
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            margin: 0;
+            gap: 20px;
+        }
+        #hor.app-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 0;
+    gap: 20px;
 }
-    /* Seznam aplikacija */
-    .app-list {
-        display: grid;
-        border: solid;
-        justify-content: center;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        padding: 0;
-        margin: 0;
-    }
 
-    /* Stil pojedinačne aplikacije */
-    .app-item {
-        width: 200px;
-        padding: 20px;
-        margin: 20px;
-        text-align: center;
-        border-radius: 12px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-        background-color: #ffffff;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-    }
 
-    .app-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    }
+        .app-item {
+            width: 200px;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-    /* Stil ikone aplikacije */
-    .app-item img {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 50%;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
+        .app-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
 
-    /* Stil naslova aplikacije */
-    .app-item h3 {
-        font-size: 18px;
-        margin-bottom: 10px;
-        color: #333;
-    }
+        .app-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
 
-    /* Stil opisa aplikacije */
-    .app-item p {
-        font-size: 14px;
-        color: #666;
-        line-height: 1.5;
-        margin-bottom: 10px;
-    }
+        .app-item h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
 
-    /* Stil poveznice */
-    .app-item a {
-        display: inline-block;
-        text-decoration: none;
-        color: #007bff;
-        font-family: myfont;
-        font-weight: bold;
-        transition: color 0.2s ease;
-    }
+        .app-item p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
 
-    .app-item a:hover {
-        color: #0056b3;
-    }
-</style>
+        .app-item a {
+            display: inline-block;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+            transition: color 0.2s ease;
+        }
 
+        .app-item a:hover {
+            color: #0056b3;
+        }
+
+        .active {
+            display: grid;
+        }
+    </style>
 </head>
 <body>
-    <div class="naslov">
+    <!-- Main title -->
     <h1>Seznam Aplikacij</h1>
-</div>
-    <ul class="app-list">
-        <!-- Microsoft Word -->
+
+    <!-- Application List -->
+    <ul class="app-list" id="applications">
         <li class="app-item">
             <a href="https://www.microsoft.com/en-us/microsoft-365/word" target="load.html">
                 <p>Microsoft Word</p>
             </a>
         </li>
-
-        <!-- Google Translate -->
         <li class="app-item">
             <a href="https://translate.google.com/" target="load.html">
                 <p>Google Translate</p>
             </a>
         </li>
-
-        <!-- Remove.bg (Background Remover) -->
         <li class="app-item">
             <a href="https://www.remove.bg/" target="load.html">
                 <p>Remove.bg</p>
             </a>
         </li>
-
-        <!-- Adobe Premiere Pro -->
         <li class="app-item">
             <a href="https://www.adobe.com/products/premiere.html" target="load.html">
                 <p>Adobe Premiere Pro</p>
             </a>
         </li>
-
-        <!-- Spotify -->
         <li class="app-item">
             <a href="https://www.spotify.com/" target="load.html">
                 <p>Spotify</p>
             </a>
         </li>
+    </ul>
 
-          <li class="app-item">
+    <!-- Game List -->
+    <ul class="app-list" id="games">
+        <li class="app-item">
             <a href="ugibanje.html" target="load.html">
                 <p>Guesses</p>
             </a>
         </li>
-         <!-- dnevnik -->
+         <li class="app-item">
+            <a href="shortgame.html" target="load.html">
+                <p>Spomin</p>
+            </a>
+        </li>
+        <li class="app-item">
+            <a href="kocka.html" target="load.html">
+                <p>Kocka</p>
+            </a>
+        </li>
+         <li class="app-item">
+            <a href="angry.html" target="load.html">
+                <p>Angry birds</p>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Personal Apps List -->
+    <ul class="app-list" id="my">
         <li class="app-item">
             <a href="2.html" target="load.html">
                 <p>Spletni dnevnik</p>
             </a>
         </li>
-                <!-- casopis -->
-        <li class="app-item">
-            <a href="https://razrednicasopis.github.io" target="load.html">
-                <p>razredni časopis</p>
-            </a>
-        </li>
-             <!-- belezke-->
         <li class="app-item">
             <a href="bl.html" target="load.html">
-                <p>belezke</p>
+                <p>Belezke</p>
             </a>
         </li>
-           <!-- odgovori-->
+        <li class="app-item">
+            <a href="dogodki.html" target="load.html">
+                <p>Dogodki</p>
+            </a>
+        </li>
+        <li class="app-item">
+            <a href="shoplist.html" target="load.html">
+                <p>seznam</p>
+            </a>
+        </li>
+    </ul>
+    </ul>
+
+    <ul id="hor" class="app-list">
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/oven" target="load.html">Oven</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/bik" target="load.html">Bik</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/dvojcka" target="load.html">Dvojčka</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/rak" target="load.html">Rak</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/lev" target="load.html">Lev</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/devica" target="load.html">Devica</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/tehtnica" target="load.html">Tehtnica</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/skorpijon" target="load.html">Škorpijon</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/strelec" target="load.html">Strelec</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/kozorog" target="load.html">Kozorog</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/vodnar" target="load.html">Vodnar</a></li>
+  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/ribi" target="load.html">Ribi</a></li>
+</ul>
+
+
+    <!-- Other Apps List -->
+    <ul class="app-list" id="other">
+        <li class="app-item">
+            <a href="https://razrednicasopis.github.io" target="load.html">
+                <p>Razredni časopis</p>
+            </a>
+        </li>
         <li class="app-item">
             <a href="https://nexus224411.github.io/odgovori/" target="load.html">
-                <p>odgovori</p>
+                <p>Odgovori</p>
             </a>
         </li>
     </ul>
 
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <a onclick="showCategory('applications')">Aplikacije</a>
+        <a onclick="showCategory('games')">Igre</a>
+        <a onclick="showCategory('my')">Osebne aplikacije</a>
+        <a onclick="showCategory('hor')">Horoskop</a>
+        <a onclick="showCategory('other')">Ostalo</a>
+    </div>
+
+    <script>
+        function showCategory(category) {
+            document.querySelectorAll('.app-list').forEach(list => {
+                list.style.display = 'none';
+            });
+            document.getElementById(category).style.display = 'grid';
+        }
+
+        // Show applications by default
+        showCategory('applications');
+    </script>
 </body>
 </html>
