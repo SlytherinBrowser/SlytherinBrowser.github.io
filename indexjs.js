@@ -88,6 +88,7 @@ function searchSlytherinBrowser() {
             addShortcut();
         } else {
             let urlToOpen = searchTerm;
+            location.reload(); // Osveži stran po preklopu načina
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
