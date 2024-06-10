@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         window.location.href = "menu.html";
     }
 function lock() {
-        window.location.href = "lock.html";
+        window.location.href = "lock1.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
@@ -80,21 +80,20 @@ function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
 
     if (searchTerm !== "") {
-        if (searchTerm.startsWith("*style:normal")) {
+        if (searchTerm.startsWith("*STYLE:NORMAL")) {
             applyMode("normal");
-        } else if (searchTerm.startsWith("*style:modern")) {
+        } else if (searchTerm.startsWith("*STYLE:MODERN")) {
             applyMode("modern");
         } else if (searchTerm.startsWith("*")) {
             addShortcut();
         } else {
             let urlToOpen = searchTerm;
-             location.reload(); // Osveži stran po preklopu načina
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
                 // Če ne izgleda kot URL, oblikujemo Google iskalni URL
                 const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
-                window.open(searchUrl, 'load.html');
+                window.open(searchUrl, '_blank');
                 localStorage.setItem("lastSearch", searchTerm);
             } else {
                 // Če izgleda kot URL, odpremo URL v novem zavihku
@@ -107,6 +106,47 @@ function searchSlytherinBrowser() {
         document.getElementById("search").value = ""; // Počisti iskalno polje
     }
 }
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const savedMode = localStorage.getItem("mode") || "normal";
+    applyMode(savedMode);
+});
+
+document.addEventListener("keydown", function(event) {
+    if (event.shiftKey && event.key === "*") {
+        const currentMode = localStorage.getItem("mode") || "normal";
+        const newMode = currentMode === "normal" ? "modern" : "normal";
+        applyMode(newMode);
+        location.reload(); // Osveži stran po preklopu načina
+    }
+});
+
+function applyMode(mode) {
+    const normalStylesheet = document.getElementById("normalStylesheet");
+    const modernStylesheet = document.getElementById("modernStylesheet");
+
+    if (mode === "normal") {
+        normalStylesheet.disabled = false;
+        modernStylesheet.disabled = true;
+    } else {
+        normalStylesheet.disabled = true;
+        modernStylesheet.disabled = false;
+    }
+
+    localStorage.setItem("mode", mode);
+}
+
+// Preveri, če je niz URL
+function isURL(str) {
+    const pattern = new RegExp('^(https?:\\/\\/)?'+ // protokol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|'+ // domena in poddomena
+        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // IP (v4) naslov
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // vrata in pot
+        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+        '(\\#[-a-z\\d_]*)?$','i'); // fragment lokator
+    return !!pattern.test(str);
+}
+    
 
 document.addEventListener('DOMContentLoaded', (event) => {
     const savedMode = localStorage.getItem("mode") || "normal";
