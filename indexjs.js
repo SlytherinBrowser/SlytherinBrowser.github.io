@@ -80,9 +80,9 @@ function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
 
     if (searchTerm !== "") {
-        if (searchTerm.startsWith("*STYLE:NORMAL")) {
+        if (searchTerm.startsWith("*style:normal")) {
             applyMode("normal");
-        } else if (searchTerm.startsWith("*STYLE:MODERN")) {
+        } else if (searchTerm.startsWith("*style:modern")) {
             applyMode("modern");
         } else if (searchTerm.startsWith("*")) {
             addShortcut();
@@ -145,36 +145,6 @@ function isURL(str) {
         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
         '(\\#[-a-z\\d_]*)?$','i'); // fragment lokator
     return !!pattern.test(str);
-}
-    
-
-document.addEventListener('DOMContentLoaded', (event) => {
-    const savedMode = localStorage.getItem("mode") || "normal";
-    applyMode(savedMode);
-});
-
-document.addEventListener("keydown", function(event) {
-    if (event.shiftKey && event.key === "*") {
-        const currentMode = localStorage.getItem("mode") || "normal";
-        const newMode = currentMode === "normal" ? "modern" : "normal";
-        applyMode(newMode);
-        location.reload(); // Osveži stran po preklopu načina
-    }
-});
-
-function applyMode(mode) {
-    const normalStylesheet = document.getElementById("normalStylesheet");
-    const modernStylesheet = document.getElementById("modernStylesheet");
-
-    if (mode === "normal") {
-        normalStylesheet.disabled = false;
-        modernStylesheet.disabled = true;
-    } else {
-        normalStylesheet.disabled = true;
-        modernStylesheet.disabled = false;
-    }
-
-    localStorage.setItem("mode", mode);
 }
 
 
