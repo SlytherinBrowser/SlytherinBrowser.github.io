@@ -64,15 +64,11 @@ label {
 }
 
 #submitBtn {
-    position: fixed;
-    left: 32%;
-    bottom: 40%;
     padding: 15px 30px;
     background-color: #ff6f61;
     color: #ffffff;
     border: none;
-    border-top-left-radius: 15px;
-    border-bottom-left-radius: 15px;
+    border-radius: 15px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
@@ -110,15 +106,14 @@ label {
 }
 
 #menu {
+    width: 100%;
     position: fixed;
-    left: 48%;
-    bottom: 40%;
+    bottom: 10%;
     padding: 15px 30px;
     background-color: #ff6f61;
     color: #ffffff;
     border: none;
-    border-top-right-radius: 15px;
-    border-bottom-right-radius: 15px;
+border-radius: 15px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
