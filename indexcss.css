@@ -1,4 +1,344 @@
-            body {
+@media screen and (max-width: 700px){
+body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+            font-family: 'Arial', sans-serif;
+            color: #fff; /* White text color */
+        }
+        .p{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 2px;
+            color: #2C3E50;
+        }
+        .p:hover{
+            color: black;
+        }
+
+        #logo {
+            display: none;
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            
+        }
+
+        #searchForm {
+            width: 100%;
+            background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
+            border: 2px solid #fff; /* White border */
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #search {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
+            border: 2px solid #fff; /* White border */
+            padding: 20px;
+            font-size: 18px;
+            width: 90%;
+            height: 74px;
+            border-radius: 10px;
+            color: #fff; /* White text color */
+            outline: none;
+            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+        }
+
+        #search:focus {
+            border-color: #007bff;
+            background: linear-gradient(to right, #e74c3c, #2980b9);
+        }
+        #submitBtn{
+    position: fixed;
+    margin: 40px;
+    width: 75px;
+    left: 76%;
+    bottom: 44%;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    cursor: pointer;
+}
+ #menu{
+    position: fixed;
+    margin: 40px;
+    left: 76%;
+    width: 75px;
+    bottom: 40%;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    cursor: pointer;
+}
+       #submitBtn:hover {
+    background-color: #2980b9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
+}
+        #dock {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 999;
+            width: 100%;
+            height: auto;
+        }
+
+        .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-size: cover;
+            cursor: pointer;
+        }
+
+        .icon:hover {
+            transform: scale(1.1);
+        }
+
+
+#menu:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+}
+ #lock{
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    bottom: 20px;
+    right: 80px;
+    background-color: #0078d7;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+}
+
+#lock:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+}
+        #topBar {
+            position: fixed;
+            top: 0;     
+            right: -2;
+            width: 5cm;
+            height: 1cm;
+            background-color: black;
+            border-radius: 40px;
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            transition: width 0.5s 0.5s, height 0.5s 0s;
+        }
+         #topBar:hover{
+          width: 100%;
+          height: 3cm;
+          border-radius: 0.25;
+          transition: width 0.5s 0s, height 0.5s 0.5s;
+         }
+
+          .taskbar-icon {
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    bottom: 20px;
+    right: 20px; 
+    background-color: #0078d7;
+    border-radius: 10px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
+}
+
+.taskbar-icon:hover {
+    background-color: #005ea2;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečanje senčenja ob hoverju */
+}
+        .taskbar-icon svg {
+            width: 50%;
+            height: 50%;
+            fill: #fff;
+        }
+        /* Stilizacija za koledar */
+.calendar-container {
+    position: fixed;
+    bottom: 80px;
+    right: 0px;
+    width: 320px;
+    background-color: black;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Senčenje */
+    display: none;
+    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+}
+
+.calendar-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+}
+        .calendar-header {
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+    color: white;
+    padding: 15px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.3s, color 0.3s;
+}
+
+.calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid #ccc;
+    background: #fafafa;
+}
+
+.day {
+    padding: 15px;
+    text-align: center;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
+    color: #444; /* Temnejša barva besedila za boljši kontrast */
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.day:hover {
+    background-color: #ffe3c3;
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.today {
+    background: linear-gradient(135deg, #43cea2, #185a9d);
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transform: scale(1.15);
+}
+
+.day:nth-child(7n+1) {
+    color: #d32f2f; /* Barva za nedelje */
+}
+
+.day:nth-child(7n) {
+    color: #1976d2; /* Barva za sobote */
+}
+
+/* Stilizacija za kalkulator */
+.calculator-container {
+    display: none;
+    position: fixed;
+    padding: 20px;
+    border: 5px solid black; /* Popravljena nastavitev obrobe */
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8); /* Senčenje */
+    z-index: 999;
+    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+}
+
+.calculator-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8); /* Povečano senčenje ob hoverju */
+}
+
+/* Stilizacija za prikazno polje */
+#display {
+    width: 200px;
+    padding: 15px;
+    font-size: 15px;
+    border: 1px solid #ccc; /* Dodana obroba */
+    border-radius: 4px; /* Dodan zaobljen rob */
+    text-align: right; /* Poravnava besedila desno */
+}
+
+/* Slog za gumbe in druge elemente znotraj kalkulatorja */
+.calculator-container input,
+.calculator-container select,
+.calculator-container button {
+    margin: 5px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.calculator-container input {
+    width: calc(100% - 22px); /* Prilagodite širino vhodnega polja */
+    text-align: right; /* Poravnajte besedilo v desno za boljši prikaz številk */
+}
+
+.calculator-container select {
+    width: 100%; /* Prilagodite širino padajočih seznamov */
+}
+
+.calculator-container button {
+    background-color: #4CAF50; /* Zelena barva gumba */
+    color: white; /* Bela barva besedila na gumbu */
+    cursor: pointer;
+}
+
+.calculator-container button:hover {
+    background-color: #45a049; /* Temnejša zelena barva ob prehodu miške */
+}
+
+.trigger-button {
+    position: fixed;
+    bottom: 20px;
+    left: 80px;
+    width: 50px;
+    height: 50px;
+    color: #000000;
+    background-color: #0078d7;
+    border-radius: 10px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+     cursor: pointer;
+ }
+}
+@media screen and (min-width: 700px){
+  body {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -16,7 +356,7 @@
             color: #2C3E50;
         }
         .p:hover{
-            color: White;
+            color: black;
         }
 
         #logo {
@@ -325,3 +665,4 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
      cursor: pointer;
  }
+}
