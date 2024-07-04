@@ -70,15 +70,31 @@ body {
     border-top-left-radius: 5px;
     cursor: pointer;
 }
- #menu{ 
-    position: fixed;
-    width: 100%;
+#buttonkng{
+    text-align: left;
+    justify-content: left;
+    right: 0;
+     position: fixed;
+    width: 50%;
     bottom: 8%;
     padding: 10px 20px;
     background-color: #3498db;
     color: #fff;
     border: none;
-    border-radius: 15px;
+    cursor: pointer;
+}
+
+ #menu{ 
+    text-align: right;
+    justify-content: right;
+    left: 0;
+    position: fixed;
+    width: 50%;
+    bottom: 8%;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
     cursor: pointer;
 }
        #submitBtn:hover {
@@ -92,7 +108,7 @@ body {
             transform: translateX(-50%);
             background-color: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-            border-radius: 0px;
+            border-radius: 5px;
             padding: 10px;
             display: flex;
             justify-content: space-around;
@@ -115,22 +131,8 @@ body {
         }
 
 
-#menu:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
-}
- #lock{
-    position: fixed;
-    width: 50px;
-    height: 50px;
-    bottom: 20px;
-    right: 80px;
-    background-color: #0078d7;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-
-#lock:hover {
+#menu:hover,
+#buttonkng:hover{
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
 }
         #topBar {
@@ -140,7 +142,7 @@ body {
             width: 5cm;
             height: 1cm;
             background-color: black;
-            border-radius: 40px;
+            border-radius: 25px;
             z-index: 999;
             display: flex;
             justify-content: center;
@@ -152,7 +154,7 @@ body {
          #topBar:hover{
           width: 100%;
           height: 3cm;
-          border-radius: 0.25;
+          border-radius: 0,01;
           transition: width 0.5s 0s, height 0.5s 0.5s;
          }
 
@@ -431,38 +433,31 @@ body {
         .icon:hover {
             transform: scale(1.1);
         }
-
+#buttonkng{
+    position: fixed;
+    width: 80px;
+    height: 50px;
+    bottom: 20px;
+    right: 100px;
+    border: none;
+    background-color: #0078d7;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+}
        #menu {
     position: fixed;
-    width: 50px;
+    width: 80px;
     height: 50px;
     bottom: 20px;
     left: 20px;
+    border: none;
     background-color: #0078d7;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
     transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
 }
-
-#menu:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
-}
- #lock{
-    position: fixed;
-    width: 50px;
-    height: 50px;
-    bottom: 20px;
-    right: 80px;
-    background-color: #0078d7;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-
-#lock:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
-}
-        #topBar {
+    #topBar {
             position: fixed;
             top: 0;     
             right: -2;
@@ -487,18 +482,21 @@ body {
 
           .taskbar-icon {
     position: fixed;
-    width: 50px;
+    width: 80px;
     height: 50px;
     bottom: 20px;
     right: 20px; 
     background-color: #0078d7;
+    border: none;
     border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
 }
-
+#menu:hover,
+#buttonkng:hover,
+.trigger-button:hover,
 .taskbar-icon:hover {
     background-color: #005ea2;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečanje senčenja ob hoverju */
@@ -646,11 +644,12 @@ body {
 .trigger-button {
     position: fixed;
     bottom: 20px;
-    left: 80px;
-    width: 50px;
+    left: 100px;
+    width: 80px;
     height: 50px;
     color: #000000;
     background-color: #0078d7;
+    border: none;
     border-radius: 10px;
     display: flex;
     justify-content: center;
