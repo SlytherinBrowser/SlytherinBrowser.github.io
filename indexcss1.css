@@ -104,16 +104,29 @@ label {
 .icon:hover {
     transform: scale(1.2);
 }
-
-#menu {
-    width: 100%;
+#buttonkng{
+      width: 50%;
+      right: 0;
     position: fixed;
     bottom: 8%;
     padding: 15px 30px;
     background-color: #ff6f61;
     color: #ffffff;
     border: none;
-border-radius: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+#menu {
+    left: 0;
+    width: 50%;
+    position: fixed;
+    bottom: 8%;
+    padding: 15px 30px;
+    background-color: #ff6f61;
+    color: #ffffff;
+    border: none;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
@@ -124,7 +137,8 @@ border-radius: 15px;
 }
 
 #menu:hover,
-#submitBtn:hover
+#submitBtn:hover,
+#buttonkng:hover
  {
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
     transform: scale(1.1);
@@ -468,34 +482,35 @@ label {
     transform: scale(1.2);
 }
 
-#menu,
-#lock {
+#menu{
+    left: 20px;
     position: fixed;
-    width: 50px;
+    width: 80px;
+    height: 50px;
+    bottom: 20px;
+     background-color: #ff6f61;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+#buttonkng{
+    right: 100px;
+    position: fixed;
+    width: 80px;
     height: 50px;
     bottom: 20px;
     background-color: #6a82fb;
     border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-    transition: box-shadow 0.3s, transform 0.3s;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     cursor: pointer;
-}
-
-#menu {
-    left: 20px;
-}
-
-#lock {
-    right: 80px;
-}
-
-#menu:hover,
-#lock:hover {
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
 
 #topBar {
@@ -523,7 +538,7 @@ label {
 
 .taskbar-icon {
     position: fixed;
-    width: 50px;
+    width: 80px;
     height: 50px;
     bottom: 20px;
     right: 20px;
@@ -536,7 +551,9 @@ label {
     cursor: pointer;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
-
+.trigger-button:hover,
+#buttonkng:hover,
+#menu:hover,
 .taskbar-icon:hover {
     background-color: #ff3b2f;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
@@ -702,8 +719,8 @@ label {
 .trigger-button {
     position: fixed;
     bottom: 20px;
-    left: 80px;
-    width: 50px;
+    left: 100px;
+    width: 80px;
     height: 50px;
     color: #ffffff;
     background-color: #4e54c8;
@@ -715,10 +732,3 @@ label {
     cursor: pointer;
     transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
-
-.trigger-button:hover {
-    background-color: #6a82fb;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
-}
- }
