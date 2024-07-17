@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
     <style>
-        body {
+           body {
             font-family: 'myfont', sans-serif;
             margin: 0;
             padding: 0;
@@ -33,7 +33,7 @@
         .navbar a {
             color: white;
             text-decoration: none;
-            padding: 14px 20px;
+            padding: 10px 10px;
             font-family: myfont;
             cursor: pointer;
             transition: background-color 0.3s, border-radius 0.3s;
@@ -64,64 +64,62 @@
             margin: 0;
             gap: 20px;
         }
-        #hor.app-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
-    margin: 0;
-    gap: 20px;
-}
 
-
-        .app-item {
-            width: 200px;
+        .app-list.grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            justify-content: center;
+            align-items: flex-start;
             padding: 20px;
-            text-align: center;
-            border-radius: 12px;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 0 auto;
+            gap: 20px;
+            max-width: 500px; /* Adjust this value based on the desired width */
         }
 
-        .app-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        .app-list.horoscope-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .app-item {
+            position: relative;
+            width: 100%;
+            max-width: 160px;
+            text-align: center;
+            cursor: pointer;
         }
 
         .app-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
+            width: 100%;
+            height: auto;
+            display: block;
         }
 
-        .app-item h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #333;
+        .app-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: midnightblue;
+            overflow: hidden;
+            width: 100%;
+            height: 0;
+            transition: .5s ease;
         }
 
-        .app-item p {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.5;
-            margin-bottom: 10px;
+        .app-item:hover .overlay {
+            height: 100%;
         }
 
-        .app-item a {
-            display: inline-block;
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-            transition: color 0.2s ease;
-        }
-
-        .app-item a:hover {
-            color: #0056b3;
+        .app-item .text {
+            white-space: nowrap; 
+            color: white;
+            font-size: 20px;
+            position: absolute;
+            overflow: hidden;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
         }
 
         .active {
@@ -134,109 +132,153 @@
     <h1>Seznam Aplikacij</h1>
 
     <!-- Application List -->
-    <ul class="app-list" id="applications">
+    <ul class="app-list grid" id="applications">
         <li class="app-item">
             <a href="https://www.microsoft.com/en-us/microsoft-365/word" target="load.html">
-                <p>Microsoft Word</p>
+                <img src="word.png" alt="Microsoft Word" class="image">
+                <div class="overlay">
+                    <div class="text">Microsoft Word</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="https://translate.google.com/" target="load.html">
-                <p>Google Translate</p>
+                <img src="prevajalnik.png" alt="Google Translate" class="image">
+                <div class="overlay">
+                    <div class="text">Google Translate</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="https://www.remove.bg/" target="load.html">
-                <p>Remove.bg</p>
+                <img src="remove4.png" alt="Remove.bg" class="image">
+                <div class="overlay">
+                    <div class="text">Remove.bg</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="https://www.adobe.com/products/premiere.html" target="load.html">
-                <p>Adobe Premiere Pro</p>
+                <img src="adobe.png"class="image">
+                <div class="overlay">
+                    <div class="text">Adobe <br> Premiere <br> Pro</div>
+                </div>
+            </a>
+        </li>
+         <li class="app-item">
+            <a href="https://www.w3schools.com/" target="load.html">
+                <img src="w3school.png" alt="w3schools" class="image">
+                <div class="overlay">
+                    <div class="text">W3schools</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="https://www.spotify.com/" target="load.html">
-                <p>Spotify</p>
+                <img src="spotify.png" alt="Spotify" class="image">
+                <div class="overlay">
+                    <div class="text">Spotify</div>
+                </div>
             </a>
         </li>
     </ul>
 
     <!-- Game List -->
-    <ul class="app-list" id="games">
+    <ul class="app-list grid" id="games">
         <li class="app-item">
             <a href="ugibanje.html" target="load.html">
-                <p>Guesses</p>
+                <img src="guess.png" alt="Guesses" class="image">
+                <div class="overlay">
+                    <div class="text">Guesses</div>
+                </div>
             </a>
         </li>
-         <li class="app-item">
+        <li class="app-item">
             <a href="shortgame.html" target="load.html">
-                <p>Spomin</p>
+                <img src="memory.png" alt="Spomin" class="image">
+                <div class="overlay">
+                    <div class="text">Spomin</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="kocka.html" target="load.html">
-                <p>Kocka</p>
+                <img src="cube.png" alt="Kocka" class="image">
+                <div class="overlay">
+                    <div class="text">Kocka</div>
+                </div>
             </a>
         </li>
-         <li class="app-item">
+        <li class="app-item">
             <a href="angry.html" target="load.html">
-                <p>Angry birds</p>
+                <img src="angrybirds.png" alt="Angry Birds" class="image">
+                <div class="overlay">
+                    <div class="text">Angry Birds</div>
+                </div>
             </a>
         </li>
     </ul>
 
     <!-- Personal Apps List -->
-    <ul class="app-list" id="my">
+    <ul class="app-list grid" id="my">
         <li class="app-item">
             <a href="2.html" target="load.html">
-                <p>Spletni dnevnik</p>
+                <img src="blog.png" alt="Spletni dnevnik" class="image">
+                <div class="overlay">
+                    <div class="text">Spletni dnevnik</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="bl.html" target="load.html">
-                <p>Belezke</p>
+                <img src="notes.png" alt="Belezke" class="image">
+                <div class="overlay">
+                    <div class="text">Belezke</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
             <a href="shoplist.html" target="load.html">
-                <p>seznam</p>
+                <img src="list.png" alt="Seznam" class="image">
+                <div class="overlay">
+                    <div class="text">Seznam</div>
+                </div>
             </a>
         </li>
     </ul>
+
+    <!-- Horoscope List -->
+    <ul class="app-list grid horoscope-grid" id="hor">
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/oven" target="load.html"><img src="oven.png" alt="Oven" class="image"><div class="overlay"><div class="text">Oven</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/bik" target="load.html"><img src="bik.png" alt="Bik" class="image"><div class="overlay"><div class="text">Bik</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/dvojcka" target="load.html"><img src="dvojcka.png" alt="Dvojčka" class="image"><div class="overlay"><div class="text">Dvojčka</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/rak" target="load.html"><img src="rak.png" alt="Rak" class="image"><div class="overlay"><div class="text">Rak</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/lev" target="load.html"><img src="lev.png" alt="Lev" class="image"><div class="overlay"><div class="text">Lev</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/devica" target="load.html"><img src="devica.png" alt="Devica" class="image"><div class="overlay"><div class="text">Devica</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/tehtnica" target="load.html"><img src="tehtnica.png" alt="Tehtnica" class="image"><div class="overlay"><div class="text">Tehtnica</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/skorpijon" target="load.html"><img src="skorpijon.png" alt="Škorpijon" class="image"><div class="overlay"><div class="text">Škorpijon</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/strelec" target="load.html"><img src="strelec.png" alt="Strelec" class="image"><div class="overlay"><div class="text">Strelec</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/kozorog" target="load.html"><img src="kozorog.png" alt="Kozorog" class="image"><div class="overlay"><div class="text">Kozorog</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/vodnar" target="load.html"><img src="vodnar.png" alt="Vodnar" class="image"><div class="overlay"><div class="text">Vodnar</div></div></a></li>
+        <li class="app-item"><a href="https://siol.net/horoskop/dnevni/ribi" target="load.html"><img src="ribi.png" alt="Ribi" class="image"><div class="overlay"><div class="text">Ribi</div></div></a></li>
     </ul>
-
-    <ul id="hor" class="app-list">
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/oven" target="load.html">Oven</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/bik" target="load.html">Bik</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/dvojcka" target="load.html">Dvojčka</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/rak" target="load.html">Rak</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/lev" target="load.html">Lev</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/devica" target="load.html">Devica</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/tehtnica" target="load.html">Tehtnica</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/skorpijon" target="load.html">Škorpijon</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/strelec" target="load.html">Strelec</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/kozorog" target="load.html">Kozorog</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/vodnar" target="load.html">Vodnar</a></li>
-  <li class="app-item"><a href="https://siol.net/horoskop/dnevni/ribi" target="load.html">Ribi</a></li>
-</ul>
-
 
     <!-- Other Apps List -->
-    <ul class="app-list" id="other">
+    <ul class="app-list grid" id="other">
         <li class="app-item">
             <a href="https://razrednicasopis.github.io" target="load.html">
-                <p>Razredni časopis</p>
+                <img src="news.png" alt="Razredni časopis" class="image">
+                <div class="overlay">
+                    <div class="text">Razredni časopis</div>
+                </div>
             </a>
         </li>
         <li class="app-item">
-            <a href="https://razrednicasopis.github.io/Resources/utills/klepet.html" target="load.html"
-                <p>klepet</p>
-            </a>
-        </li>
-        <li class="app-item">
-            <a href="https://nexus224411.github.io/odgovori/" target="load.html">
-                <p>Odgovori</p>
+            <a href="https://razrednicasopis.github.io/Resources/utills/klepet.html" target="load.html">
+                <img src="chat.png" alt="klepet" class="image">
+                <div class="overlay">
+                    <div class="text">klepet</div>
+                </div>
             </a>
         </li>
     </ul>
