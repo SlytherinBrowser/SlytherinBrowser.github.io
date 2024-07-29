@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitri Klikalnik</title>
+    <style>body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+#gameArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#status {
+    margin-bottom: 20px;
+}
+
+#clickButton {
+    padding: 20px 40px;
+    font-size: 24px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+#clickButton:active {
+    transform: scale(0.95);
+}
+
+#results, #record {
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+</style>
+</head>
+<body>
+    <h1>Hitri Klikalnik</h1>
+    <div id="gameArea">
+        <div id="status">
+            <p>Čas: <span id="timeRemaining">120</span> s</p>
+            <p>Število klikov: <span id="clicksCount">0</span></p>
+        </div>
+        <button id="clickButton">Klikni me!</button>
+    </div>
+    <div id="results" style="display:none;">
+        <h2>Rezultati</h2>
+        <p>Število klikov: <span id="finalClicksCount">0</span></p>
+        <p>Največ klikov na sekundo: <span id="maxClicksPerSecond">0</span></p>
+        <p>Največ klikov na minuto: <span id="maxClicksPerMinute">0</span></p>
+        <p>Rekord - Število klikov: <span id="recordClicksCount">0</span></p>
+        <p>Rekord - Največ klikov na sekundo: <span id="recordMaxClicksPerSecond">0</span></p>
+        <p>Rekord - Največ klikov na minuto: <span id="recordMaxClicksPerMinute">0</span></p>
+        <button id="retryButton">Ponovno igraj</button>
+        <button id="viewRecordButton">Pokaži rekord</button>
+        <button id="clearRecordsButton">Pobriši rekorde</button>
+    </div>
+    <div id="record" style="display:none;">
+        <h2>Rekordi</h2>
+        <p>Rekord - Število klikov: <span id="recordClicksCountFull">0</span></p>
+        <p>Rekord - Največ klikov na sekundo: <span id="recordMaxClicksPerSecondFull">0</span></p>
+        <p>Rekord - Največ klikov na minuto: <span id="recordMaxClicksPerMinuteFull">0</span></p>
+        <button id="backToResultsButton">Nazaj na rezultate</button>
+    </div>
+
+    <script>
+        let clickButton = document.getElementById('clickButton');
+        let clicksCountDisplay = document.getElementById('clicksCount');
+        let timeRemainingDisplay = document.getElementById('timeRemaining');
+        let maxClicksPerSecondDisplay = document.getElementById('maxClicksPerSecond');
+        let maxClicksPerMinuteDisplay = document.getElementById('maxClicksPerMinute');
+        let finalClicksCountDisplay = document.getElementById('finalClicksCount');
+        let retryButton = document.getElementById('retryButton');
+        let viewRecordButton = document.getElementById('viewRecordButton');
+        let clearRecordsButton = document.getElementById('clearRecordsButton');
+        let recordClicksCountDisplay = document.getElementById('recordClicksCount');
+        let recordMaxClicksPerSecondDisplay = document.getElementById('recordMaxClicksPerSecond');
+        let recordMaxClicksPerMinuteDisplay = document.getElementById('recordMaxClicksPerMinute');
+        let recordSection = document.getElementById('record');
+        let resultsSection = document.getElementById('results');
+        let backToResultsButton = document.getElementById('backToResultsButton');
+        let recordClicksCountFull = document.getElementById('recordClicksCountFull');
+        let recordMaxClicksPerSecondFull = document.getElementById('recordMaxClicksPerSecondFull');
+        let recordMaxClicksPerMinuteFull = document.getElementById('recordMaxClicksPerMinuteFull');
+
+        let clickCount = 0;
+        let clicksPerSecond = [];
+        let clicksPerMinute = [];
+        let startTime;
+        let endTime;
+        let gameStarted = false;
+
+        function startGame() {
+            clickCount = 0;
+            clicksPerSecond = [];
+            clicksPerMinute = [];
+            clicksCountDisplay.textContent = clickCount;
+            timeRemainingDisplay.textContent = 120;
+            maxClicksPerSecondDisplay.textContent = '0';
+            maxClicksPerMinuteDisplay.textContent = '0';
+            resultsSection.style.display = 'none';
+            recordSection.style.display = 'none';
+            clickButton.style.display = 'block';
+            gameStarted = false;
+
+            clickButton.addEventListener('click', recordClick);
+        }
+
+        function startTimer() {
+            if (!gameStarted) {
+                gameStarted = true;
+                startTime = new Date().getTime();
+                endTime = startTime + 2 * 60 * 1000; // 2 minutes
+                setTimeout(endGame, 2 * 60 * 1000); // End game after 2 minutes
+                updateTimer();
+            }
+        }
+
+        function updateTimer() {
+            let interval = setInterval(() => {
+                if (new Date().getTime() >= endTime) {
+                    clearInterval(interval);
+                } else {
+                    let timeRemaining = Math.ceil((endTime - new Date().getTime()) / 1000);
+                    timeRemainingDisplay.textContent = timeRemaining;
+                }
+            }, 1000);
+        }
+
+        function recordClick() {
+            startTimer(); // Start the timer on the first click
+            if (new Date().getTime() < endTime) {
+                clickCount++;
+                clicksCountDisplay.textContent = clickCount;
+
+                let currentTime = new Date().getTime();
+                let elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+                let clicksInLastSecond = clicksPerSecond[elapsedSeconds] || 0;
+                clicksInLastSecond++;
+                clicksPerSecond[elapsedSeconds] = clicksInLastSecond;
+
+                if (clicksInLastSecond > maxClicksPerSecondDisplay.textContent) {
+                    maxClicksPerSecondDisplay.textContent = clicksInLastSecond;
+                }
+
+                let elapsedMinutes = Math.floor((currentTime - startTime) / (60 * 1000));
+                let clicksInLastMinute = clicksPerMinute[elapsedMinutes] || 0;
+                clicksInLastMinute++;
+                clicksPerMinute[elapsedMinutes] = clicksInLastMinute;
+
+                if (clicksInLastMinute > maxClicksPerMinuteDisplay.textContent) {
+                    maxClicksPerMinuteDisplay.textContent = clicksInLastMinute;
+                }
+            }
+        }
+
+        function endGame() {
+            clickButton.style.display = 'none';
+            resultsSection.style.display = 'block';
+
+            finalClicksCountDisplay.textContent = clickCount;
+
+            let finalClicksPerSecond = Math.max(...clicksPerSecond, 0);
+            let finalClicksPerMinute = Math.max(...clicksPerMinute, 0);
+
+            maxClicksPerSecondDisplay.textContent = finalClicksPerSecond;
+            maxClicksPerMinuteDisplay.textContent = finalClicksPerMinute;
+
+            updateRecords();
+        }
+
+        function updateRecords() {
+            let currentClicksCount = parseInt(finalClicksCountDisplay.textContent);
+            let currentMaxClicksPerSecond = parseInt(maxClicksPerSecondDisplay.textContent);
+            let currentMaxClicksPerMinute = parseInt(maxClicksPerMinuteDisplay.textContent);
+
+            let recordClicksCount = parseInt(localStorage.getItem('recordClicksCount') || '0');
+            let recordMaxClicksPerSecond = parseInt(localStorage.getItem('recordMaxClicksPerSecond') || '0');
+            let recordMaxClicksPerMinute = parseInt(localStorage.getItem('recordMaxClicksPerMinute') || '0');
+
+            if (currentClicksCount > recordClicksCount) {
+                localStorage.setItem('recordClicksCount', currentClicksCount);
+            }
+            if (currentMaxClicksPerSecond > recordMaxClicksPerSecond) {
+                localStorage.setItem('recordMaxClicksPerSecond', currentMaxClicksPerSecond);
+            }
+            if (currentMaxClicksPerMinute > recordMaxClicksPerMinute) {
+                localStorage.setItem('recordMaxClicksPerMinute', currentMaxClicksPerMinute);
+            }
+
+            recordClicksCountDisplay.textContent = localStorage.getItem('recordClicksCount');
+            recordMaxClicksPerSecondDisplay.textContent = localStorage.getItem('recordMaxClicksPerSecond');
+            recordMaxClicksPerMinuteDisplay.textContent = localStorage.getItem('recordMaxClicksPerMinute');
+
+            recordClicksCountFull.textContent = localStorage.getItem('recordClicksCount');
+            recordMaxClicksPerSecondFull.textContent = localStorage.getItem('recordMaxClicksPerSecond');
+            recordMaxClicksPerMinuteFull.textContent = localStorage.getItem('recordMaxClicksPerMinute');
+        }
+
+        function clearRecords() {
+            localStorage.removeItem('recordClicksCount');
+            localStorage.removeItem('recordMaxClicksPerSecond');
+            localStorage.removeItem('recordMaxClicksPerMinute');
+            
+            // Update the display
+            recordClicksCountDisplay.textContent = '0';
+            recordMaxClicksPerSecondDisplay.textContent = '0';
+            recordMaxClicksPerMinuteDisplay.textContent = '0';
+
+            recordClicksCountFull.textContent = '0';
+            recordMaxClicksPerSecondFull.textContent = '0';
+            recordMaxClicksPerMinuteFull.textContent = '0';
+        }
+
+        retryButton.addEventListener('click', startGame);
+        viewRecordButton.addEventListener('click', () => {
+            resultsSection.style.display = 'none';
+            recordSection.style.display = 'block';
+        });
+        backToResultsButton.addEventListener('click', () => {
+            recordSection.style.display = 'none';
+            resultsSection.style.display = 'block';
+        });
+        clearRecordsButton.addEventListener('click', clearRecords);
+
+        // Start game on load
+        startGame();
+    </script>
+</body>
+</html>
