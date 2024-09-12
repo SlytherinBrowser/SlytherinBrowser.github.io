@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
     <style>
-           body {
+        body {
             font-family: 'myfont', sans-serif;
             margin: 0;
             padding: 0;
@@ -18,31 +18,46 @@
             src: url(Jaro-Regular.ttf);
         }
 
-        /* Navigation Bar */
-        .navbar {
-            display: flex;
-            justify-content: center;
-            background-color: #333;
-            padding: 10px 0;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
-            z-index: 1000;
-        }
+        /* iOS-style Dock Navigation Bar */
+.navbar {
+    display: flex;
+    justify-content: space-around;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 40%;
+    left: 30%;
+    bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
 
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 10px;
-            font-family: myfont;
-            cursor: pointer;
-            transition: background-color 0.3s, border-radius 0.3s;
-        }
+.navbar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #333;
+    font-family: 'myfont', sans-serif;
+    transition: transform 0.3s;
+}
 
-        .navbar a:hover {
-            background-color: #575757;
-            border-radius: 4px;
-        }
+.navbar a span {
+    font-size: 30px; /* Icon size */
+    margin-bottom: 5px;
+}
+
+.navbar a p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.navbar a:hover {
+    transform: scale(1.1); /* Enlarge on hover */
+}
+
 
         /* Main title */
         h1 {
@@ -119,7 +134,6 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            -ms-transform: translate(-50%, -50%);
         }
 
         .active {
@@ -159,13 +173,13 @@
         </li>
         <li class="app-item">
             <a href="https://www.adobe.com/products/premiere.html" target="load.html">
-                <img src="adobe.png"class="image">
+                <img src="adobe.png" class="image">
                 <div class="overlay">
                     <div class="text">Adobe <br> Premiere <br> Pro</div>
                 </div>
             </a>
         </li>
-         <li class="app-item">
+        <li class="app-item">
             <a href="https://www.w3schools.com/" target="load.html">
                 <img src="w3school.png" alt="w3schools" class="image">
                 <div class="overlay">
@@ -219,7 +233,7 @@
         </li>
         <li class="app-item">
             <a href="clicker.html" target="load.html">
-                <img src="clicker.png" alt="Guesses" class="image">
+                <img src="clicker.png" alt="clicker" class="image">
                 <div class="overlay">
                     <div class="text">clicker</div>
                 </div>
@@ -255,7 +269,7 @@
         </li>
     </ul>
 
-    <!-- Horoscope List -->
+     <!-- Horoscope List -->
     <ul class="app-list grid horoscope-grid" id="hor">
         <li class="app-item"><a href="https://siol.net/horoskop/dnevni/oven" target="load.html"><img src="oven.png" alt="Oven" class="image"><div class="overlay"><div class="text">Oven</div></div></a></li>
         <li class="app-item"><a href="https://siol.net/horoskop/dnevni/bik" target="load.html"><img src="bik.png" alt="Bik" class="image"><div class="overlay"><div class="text">Bik</div></div></a></li>
@@ -291,14 +305,30 @@
         </li>
     </ul>
 
-    <!-- Navigation Bar -->
-    <div class="navbar">
-        <a onclick="showCategory('applications')">Aplikacije</a>
-        <a onclick="showCategory('games')">Igre</a>
-        <a onclick="showCategory('my')">Osebne aplikacije</a>
-        <a onclick="showCategory('hor')">Horoskop</a>
-        <a onclick="showCategory('other')">Ostalo</a>
-    </div>
+    <!-- Navigation Bar - iOS-style Dock -->
+<div class="navbar">
+    <a onclick="showCategory('applications')">
+        <span>📱</span>
+        <p>Aplikacije</p>
+    </a>
+    <a onclick="showCategory('games')">
+        <span>🎮</span>
+        <p>Igre</p>
+    </a>
+    <a onclick="showCategory('my')">
+        <span>👤</span>
+        <p>Osebno</p>
+    </a>
+    <a onclick="showCategory('hor')">
+        <span>🔮</span>
+        <p>Horoskop</p>
+    </a>
+    <a onclick="showCategory('other')">
+        <span>🗂️</span>
+        <p>Ostalo</p>
+    </a>
+</div>
+
 
     <script>
         function showCategory(category) {
