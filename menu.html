@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seznam Aplikacij</title>
     <style>
-        body {
+      body {
             font-family: 'myfont', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #f0f0f0;
             color: #333;
         }
 
@@ -19,122 +19,133 @@
         }
 
         /* iOS-style Dock Navigation Bar */
-.navbar {
-    display: flex;
-    justify-content: space-around;
-    background-color: rgba(255, 255, 255, 0.7);
-    padding: 10px;
-    position: fixed;
-    bottom: 10;
-    width: 100%;
-    bottom: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-}
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+        }
 
-.navbar a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-decoration: none;
-    color: #333;
-    font-family: 'myfont', sans-serif;
-    transition: transform 0.3s;
-}
+        .navbar a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #333;
+            font-family: 'myfont', sans-serif;
+            transition: transform 0.3s, color 0.3s;
+        }
 
-.navbar a span {
-    font-size: 30px; /* Icon size */
-    margin-bottom: 5px;
-}
+        .navbar a span {
+            font-size: 28px; /* Slightly larger icons */
+            margin-bottom: 6px;
+        }
 
-.navbar a p {
-    font-size: 14px;
-    margin: 0;
-}
+        .navbar a p {
+            font-size: 13px; /* Slightly larger text */
+            margin: 0;
+            text-transform: uppercase; /* Uppercase text for uniformity */
+        }
 
-.navbar a:hover {
-    transform: scale(1.1); /* Enlarge on hover */
-}
-
+        .navbar a:hover {
+            transform: scale(1.1);
+            color: #007bff; /* Highlight color */
+        }
 
         /* Main title */
         h1 {
             text-align: center;
             background-color: #fff;
-            padding: 20px;
+            padding: 25px;
             margin: 0;
-            border-bottom: 2px solid #333;
-            border-bottom-left-radius: 10cm;
-            border-bottom-right-radius: 10cm;
+            border-bottom: 3px solid #007bff;
+            border-bottom-left-radius: 50% 30px;
+            border-bottom-right-radius: 50% 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* App list styling */
-        .app-list {
-            display: none;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            margin: 0;
-            gap: 20px;
-        }
+.app-list {
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 0;
+    gap: 15px; /* Slightly smaller gap */
+}
 
-        .app-list.grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            margin: 0 auto;
-            gap: 20px;
-            max-width: 500px; /* Adjust this value based on the desired width */
-        }
+.app-list.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 0 auto;
+    gap: 15px; /* Slightly smaller gap */
+    max-width: 400px; /* Adjusted max-width for smaller layout */
+}
 
-        .app-list.horoscope-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
+.app-list.horoscope-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 600px; /* Adjusted max-width for horoscope grid */
+    gap: 10px; /* Slightly smaller gap for horoscope grid */
+}
 
-        .app-item {
-            position: relative;
-            width: 100%;
-            max-width: 160px;
-            text-align: center;
-            cursor: pointer;
-        }
+.app-item {
+    position: relative;
+    width: 100%;
+    max-width: 140px; /* Adjusted max-width for app items */
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px; /* Slightly smaller border-radius */
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
 
-        .app-item img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+.app-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s;
+}
 
-        .app-item .overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: midnightblue;
-            overflow: hidden;
-            width: 100%;
-            height: 0;
-            transition: .5s ease;
-        }
+.app-item:hover img {
+    transform: scale(1.03); /* Slightly smaller zoom effect */
+}
 
-        .app-item:hover .overlay {
-            height: 100%;
-        }
+.app-item .overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    width: 100%;
+    height: 0;
+    transition: height 0.5s ease;
+    border-radius: 8px; /* Consistent border-radius */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .app-item .text {
-            white-space: nowrap; 
-            color: white;
-            font-size: 20px;
-            position: absolute;
-            overflow: hidden;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+.app-item:hover .overlay {
+    height: 100%;
+}
 
+.app-item .text {
+    color: #fff;
+    font-size: 16px; /* Adjusted font size for smaller layout */
+    text-align: center;
+    padding: 8px;
+}
         .active {
             display: grid;
         }
