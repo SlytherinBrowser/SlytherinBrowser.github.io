@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         window.location.href = "menu.html";
     }
 function lock() {
-        window.location.href = "lock1.html";
+        window.location.href = "lock.html";
     }
 
 let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
