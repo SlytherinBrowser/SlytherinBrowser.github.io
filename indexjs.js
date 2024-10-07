@@ -81,7 +81,7 @@ function searchSlytherinBrowser() {
 
     if (searchTerm !== "") {
         if (searchTerm.startsWith("*")) {
-            addShortcut();
+            handleShortcut(searchTerm);
         } else {
             let urlToOpen = searchTerm;
 
@@ -108,6 +108,26 @@ function isURL(text) {
     const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
     return urlRegex.test(text);
 }
+
+function handleShortcut(searchTerm) {
+    // Preverimo specifične bližnjice za prenos datotek
+    if (searchTerm === "*download*steamwin*") {
+        window.open("https://cdn.akamai.steamstatic.com/client/installer/SteamSetup.exe", '_blank');
+    } else if (searchTerm === "*download*steamapple*") {
+        window.open("https://cdn.akamai.steamstatic.com/client/installer/steam.dmg", '_blank');
+    } else if (searchTerm === "*download*steamchrome*") {
+        window.open("https://support.google.com/chromebook?p=steam_on_chromebook", '_blank'); // Steam isn't available as a Chrome extension, redirecting to main page.
+    } else if (searchTerm === "*download*steamlinux*") {
+        window.open("https://cdn.akamai.steamstatic.com/client/installer/steam.deb", '_blank'); // For Linux, Steam generally offers the download from their main page.
+    } else if (searchTerm === "*download*minecraft*") {
+        window.open("https://tlauncher.org/installer", '_blank');
+    } else if (searchTerm === "*download*operagx*") {
+        window.open("https://www.opera.com/computer/thanks?ni=eapgx&os=windows", '_blank');
+    } else {
+        console.log("Bližnjica ni prepoznana.");
+    }
+}
+
 
  let currentDate = new Date();
 
