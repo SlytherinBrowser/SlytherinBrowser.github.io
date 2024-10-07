@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Love</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            position: relative;
+            width: 400px;
+            height: 200px;
+            border: 2px solid #ff69b4;
+            border-radius: 15px;
+            background-color: #fff0f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: box-shadow 0.3s;
+        }
+        .container:hover {
+            box-shadow: 0 0 20px #ff69b4;
+        }
+        .hover-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            text-align: center;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .container:hover .hover-box {
+            opacity: 1;
+        }
+        .time-info {
+            display: none;
+        }
+        .container:hover .time-info {
+            display: block;
+        }
+        .message {
+            font-style: italic;
+            margin-top: 10px;
+            color: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="hover-box">
+        <h2>We've been together for:</h2>
+        <div class="time-info" id="timeTogether"></div>
+        <div class="countdown-info" id="countdown"></div>
+        <p class="message" id="randomMessage"></p>
+    </div>
+</div>
+
+<audio id="bgMusic" src="your-music-file.mp3" autoplay loop></audio> <!-- Add your own music file -->
+
+<script>
+    const togetherSince = new Date('2024-09-10T00:00:00'); // Date set to 10th September 2024
+    const nextAnniversary = new Date(togetherSince);
+    nextAnniversary.setFullYear(new Date().getFullYear() + 1); // Set to next anniversary year
+
+    const timeContainer = document.getElementById('timeTogether');
+    const countdownContainer = document.getElementById('countdown');
+    const messageContainer = document.getElementById('randomMessage');
+    const bgMusic = document.getElementById('bgMusic');
+
+    const messages = [
+        "You are my sunshine!",
+        "Every day with you is a blessing!",
+        "Forever grateful to have you.",
+        "You are my favorite person!",
+        "Love you more with each passing day.",
+        "You make my heart skip a beat!",
+        "I fall in love with you more every day.",
+        "You are my world, my everything.",
+        "Thank you for being my happiness.",
+        "With you, everything feels perfect.",
+        "I love the way you make me feel.",
+        "You are my best friend and my love.",
+        "Being with you is a dream come true.",
+        "Together, we make the perfect team!",
+        "Your smile brightens up my day.",
+        "You make my heart full.",
+        "I cherish every moment with you.",
+        "I am lucky to call you mine.",
+        "You are my one and only, forever."
+    ];
+
+    function updateTime() {
+        const now = new Date();
+        const diff = now - togetherSince;
+
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const weeks = Math.floor(days / 7);
+        const months = Math.floor(days / 30.44); // Approximation
+        const years = Math.floor(months / 12);
+
+        timeContainer.innerHTML = `
+            <p>${years} years</p>
+            <p>${months} months</p>
+            <p>${weeks} weeks</p>
+            <p>${days} days</p>
+            <p>${hours} hours</p>
+            <p>${minutes} minutes</p>
+            <p>${seconds} seconds</p>
+        `;
+
+        // Update countdown to next anniversary
+        const timeToAnniversary = nextAnniversary - now;
+        const daysToAnniversary = Math.floor(timeToAnniversary / (1000 * 60 * 60 * 24));
+        countdownContainer.innerHTML = `<p>${daysToAnniversary} days until our next anniversary! 🎉</p>`;
+
+        // Display a random message
+        const randomIndex = Math.floor(Math.random() * messages.length);
+        messageContainer.textContent = messages[randomIndex];
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000); // Update every second
+
+    // Play background music
+    bgMusic.volume = 0.2; // Adjust the volume level
+</script>
+
+</body>
+</html>
