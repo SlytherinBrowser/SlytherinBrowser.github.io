@@ -380,6 +380,29 @@
                 popupContainer.style.display = 'none'; // Close popup after saving
             }
         };
+        // Pridruži se klepetu
+joinButton.addEventListener('click', () => {
+    chatRoomCode = codeInput.value; // Pridobi kodo
+    // Naloži dovoljene e-poštne naslove za to sejo
+    db.ref(`sessions/${chatRoomCode}`).once('value').then((snapshot) => {
+        const sessionData = snapshot.val();
+        if (sessionData) {
+            const allowedEmails = sessionData.allowedEmails;
+            const currentUserEmail = currentUser.email;
+
+            // Preveri, ali je trenutni uporabnik dovoljen
+            if (allowedEmails.includes(currentUserEmail)) {
+                loadMessages(chatRoomCode); // Naloži sporočila za izbrano sejo
+                codeInput.value = ''; // Počisti vhodno polje
+            } else {
+                alert("You do not have access to this session.");
+            }
+        } else {
+            alert("Session not found.");
+        }
+    });
+});
+
     </script>
 </body>
 </html>
