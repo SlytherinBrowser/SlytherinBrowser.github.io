@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #chat-container {
+            width: 95%;
+            height: 90%;
+            border: 2px solid #ccc;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 20px;
+        }
+
+        #code-container {
+            padding: 10px;
+            border-bottom: 2px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #code-input {
+            width: 30%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+        }
+
+        #join-button, #reserve-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #join-button:hover, #reserve-button:hover {
+            background-color: #0056b3;
+        }
+
+        #user-list {
+            width: 50%;
+            padding: 10px;
+            border-right: 2px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #chat-window {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: scroll;
+            border-bottom: 2px solid #ccc;
+        }
+
+        #chat-input {
+            padding: 20px;
+            border: none;
+            width: 98%;
+            border-top: 2px solid #ccc;
+        }
+
+        #send-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-top: 2px solid #ccc;
+            cursor: pointer;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Popup Window Styles */
+        #popup-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #popup-container h3 {
+            margin-top: 0;
+        }
+
+        .email-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .email-input input {
+            width: 80%;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .email-input button {
+            padding: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #save-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #save-button:hover {
+            background-color: #218838;
+        }
+
+        #close-button {
+            background-color: red;
+            color: white;
+            padding: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="code-container">
+            <div id="user-list">
+                <h4>Logged-in Users</h4>
+                <div id="user-names">
+                    <!-- Tu se bodo izpisovali prijavljeni uporabniki -->
+                </div>
+            </div>
+            <div>
+                <input type="text" id="code-input" placeholder="Enter 6-digit code">
+                <button id="join-button">Join Chat</button>
+                <button id="reserve-button">Reserve Session</button> <!-- New button for reserving a session -->
+            </div>
+        </div>
+        <div id="chat-window"></div>
+        <input type="text" id="chat-input" placeholder="Type a message...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <!-- Popup Container -->
+    <div id="popup-container">
+        <h3>Reserve Session</h3>
+        <input type="text" id="reservation-code" placeholder="Enter 6-digit code">
+        <div id="email-container">
+            <div class="email-input">
+                <input type="email" placeholder="Enter email">
+                <button id="add-email">+</button>
+            </div>
+        </div>
+        <button id="save-button">Save</button>
+        <button id="close-button">Close</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
+            authDomain: "slychat-e0a59.firebaseapp.com",
+            projectId: "slychat-e0a59",
+            storageBucket: "slychat-e0a59.appspot.com",
+            messagingSenderId: "462724887870",
+            appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
+            measurementId: "G-52CMK3FJYW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Elementi
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const codeInput = document.getElementById('code-input');
+        const joinButton = document.getElementById('join-button');
+        const reserveButton = document.getElementById('reserve-button');
+        const userNamesContainer = document.getElementById('user-names');
+        const popupContainer = document.getElementById('popup-container');
+        const addEmailButton = document.getElementById('add-email');
+        const emailContainer = document.getElementById('email-container');
+        const saveButton = document.getElementById('save-button');
+        const closeButton = document.getElementById('close-button');
+
+        let currentUser = null;  // Trenutni uporabnik
+        let chatRoomCode = 'public'; // Privzeto javna seja
+        const localMessages = [];  // Lokalno shranjevanje sporočil
+        let emailList = [];
+
+        // Funkcija za prikaz sporočila v oblačku
+        function addMessageToChatWindow(message, sender, isSentByCurrentUser, status) {
+            const msgElement = document.createElement('div');
+            msgElement.classList.add('message-box');
+
+            const senderNameElement = document.createElement('div');
+            senderNameElement.classList.add('sender-name');
+            senderNameElement.textContent = sender;
+
+            const msgTextElement = document.createElement('div');
+            msgTextElement.textContent = message.text;
+
+            const msgStatusElement = document.createElement('div');
+            msgStatusElement.classList.add('message-status');
+            msgStatusElement.textContent = status;
+
+            if (isSentByCurrentUser) {
+                msgElement.classList.add('sent');
+            } else {
+                msgElement.classList.add('received');
+            }
+
+            msgElement.appendChild(senderNameElement);
+            msgElement.appendChild(msgTextElement);
+            msgElement.appendChild(msgStatusElement);
+
+            chatWindow.appendChild(msgElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // Prijava z Google
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                loadMessages(chatRoomCode); // Naloži sporočila za trenutni chat room
+                displayLoggedInUser(user.displayName); // Prikaži prijavljenega uporabnika
+            }
+        });
+
+        // Dodaj prijavljenega uporabnika v seznam
+        function displayLoggedInUser(displayName) {
+            const userElement = document.createElement('div');
+            userElement.textContent = displayName;
+            userNamesContainer.appendChild(userElement);
+        }
+
+        // Naloži sporočila iz Firebase
+        function loadMessages(roomCode) {
+            db.ref(`messages/${roomCode}`).on('child_added', (snapshot) => {
+                const messageData = snapshot.val();
+                const isSentByCurrentUser = messageData.userId === currentUser.uid;
+                addMessageToChatWindow(messageData, messageData.sender, isSentByCurrentUser, messageData.status);
+                localMessages.push(messageData);
+            });
+        }
+
+        // Pošlji sporočilo
+        sendButton.addEventListener('click', () => {
+            const messageText = chatInput.value;
+            if (messageText) {
+                const message = {
+                    text: messageText,
+                    sender: currentUser.displayName,
+                    userId: currentUser.uid,
+                    status: 'sent'
+                };
+
+                db.ref(`messages/${chatRoomCode}`).push(message); // Shrani sporočilo v Firebase
+                addMessageToChatWindow(message, currentUser.displayName, true, message.status); // Prikaz sporočila
+                chatInput.value = ''; // Počisti vhodno polje
+            }
+        });
+
+        // Pridruži se klepetu
+        joinButton.addEventListener('click', () => {
+            chatRoomCode = codeInput.value; // Pridobi kodo
+            loadMessages(chatRoomCode); // Naloži sporočila za izbrano sejo
+            codeInput.value = ''; // Počisti vhodno polje
+        });
+
+        // Prikaži okno za rezervacijo seje
+        reserveButton.addEventListener('click', () => {
+            popupContainer.style.display = 'block';
+        });
+
+        // Zapri okno
+        closeButton.addEventListener('click', () => {
+            popupContainer.style.display = 'none';
+        });
+
+        // Dodaj novo polje za email
+        addEmailButton.addEventListener('click', () => {
+            const newEmailInput = document.createElement('div');
+            newEmailInput.classList.add('email-input');
+            newEmailInput.innerHTML = `
+                <input type="email" placeholder="Enter email">
+                <button class="remove-email">-</button>
+            `;
+            emailContainer.appendChild(newEmailInput);
+
+            // Odstrani email polje
+            newEmailInput.querySelector('.remove-email').addEventListener('click', () => {
+                newEmailInput.remove();
+            });
+        });
+
+        // Shrani rezervacijo seje
+        saveButton.addEventListener('click', () => {
+            const sessionCode = document.getElementById('reservation-code').value;
+            const emailInputs = emailContainer.querySelectorAll('input[type="email"]');
+
+            emailList = Array.from(emailInputs).map(input => input.value).filter(email => email);
+
+            // Shranimo podatke, lahko uporabimo Firebase Database ali lokalno
+            if (sessionCode && emailList.length > 0) {
+                const sessionData = {
+                    code: sessionCode,
+                    allowedEmails: emailList
+                };
+                
+                // Shranimo v Firebase Database
+                db.ref(`sessions/${sessionCode}`).set(sessionData).then(() => {
+                    alert("Session reserved with allowed emails.");
+                    popupContainer.style.display = 'none'; // Zapremo okno po uspešnem shranjevanju
+                }).catch(error => {
+                    console.error("Error reserving session:", error);
+                });
+            } else {
+                alert("Please enter a session code and at least one email.");
+            }
+        });
+    </script>
+</body>
+</html>
