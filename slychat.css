@@ -44,7 +44,7 @@
 }
 
 #join-button, #reserve-button, #google-sign-in-button {
-    padding: 12px 30px;
+    padding: 10px 25px;
     background: linear-gradient(145deg, #6a82fb, #fc5c7d);
     color: white;
     border: none;
