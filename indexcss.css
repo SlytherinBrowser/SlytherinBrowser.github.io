@@ -1,212 +1,569 @@
 @media screen and (max-width: 700px){
-body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
-            font-family: 'Arial', sans-serif;
-            color: #fff; /* White text color */
-        }
-        .p{
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 2px;
-            color: #2C3E50;
-        }
-        .p:hover{
-            color: black;
-        }
-
-        #logo {
-            display: none;
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
+    body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+                font-family: 'Arial', sans-serif;
+                color: #fff; /* White text color */
+            }
+            .p{
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 2px;
+                color: #2C3E50;
+            }
+            .p:hover{
+                color: black;
+            }
+    
+            #logo {
+                display: none;
+                width: 100px;
+                height: 100px;
+                margin-bottom: 20px;
+                
+            }
+    
+            #searchForm {
+                width: 100%;
+                background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
+                border: 2px solid #fff; /* White border */
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
+            }
+    
+            label {
+                display: block;
+                margin-bottom: 10px;
+                color: #fff;
+            }
+    
+            #search {
+                background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
+                border: 2px solid #fff; /* White border */
+                padding: 20px;
+                font-size: 18px;
+                width: 100%;
+                height: 74px;
+                border-radius: 10px;
+                color: #fff; /* White text color */
+                outline: none;
+                transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+            }
+    
+            #search:focus {
+                border-color: #007bff;
+                background: linear-gradient(to right, #e74c3c, #2980b9);
+            }
+            #submitBtn{
+        bottom: 44%;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        border-top-right-radius: 5px;
+        border-top-left-radius: 5px;
+        cursor: pointer;
+    }
+    #buttonkng{
+        text-align: left;
+        justify-content: left;
+        right: 0;
+         position: fixed;
+        width: 50%;
+        bottom: 8%;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    
+     #menu{ 
+        text-align: right;
+        justify-content: right;
+        left: 0;
+        position: fixed;
+        width: 50%;
+        bottom: 8%;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+           #submitBtn:hover {
+        background-color: #2980b9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
+    }
+            #dock {
+                position: fixed;
+                bottom: 0px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                border-radius: 5px;
+                padding: 10px;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 999;
+                width: 100%;
+                height: auto;
+            }
+    
+            .icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-size: cover;
+                cursor: pointer;
+            }
+    
+            .icon:hover {
+                transform: scale(1.1);
+            }
+    
+    
+    #menu:hover,
+    #buttonkng:hover{
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+    }
+            #topBar {
+                position: fixed;
+                top: 0;     
+                right: -2;
+                width: 5cm;
+                height: 1cm;
+                background-color: black;
+                border-radius: 25px;
+                z-index: 999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: white;
+                cursor: pointer;
+                transition: width 0.5s 0.5s, height 0.5s 0s;
+            }
+             #topBar:hover{
+              width: 100%;
+              height: 3cm;
+              border-radius: 0,01;
+              transition: width 0.5s 0s, height 0.5s 0.5s;
+             }
+    
+              .taskbar-icon {
+        position: fixed;
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px; 
+        background-color: #0078d7;
+        border-radius: 10px;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
+    }
+    
+    .taskbar-icon:hover {
+        background-color: #005ea2;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečanje senčenja ob hoverju */
+    }
+            .taskbar-icon svg {
+                width: 50%;
+                height: 50%;
+                fill: #fff;
+            }
+            /* Stilizacija za koledar */
+    .calendar-container {
+        position: fixed;
+        bottom: 80px;
+        right: 0px;
+        width: 320px;
+        background-color: black;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Senčenje */
+        display: none;
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    }
+    
+    .calendar-container:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+    }
+            .calendar-header {
+        background: linear-gradient(135deg, #ff7e5f, #feb47b);
+        color: white;
+        padding: 15px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .calendar-header button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: transform 0.3s, color 0.3s;
+    }
+    
+    .calendar-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        border-top: 1px solid #ccc;
+        background: #fafafa;
+    }
+    
+    .day {
+        padding: 15px;
+        text-align: center;
+        border-right: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        font-size: 16px;
+        color: #444; /* Temnejša barva besedila za boljši kontrast */
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .day:hover {
+        background-color: #ffe3c3;
+        transform: scale(1.1);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .today {
+        background: linear-gradient(135deg, #43cea2, #185a9d);
+        color: white;
+        font-weight: bold;
+        border-radius: 50%;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transform: scale(1.15);
+    }
+    
+    .day:nth-child(7n+1) {
+        color: #d32f2f; /* Barva za nedelje */
+    }
+    
+    .day:nth-child(7n) {
+        color: #1976d2; /* Barva za sobote */
+    }
+    
+    /* Stilizacija za kalkulator */
+    .calculator-container {
+        display: none;
+        position: fixed;
+        padding: 20px;
+        border: 5px solid black; /* Popravljena nastavitev obrobe */
+        border-radius: 5px;
+        background-color: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8); /* Senčenje */
+        z-index: 999;
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    }
+    
+    .calculator-container:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8); /* Povečano senčenje ob hoverju */
+    }
+    
+    /* Stilizacija za prikazno polje */
+    #display {
+        width: 200px;
+        padding: 15px;
+        font-size: 15px;
+        border: 1px solid #ccc; /* Dodana obroba */
+        border-radius: 4px; /* Dodan zaobljen rob */
+        text-align: right; /* Poravnava besedila desno */
+    }
+    
+    /* Slog za gumbe in druge elemente znotraj kalkulatorja */
+    .calculator-container input,
+    .calculator-container select,
+    .calculator-container button {
+        margin: 5px;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    .calculator-container input {
+        width: calc(100% - 22px); /* Prilagodite širino vhodnega polja */
+        text-align: right; /* Poravnajte besedilo v desno za boljši prikaz številk */
+    }
+    
+    .calculator-container select {
+        width: 100%; /* Prilagodite širino padajočih seznamov */
+    }
+    
+    .calculator-container button {
+        background-color: #4CAF50; /* Zelena barva gumba */
+        color: white; /* Bela barva besedila na gumbu */
+        cursor: pointer;
+    }
+    
+    .calculator-container button:hover {
+        background-color: #45a049; /* Temnejša zelena barva ob prehodu miške */
+    }
+    
+    .trigger-button {
+        position: fixed;
+        bottom: 20px;
+        left: 80px;
+        width: 50px;
+        height: 50px;
+        color: #000000;
+        background-color: #0078d7;
+        border-radius: 10px;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+         cursor: pointer;
+     }
+    }
+    @media screen and (min-width: 700px){
+      body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+                font-family: 'Arial', sans-serif;
+                color: #fff; /* White text color */
+            }
+            .p{
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 2px;
+                color: #2C3E50;
+            }
+            .p:hover{
+                color: black;
+            }
+    
+            #logo {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 20px;
+                
+            }
+    
+            #searchForm {
+                background: radial-gradient(circle, #2980b9, #1c5985); /* Darker gradient for more depth */
+                border: 2px solid #fff; /* White border */
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 0 30px rgba(0, 0, 0, 0.7); /* More pronounced shadow */
+                transition: transform 0.3s ease; /* Smooth scaling effect */
+            }
             
-        }
-
-        #searchForm {
-            width: 100%;
-            background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
-            border: 2px solid #fff; /* White border */
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        #search {
-            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
-            border: 2px solid #fff; /* White border */
-            padding: 20px;
-            font-size: 18px;
-            width: 100%;
-            height: 74px;
-            border-radius: 10px;
-            color: #fff; /* White text color */
-            outline: none;
-            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
-        }
-
-        #search:focus {
-            border-color: #007bff;
-            background: linear-gradient(to right, #e74c3c, #2980b9);
-        }
-        #submitBtn{
-    bottom: 44%;
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
-    cursor: pointer;
-}
-#buttonkng{
-    text-align: left;
-    justify-content: left;
-    right: 0;
-     position: fixed;
-    width: 50%;
-    bottom: 8%;
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-
- #menu{ 
-    text-align: right;
-    justify-content: right;
-    left: 0;
-    position: fixed;
-    width: 50%;
-    bottom: 8%;
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-       #submitBtn:hover {
-    background-color: #2980b9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
-}
-        #dock {
-            position: fixed;
-            bottom: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 5px;
-            padding: 10px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 999;
-            width: 100%;
-            height: auto;
-        }
-
-        .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-size: cover;
-            cursor: pointer;
-        }
-
-        .icon:hover {
-            transform: scale(1.1);
-        }
-
-
-#menu:hover,
-#buttonkng:hover{
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
-}
+            #searchForm:hover {
+                transform: translateY(-5px); /* Lift effect on hover */
+            }
+            
+            label {
+                display: block;
+                margin-bottom: 10px;
+                color: #fff;
+                font-size: 1.1em; /* Slightly larger font for better readability */
+            }
+            
+            #search {
+                background: linear-gradient(to right, #2980b9, #2ecc71); /* Gradient input background */
+                border: 2px solid #fff; /* White border */
+                padding: 15px; /* Reduced padding for a sleeker look */
+                font-size: 18px;
+                width: 300px;
+                border-radius: 10px;
+                color: #fff; /* White text color */
+                outline: none;
+                transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+            }
+            
+            #search:focus {
+                border-color: #2ecc71; /* Change border color to match the focus gradient */
+                background: linear-gradient(to right, #e74c3c, #3498db); /* Updated gradient on focus */
+                transform: scale(1.05); /* Slightly scale up the input on focus */
+            }
+            
+            #submitBtn {
+                padding: 10px 20px;
+                background-color: #2980b9; /* A slightly darker blue for better contrast */
+                color: #fff;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1em; /* Standard font size */
+                transition: background-color 0.3s, transform 0.3s ease; /* Smooth transition for hover effects */
+            }
+            
+            #submitBtn:hover {
+                background-color: #1c5985; /* Darker blue on hover */
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Increased shadow on hover */
+                transform: translateY(-2px); /* Lift effect on hover */
+            }
+            
+            #submitBtn:active {
+                transform: translateY(1px); /* Slight press down effect on click */
+            }
+            
+    #dock {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(255, 255, 255, 0.1); /* Lighter background for subtlety */
+        backdrop-filter: blur(8px); /* Moderate blur for elegance */
+        border-radius: 20px; /* Smaller border radius for a sleek look */
+        padding: 12px; /* Balanced padding */
+        display: flex;
+        justify-content: space-evenly; /* Even spacing between icons */
+        align-items: center;
+        z-index: 999;
+        width: auto;
+        max-width: 90%; /* Wider max-width for better responsiveness */
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Softer shadow for depth */
+        transition: background-color 0.3s; /* Smooth transition for background color */
+    }
+    
+    .icon {
+        width: 50px; /* Icon size */
+        height: 50px; /* Icon size */
+        border-radius: 50%; /* Circular icons */
+        background-size: cover;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+    }
+    
+    .icon:hover {
+        transform: translateY(-5px) scale(1.1); /* Slight lift and scale on hover */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover for emphasis */
+    }
+    
+    #buttonkng{
+        position: fixed;
+        width: 80px;
+        height: 50px;
+        bottom: 20px;
+        right: 100px;
+        border: none;
+        background-color: #0078d7;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    }
+           #menu {
+        position: fixed;
+        width: 80px;
+        height: 50px;
+        bottom: 20px;
+        left: 20px;
+        border: none;
+        background-color: #0078d7;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    }
         #topBar {
-            position: fixed;
-            top: 0;     
-            right: -2;
-            width: 5cm;
-            height: 1cm;
-            background-color: black;
-            border-radius: 25px;
-            z-index: 999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            cursor: pointer;
-            transition: width 0.5s 0.5s, height 0.5s 0s;
-        }
-         #topBar:hover{
-          width: 100%;
-          height: 3cm;
-          border-radius: 0,01;
-          transition: width 0.5s 0s, height 0.5s 0.5s;
-         }
-
-          .taskbar-icon {
-    position: fixed;
-    width: 50px;
-    height: 50px;
-    bottom: 20px;
-    right: 20px; 
-    background-color: #0078d7;
-    border-radius: 10px;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
-}
-
-.taskbar-icon:hover {
-    background-color: #005ea2;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečanje senčenja ob hoverju */
-}
-        .taskbar-icon svg {
-            width: 50%;
-            height: 50%;
-            fill: #fff;
-        }
-        /* Stilizacija za koledar */
+                position: fixed;
+                top: 0;     
+                right: -2;
+                width: 2cm;
+                height: 0.5cm;
+                background-color: black;
+                border-radius: 0.25cm;
+                z-index: 999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: white;
+                cursor: pointer;
+                transition: width 0.5s 0.5s, height 0.5s 0s;
+            }
+             #topBar:hover{
+              width: 7cm;
+              height: 1.5cm;
+              border-radius: 0.25;
+              transition: width 0.5s 0s, height 0.5s 0.5s;
+             }
+    
+              .taskbar-icon {
+        position: fixed;
+        width: 80px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px; 
+        background-color: #0078d7;
+        border: none;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
+    }
+    #menu:hover,
+    #buttonkng:hover,
+    .trigger-button:hover,
+    .taskbar-icon:hover {
+        background-color: #007bff; /* Lighter blue for a fresh look */
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2); /* Deeper shadow for a more pronounced effect */
+        transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+        transform: translateY(-2px); /* Subtle lift effect */
+    }
+    
+    .taskbar-icon svg {
+        width: 60%; /* Slightly larger for better visibility */
+        height: 60%;
+        fill: #ffffff; /* Ensure icons are white for contrast */
+        transition: transform 0.3s ease; /* Smooth transition for scaling */
+    }
+    
+    .taskbar-icon:hover svg {
+        transform: scale(1.1); /* Scale up the icon on hover for emphasis */
+    }
+    
+/* Streamlined Modern Calendar Styling */
 .calendar-container {
     position: fixed;
     bottom: 80px;
-    right: 0px;
+    right: 0;
     width: 320px;
-    background-color: black;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Senčenje */
+    background-color: #ffffff; /* Crisp white for contrast */
+    border-radius: 15px; /* Modern rounded corners */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* Soft shadow */
     display: none;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    transition: box-shadow 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+    overflow: hidden; /* Prevent overflow */
 }
 
 .calendar-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
+    transform: translateY(-4px); /* Lift effect on hover */
 }
-        .calendar-header {
-    background: linear-gradient(135deg, #ff7e5f, #feb47b);
+
+.calendar-header {
+    background: #6200ea; /* Deep purple for a bold header */
     color: white;
-    padding: 15px;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
+    padding: 15px 20px; /* Ample padding */
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    font-family: 'Roboto', sans-serif; /* Modern sans-serif font */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 .calendar-header button {
@@ -215,446 +572,136 @@ body {
     color: white;
     font-size: 24px;
     cursor: pointer;
-    transition: transform 0.3s, color 0.3s;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.calendar-header button:hover {
+    transform: scale(1.1); /* Slight enlargement */
+    color: #ffab40; /* Accent color on hover */
 }
 
 .calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    border-top: 1px solid #ccc;
-    background: #fafafa;
+    border-top: 1px solid #e0e0e0; /* Soft top border */
+    background: #f9f9f9; /* Very light background */
 }
 
 .day {
-    padding: 15px;
+    padding: 15px; /* Padding for better clickability */
     text-align: center;
-    border-right: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-right: 1px solid #e0e0e0; /* Subtle right border */
+    border-bottom: 1px solid #e0e0e0; /* Subtle bottom border */
     font-size: 16px;
-    color: #444; /* Temnejša barva besedila za boljši kontrast */
+    color: #555; /* Darker text for better readability */
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Transition effects */
 }
 
 .day:hover {
-    background-color: #ffe3c3;
-    transform: scale(1.1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: rgba(98, 0, 238, 0.1); /* Light purple on hover */
+    transform: translateY(-2px); /* Slight lift effect */
 }
 
 .today {
-    background: linear-gradient(135deg, #43cea2, #185a9d);
-    color: white;
+    background: #03dac5; /* Teal for today's date */
+    color: #000; /* Dark text for visibility */
     font-weight: bold;
     border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Consistent shadow */
+    transform: scale(1.1); /* Slightly larger for emphasis */
 }
 
 .day:nth-child(7n+1) {
-    color: #d32f2f; /* Barva za nedelje */
+    color: #d32f2f; /* Sunday color */
 }
 
 .day:nth-child(7n) {
-    color: #1976d2; /* Barva za sobote */
+    color: #1976d2; /* Saturday color */
 }
 
-/* Stilizacija za kalkulator */
+   /* Modernized styling for the calculator */
 .calculator-container {
     display: none;
     position: fixed;
     padding: 20px;
-    border: 5px solid black; /* Popravljena nastavitev obrobe */
-    border-radius: 5px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8); /* Senčenje */
+    border: none; /* Removed border for a cleaner look */
+    border-radius: 10px; /* Increased border-radius for a softer feel */
+    background-color: #ffffff; /* Bright white background for contrast */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Softer shadow */
     z-index: 999;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    transition: box-shadow 0.3s; /* Transition for shadow effect */
 }
 
 .calculator-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8); /* Povečano senčenje ob hoverju */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
 }
 
-/* Stilizacija za prikazno polje */
+/* Styling for the display field */
 #display {
-    width: 200px;
-    padding: 15px;
-    font-size: 15px;
-    border: 1px solid #ccc; /* Dodana obroba */
-    border-radius: 4px; /* Dodan zaobljen rob */
-    text-align: right; /* Poravnava besedila desno */
+    width: 90%; /* Full width for display */
+    padding: 20px; /* Increased padding for spaciousness */
+    font-size: 24px; /* Larger font size for better readability */
+    border: none; /* Removed border for a clean look */
+    border-radius: 8px; /* Rounded corners for a modern feel */
+    text-align: right; /* Align text to the right */
+    background-color: #f8f8f8; /* Light gray background for contrast */
+    color: #333; /* Dark text color for readability */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle inner shadow */
 }
 
-/* Slog za gumbe in druge elemente znotraj kalkulatorja */
+/* Styling for buttons and other elements inside the calculator */
 .calculator-container input,
 .calculator-container select,
 .calculator-container button {
-    margin: 5px;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    margin: 10px 0; /* Increased margin for better spacing */
+    padding: 12px; /* Increased padding for comfort */
+    font-size: 18px; /* Larger font size for readability */
+    border: none; /* Removed border for a cleaner appearance */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    background-color: #e0e0e0; /* Light gray background for inputs */
+    color: #333; /* Dark text color */
+    transition: background-color 0.3s, transform 0.3s; /* Transition for button hover effects */
 }
 
+/* Adjusting the input field */
 .calculator-container input {
-    width: calc(100% - 22px); /* Prilagodite širino vhodnega polja */
-    text-align: right; /* Poravnajte besedilo v desno za boljši prikaz številk */
+    width: calc(100% - 24px); /* Adjusted width for padding */
+    text-align: right; /* Align text to the right for numbers */
 }
 
+/* Adjusting the select field */
 .calculator-container select {
-    width: 100%; /* Prilagodite širino padajočih seznamov */
+    width: 100%; /* Full width for dropdowns */
 }
 
+/* Styling for buttons */
 .calculator-container button {
-    background-color: #4CAF50; /* Zelena barva gumba */
-    color: white; /* Bela barva besedila na gumbu */
     cursor: pointer;
+    background-color: #4caf50; /* Green background for buttons */
+    color: white; /* White text color */
 }
 
 .calculator-container button:hover {
-    background-color: #45a049; /* Temnejša zelena barva ob prehodu miške */
+    background-color: #45a049; /* Darker green on hover */
+    transform: translateY(-2px); /* Subtle lift effect on hover */
 }
 
-.trigger-button {
-    position: fixed;
-    bottom: 20px;
-    left: 80px;
-    width: 50px;
-    height: 50px;
-    color: #000000;
-    background-color: #0078d7;
-    border-radius: 10px;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-     cursor: pointer;
- }
-}
-@media screen and (min-width: 700px){
-  body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
-            font-family: 'Arial', sans-serif;
-            color: #fff; /* White text color */
-        }
-        .p{
-            display: flex;
-            position: fixed;
-            top: 0;
-            left: 2px;
-            color: #2C3E50;
-        }
-        .p:hover{
-            color: black;
-        }
-
-        #logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 20px;
-            
-        }
-
-        #searchForm {
-            background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
-            border: 2px solid #fff; /* White border */
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        #search {
-            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
-            border: 2px solid #fff; /* White border */
-            padding: 20px;
-            font-size: 18px;
-            width: 300px;
-            border-radius: 10px;
-            color: #fff; /* White text color */
-            outline: none;
-            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
-        }
-
-        #search:focus {
-            border-color: #007bff;
-            background: linear-gradient(to right, #e74c3c, #2980b9);
-        }
-
-        #submitBtn {
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-       #submitBtn:hover {
-    background-color: #2980b9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
-}
-        #dock {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 10px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 999;
-            width: auto;
-            max-width: calc(100% - 40px);
-        }
-
-        .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-size: cover;
-            cursor: pointer;
-        }
-
-        .icon:hover {
-            transform: scale(1.1);
-        }
-#buttonkng{
-    position: fixed;
-    width: 80px;
-    height: 50px;
-    bottom: 20px;
-    right: 100px;
-    border: none;
-    background-color: #0078d7;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-       #menu {
-    position: fixed;
-    width: 80px;
-    height: 50px;
-    bottom: 20px;
-    left: 20px;
-    border: none;
-    background-color: #0078d7;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-    #topBar {
-            position: fixed;
-            top: 0;     
-            right: -2;
-            width: 2cm;
-            height: 0.5cm;
-            background-color: black;
-            border-radius: 0.25cm;
-            z-index: 999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            cursor: pointer;
-            transition: width 0.5s 0.5s, height 0.5s 0s;
-        }
-         #topBar:hover{
-          width: 7cm;
-          height: 1.5cm;
-          border-radius: 0.25;
-          transition: width 0.5s 0s, height 0.5s 0.5s;
-         }
-
-          .taskbar-icon {
-    position: fixed;
-    width: 80px;
-    height: 50px;
-    bottom: 20px;
-    right: 20px; 
-    background-color: #0078d7;
-    border: none;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja */
-}
-#menu:hover,
-#buttonkng:hover,
-.trigger-button:hover,
-.taskbar-icon:hover {
-    background-color: #005ea2;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečanje senčenja ob hoverju */
-}
-        .taskbar-icon svg {
-            width: 50%;
-            height: 50%;
-            fill: #fff;
-        }
-        /* Stilizacija za koledar */
-.calendar-container {
-    position: fixed;
-    bottom: 80px;
-    right: 0px;
-    width: 320px;
-    background-color: black;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Senčenje */
-    display: none;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-
-.calendar-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Povečano senčenje ob hoverju */
-}
-        .calendar-header {
-    background: linear-gradient(135deg, #ff7e5f, #feb47b);
-    color: white;
-    padding: 15px;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-
-.calendar-header button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
-    cursor: pointer;
-    transition: transform 0.3s, color 0.3s;
-}
-
-.calendar-body {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-top: 1px solid #ccc;
-    background: #fafafa;
-}
-
-.day {
-    padding: 15px;
-    text-align: center;
-    border-right: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    font-size: 16px;
-    color: #444; /* Temnejša barva besedila za boljši kontrast */
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-}
-
-.day:hover {
-    background-color: #ffe3c3;
-    transform: scale(1.1);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.today {
-    background: linear-gradient(135deg, #43cea2, #185a9d);
-    color: white;
-    font-weight: bold;
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    transform: scale(1.15);
-}
-
-.day:nth-child(7n+1) {
-    color: #d32f2f; /* Barva za nedelje */
-}
-
-.day:nth-child(7n) {
-    color: #1976d2; /* Barva za sobote */
-}
-
-/* Stilizacija za kalkulator */
-.calculator-container {
-    display: none;
-    position: fixed;
-    padding: 20px;
-    border: 5px solid black; /* Popravljena nastavitev obrobe */
-    border-radius: 5px;
-    background-color: #fff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8); /* Senčenje */
-    z-index: 999;
-    transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-}
-
-.calculator-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.8); /* Povečano senčenje ob hoverju */
-}
-
-/* Stilizacija za prikazno polje */
-#display {
-    width: 200px;
-    padding: 15px;
-    font-size: 15px;
-    border: 1px solid #ccc; /* Dodana obroba */
-    border-radius: 4px; /* Dodan zaobljen rob */
-    text-align: right; /* Poravnava besedila desno */
-}
-
-/* Slog za gumbe in druge elemente znotraj kalkulatorja */
-.calculator-container input,
-.calculator-container select,
-.calculator-container button {
-    margin: 5px;
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.calculator-container input {
-    width: calc(100% - 22px); /* Prilagodite širino vhodnega polja */
-    text-align: right; /* Poravnajte besedilo v desno za boljši prikaz številk */
-}
-
-.calculator-container select {
-    width: 100%; /* Prilagodite širino padajočih seznamov */
-}
-
-.calculator-container button {
-    background-color: #4CAF50; /* Zelena barva gumba */
-    color: white; /* Bela barva besedila na gumbu */
-    cursor: pointer;
-}
-
-.calculator-container button:hover {
-    background-color: #45a049; /* Temnejša zelena barva ob prehodu miške */
-}
-
-.trigger-button {
-    position: fixed;
-    bottom: 20px;
-    left: 100px;
-    width: 80px;
-    height: 50px;
-    color: #000000;
-    background-color: #0078d7;
-    border: none;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-     cursor: pointer;
- }
-}
+    
+    .trigger-button {
+        position: fixed;
+        bottom: 20px;
+        left: 100px;
+        width: 80px;
+        height: 50px;
+        color: #000000;
+        background-color: #0078d7;
+        border: none;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+         cursor: pointer;
+     }
+    }
