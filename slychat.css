@@ -1,0 +1,184 @@
+   body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+#chat-container {
+    width: 95%;
+    height: 90%;
+    background: #ffffff;
+    border-radius: 30px;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.1), -8px -8px 16px rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+#code-container {
+    padding: 15px;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f0f0f0;
+    border-radius: 20px;
+    box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+#code-input {
+    width: 30%;
+    padding: 12px;
+    border-radius: 30px;
+    border: none;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.7);
+    background-color: #f7f7f7;
+    color: #555;
+}
+
+#join-button, #reserve-button, #google-sign-in-button {
+    padding: 12px 30px;
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+#join-button:hover, #reserve-button:hover, #google-sign-in-button:hover {
+    background: linear-gradient(145deg, #5b72e9, #e4486c);
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.8);
+}
+
+#user-list {
+    width: 50%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+#chat-window {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: scroll;
+    background-color: #f8f9fa;
+    border-radius: 20px;
+    box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+#chat-input {
+    padding: 20px;
+    border: none;
+    width: 98%;
+    border-top: none;
+    background-color: #ffffff;
+    border-radius: 30px;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
+
+#send-button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    transition: background-color 0.3s ease-in-out, box-shadow 0.3s;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.7);
+}
+
+#send-button:hover {
+    background: linear-gradient(145deg, #5b72e9, #e4486c);
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.9);
+}
+
+/* Popup Window Styles */
+#popup-container {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 25px;
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.7);
+}
+
+#popup-container h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.email-input {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.email-input input {
+    width: 80%;
+    padding: 10px;
+    margin-right: 5px;
+    border-radius: 15px;
+    border: none;
+    background-color: #f0f0f0;
+    box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+.email-input button {
+    padding: 10px;
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 4px 4px 8px rgba(0, 123, 255, 0.3);
+    transition: background-color 0.3s ease-in-out;
+}
+
+#save-button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(145deg, #28a745, #56e39f);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
+
+#save-button:hover {
+    background: linear-gradient(145deg, #218838, #44d16e);
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.9);
+}
+
+#close-button {
+    background-color: #e63946;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.8);
+}
