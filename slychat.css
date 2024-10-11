@@ -44,7 +44,7 @@
 }
 
 #join-button, #reserve-button, #google-sign-in-button, #google-sign-out-button{
-    padding: 9px 23px;
+    padding: 8px 20px;
     background: linear-gradient(145deg, #6a82fb, #fc5c7d);
     color: white;
     border: none;
