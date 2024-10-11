@@ -6,61 +6,123 @@
 <title>Zaklenjena Stran</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-    body {
-        font-family: 'Roboto', sans-serif;
-        text-align: center;
-        background-color: #f7f8fa;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: #333;
+body {
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #222;
+    animation: fadeInBody 1s ease-in-out;
+}
+
+@keyframes fadeInBody {
+    from {
+        opacity: 0;
     }
-    #container {
-        background: white;
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        max-width: 400px;
-        width: 100%;
+    to {
+        opacity: 1;
     }
-    #passwordInput {
-        margin-top: 20px;
-        padding: 12px;
-        font-size: 16px;
-        border: 2px solid #ddd;
-        border-radius: 5px;
-        width: 100%;
-        box-sizing: border-box;
-        transition: border-color 0.3s ease;
+}
+
+#container {
+    background: white;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
     }
-    #passwordInput:focus {
-        border-color: #4CAF50;
-        outline: none;
+    to {
+        opacity: 1;
+        transform: scale(1);
     }
-    #submitButton {
-        margin-top: 20px;
-        padding: 12px;
-        font-size: 16px;
-        cursor: pointer;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-        width: 100%;
-        box-sizing: border-box;
+}
+
+#container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+#passwordInput {
+    margin-top: 25px;
+    padding: 15px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-    #submitButton:hover {
-        background-color: #45a049;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-    #message {
-        margin-top: 20px;
-        font-size: 18px;
-        color: #555;
+}
+
+#passwordInput:focus {
+    border-color: #1abc9c;
+    box-shadow: 0 0 5px rgba(26, 188, 156, 0.3);
+    outline: none;
+}
+
+#submitButton {
+    margin-top: 25px;
+    padding: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #1abc9c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    animation: slideUp 0.7s ease-out;
+}
+
+#submitButton:hover {
+    background-color: #16a085;
+    box-shadow: 0 4px 10px rgba(26, 188, 156, 0.2);
+}
+
+#message {
+    margin-top: 25px;
+    font-size: 18px;
+    color: #444;
+    animation: fadeInMessage 1s ease-in-out;
+}
+
+@keyframes fadeInMessage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 </style>
 </head>
 <body>
