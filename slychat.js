@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
     
 
@@ -18,6 +18,7 @@ import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gsta
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore();
+    const provider = new GoogleAuthProvider();
 
     // Elementi
     const chatWindow = document.getElementById('chat-window');
@@ -70,59 +71,58 @@ import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gsta
         chatWindow.scrollTop = chatWindow.scrollHeight;  // Pomakni se navzdol do zadnjega sporočila
     }
 
-    // Google Sign-In
-    googleSignInButton.onclick = function() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then((result) => {
-            currentUser = result.user;
-            updateUI();
-            console.log('User signed in: ', currentUser);
-        }).catch((error) => {
-            console.error('Error during sign in: ', error);
+// Google prijava
+googleSignInButton.onclick = () => {
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            const user = result.user;
+            console.log("User signed in: ", user);
+            updateUI(user);
+        })
+        .catch((error) => {
+            console.error("Error during sign-in: ", error);
         });
-    };
+};
 
-    // Google Sign-Out
-    googleSignOutButton.onclick = function() {
-        auth.signOut().then(() => {
-            currentUser = null;
-            updateUI();
-            console.log('User signed out.');
-        }).catch((error) => {
-            console.error('Error during sign out: ', error);
+// Google odjava
+googleSignOutButton.onclick = () => {
+    signOut(auth)
+        .then(() => {
+            console.log("User signed out.");
+            updateUI(null);
+        })
+        .catch((error) => {
+            console.error("Error during sign-out: ", error);
         });
-    };
+};
 
-    // Update the UI based on user state
-    auth.onAuthStateChanged((user) => {
-        if (user) {
-            currentUser = user;
-            updateUI();
-        } else {
-            currentUser = null;
-            updateUI();
-        }
-    });
-
-    function updateUI() {
-        if (currentUser) {
-            userNamesContainer.innerHTML = ''; // Clear existing users
-            const userElement = document.createElement('div');
-            userElement.textContent = currentUser.displayName || currentUser.email;
-            userNamesContainer.appendChild(userElement);
-
-            googleSignInButton.style.display = 'none';
-            googleSignOutButton.style.display = 'block';
-            chatInput.disabled = false; // Enable chat input
-            sendButton.disabled = false; // Enable send button
-        } else {
-            userNamesContainer.innerHTML = 'No user logged in';
-            googleSignInButton.style.display = 'block';
-            googleSignOutButton.style.display = 'none';
-            chatInput.disabled = true; // Disable chat input
-            sendButton.disabled = true; // Disable send button
-        }
+// Listen for auth state changes
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("User is signed in: ", user);
+        updateUI(user);
+    } else {
+        console.log("No user is signed in.");
+        updateUI(null);
     }
+});
+
+// Spremeni stran glede na to ali si prijavljen
+function updateUI(user) {
+    if (user) {
+        userNamesContainer.textContent = user.displayName || user.email;
+        googleSignInButton.style.display = 'none';
+        googleSignOutButton.style.display = 'block';
+        chatInput.disabled = 'false';
+        sendButton.disabled = 'false';
+    } else {
+        userNamesContainer.textContent = 'No user logged in';
+        googleSignInButton.style.display = 'block';
+        googleSignOutButton.style.display = 'none';
+        chatInput.disabled = 'true';
+        sendButton.disabled = 'true';
+    }
+}
 
     // Chat sending functionality
     sendButton.onclick = function() {
