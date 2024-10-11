@@ -43,7 +43,7 @@
     color: #555;
 }
 
-#join-button, #reserve-button, #google-sign-in-button {
+#join-button, #reserve-button, #google-sign-in-button #google-sign-out-button{
     padding: 9px 23px;
     background: linear-gradient(145deg, #6a82fb, #fc5c7d);
     color: white;
@@ -54,7 +54,7 @@
     transition: all 0.3s ease-in-out;
 }
 
-#join-button:hover, #reserve-button:hover, #google-sign-in-button:hover {
+#join-button:hover, #reserve-button:hover, #google-sign-in-button:hover #google-sign-out-button:hover{
     background: linear-gradient(145deg, #5b72e9, #e4486c);
     box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
