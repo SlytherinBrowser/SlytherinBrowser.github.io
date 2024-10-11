@@ -43,8 +43,8 @@
     </div>
 
 
-    <script type="module">
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    <script>
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
     
@@ -170,53 +170,19 @@ function updateUI(user) {
     }
 }
 
-   // Function to send a message
-sendButton.onclick = function() {
-    const message = chatInput.value.trim(); // Trim whitespace from the input
-
-    if (message !== '') {
-        const chatMessage = {
-            text: message,
-            sender: currentUser ? (currentUser.displayName || currentUser.email) : 'Anonymous',
-            timestamp: new Date().toISOString() // Add a timestamp for the message
-        };
-
-        // Push the message to the database
-        db.ref(`chats/${chatRoomCode}`).push(chatMessage)
-            .then(() => {
-                // Successfully sent, add message to the chat window
-                addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
-            })
-            .catch(error => {
-                // Handle any errors
-                console.error('Error sending message:', error);
-            });
-
-        // Clear the chat input field
-        chatInput.value = '';
-    }
-};
-
-// Function to add a message to the chat window
-function addMessageToChatWindow(chatMessage, sender, isCurrentUser, status) {
-    const messageContainer = document.createElement('div');
-    messageContainer.classList.add('chat-message');
-    if (isCurrentUser) {
-        messageContainer.classList.add('my-message'); // Style for current user's message
-    }
-
-    // Construct the message display
-    messageContainer.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="message-text">${chatMessage.text}</div>
-        <div class="message-status">${status}</div>
-    `;
-
-    // Append the message to the chat window
-    chatWindow.appendChild(messageContainer);
-    chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the bottom of the chat
-}
-
+    // Chat sending functionality
+    sendButton.onclick = function() {
+        const message = chatInput.value;
+        if (message.trim() !== '') {
+            const chatMessage = {
+                text: message,
+                sender: currentUser ? currentUser.displayName || currentUser.email : 'Anonymous'
+            };
+            db.ref(`chats/${chatRoomCode}`).push(chatMessage);
+            addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
+            chatInput.value = '';
+        }
+    };
 
     // Joining a chat room
     joinButton.onclick = function() {
