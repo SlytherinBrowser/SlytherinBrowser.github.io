@@ -1,4 +1,4 @@
-   body {
+body {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #e0eafc, #cfdef3);
     margin: 0;
@@ -8,6 +8,7 @@
     align-items: center;
     height: 100vh;
     color: #333;
+    transition: all 0.5s ease-in-out;
 }
 
 #chat-container {
@@ -20,6 +21,12 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 20px;
+    transition: transform 0.5s, box-shadow 0.5s ease;
+}
+
+#chat-container:hover {
+    transform: translateY(-10px);
+    box-shadow: 12px 12px 24px rgba(0, 0, 0, 0.2), -12px -12px 24px rgba(255, 255, 255, 0.7);
 }
 
 #code-container {
@@ -31,6 +38,7 @@
     background: #f0f0f0;
     border-radius: 20px;
     box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease-in-out;
 }
 
 #code-input {
@@ -38,9 +46,17 @@
     padding: 12px;
     border-radius: 30px;
     border: none;
-    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.7);
     background-color: #f7f7f7;
     color: #555;
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), -4px -4px 8px rgba(255, 255, 255, 0.7);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 0;
 }
 
 #join-button, #reserve-button, #google-sign-in-button, #google-sign-out-button {
@@ -49,14 +65,15 @@
     color: white;
     border: none;
     border-radius: 50px;
-    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.7);
     cursor: pointer;
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.15), -6px -6px 12px rgba(255, 255, 255, 0.7);
     transition: all 0.3s ease-in-out;
 }
 
 #join-button:hover, #reserve-button:hover, #google-sign-in-button:hover, #google-sign-out-button:hover {
     background: linear-gradient(145deg, #5b72e9, #e4486c);
     box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.8);
+    transform: scale(1.05);
 }
 
 #user-list {
@@ -83,10 +100,14 @@
     padding: 20px;
     border: none;
     width: 98%;
-    border-top: none;
     background-color: #ffffff;
     border-radius: 30px;
     box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.8);
+    transition: transform 0.3s ease-in-out;
+}
+
+#chat-input:focus {
+    transform: scale(1.02);
 }
 
 #send-button {
@@ -96,16 +117,16 @@
     background: linear-gradient(145deg, #6a82fb, #fc5c7d);
     color: white;
     border: none;
-    cursor: pointer;
     border-bottom-left-radius: 30px;
     border-bottom-right-radius: 30px;
-    transition: background-color 0.3s ease-in-out, box-shadow 0.3s;
+    transition: all 0.3s ease-in-out;
     box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.7);
 }
 
 #send-button:hover {
     background: linear-gradient(145deg, #5b72e9, #e4486c);
     box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
 }
 
 /* Popup Window Styles */
@@ -121,6 +142,7 @@
     border-radius: 20px;
     backdrop-filter: blur(15px);
     box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.7);
+    transition: opacity 0.5s ease-in-out;
 }
 
 #popup-container h3 {
@@ -173,6 +195,7 @@
 }
 
 #close-button {
+    width: 100%;
     background-color: #e63946;
     color: white;
     padding: 10px;
@@ -180,5 +203,10 @@
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
-    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.8);
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.1), -6px -6px 12px rgba(255, 255, 255, 0.7);
+}
+
+#close-button:hover {
+    background-color: #d90429;
+    box-shadow: 8px 8px 16px rgba(0, 0, 0, 0.2), -8px -8px 16px rgba(255, 255, 255, 0.8);
 }
