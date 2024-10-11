@@ -73,42 +73,47 @@
 </div>
 
 <script>
-    const correctPassword = "meandyou";
-    let attempts = 0;
-    const maxAttempts = 3;
-    const lockoutDuration = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+   const correctPassword = "meandyou";
+let attempts = 0;
+const maxAttempts = 3;
+const lockoutDuration = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-    document.getElementById("submitButton").addEventListener("click", function() {
-        const enteredPassword = document.getElementById("passwordInput").value;
+document.getElementById("submitButton").addEventListener("click", function() {
+    const enteredPassword = document.getElementById("passwordInput").value;
+
+    const lockoutTime = localStorage.getItem("lockoutTime");
+    const now = new Date();
+    
+    if (lockoutTime) {
+        const lockoutDate = new Date(lockoutTime);
+        const midnightToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
         
-        if (localStorage.getItem("lockoutTime")) {
-            const lockoutTime = new Date(localStorage.getItem("lockoutTime"));
-            const currentTime = new Date();
-            if (currentTime - lockoutTime < lockoutDuration) {
-                document.getElementById("message").textContent = "Stran je zaklenjena. Poskusite znova po polnoči.";
-                return;
-            } else {
-                localStorage.removeItem("lockoutTime");
-                attempts = 0;
-            }
+        // Reset attempts if it's after midnight
+        if (now >= midnightToday && lockoutDate < midnightToday) {
+            localStorage.removeItem("lockoutTime");
+            attempts = 0;
+        } else if (now - lockoutDate < lockoutDuration) {
+            document.getElementById("message").textContent = "Stran je zaklenjena. Poskusite znova po polnoči.";
+            return;
         }
+    }
 
-        if (enteredPassword === correctPassword && attempts < maxAttempts) {
-            document.getElementById("message").textContent = "Geslo je pravilno. Preusmerjam...";
-            setTimeout(function(){
-                window.location.href = "https://slytherinbrowser.github.io/moja.html";
-            }, 2000);
-        } else {
-            attempts++;
-            document.getElementById("message").textContent = "Napačno geslo. Poskusite znova.";
-            if (attempts >= maxAttempts) {
-                const now = new Date();
-                const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-                localStorage.setItem("lockoutTime", midnight);
-                document.getElementById("message").textContent = "Stran je zaklenjena. Poskusite znova po polnoči.";
-            }
+    if (enteredPassword === correctPassword && attempts < maxAttempts) {
+        document.getElementById("message").textContent = "Geslo je pravilno. Preusmerjam...";
+        setTimeout(function(){
+            window.location.href = "https://slytherinbrowser.github.io/moja.html";
+        }, 2000);
+    } else {
+        attempts++;
+        document.getElementById("message").textContent = "Napačno geslo. Poskusite znova.";
+        if (attempts >= maxAttempts) {
+            const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+            localStorage.setItem("lockoutTime", midnight);
+            document.getElementById("message").textContent = "Stran je zaklenjena. Poskusite znova po polnoči.";
         }
-    });
+    }
+});
+
 </script>
 
 </body>
