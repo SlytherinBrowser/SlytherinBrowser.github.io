@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Basic Code Editor</title>
     <style>
-        /* Basic Style */
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -61,22 +60,10 @@
         <input type="text" id="fileName" placeholder="Enter file name (e.g., my_code.html)">
     </div>
 
-    <!-- HTML Editor -->
+    <!-- Unified Editor -->
     <div class="editor-section">
-        <h2>HTML</h2>
-        <textarea id="htmlEditor"></textarea>
-    </div>
-
-    <!-- CSS Editor -->
-    <div class="editor-section">
-        <h2>CSS</h2>
-        <textarea id="cssEditor"></textarea>
-    </div>
-
-    <!-- JavaScript Editor -->
-    <div class="editor-section">
-        <h2>JavaScript</h2>
-        <textarea id="jsEditor"></textarea>
+        <h2>Code</h2>
+        <textarea id="codeEditor" placeholder="Write your code here..."></textarea>
     </div>
 
     <!-- Buttons -->
@@ -88,41 +75,26 @@
 
     <script>
         function updatePreview() {
-            const htmlContent = document.getElementById("htmlEditor").value;
-            const cssContent = document.getElementById("cssEditor").value;
-            const jsContent = document.getElementById("jsEditor").value;
-
+            const fileName = document.getElementById("fileName").value;
+            const codeContent = document.getElementById("codeEditor").value;
             const previewFrame = document.getElementById('preview');
-            previewFrame.innerHTML = `
-                <style>${cssContent}</style>
-                ${htmlContent}
-                <script>${jsContent}<\/script>
-            `;
+
+            if (fileName.endsWith(".html")) {
+                previewFrame.innerHTML = codeContent;
+            } else if (fileName.endsWith(".css")) {
+                previewFrame.innerHTML = `<style>${codeContent}</style><p>CSS Preview</p>`;
+            } else if (fileName.endsWith(".js")) {
+                previewFrame.innerHTML = `<p>JavaScript Preview</p><script>${codeContent}<\/script>`;
+            } else {
+                previewFrame.innerHTML = "<p>Unsupported file type. Please use .html, .css, or .js</p>";
+            }
         }
 
         function saveFile() {
             const fileName = document.getElementById("fileName").value || "my_code.html"; // Default file name
-            const htmlContent = document.getElementById("htmlEditor").value;
-            const cssContent = document.getElementById("cssEditor").value;
-            const jsContent = document.getElementById("jsEditor").value;
+            const codeContent = document.getElementById("codeEditor").value;
 
-            const fullContent = `
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>${fileName}</title>
-                    <style>${cssContent}</style>
-                </head>
-                <body>
-                    ${htmlContent}
-                    <script>${jsContent}<\/script>
-                </body>
-                </html>
-            `;
-
-            const blob = new Blob([fullContent], { type: "text/html" });
+            const blob = new Blob([codeContent], { type: "text/plain" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = fileName;
