@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Code Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -86,16 +88,26 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/html-hint.min.js"></script>
     <script>
-        // Initialize CodeMirror with syntax highlighting
+        // Initialize CodeMirror with syntax highlighting and autocomplete
         const codeEditor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
             lineNumbers: true,
             mode: "htmlmixed",
             theme: "material",
             autoCloseTags: true,
-            matchBrackets: true
+            matchBrackets: true,
+            extraKeys: { "Ctrl-Space": "autocomplete" },
         });
         codeEditor.setSize("100%", "100%");
+
+        // Enable auto-complete on input
+        codeEditor.on("inputRead", function(editor, event) {
+            if (!editor.state.completionActive && /^[\w\.\-]+$/.test(event.text[0])) {
+                CodeMirror.commands.autocomplete(editor);
+            }
+        });
 
         // Update preview based on file type
         function updatePreview() {
