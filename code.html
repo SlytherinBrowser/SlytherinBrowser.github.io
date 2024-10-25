@@ -3,80 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basic Code Editor</title>
+    <title>Advanced Code Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #282c34;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            color: #333;
+            color: #fff;
+            margin: 0;
+            height: 100vh;
         }
         h1 {
             font-size: 1.8em;
-            color: #444;
+            color: #61dafb;
         }
-        .editor-section {
+        .controls {
+            display: flex;
+            justify-content: space-between;
             width: 90%;
-            margin: 10px 0;
-        }
-        textarea, input[type="text"] {
-            width: 100%;
-            padding: 10px;
+            align-items: center;
             margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 50%;
+            padding: 8px;
             font-size: 1em;
             border-radius: 4px;
             border: 1px solid #ccc;
-            resize: vertical;
+            color: #333;
         }
         button {
-            background-color: #0078D4;
-            color: #fff;
+            background-color: #61dafb;
+            color: #282c34;
             border: none;
             border-radius: 5px;
             padding: 10px 20px;
             font-size: 1em;
             cursor: pointer;
-            margin: 10px;
+            margin-left: 10px;
+        }
+        .editor-section {
+            width: 90%;
+            height: 60%;
+            margin-bottom: 10px;
         }
         #preview {
             width: 90%;
-            background: #fff;
+            background: #1e1e1e;
             border-radius: 8px;
             padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+            color: #ddd;
+            overflow-y: auto;
+            height: 25%;
         }
     </style>
 </head>
 <body>
-    <h1>Basic Code Editor</h1>
+    <h1>Advanced Code Editor</h1>
 
-    <!-- Input for file name -->
-    <div class="editor-section">
-        <h2>File Name</h2>
+    <!-- Controls for file name and buttons -->
+    <div class="controls">
         <input type="text" id="fileName" placeholder="Enter file name (e.g., my_code.html)">
+        <button onclick="updatePreview()">Show Preview</button>
+        <button onclick="saveFile()">Save File</button>
     </div>
 
-    <!-- Unified Editor -->
+    <!-- Code Editor -->
     <div class="editor-section">
-        <h2>Code</h2>
-        <textarea id="codeEditor" placeholder="Write your code here..."></textarea>
+        <textarea id="codeEditor"></textarea>
     </div>
-
-    <!-- Buttons -->
-    <button onclick="updatePreview()">Show Preview</button>
-    <button onclick="saveFile()">Save File</button>
 
     <!-- Preview Section -->
-    <div id="preview"></div>
+    <div id="preview">Your preview will appear here</div>
 
+    <!-- CodeMirror Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
     <script>
+        // Initialize CodeMirror with syntax highlighting
+        const codeEditor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+            lineNumbers: true,
+            mode: "htmlmixed",
+            theme: "material",
+            autoCloseTags: true,
+            matchBrackets: true
+        });
+        codeEditor.setSize("100%", "100%");
+
+        // Update preview based on file type
         function updatePreview() {
             const fileName = document.getElementById("fileName").value;
-            const codeContent = document.getElementById("codeEditor").value;
+            const codeContent = codeEditor.getValue();
             const previewFrame = document.getElementById('preview');
 
             if (fileName.endsWith(".html")) {
@@ -90,10 +114,10 @@
             }
         }
 
+        // Save file function
         function saveFile() {
-            const fileName = document.getElementById("fileName").value || "my_code.html"; // Default file name
-            const codeContent = document.getElementById("codeEditor").value;
-
+            const fileName = document.getElementById("fileName").value || "my_code.html";
+            const codeContent = codeEditor.getValue();
             const blob = new Blob([codeContent], { type: "text/plain" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
