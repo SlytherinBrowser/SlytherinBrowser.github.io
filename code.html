@@ -33,15 +33,22 @@
             background-color: #61dafb;
             color: #282c34;
             border: none;
-            border-radius: 20px;
             padding: 10px 20px;
             font-size: 1em;
             cursor: pointer;
-            margin: 0 5px;
             transition: transform 0.2s ease;
         }
         .button:hover {
             transform: scale(1.05);
+        }
+        .button:first-child {
+            border-top-left-radius: 20px;
+            border-bottom-left-radius: 20px;
+        }
+        .button:last-child {
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
+            margin-left: -1px; /* Remove gap between buttons */
         }
         .editor-section {
             width: 90%;
