@@ -102,9 +102,9 @@
         });
         codeEditor.setSize("100%", "100%");
 
-        // Enable auto-complete on input
+        // Enable auto-complete suggestions automatically
         codeEditor.on("inputRead", function(editor, event) {
-            if (!editor.state.completionActive && /^[\w\.\-]+$/.test(event.text[0])) {
+            if (!editor.state.completionActive && event.text[0].match(/[\w\.\-]/)) {
                 CodeMirror.commands.autocomplete(editor);
             }
         });
