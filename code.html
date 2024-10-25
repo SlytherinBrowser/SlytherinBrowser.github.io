@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Code Editor with Autocomplete</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .editor-section {
+            width: 90%;
+            margin-bottom: 20px;
+        }
+        #preview {
+            width: 90%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            min-height: 200px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Code Editor with Autocomplete</h1>
+
+    <div class="editor-section">
+        <h2>HTML</h2>
+        <textarea id="htmlEditor"></textarea>
+    </div>
+
+    <div class="editor-section">
+        <h2>CSS</h2>
+        <textarea id="cssEditor"></textarea>
+    </div>
+
+    <div class="editor-section">
+        <h2>JavaScript</h2>
+        <textarea id="jsEditor"></textarea>
+    </div>
+
+    <button onclick="updatePreview()">Show Preview</button>
+    <button onclick="saveFile()">Save File</button>
+
+    <div id="preview"></div>
+
+    <!-- CodeMirror Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closebrackets.min.js"></script>
+
+    <script>
+        // Initialize CodeMirror editors with autocomplete
+        const htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlEditor"), {
+            mode: "xml",
+            lineNumbers: true,
+            autoCloseTags: true,
+            theme: "default"
+        });
+
+        const cssEditor = CodeMirror.fromTextArea(document.getElementById("cssEditor"), {
+            mode: "css",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            theme: "default"
+        });
+
+        const jsEditor = CodeMirror.fromTextArea(document.getElementById("jsEditor"), {
+            mode: "javascript",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            theme: "default"
+        });
+
+        // Function to show preview
+        function updatePreview() {
+            const htmlContent = htmlEditor.getValue();
+            const cssContent = cssEditor.getValue();
+            const jsContent = jsEditor.getValue();
+
+            const previewFrame = document.getElementById('preview');
+            previewFrame.innerHTML = `
+                <style>${cssContent}</style>
+                ${htmlContent}
+                <script>${jsContent}<\/script>
+            `;
+        }
+
+        // Function to save file
+        function saveFile() {
+            const htmlContent = htmlEditor.getValue();
+            const cssContent = cssEditor.getValue();
+            const jsContent = jsEditor.getValue();
+
+            const fullContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Saved Code</title>
+                    <style>${cssContent}</style>
+                </head>
+                <body>
+                    ${htmlContent}
+                    <script>${jsContent}<\/script>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([fullContent], { type: "text/html" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "my_code.html";
+            link.click();
+        }
+    </script>
+</body>
+</html>
