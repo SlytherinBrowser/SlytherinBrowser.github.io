@@ -26,43 +26,22 @@
         .controls {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            align-items: center;
             margin-bottom: 20px;
         }
-        .button-container {
-            position: relative;
-            width: 60px;
-            height: 60px;
-            overflow: hidden;
-            border-radius: 50%;
-            transition: width 0.3s ease, height 0.3s ease;
-            background-color: #61dafb;
-            cursor: pointer;
-        }
-        .button-container:hover {
-            width: 180px;
-            border-radius: 30px;
-        }
         .button {
-            opacity: 0;
+            background-color: #61dafb;
             color: #282c34;
-            text-align: center;
-            font-weight: bold;
-            text-decoration: none;
-            padding: 10px;
-            display: block;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: transform 0.2s ease;
         }
-        .button-container:hover .button {
-            opacity: 1;
-            transform: translate(-10%, -50%);
-        }
-        .button + .button {
-            left: 120%;
+        .button:hover {
+            transform: scale(1.05);
         }
         .editor-section {
             width: 90%;
@@ -87,10 +66,8 @@
     <!-- Controls for file name and buttons -->
     <div class="controls">
         <input type="text" id="fileName" placeholder="Enter file name (e.g., my_code.html)">
-        <div class="button-container">
-            <a href="#" class="button" onclick="updatePreview()">Preview</a>
-            <a href="#" class="button" onclick="saveFile()">Save</a>
-        </div>
+        <button class="button" onclick="updatePreview()">Preview</button>
+        <button class="button" onclick="saveFile()">Save</button>
     </div>
 
     <!-- Code Editor -->
