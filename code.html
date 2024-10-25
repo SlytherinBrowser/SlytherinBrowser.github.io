@@ -23,11 +23,11 @@
             width: 90%;
             margin: 10px 0;
         }
-        textarea {
+        textarea, input[type="text"] {
             width: 100%;
-            height: 150px;
-            font-size: 1em;
             padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1em;
             border-radius: 4px;
             border: 1px solid #ccc;
             resize: vertical;
@@ -54,6 +54,12 @@
 </head>
 <body>
     <h1>Basic Code Editor</h1>
+
+    <!-- Input for file name -->
+    <div class="editor-section">
+        <h2>File Name</h2>
+        <input type="text" id="fileName" placeholder="Enter file name (e.g., my_code.html)">
+    </div>
 
     <!-- HTML Editor -->
     <div class="editor-section">
@@ -95,6 +101,7 @@
         }
 
         function saveFile() {
+            const fileName = document.getElementById("fileName").value || "my_code.html"; // Default file name
             const htmlContent = document.getElementById("htmlEditor").value;
             const cssContent = document.getElementById("cssEditor").value;
             const jsContent = document.getElementById("jsEditor").value;
@@ -105,7 +112,7 @@
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Saved Code</title>
+                    <title>${fileName}</title>
                     <style>${cssContent}</style>
                 </head>
                 <body>
@@ -118,7 +125,7 @@
             const blob = new Blob([fullContent], { type: "text/html" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "my_code.html";
+            link.download = fileName;
             link.click();
         }
     </script>
