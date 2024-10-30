@@ -97,7 +97,7 @@ googleSignOutButton.onclick = () => {
 // Listen for auth state changes
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log("User is signed in: ", user);
+        console.log("User is signed in:", user);
         currentUser = user;
         updateUI(user);
     } else {
@@ -110,12 +110,14 @@ onAuthStateChanged(auth, (user) => {
 // Update UI based on sign-in status
 function updateUI(user) {
     if (user) {
+        currentUser = user;  // Save the user globally
         userNamesContainer.textContent = user.displayName || user.email;
         googleSignInButton.style.display = 'none';
         googleSignOutButton.style.display = 'block';
         chatInput.disabled = false;
         sendButton.disabled = false;
     } else {
+        currentUser = null;
         userNamesContainer.textContent = 'No user logged in';
         googleSignInButton.style.display = 'block';
         googleSignOutButton.style.display = 'none';
@@ -126,15 +128,21 @@ function updateUI(user) {
 
 // Chat sending functionality
 sendButton.onclick = async function() {
-    const message = chatInput.value;
-    if (message.trim() !== '') {
+    const message = chatInput.value.trim();
+    if (message !== '') {
         const chatMessage = {
             text: message,
-            sender: currentUser ? currentUser.displayName || currentUser.email : 'Anonymous'
+            sender: currentUser ? currentUser.displayName || currentUser.email : 'Anonymous',
+            timestamp: new Date() // add timestamp for order
         };
-        await addDoc(collection(db, `chats/${chatRoomCode}`), chatMessage);
-        addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
-        chatInput.value = '';
+        
+        try {
+            await addDoc(collection(db, `chats/${chatRoomCode}`), chatMessage);
+            addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
+            chatInput.value = '';
+        } catch (error) {
+            console.error("Error adding message to Firestore:", error);
+        }
     }
 };
 
