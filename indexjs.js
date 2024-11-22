@@ -404,12 +404,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     applyMode(savedMode);
 });
 
-document.addEventListener("keydown", function(event) {
-    if (event.shiftKey && event.key === "*") {
-        toggleMode();
-    }
-});
-
 // Dodaj event listener za klik na gumb
 document.getElementById("buttonkng").addEventListener("click", function() {
     toggleMode();
@@ -417,7 +411,7 @@ document.getElementById("buttonkng").addEventListener("click", function() {
 
 function toggleMode() {
     const currentMode = localStorage.getItem("mode") || "normal"; // Preveri trenutni slog
-    const availableModes = getAvailableModes();
+    const availableModes = getAvailableModes(); // Pridobi razpoložljive sloge
     const currentIndex = availableModes.indexOf(currentMode);
     const nextMode = availableModes[(currentIndex + 1) % availableModes.length]; // Cikli preklapljanja
     applyMode(nextMode);
