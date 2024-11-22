@@ -9,31 +9,7 @@
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
 }
-.snowflake {
-            color: #fff;
-            font-size: 1.5em;
-            position: absolute;
-            top: -10%;
-            animation: snowfall 10s linear infinite;
-        }
-        @keyframes snowfall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-                opacity: 0.3;
-            }
-        }
-        .snowflake:nth-child(odd) {
-            animation-duration: 12s;
-            font-size: 1.2em;
-        }
-        .snowflake:nth-child(even) {
-            animation-duration: 8s;
-            font-size: 1.8em;
-        }
+
        
             .p{
                 display: none;
@@ -369,31 +345,7 @@
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
             }
-.snowflake {
-            color: #fff;
-            font-size: 1.5em;
-            position: absolute;
-            top: -10%;
-            animation: snowfall 10s linear infinite;
-        }
-        @keyframes snowfall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-                opacity: 0.3;
-            }
-        }
-        .snowflake:nth-child(odd) {
-            animation-duration: 12s;
-            font-size: 1.2em;
-        }
-        .snowflake:nth-child(even) {
-            animation-duration: 8s;
-            font-size: 1.8em;
-        }
+
             .p{
                 display: flex;
                 position: fixed;
