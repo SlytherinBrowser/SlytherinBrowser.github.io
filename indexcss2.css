@@ -6,6 +6,9 @@
                 height: 100vh;
                 margin: 0;
                 background: url('winter1.png') no-repeat center center fixed;
+background-size: cover; /* Slika bo pokrila celoten zaslon */
+    background-position: center center; /* Slika bo centrirana */
+    background-attachment: fixed; /* Slika bo ostala na mestu pri pomikanju strani */
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
 }
