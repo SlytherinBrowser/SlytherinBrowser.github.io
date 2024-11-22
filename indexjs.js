@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setInterval(changeTitleAndIcon, 3000);
 });
 for (let i = 0; i < 50; i++) {
-            let snowflake = document.createElement('body');
+            let snowflake = document.createElement('div');
             snowflake.className = 'snowflake';
             snowflake.textContent = '❄';
             snowflake.style.left = Math.random() * 100 + 'vw';
