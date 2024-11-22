@@ -13,24 +13,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setInterval(changeTitleAndIcon, 3000);
 });
 
-// Funkcija za generiranje snežink
-function createSnowflakes() {
-    for (let i = 0; i < 50; i++) {
-        let snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.textContent = '❄';
-        
-        // Naključne lastnosti za snežinke
-        snowflake.style.left = Math.random() * 100 + 'vw'; // Naključna horizontalna pozicija
-        snowflake.style.fontSize = Math.random() * 10 + 10 + 'px'; // Naključna velikost
-        snowflake.style.animationDuration = Math.random() * 5 + 5 + 's'; // Naključna hitrost
-        snowflake.style.animationDelay = Math.random() * 5 + 's'; // Naključni zamik
-
-        // Dodaj snežinko na stran
-        document.body.appendChild(snowflake);
-    }
-}
-
+for (let i = 0; i < 50; i++) {
+            let snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            snowflake.textContent = '❄';
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.animationDelay = Math.random() * 5 + 's';
+            document.body.appendChild(snowflake);
+        }
 // Klic funkcije za ustvarjanje snežink
 createSnowflakes();
 
