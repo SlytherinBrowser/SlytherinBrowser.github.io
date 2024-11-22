@@ -431,7 +431,7 @@ body {
         .snowflake:nth-child(even) {
             animation-duration: 8s;
             font-size: 1.8em;
-        }
+        } 
 .p{
             display: flex;
             position: fixed;
