@@ -13,6 +13,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setInterval(changeTitleAndIcon, 3000);
 });
 
+
+
+  const logo = document.getElementById('logo');
+        const music = document.getElementById('backgroundMusic');
+        const today = new Date();
+        const start = new Date(today.getFullYear(), 10, 20); // 20. november
+        const end = new Date(today.getFullYear(), 1, 28); // 28. februar
+        
+        if (today >= start || today <= end) {
+            logo.src = "zvoncki.gif";
+            music.play();
+        }
+
+
+
 function isWinter() {
             const now = new Date();
             const month = now.getMonth();  // November is 10, December is 11, February is 1
