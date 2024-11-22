@@ -13,16 +13,34 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setInterval(changeTitleAndIcon, 3000);
 });
 
-for (let i = 0; i < 50; i++) {
-            let snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.textContent = '❄';
-            snowflake.style.left = Math.random() * 100 + 'vw';
-            snowflake.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(snowflake);
+function isWinter() {
+            const now = new Date();
+            const month = now.getMonth();  // November is 10, December is 11, February is 1
+            const day = now.getDate();
+
+            // Preverimo, če je med 20. novembrom in 28. februarjem
+            if (month === 10 && day >= 20) return true; // november 20+
+            if (month === 11) return true; // december
+            if (month === 0) return true;  // januar
+            if (month === 1 && day <= 28) return true; // februar do 28
+            return false;
         }
-// Klic funkcije za ustvarjanje snežink
-createSnowflakes();
+
+        function createSnowflakes() {
+            if (isWinter()) {
+                for (let i = 0; i < 50; i++) {
+                    let snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = '❄';
+                    snowflake.style.left = Math.random() * 100 + 'vw';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    document.body.appendChild(snowflake);
+                }
+            }
+        }
+
+        // Pokličemo funkcijo za ustvarjanje snežink
+        createSnowflakes();
 
 
  function menuking() {
