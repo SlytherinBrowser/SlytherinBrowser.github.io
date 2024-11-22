@@ -418,10 +418,9 @@ document.getElementById("buttonkng").addEventListener("click", function() {
 function toggleMode() {
     const currentMode = localStorage.getItem("mode") || "normal";
     const availableModes = getAvailableModes();
-    const newMode = availableModes.includes(currentMode) ? currentMode : "normal";
-    const nextMode = newMode === "normal" ? "modern" : newMode === "modern" ? "winterstyle" : "normal";
+    const currentIndex = availableModes.indexOf(currentMode);
+    const nextMode = availableModes[(currentIndex + 1) % availableModes.length];
     applyMode(nextMode);
-    location.reload(); // Reload the page after toggling mode
 }
 
 function getAvailableModes() {
