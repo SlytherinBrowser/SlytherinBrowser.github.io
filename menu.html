@@ -18,6 +18,33 @@
             src: url(Jaro-Regular.ttf);
         }
 
+
+.snowflake {
+            color: #fff;
+            font-size: 1.5em;
+            position: absolute;
+            top: -10%;
+            animation: snowfall 10s linear infinite;
+        }
+        @keyframes snowfall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        .snowflake:nth-child(odd) {
+            animation-duration: 12s;
+            font-size: 1.2em;
+        }
+        .snowflake:nth-child(even) {
+            animation-duration: 8s;
+            font-size: 1.8em;
+        }
+
         /* iOS-style Dock Navigation Bar */
         .navbar {
             display: flex;
@@ -358,6 +385,36 @@
 
         // Show applications by default
         showCategory('applications');
+    </script>
+ <script>
+        function isWinter() {
+            const now = new Date();
+            const month = now.getMonth();  // November is 10, December is 11, February is 1
+            const day = now.getDate();
+
+            // Preverimo, če je med 20. novembrom in 28. februarjem
+            if (month === 10 && day >= 20) return true; // november 20+
+            if (month === 11) return true; // december
+            if (month === 0) return true;  // januar
+            if (month === 1 && day <= 28) return true; // februar do 28
+            return false;
+        }
+
+        function createSnowflakes() {
+            if (isWinter()) {
+                for (let i = 0; i < 50; i++) {
+                    let snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = '❄';
+                    snowflake.style.left = Math.random() * 100 + 'vw';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    document.body.appendChild(snowflake);
+                }
+            }
+        }
+
+        // Pokličemo funkcijo za ustvarjanje snežink
+        createSnowflakes();
     </script>
 </body>
 </html>
