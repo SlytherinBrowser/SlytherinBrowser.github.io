@@ -14,6 +14,11 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
 }
 
 
+#backgroundMusic {
+            display: none; /* Skrije predvajalnik glasbe */
+        }
+
+
 .snowflake {
             color: #fff;
             font-size: 1.5em;
