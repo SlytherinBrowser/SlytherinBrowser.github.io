@@ -377,6 +377,10 @@
                 color: #fff; /* White text color */
             }
 
+#backgroundMusic {
+            display: none; /* Skrije predvajalnik glasbe */
+        }
+
 
 .snowflake {
             color: #fff;
