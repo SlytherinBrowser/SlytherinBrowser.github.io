@@ -400,33 +400,40 @@ switch (toBase) {
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    const savedMode = localStorage.getItem("mode") || "normal"; // Privzeti slog je "normal"
+    const savedMode = localStorage.getItem("mode") || "normal";
     applyMode(savedMode);
 });
 
-// Dodaj event listener za klik na gumb
+document.addEventListener("keydown", function(event) {
+    if (event.shiftKey && event.key === "*") {
+        toggleMode();
+    }
+});
+
+// Add event listener for the button click
 document.getElementById("buttonkng").addEventListener("click", function() {
     toggleMode();
 });
 
 function toggleMode() {
-    const currentMode = localStorage.getItem("mode") || "normal"; // Preveri trenutni slog
-    const availableModes = getAvailableModes(); // Pridobi razpoložljive sloge
-    const currentIndex = availableModes.indexOf(currentMode);
-    const nextMode = availableModes[(currentIndex + 1) % availableModes.length]; // Cikli preklapljanja
+    const currentMode = localStorage.getItem("mode") || "normal";
+    const availableModes = getAvailableModes();
+    const newMode = availableModes.includes(currentMode) ? currentMode : "normal";
+    const nextMode = newMode === "normal" ? "modern" : newMode === "modern" ? "winterstyle" : "normal";
     applyMode(nextMode);
+    location.reload(); // Reload the page after toggling mode
 }
 
 function getAvailableModes() {
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), 10, 20); // 20. november
-    const endDate = new Date(today.getFullYear(), 1, 28); // 28. februar
+    const startDate = new Date(today.getFullYear(), 10, 20); // 20th November
+    const endDate = new Date(today.getFullYear(), 1, 28); // 28th February
 
-    // Če je datum med 20. novembrom in 28. februarjem, je na voljo winterstyle
+    // If the date is between 20th November and 28th February, winterstyle is available
     if (today >= startDate && today <= endDate) {
-        return ["normal", "modern", "winterstyle"]; // V tem obdobju so na voljo vsi trije slogi
+        return ["normal", "modern", "winterstyle"];
     }
-    return ["normal", "modern"]; // Izven obdobja je na voljo samo "normal" in "modern"
+    return ["normal", "modern"];
 }
 
 function applyMode(mode) {
@@ -434,20 +441,19 @@ function applyMode(mode) {
     const modernStylesheet = document.getElementById("modernStylesheet");
     const winterStylesheet = document.getElementById("winterStylesheet");
 
-    // Normal stil je vedno omogočen
-    normalStylesheet.disabled = true; 
-
-    // Onemogoči vse sloge
+    // Disable all stylesheets first
+    normalStylesheet.disabled = true;
     modernStylesheet.disabled = true;
     winterStylesheet.disabled = true;
 
-    // Omogoči izbrani slog
-    if (mode === "modern") {
+    // Enable the selected mode's stylesheet
+    if (mode === "normal") {
+        normalStylesheet.disabled = false;
+    } else if (mode === "modern") {
         modernStylesheet.disabled = false;
     } else if (mode === "winterstyle") {
         winterStylesheet.disabled = false;
     }
 
-    // Shrani izbrani slog v localStorage
     localStorage.setItem("mode", mode);
 }
