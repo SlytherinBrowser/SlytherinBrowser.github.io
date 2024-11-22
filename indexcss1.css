@@ -10,6 +10,10 @@ body {
     color: #ffffff;
 }
 
+#backgroundMusic {
+            display: none; /* Skrije predvajalnik glasbe */
+        }
+
 
 .snowflake {
             color: #fff;
