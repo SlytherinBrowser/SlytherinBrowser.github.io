@@ -435,7 +435,7 @@ function applyMode(mode) {
     const winterStylesheet = document.getElementById("winterStylesheet");
 
     // Normal stil je vedno omogočen
-    normalStylesheet.disabled = false; 
+    normalStylesheet.disabled = true; 
 
     // Onemogoči vse sloge
     modernStylesheet.disabled = true;
