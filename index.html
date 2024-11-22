@@ -24,6 +24,9 @@
 
     <img id="logo" src="Slytherin.png" onclick="lock()"></img>
 
+ <audio id="backgroundMusic" loop>
+        <source src="muzika.mp3" type="audio/mpeg">
+
       <div id="dock">
         <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
           <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
@@ -87,5 +90,17 @@
 <button onclick="convert()">Pretvori</button>
 <button onclick="clearDisplay()">Počisti</button>
 </div>
+<script>
+        const logo = document.getElementById('logo');
+        const music = document.getElementById('backgroundMusic');
+        const today = new Date();
+        const start = new Date(today.getFullYear(), 10, 20); // 20. november
+        const end = new Date(today.getFullYear(), 1, 28); // 28. februar
+        
+        if (today >= start || today <= end) {
+            logo.src = "zvoncki.gif";
+            music.play();
+        }
+    </script>
 </body>
 </html>
