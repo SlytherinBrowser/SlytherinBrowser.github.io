@@ -19,7 +19,7 @@ for (let i = 0; i < 50; i++) {
             snowflake.style.left = Math.random() * 100 + 'vw';
             snowflake.style.animationDelay = Math.random() * 5 + 's';
             document.body.appendChild(snowflake);
-        };
+        }
 
  function menuking() {
         window.location.href = "menu.html";
