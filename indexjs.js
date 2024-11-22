@@ -404,48 +404,29 @@ document.addEventListener('DOMContentLoaded', (event) => {
     applyMode(savedMode);
 });
 
-let holdTimeout; // Spremenljivka za časovno omejeno držanje gumba
-let holdStart = 0; // Čas začetka držanja gumba
-
 // Dodaj event listener za klik na gumb
 document.getElementById("buttonkng").addEventListener("click", function() {
-    if (Date.now() - holdStart < 1000) { // Preveri, ali je bil gumb pritisnjen manj kot 1 sekundo
-        toggleMode(); // Preklopi med normal in modern
-    }
-});
-
-// Dodaj event listener za začetek držanja gumba
-document.getElementById("buttonkng").addEventListener("mousedown", function() {
-    holdStart = Date.now(); // Zabeleži trenutni čas, ko začneš držati gumb
-    holdTimeout = setTimeout(function() {
-        toggleWinterStyle(); // Če gumb držite več kot 1 sekundo, preklopi na winterstyle
-    }, 1000); // 1 sekunda
-});
-
-// Dodaj event listener za sprostitev gumba
-document.getElementById("buttonkng").addEventListener("mouseup", function() {
-    clearTimeout(holdTimeout); // Prekliči časovnik, če uporabnik sprosti gumb predčasno
+    toggleMode();
 });
 
 function toggleMode() {
     const currentMode = localStorage.getItem("mode") || "normal"; // Preveri trenutni slog
-    const availableModes = ["normal", "modern"];
+    const availableModes = getAvailableModes(); // Pridobi razpoložljive sloge
     const currentIndex = availableModes.indexOf(currentMode);
     const nextMode = availableModes[(currentIndex + 1) % availableModes.length]; // Cikli preklapljanja
     applyMode(nextMode);
 }
 
-function toggleWinterStyle() {
+function getAvailableModes() {
     const today = new Date();
     const startDate = new Date(today.getFullYear(), 10, 20); // 20. november
     const endDate = new Date(today.getFullYear(), 1, 28); // 28. februar
 
-    // Preveri, ali je trenutni datum v obdobju, ko je winterstyle na voljo
+    // Če je datum med 20. novembrom in 28. februarjem, je na voljo winterstyle
     if (today >= startDate && today <= endDate) {
-        applyMode("winterstyle");
-    } else {
-        alert("Winterstyle je na voljo samo od 20. novembra do 28. februarja.");
+        return ["normal", "modern", "winterstyle"]; // V tem obdobju so na voljo vsi trije slogi
     }
+    return ["normal", "modern"]; // Izven obdobja je na voljo samo "normal" in "modern"
 }
 
 function applyMode(mode) {
