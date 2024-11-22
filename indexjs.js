@@ -12,14 +12,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     // Spreminjanje naslova in ikone vsako sekundo (1000 ms)
     setInterval(changeTitleAndIcon, 3000);
 });
-for (let i = 0; i < 50; i++) {
-            let snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.textContent = '❄';
-            snowflake.style.left = Math.random() * 100 + 'vw';
-            snowflake.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(snowflake);
-        }
+
 
  function menuking() {
         window.location.href = "menu.html";
