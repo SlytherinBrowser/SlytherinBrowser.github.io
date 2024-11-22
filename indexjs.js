@@ -13,15 +13,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     setInterval(changeTitleAndIcon, 3000);
 });
 
-// Dodajanje snežink neposredno na body
-        for (let i = 0; i < 50; i++) {
-            let snowflake = document.createElement('div');
-            snowflake.className = 'snowflake';
-            snowflake.textContent = '❄';
-            snowflake.style.left = Math.random() * 100 + 'vw';
-            snowflake.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(snowflake);
-        }
+
  function menuking() {
         window.location.href = "menu.html";
     }
