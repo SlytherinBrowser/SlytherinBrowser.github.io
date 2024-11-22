@@ -7,7 +7,8 @@
                 margin: 0;
                 background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
                 font-family: 'Arial', sans-serif;
-                color: #fff; /* White text color */};
+                color: #fff; /* White text color */
+}
 .snowflake {
             color: #fff;
             font-size: 1.5em;
