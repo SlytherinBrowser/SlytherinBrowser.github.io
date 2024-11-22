@@ -440,8 +440,10 @@ function applyMode(mode) {
     const modernStylesheet = document.getElementById("modernStylesheet");
     const winterStylesheet = document.getElementById("winterStylesheet");
 
+    // Normal stil je vedno omogočen
+    normalStylesheet.disabled = false; 
+
     // Onemogoči vse sloge
-    normalStylesheet.disabled = false; // Normal stil je vedno omogočen
     modernStylesheet.disabled = true;
     winterStylesheet.disabled = true;
 
