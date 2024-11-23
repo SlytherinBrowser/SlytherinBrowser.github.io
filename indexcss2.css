@@ -71,6 +71,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
                 border-radius: 20px;
                 padding: 40px;
                 box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow */
+opacity: 40%;
             }
 
             label {
@@ -90,6 +91,8 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
                 color: #fff; /* White text color */
                 outline: none;
                 transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+
+opacity: 40%;
             }
 
             #search:focus {
@@ -105,6 +108,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
         border-top-right-radius: 5px;
         border-top-left-radius: 5px;
         cursor: pointer;
+opacity: 40%;
     }
     #buttonkng{
         text-align: left;
