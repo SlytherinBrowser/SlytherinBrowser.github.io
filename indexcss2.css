@@ -441,10 +441,12 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
                 padding: 40px;
                 box-shadow: 0 0 30px rgba(0, 0, 0, 0.7); /* More pronounced shadow */
                 transition: transform 0.3s ease; /* Smooth scaling effect */
+opacity: 40%;
             }
 
             #searchForm:hover {
                 transform: translateY(-5px); /* Lift effect on hover */
+opacity: 40%;
             }
 
             label {
@@ -464,6 +466,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
                 color: #fff; /* White text color */
                 outline: none;
                 transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+opacity: 40%;
             }
 
             #search:focus {
@@ -481,6 +484,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
                 cursor: pointer;
                 font-size: 1em; /* Standard font size */
                 transition: background-color 0.3s, transform 0.3s ease; /* Smooth transition for hover effects */
+opacity: 40%;
             }
 
             #submitBtn:hover {
