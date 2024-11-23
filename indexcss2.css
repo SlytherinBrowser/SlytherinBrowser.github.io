@@ -446,7 +446,7 @@ opacity: 70%;
 
             #searchForm:hover {
                 transform: translateY(-5px); /* Lift effect on hover */
-opacity: 40%;
+opacity: 70%;
             }
 
             label {
