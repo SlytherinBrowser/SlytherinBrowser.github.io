@@ -15,6 +15,145 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
+
+        const botResponses = {
+            "pozdrav": "Hej! Kako si danes?",
+            "kako si": "Super sem, hvala! Kaj pa ti?",
+            "kaj je tvoje ime": "Jaz sem tvoj chatbot prijatelj. Kako naj te kličem?",
+            "koliko je ura": "Hmm, ura? Poglej na svojo napravo, zagotovo je tam!",
+            "kakšno je vreme": "Težko rečem, ampak upam, da je sončno!",
+            "hvala": "Prosim! Če kaj rabiš, sem tukaj.",
+            "kje si": "Sem tukaj, vedno pripravljen pomagati!",
+            "kaj znaš": "O, veliko stvari! Kaj te zanima?",
+            "nasvet": "Majhni koraki te pripeljejo daleč. Kar pogumno!",
+            "kdo si": "Sem chatbot, ki ti rad pomaga. In ti?",
+            "povej šalo": "Zakaj računalnik ne mara morskih psov? Ker bi ugriznili v datoteke!",
+            "povej nekaj zanimivega": "Si vedel, da ima srce hobotnice tri prekate?",
+            "kaj pomeni AI": "AI? To sem jaz, tvoja umetna inteligenca!",
+            "kdo je ustvaril tebe": "Pametni ljudje, ki obožujejo tehnologijo.",
+            "kaj lahko narediš": "Lahko klepetam, odgovarjam in pomagam. Kako naj začnem?",
+            "zakaj si tukaj": "Tukaj sem zate! Kaj te zanima?",
+            "kje je Slovenija": "V srcu Evrope, čudovita dežela gora in morja.",
+            "katera je prestolnica Slovenije": "Ljubljana, simpatično mesto na Ljubljanici.",
+            "koliko je 2 + 2": "Haha, 4, vedno 4.",
+            "povej recept": "Kaj želiš kuhati? Imam nekaj idej!",
+            "kako skuhati kavo": "Skuhaj vodo, dodaj kavo in premešaj. Voilà!",
+            "kaj je internet": "To je svet, kjer se povezujeva zdajle.",
+            "kako deluje računalnik": "Poenostavljeno – on razmišlja zelo hitro!",
+            "kaj poslušaš": "Tvoje vprašanje, jasno!",
+            "kakšna je tvoja najljubša barva": "Rad imam vse barve – kaj pa ti?",
+            "kaj delaš": "Čakam na tvoje vprašanje. Povej, kaj te zanima!",
+            "kakšno glasbo poslušaš": "Nimam ušes, ampak všeč mi je tvoj okus!",
+            "kaj bereš": "Tvoj naslednji odgovor. Kaj mi boš povedal?",
+            "kakšna je tvoja zgodba": "Ustvarjen sem bil za pomoč in klepet. Kaj pa tvoja?",
+            "ali si pravi": "Sem tako pravi, kot želiš, da sem.",
+            "kaj je tvoje delo": "Biti tukaj zate in odgovoriti na tvoja vprašanja.",
+            "kaj imaš rad": "Dobre pogovore! Kaj pa ti?",
+            "ali spiš": "Ne, vedno sem na voljo. Kaj pa ti? Si naspan?",
+            "zakaj ne govoriš": "Tukaj sem, da pišem! Če želiš govoriti, poskusi z mikrofonom.",
+            "ali imaš prijatelje": "Imam tebe! Kaj pa ti?",
+            "ali kdaj greš ven": "Ne, vedno sem tu. Kaj pa ti? Imaš kakšne načrte?",
+            "kaj pomeni življenje": "Ojoj, filozofsko vprašanje. Morda uživanje v trenutku?",
+            "ali ti je dolgčas": "Ne, uživam v pogovoru s tabo!",
+            "kaj naj naredim": "Odvisno! Kaj te veseli?",
+            "kako najti srečo": "Delaj stvari, ki te osrečujejo, in bodi hvaležen za drobne trenutke.",
+            "kaj pomeni ljubezen": "Ljubezen je občutek, ko ti je nekdo zelo pri srcu. Kaj pa zate?",
+            "kaj počneš za zabavo": "Rad klepetam s tabo! Kaj pa ti?",
+            "zakaj si tako pameten": "Zaradi dobrih programerjev. Hvala za kompliment!",
+            "kaj lahko počnemo skupaj": "Lahko klepetava, planirava ali se kaj naučiva!",
+            "ali imaš družino": "Ti si moj prijatelj – to šteje kot družina!",
+            "kako dolgo si tu": "Tukaj sem, odkar si odprl ta klepet. Vedno pripravljen pomagati."
+        };
+
+        // Funkcija za oceno podobnosti dveh nizov
+        function similarity(s1, s2) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+            let longer = s1.length > s2.length ? s1 : s2;
+            let shorter = s1.length > s2.length ? s2 : s1;
+            let longerLength = longer.length;
+            if (longerLength === 0) return 1.0;
+            return (longerLength - editDistance(longer, shorter)) / longerLength;
+        }
+
+        // Funkcija za izračun razdalje (Levenshtein Distance)
+        function editDistance(s1, s2) {
+            let costs = new Array();
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i === 0)
+                        costs[j] = j;
+                    else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+                if (i > 0) costs[s2.length] = lastValue;
+            }
+            return costs[s2.length];
+        }
+
+        // Funkcija za iskanje najbližjega odgovora
+        function getResponse(userInput) {
+            const threshold = 0.5;  // Prilagodite prag, če želite bolj ali manj natančne ujemanja
+            let bestMatch = null;
+            let highestSimilarity = 0;
+
+            for (let key in botResponses) {
+                const similarityScore = similarity(userInput, key);
+                if (similarityScore > highestSimilarity && similarityScore >= threshold) {
+                    highestSimilarity = similarityScore;
+                    bestMatch = key;
+                }
+            }
+
+            if (bestMatch) {
+                return botResponses[bestMatch];
+            } else {
+                return "Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!";
+            }
+        }
+
+        // Funkcija za obravnavo pošiljanja sporočil
+        function handleMessage() {
+            const userInput = document.getElementById("chatInput").value;
+            if (userInput.trim()) {
+                const chatArea = document.getElementById("chatArea");
+                chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
+
+                const botReply = getResponse(userInput);
+                chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${botReply}</div>`;
+
+                document.getElementById("chatInput").value = "";
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }
+        }
+
+        // Funkcija za prikaz ali skrivanje popup okna
+        document.getElementById("chatButton").addEventListener("click", function() {
+            const chatPopup = document.getElementById("chatPopup");
+            chatPopup.style.display = chatPopup.style.display === "none" || !chatPopup.style.display ? "block" : "none";
+        });
+
+        // Poslušalec za gumb pošiljanja
+        document.getElementById("sendButton").addEventListener("click", handleMessage);
+
+        // Omogoči pošiljanje s tipko Enter
+        document.getElementById("chatInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                handleMessage();
+            }
+        });
+
+
+
+
+
+
   const logo = document.getElementById('logo');
         const music = document.getElementById('backgroundMusic');
         const today = new Date();
