@@ -33,7 +33,7 @@
 #chatPopup {
     display: none;
     position: fixed;
-    bottom: 15%; /* Postavimo popup nad gumb */
+    bottom: 20%; /* Postavimo popup nad gumb */
     right: 20px;
     width: 300px;
     background: white;
