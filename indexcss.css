@@ -17,29 +17,30 @@
 
        
 #chatButton {
-        text-align: center;
-        justify-content: right;
-        left: 0;
-        position: fixed;
-        width: 100%;
-        bottom: 15%;
-        padding: 10px 20px;
-        background-color: #3498db;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-    }
-     #chatPopup {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
+    text-align: center;
+    justify-content: right;
+    left: 0;
+    position: fixed;
+    width: 100%;
+    bottom: 15%;
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+#chatPopup {
+    display: none;
+    position: fixed;
+    bottom: 15%; /* Postavimo popup nad gumb */
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
 
         #chatArea {
             padding: 10px;
@@ -447,29 +448,29 @@
 
 
         #chatButton {
-        position: fixed;
-        width: 80px;
-        height: 50px;
-        bottom: 80px;
-        left: 20px;
-        border: none;
-        background-color: #0078d7;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
-        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
-    }
+    position: fixed;
+    width: 80px;
+    height: 50px;
+    bottom: 80px; /* Gumb je postavljen 80px od spodaj */
+    left: 20px;
+    border: none;
+    background-color: #0078d7;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+    transition: box-shadow 0.3s; /* Prehod za senčenje */
+}
 
-        #chatPopup {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
+#chatPopup {
+    display: none;
+    position: fixed;
+    bottom: 140px; /* Pomik popup-a nad gumb (80px + višina gumba 50px) */
+    right: 20px;
+    width: 300px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
 
         #chatArea {
             padding: 10px;
