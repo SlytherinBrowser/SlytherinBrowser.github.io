@@ -47,6 +47,7 @@
             max-height: 300px;
             overflow-y: auto;
             font-size: 14px;
+color: black;
         }
 
         #chatInputArea {
@@ -477,6 +478,7 @@
             max-height: 300px;
             overflow-y: auto;
             font-size: 14px;
+color: black;
         }
 
         #chatInputArea {
