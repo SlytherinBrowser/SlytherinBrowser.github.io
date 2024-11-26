@@ -113,12 +113,65 @@ function calculateExpression(expression) {
     }
 }
 
+// Funkcija za oceno podobnosti dveh nizov
+function similarity(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+    let longer = s1.length > s2.length ? s1 : s2;
+    let shorter = s1.length > s2.length ? s2 : s1;
+    let longerLength = longer.length;
+    if (longerLength === 0) return 1.0;
+    return (longerLength - editDistance(longer, shorter)) / longerLength;
+}
+
+// Funkcija za izračun razdalje (Levenshtein Distance)
+function editDistance(s1, s2) {
+    let costs = new Array();
+    for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+            if (i === 0)
+                costs[j] = j;
+            else if (j > 0) {
+                let newValue = costs[j - 1];
+                if (s1.charAt(i - 1) !== s2.charAt(j - 1))
+                    newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                costs[j - 1] = lastValue;
+                lastValue = newValue;
+            }
+        }
+        if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+}
+
+// Funkcija za iskanje najbližjega odgovora
+function getResponse(userInput) {
+    const threshold = 0.5;  // Prilagodite prag, če želite bolj ali manj natančne ujemanja
+    let bestMatch = null;
+    let highestSimilarity = 0;
+
+    for (let key in botResponses) {
+        const similarityScore = similarity(userInput, key);
+        if (similarityScore > highestSimilarity && similarityScore >= threshold) {
+            highestSimilarity = similarityScore;
+            bestMatch = key;
+        }
+    }
+
+    if (bestMatch) {
+        return botResponses[bestMatch];
+    } else {
+        return "Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!";
+    }
+}
+
 // Funkcija za obravnavo pošiljanja sporočil
 function handleMessage() {
     const userInput = document.getElementById("chatInput").value.trim();
+    const chatArea = document.getElementById("chatArea");
+
     if (userInput) {
-        const chatArea = document.getElementById("chatArea");
-        
         // Preveri, ali uporabnik vnese matematični izraz
         if (userInput.match(/[0-9+\-*/().\s]+/)) {
             const result = calculateExpression(userInput);
@@ -135,91 +188,21 @@ function handleMessage() {
     }
 }
 
+// Funkcija za prikaz ali skrivanje popup okna
+document.getElementById("chatButton").addEventListener("click", function() {
+    const chatPopup = document.getElementById("chatPopup");
+    chatPopup.style.display = chatPopup.style.display === "none" || !chatPopup.style.display ? "block" : "none";
+});
 
+// Poslušalec za gumb pošiljanja
+document.getElementById("sendButton").addEventListener("click", handleMessage);
 
-        // Funkcija za oceno podobnosti dveh nizov
-        function similarity(s1, s2) {
-            s1 = s1.toLowerCase();
-            s2 = s2.toLowerCase();
-            let longer = s1.length > s2.length ? s1 : s2;
-            let shorter = s1.length > s2.length ? s2 : s1;
-            let longerLength = longer.length;
-            if (longerLength === 0) return 1.0;
-            return (longerLength - editDistance(longer, shorter)) / longerLength;
-        }
-
-        // Funkcija za izračun razdalje (Levenshtein Distance)
-        function editDistance(s1, s2) {
-            let costs = new Array();
-            for (let i = 0; i <= s1.length; i++) {
-                let lastValue = i;
-                for (let j = 0; j <= s2.length; j++) {
-                    if (i === 0)
-                        costs[j] = j;
-                    else if (j > 0) {
-                        let newValue = costs[j - 1];
-                        if (s1.charAt(i - 1) !== s2.charAt(j - 1))
-                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
-                        costs[j - 1] = lastValue;
-                        lastValue = newValue;
-                    }
-                }
-                if (i > 0) costs[s2.length] = lastValue;
-            }
-            return costs[s2.length];
-        }
-
-        // Funkcija za iskanje najbližjega odgovora
-        function getResponse(userInput) {
-            const threshold = 0.5;  // Prilagodite prag, če želite bolj ali manj natančne ujemanja
-            let bestMatch = null;
-            let highestSimilarity = 0;
-
-            for (let key in botResponses) {
-                const similarityScore = similarity(userInput, key);
-                if (similarityScore > highestSimilarity && similarityScore >= threshold) {
-                    highestSimilarity = similarityScore;
-                    bestMatch = key;
-                }
-            }
-
-            if (bestMatch) {
-                return botResponses[bestMatch];
-            } else {
-                return "Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!";
-            }
-        }
-
-        // Funkcija za obravnavo pošiljanja sporočil
-        function handleMessage() {
-            const userInput = document.getElementById("chatInput").value;
-            if (userInput.trim()) {
-                const chatArea = document.getElementById("chatArea");
-                chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
-
-                const botReply = getResponse(userInput);
-                chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${botReply}</div>`;
-
-                document.getElementById("chatInput").value = "";
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }
-        }
-
-        // Funkcija za prikaz ali skrivanje popup okna
-        document.getElementById("chatButton").addEventListener("click", function() {
-            const chatPopup = document.getElementById("chatPopup");
-            chatPopup.style.display = chatPopup.style.display === "none" || !chatPopup.style.display ? "block" : "none";
-        });
-
-        // Poslušalec za gumb pošiljanja
-        document.getElementById("sendButton").addEventListener("click", handleMessage);
-
-        // Omogoči pošiljanje s tipko Enter
-        document.getElementById("chatInput").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                handleMessage();
-            }
-        });
+// Omogoči pošiljanje s tipko Enter
+document.getElementById("chatInput").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        handleMessage();
+    }
+});
 
 
 
