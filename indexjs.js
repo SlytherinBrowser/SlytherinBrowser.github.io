@@ -20,15 +20,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     "pozdrav": "Hej! Kako si danes?",
     "kako si": "Super sem, hvala! Kaj pa ti?",
     "kaj je tvoje ime": "Jaz sem tvoj chatbot prijatelj. Kako naj te kličem?",
-    "koliko je ura": function() {
-        const now = new Date();
-        return `Trenutni čas je ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-    },
-    "kakšen je datum": function() {
-        const now = new Date();
-        const date = now.toLocaleDateString('sl-SI');
-        return `Danes je ${date}`;
-    },
     "kakšno je vreme": "Težko rečem, ampak upam, da je sončno!",
     "hvala": "Prosim! Če kaj rabiš, sem tukaj.",
     "kje si": "Sem tukaj, vedno pripravljen pomagati!",
