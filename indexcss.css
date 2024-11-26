@@ -16,6 +16,69 @@
         }
 
        
+#chatButton {
+        text-align: center;
+        justify-content: right;
+        left: 0;
+        position: fixed;
+        width: 100%;
+        bottom: 15%;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+     #chatPopup {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #chatArea {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        #chatInputArea {
+            display: flex;
+            align-items: stretch;
+            position: relative;
+            background: linear-gradient(to right, red, blue);
+            border-radius: 15px 15px 0 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 15px 0 0 0;
+            outline: none;
+            font-size: 14px;
+            color: white;
+            background: transparent;
+        }
+
+        #sendButton {
+            padding: 0 15px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 0 0 15px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+
+
 .snowflake {
             color: #fff;
             font-size: 1.5em;
@@ -380,6 +443,70 @@
 #backgroundMusic {
             display: none; /* Skrije predvajalnik glasbe */
         }
+
+
+
+        #chatButton {
+        position: fixed;
+        width: 80px;
+        height: 50px;
+        bottom: 80px;
+        left: 20px;
+        border: none;
+        background-color: #0078d7;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    }
+
+        #chatPopup {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #chatArea {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        #chatInputArea {
+            display: flex;
+            align-items: stretch;
+            position: relative;
+            background: linear-gradient(to right, red, blue);
+            border-radius: 15px 15px 0 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 15px 0 0 0;
+            outline: none;
+            font-size: 14px;
+            color: white;
+            background: transparent;
+        }
+
+        #sendButton {
+            padding: 0 15px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 0 0 15px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
 
 
 .snowflake {
