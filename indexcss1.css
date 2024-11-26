@@ -21,7 +21,7 @@ body {
     left: 0;
     width: 100%;
     position: fixed;
-    bottom: 15%; /* Gumb je postavljen na 15% od spodaj */
+    bottom: 12%; /* Gumb je postavljen na 15% od spodaj */
     padding: 15px 30px;
     background-color: #ff6f61;
     color: #ffffff;
