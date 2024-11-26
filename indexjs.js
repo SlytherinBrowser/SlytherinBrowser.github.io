@@ -147,33 +147,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
+    // Preveri, ali izraz vsebuje samo dovoljene znake (številke, operatorje in prazne prostore)
     const validExpression = /^[\d+\-*/().\s]*$/;
+
     if (validExpression.test(expression)) {
         try {
-            return Function('return ' + expression)(); // Uporablja varno eval funkcijo
+            // Uporabi funkcijo za eval, da izvede matematične operacije
+            return Function('return ' + expression)(); // Uporablja varno funkcijo za eval
         } catch (e) {
             return "Oprosti, ne morem izračunati tega.";
         }
     } else {
         return "Oprosti, ta izraz vsebuje nedovoljene znake.";
     }
-}
-
-// Funkcija za pridobitev trenutnega časa
-function getCurrentTime() {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    return `Trenutno je ${hours}:${minutes}.`;
-}
-
-// Funkcija za pridobitev trenutnega datuma
-function getCurrentDate() {
-    const now = new Date();
-    const day = now.getDate().toString().padStart(2, '0');
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const year = now.getFullYear();
-    return `Danes je ${day}.${month}.${year}.`;
 }
 
 // Funkcija za oceno podobnosti dveh nizov
@@ -210,7 +196,7 @@ function editDistance(s1, s2) {
 
 // Funkcija za iskanje najbližjega odgovora
 function getResponse(userInput) {
-    const threshold = 0.5;
+    const threshold = 0.5;  // Prilagodite prag, če želite bolj ali manj natančne ujemanja
     let bestMatch = null;
     let highestSimilarity = 0;
 
@@ -235,20 +221,13 @@ function handleMessage() {
     const chatArea = document.getElementById("chatArea");
 
     if (userInput) {
-        if (userInput.includes("koliko je ura")) {
-            const time = getCurrentTime();
-            chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
-            chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${time}</div>`;
-        } else if (userInput.includes("kateri datum je danes") || userInput.includes("kaj je danes za datum")) {
-            const date = getCurrentDate();
-            chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
-            chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${date}</div>`;
-        } else if (userInput.match(/^[0-9+\-*/().\s]+$/)) {
+        // Preveri, ali uporabnik vnese matematični izraz
+        if (userInput.match(/[0-9+\-*/().\s]+/)) {
             const result = calculateExpression(userInput);
             chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
             chatArea.innerHTML += `<div><strong>Chatbot:</strong> Rezultat: ${result}</div>`;
         } else {
-            const botReply = getResponse(userInput);
+            const botReply = getResponse(userInput);  // Ostali odgovori chatbot-a
             chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
             chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${botReply}</div>`;
         }
