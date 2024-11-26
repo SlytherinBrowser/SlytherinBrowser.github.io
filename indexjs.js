@@ -94,6 +94,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
     "kaj si želiš od umetnosti": "Imam rad umetnost! Kaj pa ti?"
 };
 
+
+
+// Funkcija za preverjanje ali je vnos matematični izraz
+function isMathExpression(input) {
+    // Preveri, če se vnos ujema z osnovnimi matematičnimi izrazi (številke, +, -, *, /)
+    return /^[\d+\-*/().\s]+$/.test(input);
+}
+
+// Funkcija za izvajanje izračuna
+function calculateMathExpression(input) {
+    try {
+        return eval(input);  // Opozorilo: eval ni priporočljiv zaradi varnostnih razlogov!
+    } catch (e) {
+        return "Oprosti, nekaj je šlo narobe pri računanju.";
+    }
+}
+
+
+
+
         // Funkcija za oceno podobnosti dveh nizov
         function similarity(s1, s2) {
             s1 = s1.toLowerCase();
