@@ -201,8 +201,8 @@ function handleMessage() {
     const chatArea = document.getElementById("chatArea");
 
     if (userInput) {
-        // Preveri, ali uporabnik vnese matematični izraz
-        if (userInput.match(/[0-9+\-*/().\s]+/)) {
+        // Preveri, ali uporabnik vnese matematični izraz, ki vsebuje znak '='
+        if (userInput.includes("=")) {
             const result = calculateExpression(userInput);
             chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
             chatArea.innerHTML += `<div><strong>Chatbot:</strong> Rezultat: ${result}</div>`;
