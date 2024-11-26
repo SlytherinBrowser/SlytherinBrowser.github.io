@@ -678,7 +678,7 @@ color: black;
     }
         #topBar {
                 position: fixed;
-                top: 0;     
+                top: 105px;     
                 right: -2;
                 width: 2cm;
                 height: 0.5cm;
