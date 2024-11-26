@@ -96,21 +96,44 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
-// Funkcija za preverjanje ali je vnos matematični izraz
-function isMathExpression(input) {
-    // Preveri, če se vnos ujema z osnovnimi matematičnimi izrazi (številke, +, -, *, /)
-    return /^[\d+\-*/().\s]+$/.test(input);
-}
+// Funkcija za izvajanje matematičnih operacij
+function calculateExpression(expression) {
+    // Preveri, ali izraz vsebuje samo dovoljene znake (številke, operatorje in prazne prostore)
+    const validExpression = /^[\d+\-*/().\s]*$/;
 
-// Funkcija za izvajanje izračuna
-function calculateMathExpression(input) {
-    try {
-        return eval(input);  // Opozorilo: eval ni priporočljiv zaradi varnostnih razlogov!
-    } catch (e) {
-        return "Oprosti, nekaj je šlo narobe pri računanju.";
+    if (validExpression.test(expression)) {
+        try {
+            // Uporabi funkcijo za eval, da izvede matematične operacije
+            return Function('return ' + expression)(); // Uporablja varno funkcijo za eval
+        } catch (e) {
+            return "Oprosti, ne morem izračunati tega.";
+        }
+    } else {
+        return "Oprosti, ta izraz vsebuje nedovoljene znake.";
     }
 }
 
+// Funkcija za obravnavo pošiljanja sporočil
+function handleMessage() {
+    const userInput = document.getElementById("chatInput").value.trim();
+    if (userInput) {
+        const chatArea = document.getElementById("chatArea");
+        
+        // Preveri, ali uporabnik vnese matematični izraz
+        if (userInput.match(/[0-9+\-*/().\s]+/)) {
+            const result = calculateExpression(userInput);
+            chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
+            chatArea.innerHTML += `<div><strong>Chatbot:</strong> Rezultat: ${result}</div>`;
+        } else {
+            const botReply = getResponse(userInput);  // Ostali odgovori chatbot-a
+            chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
+            chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${botReply}</div>`;
+        }
+
+        document.getElementById("chatInput").value = "";
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+}
 
 
 
