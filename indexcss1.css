@@ -15,6 +15,71 @@ body {
         }
 
 
+
+
+ #chatButton {
+    left: 0;
+    width: 100%;
+    position: fixed;
+    bottom: 15%;
+    padding: 15px 30px;
+    background-color: #ff6f61;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+     #chatPopup {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #chatArea {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        #chatInputArea {
+            display: flex;
+            align-items: stretch;
+            position: relative;
+            background: linear-gradient(to right, red, blue);
+            border-radius: 15px 15px 0 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 15px 0 0 0;
+            outline: none;
+            font-size: 14px;
+            color: white;
+            background: transparent;
+        }
+
+        #sendButton {
+            padding: 0 15px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 0 0 15px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+
+
 .snowflake {
             color: #fff;
             font-size: 1.5em;
@@ -420,6 +485,74 @@ body {
         }
 
     
+
+#chatButton {
+            left: 20px;
+    position: fixed;
+    width: 80px;
+    height: 50px;
+    bottom: 80px;
+     background-color: #ff6f61;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+        #chatPopup {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #chatArea {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        #chatInputArea {
+            display: flex;
+            align-items: stretch;
+            position: relative;
+            background: linear-gradient(to right, red, blue);
+            border-radius: 15px 15px 0 0;
+        }
+
+        #chatInput {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 15px 0 0 0;
+            outline: none;
+            font-size: 14px;
+            color: white;
+            background: transparent;
+        }
+
+        #sendButton {
+            padding: 0 15px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 0 0 15px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+
+
+
 .snowflake {
             color: #fff;
             font-size: 1.5em;
