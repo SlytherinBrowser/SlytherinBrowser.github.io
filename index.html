@@ -10,10 +10,45 @@
 <link id="winterStylesheet" rel="stylesheet" href="indexcss2.css" disabled>
     <script defer src="indexjs.js"></script>
 </head>
-
+<style type="text/css">
+	.eye-container {
+		position: fixed;
+		top: 40px;
+            display: flex;
+            gap: 30px;
+        }
+        .eye {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: white;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        .pupil {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: black;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.2s ease-in-out;
+        }
+</style>
 <body>
 
     <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
+    <div class="eye-container">
+    <div class="eye">
+        <div class="pupil" id="pupil1"></div>
+    </div>
+    <div class="eye">
+        <div class="pupil" id="pupil2"></div>
+    </div>
+</div>
     <img id="logo" src="Slytherin.png"></img>
 
     <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
@@ -92,5 +127,62 @@
 </div>
         <audio id="backgroundMusic" loop>
        <source src="https://www.youtube.com/watch?v=3CWJNqyub3o&ab_channel=ChristmasSongsandCarols-LovetoSing" type="audio/mpeg">
+            	<script>
+    const pupils = document.querySelectorAll('.pupil');
+    let isBlinking = false;
+    let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
+
+    function moveEyes(event) {
+        if (isBlinking) return; // Če oči mežikajo, ne premikaj pupil
+
+        const mouseX = event.clientX || event.touches[0].clientX;
+        const mouseY = event.clientY || event.touches[0].clientY;
+
+        const eyes = document.querySelectorAll('.eye');
+        eyes.forEach((eye, index) => {
+            const eyeRect = eye.getBoundingClientRect();
+            const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+            const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+
+            const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
+            const distance = Math.min(eyeRect.width / 4, eyeRect.height / 4);
+
+            const pupil = pupils[index];
+            const newX = Math.cos(angle) * distance;
+            const newY = Math.sin(angle) * distance;
+
+            pupil.style.transform = `translate(-50%, -50%) translate(${newX}px, ${newY}px)`;
+
+            lastPositions[index] = {x: newX, y: newY};
+        });
+    }
+
+    function blink() {
+        if (isBlinking) return;
+
+        isBlinking = true;
+        pupils.forEach(pupil => {
+            pupil.style.transform = 'translate(-50%, -50%) scale(0)';
+        });
+
+        setTimeout(() => {
+            pupils.forEach((pupil, index) => {
+                pupil.style.transform = `translate(-50%, -50%) translate(${lastPositions[index].x}px, ${lastPositions[index].y}px) scale(1)`;
+            });
+            isBlinking = false;
+        }, 200);
+    }
+
+    // Zavijanje z očmi vsakih 5 sekund
+    setInterval(() => {
+        blink();
+    }, 5000);
+
+    // Dogodki za premikanje miške ali dotik
+    document.addEventListener('mousemove', moveEyes);
+    document.addEventListener('touchmove', (event) => {
+        event.preventDefault();
+        moveEyes(event);
+    });
 </body>
 </html>
