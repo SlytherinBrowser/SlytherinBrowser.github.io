@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
+
         const botResponses = {
     "pozdrav": "Hej! Kako si danes?",
     "kako si": "Super sem, hvala! Kaj pa ti?",
