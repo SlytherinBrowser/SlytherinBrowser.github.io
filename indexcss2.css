@@ -51,6 +51,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
             max-height: 300px;
             overflow-y: auto;
             font-size: 14px;
+color: black;
         }
 
         #chatInputArea {
@@ -482,6 +483,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
             max-height: 300px;
             overflow-y: auto;
             font-size: 14px;
+color: black;
         }
 
         #chatInputArea {
