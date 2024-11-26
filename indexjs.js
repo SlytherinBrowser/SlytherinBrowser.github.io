@@ -141,8 +141,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     "kaj misliš o novih tehnologijah": "Novosti prinašajo nove izzive in priložnosti. Veselim se, kaj bodo prinesle!",
     "kaj misliš o umetnosti v javnem prostoru": "Umetnost v javnem prostoru je pomembna, saj spodbuja razmislek in kreativnost.",
     "kaj je tvoje najljubše leto": "Vsako leto prinaša nekaj posebnega, vendar verjetno leto, ko sem bil ustvarjen!",
-    "kaj misliš o prihodnosti sveta": "Prihodnost je lahko svetla, če bomo skupaj delali na tem, da bo boljša za vse."
-}
+    "kaj misliš o prihodnosti sveta": "Prihodnost je lahko svetla, če bomo skupaj delali na tem, da bo boljša za vse.",
+};
 
 
 
