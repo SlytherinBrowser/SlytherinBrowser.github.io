@@ -20,56 +20,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
 
 
 
-   .game-popup {
-            background-color: #fff;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            width: 300px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none; /* Inicialno skrito */
-            position: absolute;
-            bottom: 50px; /* Postavimo nad gumb */
-            left: 0;
-        }
-        .indicator {
-            margin: 10px 0;
-        }
-        .indicator span {
-            font-weight: bold;
-        }
-        .buttons {
-            margin-top: 20px;
-        }
-        .button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .button:hover {
-            background-color: #ddd;
-        }
-        .open-popup {
-            text-align: center;
-    justify-content: right;
-    left: 0;
-    position: fixed;
-    width: 100%;
-    bottom: 16%;
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-        .open-popup:hover {
-            background-color: #45a049;
-        }
-
+   
 
 
 
