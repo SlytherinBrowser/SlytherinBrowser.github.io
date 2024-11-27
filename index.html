@@ -70,6 +70,30 @@
         </div>
     </div>
 
+
+<button class="open-popup" onclick="togglePopup()">Game</button>
+
+<div class="game-popup" id="gamePopup">
+    <h2>Poskrbi za svojega ljubljenčka!</h2>
+    <div class="indicator">
+        <p>Lakota: <span id="hunger">100</span>%</p>
+    </div>
+    <div class="indicator">
+        <p>Spanec: <span id="sleep">100</span>%</p>
+    </div>
+    <div class="indicator">
+        <p>Čistoča: <span id="cleanliness">100</span>%</p>
+    </div>
+
+    <div class="buttons">
+        <button class="button" onclick="feedPet()">Nahrani</button>
+        <button class="button" onclick="putToSleep()">Zaspi</button>
+        <button class="button" onclick="wakeUp()">Zbudi</button>
+        <button class="button" onclick="washPet()">Umij</button>
+    </div>
+</div>
+
+
       <div id="dock">
         <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
           <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
@@ -134,27 +158,7 @@
 <button onclick="clearDisplay()">Počisti</button>
 </div>
 
-<button class="open-popup" onclick="togglePopup()">Game</button>
 
-<div class="game-popup" id="gamePopup">
-    <h2>Poskrbi za svojega ljubljenčka!</h2>
-    <div class="indicator">
-        <p>Lakota: <span id="hunger">100</span>%</p>
-    </div>
-    <div class="indicator">
-        <p>Spanec: <span id="sleep">100</span>%</p>
-    </div>
-    <div class="indicator">
-        <p>Čistoča: <span id="cleanliness">100</span>%</p>
-    </div>
-
-    <div class="buttons">
-        <button class="button" onclick="feedPet()">Nahrani</button>
-        <button class="button" onclick="putToSleep()">Zaspi</button>
-        <button class="button" onclick="wakeUp()">Zbudi</button>
-        <button class="button" onclick="washPet()">Umij</button>
-    </div>
-</div>
 
 
         <audio id="backgroundMusic" loop>
