@@ -71,27 +71,7 @@
     </div>
 
 
-<button class="open-popup" onclick="togglePopup()">Game</button>
 
-<div class="game-popup" id="gamePopup">
-    <h2>Poskrbi za svojega ljubljenčka!</h2>
-    <div class="indicator">
-        <p>Lakota: <span id="hunger">100</span>%</p>
-    </div>
-    <div class="indicator">
-        <p>Spanec: <span id="sleep">100</span>%</p>
-    </div>
-    <div class="indicator">
-        <p>Čistoča: <span id="cleanliness">100</span>%</p>
-    </div>
-
-    <div class="buttons">
-        <button class="button" onclick="feedPet()">Nahrani</button>
-        <button class="button" onclick="putToSleep()">Zaspi</button>
-        <button class="button" onclick="wakeUp()">Zbudi</button>
-        <button class="button" onclick="washPet()">Umij</button>
-    </div>
-</div>
 
 
       <div id="dock">
@@ -220,82 +200,6 @@
         event.preventDefault();
         moveEyes(event);
     });
-</script>
-<script>
-    let hunger = 100;
-    let sleep = 100;
-    let cleanliness = 100;
-    let awakeTime = 0; // Čas, ko je ljubljenček buden
-    let sleepTime = 0; // Čas, ko je ljubljenček spal
-
-    function togglePopup() {
-        const popup = document.getElementById('gamePopup');
-        if (popup.style.display === 'none' || popup.style.display === '') {
-            popup.style.display = 'block'; // Prikaz pop-upa
-        } else {
-            popup.style.display = 'none'; // Skrij pop-up
-        }
-    }
-
-    function updateIndicators() {
-        document.getElementById('hunger').textContent = hunger;
-        document.getElementById('sleep').textContent = sleep;
-        document.getElementById('cleanliness').textContent = cleanliness;
-    }
-
-    function feedPet() {
-        if (hunger < 100) {
-            hunger += 20;
-            if (hunger > 100) hunger = 100;
-        }
-        updateIndicators();
-    }
-
-    function putToSleep() {
-        if (sleep < 100) {
-            sleepTime += 5; // Povečamo čas spanja
-            sleep += sleepTime * 0.5; // Daljši čas spanja pomeni več naspanosti
-            if (sleep > 100) sleep = 100;
-            awakeTime = 0; // Ponastavimo čas budnosti, ko gre spati
-        }
-        updateIndicators();
-    }
-
-    function wakeUp() {
-        if (sleep > 0) {
-            sleep -= 20;
-            if (sleep < 0) sleep = 0;
-        }
-        awakeTime += 5; // Povečamo čas budnosti
-        hunger -= 5; // Med budnostjo se povečuje lakota
-        cleanliness -= 2; // Med budnostjo se čistoča zmanjšuje
-        updateIndicators();
-    }
-
-    function washPet() {
-        if (cleanliness < 100) {
-            cleanliness += 20;
-            if (cleanliness > 100) cleanliness = 100;
-        }
-        updateIndicators();
-    }
-
-    // Periodično povečuj čas budnosti in spanec
-    setInterval(() => {
-        if (awakeTime > 0) {
-            awakeTime += 1;
-            sleep -= 0.1 * awakeTime; // Daljši čas budnosti pomeni večjo utrujenost
-        }
-
-        if (sleepTime > 0) {
-            sleepTime += 1;
-            sleep += 0.2 * sleepTime; // Daljši čas spanja pomeni večjo naspanost
-        }
-
-        if (hunger > 0) hunger -= 0.1; // Postopno zmanjševanje lakote med igro
-
-        updateIndicators();
-    }, 1000); // Posodobitev vsakih 1 sekundo
 </script>
 </body>
 </html>
