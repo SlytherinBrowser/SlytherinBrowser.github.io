@@ -357,12 +357,14 @@ function searchSlytherinBrowser() {
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
+                // Če ne izgleda kot URL, oblikujemo Google iskalni URL
                 const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
-                window.open(searchUrl, '_blank');
+                window.open(searchUrl, 'load.html');
                 localStorage.setItem("lastSearch", searchTerm);
             } else {
+                // Če izgleda kot URL, odpremo URL v novem zavihku
                 if (!urlToOpen.startsWith("http://") && !urlToOpen.startsWith("https://")) {
-                    urlToOpen = "http://" + urlToOpen;
+                    urlToOpen = "http://" + urlToOpen; // Dodamo privzeti protokol, če ni naveden
                 }
                 window.open(urlToOpen, '_blank');
             }
@@ -371,14 +373,10 @@ function searchSlytherinBrowser() {
     }
 }
 
-function isURL(str) {
-    const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
-    return !!pattern.test(str);
+function isURL(text) {
+    // Preverimo, ali vneseni izraz izgleda kot URL
+    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    return urlRegex.test(text);
 }
 
 function checkForRotation() {
