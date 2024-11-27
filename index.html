@@ -72,7 +72,7 @@
 
 
 
-
+ <button id="clickButton">0</button>
 
       <div id="dock">
         <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
@@ -201,5 +201,48 @@
         moveEyes(event);
     });
 </script>
+ <script>
+        let count = 0;
+        const maxCount = 99999;
+        let timeout;
+        const clickButton = document.getElementById('clickButton');
+        const clickImage = document.querySelector('.lamp'); // Poišče prvo sliko z razredom 'lamp'
+
+        clickButton.addEventListener('click', () => {
+            count++;
+            clickButton.textContent = count;
+
+            // Če doseže 100,000, se slika spremeni v GIF
+            if (count >= maxCount) {
+                clickImage.src = 'lamp.gif'; // Zamenjaj z URL-jem tvoje GIF slike
+                clickImage.classList.add('gif');
+                clickImage.classList.remove('lamp');
+            } else {
+                // Obnovi sliko, če ni doseženo največje število
+                if (clickImage.classList.contains('gif')) {
+                    clickImage.src = 'Slyherin.png'; // Zamenjaj z URL-jem začetne slike
+                    clickImage.classList.add('lamp');
+                    clickImage.classList.remove('gif');
+                }
+
+                if (count >= 100) {
+                    clickButton.classList.add('bold');
+                } else {
+                    clickButton.classList.remove('bold');
+                }
+            }
+
+            // Ponastavi časovnik
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                count = 0;
+                clickButton.textContent = count;
+                clickImage.src = 'tvoja-slikica.png'; // Zamenjaj z URL-jem začetne slike
+                clickImage.classList.add('lamp');
+                clickImage.classList.remove('gif');
+                clickButton.classList.remove('bold');
+            }, 3000);
+        });
+    </script>
 </body>
 </html>
