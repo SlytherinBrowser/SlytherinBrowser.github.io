@@ -11,9 +11,9 @@
     <script defer src="indexjs.js"></script>
 </head>
 <style type="text/css">
-	.eye-container {
-		position: fixed;
-		top: 0px;
+        .eye-container {
+                position: fixed;
+                top: 0px;
             display: flex;
             gap: 30px;
         }
@@ -51,19 +51,12 @@
 </div>
     <img id="logo" src="Slytherin.png"></img>
 
-  <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
-    <label for="search">SlytherinBrowser:</label>
-    <input 
-        type="search" 
-        id="search" 
-        name="search" 
-        placeholder="Vnesite iskalni pojem..." 
-        oninput="checkForSuggestions()" />
-    <input type="submit" id="submitBtn" value="Išči">
-</form>
+    <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
+        <label for="search">SlytherinBrowser:</label>
+       <input type="search" id="search" name="search" placeholder="Vnesite iskalni pojem..." oninput="checkForRotation(); checkForReminder();">
 
-<!-- Prikaz rezultatov iskanja -->
-<div id="search-results"></div>
+        <input type="submit" id="submitBtn" value="Išči">
+    </form>
 
     <img id="logo" src="Slytherin.png"></img>
 
@@ -76,7 +69,7 @@
             <button id="sendButton">Pošlji</button>
         </div>
     </div>
-     
+
       <div id="dock">
         <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
           <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
@@ -142,7 +135,7 @@
 </div>
         <audio id="backgroundMusic" loop>
        <source src="https://www.youtube.com/watch?v=3CWJNqyub3o&ab_channel=ChristmasSongsandCarols-LovetoSing" type="audio/mpeg">
-            	<script>
+                    <script>
     const pupils = document.querySelectorAll('.pupil');
     let isBlinking = false;
     let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
