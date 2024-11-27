@@ -17,7 +17,41 @@ body {
 
 
 
-        
+         #clickButton {
+            left: 0;
+            width: 100%;
+            position: fixed;
+            bottom: 16%; /* Gumb je postavljen na 12% od spodnjega roba */
+            padding: 15px 30px;
+            background-color: #ff6f61;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        #clickButton:hover {
+            background-color: #2980b9;
+        }
+
+        img.lamp {
+            width: 60px;
+            height: 60px;
+        }
+
+        img.gif {
+            width: 60px;
+            height: 60px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
 
 
 
