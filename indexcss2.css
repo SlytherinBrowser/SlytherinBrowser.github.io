@@ -80,7 +80,7 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
 #chatPopup {
     display: none;
     position: fixed;
-    bottom: 20%; /* Postavimo popup nad gumb */
+    bottom: 25%; /* Postavimo popup nad gumb */
     right: 20px;
     width: 300px;
     background: white;
