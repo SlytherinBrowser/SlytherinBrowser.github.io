@@ -496,7 +496,41 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
         }
 
 
+#clickButton {
+              position: fixed;
+            width: 80px;
+            height: 50px;
+            bottom: 80px; /* Gumb je postavljen 80px od spodnjega roba */
+            right: 20px;
+            border: none;
+            background-color: #0078d7;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+            transition: box-shadow 0.3s; /* Prehod za senčenje */
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+                #clickButton:hover {
+            background-color: #2980b9;
+        }
 
+        img.lamp {
+            width: 60px;
+            height: 60px;
+        }
+
+        img.gif {
+            width: 60px;
+            height: 60px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
 
 
 #chatButton {
