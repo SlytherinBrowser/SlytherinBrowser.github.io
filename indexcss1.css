@@ -74,7 +74,7 @@ body {
 #chatPopup {
     display: none;
     position: fixed;
-    bottom: 20%; /* Pomakni popup okno 20% od spodaj, da bo nad gumbom */
+    bottom: 25%; /* Pomakni popup okno 20% od spodaj, da bo nad gumbom */
     right: 20px;
     width: 300px;
     background: white;
