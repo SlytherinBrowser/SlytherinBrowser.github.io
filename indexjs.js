@@ -335,20 +335,88 @@ function showCurrentTime() {
     document.getElementById("topBar").innerText = formattedTime;
 }
 
-function openLastSearch() {
-    const lastSearch = localStorage.getItem("lastSearch");
+// Funkcija za preverjanje predlogov ob tipkanju
+async function checkForSuggestions() {
+    const query = document.getElementById("search").value.trim();
+    const resultsContainer = document.getElementById("search-results");
 
-    if (lastSearch) {
-        const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(lastSearch);
-        window.open(searchUrl, 'load.html');
+    if (query) {
+        // Pokličemo API za iskanje predlogov
+        const suggestions = await fetchSuggestions(query);
+
+        if (suggestions.length > 0) {
+            resultsContainer.innerHTML = suggestions
+                .map(item => `<div class="result-item" onclick="handleSuggestionClick('${item}')">${item}</div>`)
+                .join('');
+            resultsContainer.style.display = "block";
+        } else {
+            resultsContainer.innerHTML = '<div class="result-item">Ni zadetkov</div>';
+            resultsContainer.style.display = "block";
+        }
     } else {
-        alert("Ni zadnjega iskanja.");
+        resultsContainer.style.display = "none"; // Skrijemo rezultate, ko ni besedila
     }
 }
 
+// Funkcija za pridobivanje predlogov s simuliranim API klicem
+async function fetchSuggestions(query) {
+    // To je samo simulacija, namesto tega bi uporabil pravi API za iskanje predlogov
+    const popularSuggestions = [
+    "Google", 
+    "Facebook", 
+    "YouTube", 
+    "Amazon", 
+    "Wikipedia", 
+    "Twitter", 
+    "Instagram", 
+    "Netflix", 
+    "Spotify", 
+    "TikTok", 
+    "LinkedIn", 
+    "Gmail", 
+    "Reddit", 
+    "eBay", 
+    "Yahoo", 
+    "Bing", 
+    "Pinterest", 
+    "WhatsApp", 
+    "Skype", 
+    "Google Maps", 
+    "Apple", 
+    "Samsung", 
+    "Android", 
+    "Microsoft", 
+    "Netflix login", 
+    "Zoom", 
+    "Uber", 
+    "eBay login", 
+    "WhatsApp download", 
+    "Spotify login", 
+    "Best Buy", 
+    "Hulu", 
+    "Airbnb", 
+    "Fiverr", 
+    "Craigslist", 
+    "CNN", 
+    "BBC", 
+    "New York Times", 
+    "Amazon Prime Video"
+];
+
+    // Filtriramo predloge, ki vsebujejo vnos uporabnika
+    return simulatedSuggestions.filter(item => item.toLowerCase().includes(query.toLowerCase()));
+}
+
+// Funkcija za obdelavo klikov na predloge
+function handleSuggestionClick(suggestion) {
+    // Ko klikneš na predlog, se ta vnese v iskalnik
+    document.getElementById("search").value = suggestion;
+    document.getElementById("search-results").style.display = "none"; // Skrijemo predloge
+}
+
+// Funkcija za izvedbo iskanja
 function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
-
     if (searchTerm !== "") {
         if (searchTerm.startsWith("*")) {
             handleShortcut(searchTerm);
@@ -357,26 +425,54 @@ function searchSlytherinBrowser() {
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
-                // Če ne izgleda kot URL, oblikujemo Google iskalni URL
                 const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
-                window.open(searchUrl, 'load.html');
+                window.open(searchUrl, '_blank');
                 localStorage.setItem("lastSearch", searchTerm);
             } else {
-                // Če izgleda kot URL, odpremo URL v novem zavihku
                 if (!urlToOpen.startsWith("http://") && !urlToOpen.startsWith("https://")) {
-                    urlToOpen = "http://" + urlToOpen; // Dodamo privzeti protokol, če ni naveden
+                    urlToOpen = "http://" + urlToOpen;
                 }
                 window.open(urlToOpen, '_blank');
             }
         }
         document.getElementById("search").value = ""; // Počisti iskalno polje
+        document.getElementById("search-results").style.display = "none"; // Skrijemo rezultate
     }
 }
 
-function isURL(text) {
-    // Preverimo, ali vneseni izraz izgleda kot URL
-    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-    return urlRegex.test(text);
+// Funkcija za preverjanje URL
+function isURL(str) {
+    const pattern = new RegExp('^(https?:\\/\\/)?' + // protokol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // ime domene
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // ali IP (v4) naslov
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // vrata in pot
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // poizvedba
+        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment
+    return !!pattern.test(str);
+}
+
+// Funkcija za bližnjice
+function handleShortcut(searchTerm) {
+    // Primer za bližnjico
+    if (searchTerm === "*home") {
+        window.location.href = "/";
+    } else if (searchTerm === "*last") {
+        openLastSearch();
+    } else {
+        alert("Neznana bližnjica: " + searchTerm);
+    }
+}
+
+// Funkcija za odpiranje zadnjega iskanja
+function openLastSearch() {
+    const lastSearch = localStorage.getItem("lastSearch");
+
+    if (lastSearch) {
+        const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(lastSearch);
+        window.open(searchUrl, '_blank');
+    } else {
+        alert("Ni zadnjega iskanja.");
+    }
 }
 
 function checkForRotation() {
