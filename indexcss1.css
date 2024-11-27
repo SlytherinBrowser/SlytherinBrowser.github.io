@@ -538,56 +538,39 @@ body {
     
 
 
-        .game-popup {
-            background-color: #fff;
-            border: 2px solid #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            width: 300px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none; /* Inicialno skrito */
-            position: absolute;
-            bottom: 50px; /* Postavimo nad gumb */
-            left: 0;
-        }
-        .indicator {
-            margin: 10px 0;
-        }
-        .indicator span {
-            font-weight: bold;
-        }
-        .buttons {
-            margin-top: 20px;
-        }
-        .button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
+
+             #clickButton {
+            right: 20px;
+            position: fixed;
+            width: 80px;
+            height: 50px;
+            bottom: 80px; /* Gumb je 80px nad dnom zaslona */
+            background-color: #ff6f61;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
         }
-        .button:hover {
-            background-color: #ddd;
+                #clickButton:hover {
+            background-color: #2980b9;
         }
-        .open-popup {
-            right: 20px;
-    position: fixed;
-    width: 80px;
-    height: 50px;
-    bottom: 80px;  /* Gumb je 80px nad dnom zaslona */
-    background-color: #ff6f61;
-    border-radius: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
-}
-        .open-popup:hover {
-            background-color: #45a049;
+
+        img.lamp {
+            width: 60px;
+            height: 60px;
+        }
+
+        img.gif {
+            width: 60px;
+            height: 60px;
+        }
+
+        .bold {
+            font-weight: bold;
         }
 
 
