@@ -51,12 +51,17 @@
 </div>
     <img id="logo" src="Slytherin.png"></img>
 
-    <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
-        <label for="search">SlytherinBrowser:</label>
-       <input type="search" id="search" name="search" placeholder="Vnesite iskalni pojem..." oninput="checkForRotation(); checkForReminder();">
-
-        <input type="submit" id="submitBtn" value="Išči">
-    </form>
+  <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
+    <label for="search">SlytherinBrowser:</label>
+    <input 
+        type="search" 
+        id="search" 
+        name="search" 
+        placeholder="Vnesite iskalni pojem..." 
+        oninput="checkForRotation(); checkForReminder();" />
+    <input type="submit" id="submitBtn" value="Išči">
+</form>
+<div id="search-results"></div>
 
     <img id="logo" src="Slytherin.png"></img>
 
