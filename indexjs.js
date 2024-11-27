@@ -357,14 +357,12 @@ function searchSlytherinBrowser() {
 
             // Preverimo, ali vneseni izraz izgleda kot URL
             if (!isURL(searchTerm)) {
-                // Če ne izgleda kot URL, oblikujemo Google iskalni URL
                 const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(searchTerm);
-                window.open(searchUrl, 'load.html');
+                window.open(searchUrl, '_blank');
                 localStorage.setItem("lastSearch", searchTerm);
             } else {
-                // Če izgleda kot URL, odpremo URL v novem zavihku
                 if (!urlToOpen.startsWith("http://") && !urlToOpen.startsWith("https://")) {
-                    urlToOpen = "http://" + urlToOpen; // Dodamo privzeti protokol, če ni naveden
+                    urlToOpen = "http://" + urlToOpen;
                 }
                 window.open(urlToOpen, '_blank');
             }
@@ -373,10 +371,39 @@ function searchSlytherinBrowser() {
     }
 }
 
-function isURL(text) {
-    // Preverimo, ali vneseni izraz izgleda kot URL
-    const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-    return urlRegex.test(text);
+function isURL(str) {
+    const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+    return !!pattern.test(str);
+}
+
+function checkForRotation() {
+    const query = document.getElementById("search").value;
+    const resultsContainer = document.getElementById("search-results");
+    
+    if (query.trim() !== "") {
+        resultsContainer.style.display = 'block';
+        const mockResults = [
+            'Rezultat 1',
+            'Rezultat 2',
+            'Rezultat 3',
+            'Rezultat 4'
+        ].filter(item => item.toLowerCase().includes(query.toLowerCase()));
+        
+        resultsContainer.innerHTML = mockResults.length 
+            ? mockResults.map(result => `<div class="result-item">${result}</div>`).join('')
+            : '<div class="result-item">Ni zadetkov</div>';
+    } else {
+        resultsContainer.style.display = 'none';
+    }
+}
+
+function checkForReminder() {
+    // Dodatne animacije ali opomniki
 }
 
 function handleShortcut(searchTerm) {
