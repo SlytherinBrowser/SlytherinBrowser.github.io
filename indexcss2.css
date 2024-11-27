@@ -22,7 +22,42 @@ background-size: cover; /* Slika bo pokrila celoten zaslon */
 
    
 
+ #clickButton {
+            text-align: center;
+            justify-content: right;
+            left: 0;
+            position: fixed;
+            width: 100%;
+            bottom: 16%;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
 
+        #clickButton:hover {
+            background-color: #2980b9;
+        }
+
+        img.lamp {
+            width: 60px;
+            height: 60px;
+        }
+
+        img.gif {
+            width: 60px;
+            height: 60px;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
 
 
 
