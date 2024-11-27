@@ -127,13 +127,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
-    // Preveri, ali izraz vsebuje samo dovoljene znake (številke, operatorje in prazne prostore)
-    const validExpression = /^[\d+\-*/().\s]*$/;
+    // Preveri, ali izraz vsebuje samo dovoljene znake (številke, operatorje, prazne prostore in znak '=')
+    const validExpression = /^[\d+\-*/().=\s]*$/;
 
     if (validExpression.test(expression)) {
         try {
-            // Uporabi funkcijo za eval, da izvede matematične operacije
-            return Function('return ' + expression)(); // Uporablja varno funkcijo za eval
+            // Odstrani znak '=' iz izraza, da bo eval deloval pravilno
+            const cleanedExpression = expression.replace("=", "").trim();
+            // Uporabi funkcijo eval za izračun
+            return Function('return ' + cleanedExpression)(); // Uporablja varno funkcijo za eval
         } catch (e) {
             return "Oprosti, ne morem izračunati tega.";
         }
