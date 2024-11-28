@@ -201,48 +201,50 @@
         moveEyes(event);
     });
 </script>
- <script>
-        let count = 0;
-        const maxCount = 999;
-        let timeout;
-        const clickButton = document.getElementById('clickButton');
-        const clickImage = document.querySelector('.lamp'); // Poišče prvo sliko z razredom 'lamp'
+<script>
+    let count = 0;
+    const maxCount = 999;
+    let timeout;
+    const clickButton = document.getElementById('clickButton');
+    const clickImage = document.querySelector('.lamp');
 
-        clickButton.addEventListener('click', () => {
-            count++;
+    clickButton.addEventListener('click', () => {
+        count++;
+        clickButton.textContent = count;
+
+        // Če doseže največjo vrednost, prikaže GIF
+        if (count >= maxCount) {
+            clickImage.src = 'lamp.gif'; // Zamenjaj z URL-jem tvoje GIF slike
+            clickImage.classList.add('gif');
+            clickImage.classList.remove('lamp');
+        } else if (!clickImage.classList.contains('gif')) {
+            // Obnovi sliko, če GIF še ni aktiven
+            clickImage.src = 'Slytherin.png'; // Zamenjaj z URL-jem začetne slike
+            clickImage.classList.add('lamp');
+            clickImage.classList.remove('gif');
+        }
+
+        if (count >= 100) {
+            clickButton.classList.add('bold');
+        } else {
+            clickButton.classList.remove('bold');
+        }
+
+        // Ponastavi časovnik
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            count = 0;
             clickButton.textContent = count;
 
-            // Če doseže 100,000, se slika spremeni v GIF
-            if (count >= maxCount) {
-                clickImage.src = 'lamp.gif'; // Zamenjaj z URL-jem tvoje GIF slike
-                clickImage.classList.add('gif');
-                clickImage.classList.remove('lamp');
-            } else {
-                // Obnovi sliko, če ni doseženo največje število
-                if (clickImage.classList.contains('gif')) {
-                    clickImage.src = 'Slytherin.png'; // Zamenjaj z URL-jem začetne slike
-                    clickImage.classList.add('lamp');
-                    clickImage.classList.remove('gif');
-                }
-
-                if (count >= 100) {
-                    clickButton.classList.add('bold');
-                } else {
-                    clickButton.classList.remove('bold');
-                }
-            }
-
-            // Ponastavi časovnik
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                count = 0;
-                clickButton.textContent = count;
+            if (!clickImage.classList.contains('gif')) {
                 clickImage.src = 'Slytherin.png'; // Zamenjaj z URL-jem začetne slike
                 clickImage.classList.add('lamp');
                 clickImage.classList.remove('gif');
-                clickButton.classList.remove('bold');
-            }, 3000);
-        });
-    </script>
+            }
+            clickButton.classList.remove('bold');
+        }, 3000);
+    });
+</script>
+
 </body>
 </html>
