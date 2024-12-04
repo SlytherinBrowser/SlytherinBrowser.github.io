@@ -129,7 +129,7 @@ body {
     border-radius: 12px;
     padding: 8px 12px; /* Manjši padding */
     margin: 6px 0;
-    background-color: #f9f9f9;
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 0.9em; /* Manjša pisava */
     max-width: 80%; /* Manjša maksimalna širina */
