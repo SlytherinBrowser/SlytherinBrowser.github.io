@@ -199,16 +199,37 @@ sendButton.onclick = async function () {
     }
 };
 
-    // Joining a chat room
-    joinButton.onclick = function() {
-        chatRoomCode = codeInput.value.trim();
-        if (chatRoomCode) {
-            db.ref(`chats/${chatRoomCode}`).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                addMessageToChatWindow(message, message.sender, false, 'Received');
+   // Nalaganje sporočil iz trenutne seje
+async function loadMessages(roomCode) {
+    try {
+        const querySnapshot = await collection(db, `chats/${roomCode}`);
+        onSnapshot(querySnapshot, (snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const message = change.doc.data();
+                    const isSentByCurrentUser = currentUser && (message.sender === (currentUser.displayName || currentUser.email));
+                    addMessageToChatWindow(message, message.sender, isSentByCurrentUser, 'Received');
+                }
             });
-        }
-    };
+        });
+    } catch (error) {
+        console.error('Error loading messages: ', error);
+    }
+}
+
+// Joining a chat room
+joinButton.onclick = function () {
+    chatRoomCode = codeInput.value.trim() || 'public';
+    if (chatRoomCode) {
+        chatWindow.innerHTML = ''; // Počisti prejšnja sporočila
+        loadMessages(chatRoomCode);
+    }
+};
+
+// Ob začetni prijavi v javno sejo
+if (chatRoomCode === 'public') {
+    loadMessages(chatRoomCode);
+}
 // Show the popup for reserving a session
 reserveButton.onclick = function () {
     popupContainer.style.display = 'block';
