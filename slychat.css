@@ -127,42 +127,41 @@ body {
 .message-box {
     border: 1px solid #ddd;
     border-radius: 12px;
-    padding: 8px 12px; /* Manjši padding */
+    padding: 8px 12px;
     margin: 6px 0;
-    background: linear-gradient(145deg, #6a82fb, #fc5c7d);
+    background: linear-gradient(145deg, #6a82fb, #fc5c7d); /* Dodano gradientno ozadje */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 0.9em; /* Manjša pisava */
-    max-width: 80%; /* Manjša maksimalna širina */
+    font-size: 0.9em;
+    max-width: 80%;
     word-wrap: break-word;
     width: auto;
     white-space: pre-wrap;
 }
 
 .message-box.sent {
-    background-color: linear-gradient(145deg, #6a82fb, #fc5c7;
     margin-left: auto;
     border: none;
 }
 
 .message-box.received {
-    background-color: linear-gradient(145deg, #6a82fb, #fc5c7;
     margin-right: auto;
     border: none;
 }
 
 .sender-name {
     font-weight: bold;
-    font-size: 1em; /* Manjša pisava za ime pošiljatelja */
+    font-size: 1em;
     color: #333;
     margin-bottom: 6px;
 }
 
 .message-status {
-    font-size: 0.8em; /* Manjša pisava za status */
+    font-size: 0.8em;
     color: #888;
     text-align: right;
     margin-top: 4px;
 }
+
 
 #chat-input {
     padding: 20px;
