@@ -125,36 +125,44 @@ body {
     box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
 }
 .message-box {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      margin: 5px 0;
-      max-width: 70%;
-      word-wrap: break-word;
-  }
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    padding: 12px;
+    margin: 8px 0;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-size: 1em;
+    max-width: 90%;  /* Maksimalna širina za zagotavljanje, da sporočilo ne postane preširoko */
+    word-wrap: break-word;
+    width: auto; /* Prilagajanje širine glede na vsebino */
+    white-space: pre-wrap; /* Omogoči, da se besedilo prelomi v več vrsticah */
+}
 
-  .message-box.sent {
-      background-color: #e0ffe0;
-      margin-left: auto;
-  }
+.message-box.sent {
+    background-color: #d1ffd6;
+    margin-left: auto;
+    border: none;
+}
 
-  .message-box.received {
-      background-color: #f0f0f0;
-      margin-right: auto;
-  }
+.message-box.received {
+    background-color: #f3f3f3;
+    margin-right: auto;
+    border: none;
+}
 
-  .sender-name {
-      font-weight: bold;
-      font-size: 0.9em;
-      margin-bottom: 5px;
-  }
+.sender-name {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 8px;
+}
 
-  .message-status {
-      font-size: 0.8em;
-      color: gray;
-      text-align: right;
-      margin-top: 5px;
-  }
+.message-status {
+    font-size: 0.85em;
+    color: #888;
+    text-align: right;
+    margin-top: 5px;
+}
 
 #chat-input {
     padding: 20px;
