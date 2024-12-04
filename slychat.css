@@ -124,6 +124,37 @@ body {
     border-radius: 20px;
     box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1), inset -4px -4px 8px rgba(255, 255, 255, 0.7);
 }
+.message-box {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 5px 0;
+      max-width: 70%;
+      word-wrap: break-word;
+  }
+
+  .message-box.sent {
+      background-color: #e0ffe0;
+      margin-left: auto;
+  }
+
+  .message-box.received {
+      background-color: #f0f0f0;
+      margin-right: auto;
+  }
+
+  .sender-name {
+      font-weight: bold;
+      font-size: 0.9em;
+      margin-bottom: 5px;
+  }
+
+  .message-status {
+      font-size: 0.8em;
+      color: gray;
+      text-align: right;
+      margin-top: 5px;
+  }
 
 #chat-input {
     padding: 20px;
