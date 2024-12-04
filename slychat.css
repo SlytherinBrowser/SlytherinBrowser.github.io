@@ -139,13 +139,13 @@ body {
 }
 
 .message-box.sent {
-    background-color: #d1ffd6;
+    background-color: linear-gradient(145deg, #6a82fb, #fc5c7;
     margin-left: auto;
     border: none;
 }
 
 .message-box.received {
-    background-color: #f3f3f3;
+    background-color: linear-gradient(145deg, #6a82fb, #fc5c7;
     margin-right: auto;
     border: none;
 }
