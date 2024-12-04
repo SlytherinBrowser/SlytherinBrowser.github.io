@@ -203,16 +203,26 @@ sendButton.onclick = async function () {
 joinButton.onclick = function() {
     chatRoomCode = codeInput.value.trim();
     if (chatRoomCode) {
-        db.ref(`chats/${chatRoomCode}`).on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            addMessageToChatWindow(message, message.sender, false, 'Received');
-        });
+        loadMessages(chatRoomCode);
     }
 };
 
 // Ob začetni prijavi v javno sejo
 if (chatRoomCode === 'public') {
     loadMessages(chatRoomCode);
+}
+
+// Funkcija za nalaganje sporočil v seji
+function loadMessages(chatRoomCode) {
+    const chatRef = collection(db, `chats/${chatRoomCode}`);
+    onSnapshot(chatRef, (querySnapshot) => {
+        // Počisti trenutna sporočila v pogovoru
+        chatWindow.innerHTML = '';
+        querySnapshot.forEach((doc) => {
+            const message = doc.data();
+            addMessageToChatWindow(message, message.sender, false, 'Received');
+        });
+    });
 }
 
 // Show the popup for reserving a session
