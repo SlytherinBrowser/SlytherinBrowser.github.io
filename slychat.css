@@ -132,7 +132,7 @@ body {
     background: linear-gradient(145deg, #6a82fb, #fc5c7d); /* Dodano gradientno ozadje */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 0.9em;
-    max-width: 80%;
+    max-width: 45%;
     word-wrap: break-word;
     width: auto;
     white-space: pre-wrap;
