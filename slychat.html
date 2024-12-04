@@ -201,10 +201,20 @@ sendButton.onclick = async function () {
 
 // Joining a chat room
 joinButton.onclick = function () {
-    chatRoomCode = codeInput.value.trim();
-    if (chatRoomCode) {
+    const newChatRoomCode = codeInput.value.trim() || 'public';
+
+    if (chatRoomCode !== newChatRoomCode) {
+        // Odjavi trenutni poslušalec, če obstaja
+        if (unsubscribe) {
+            unsubscribe();
+        }
+
+        chatRoomCode = newChatRoomCode; // Nastavi novo številko seje
+        chatWindow.innerHTML = ''; // Počisti trenutno okno pogovora
+
+        // Pridobi zbirko za novo sejo in poslušaj spremembe
         const chatCollection = collection(db, `chats/${chatRoomCode}`);
-        onSnapshot(chatCollection, (snapshot) => {
+        unsubscribe = onSnapshot(chatCollection, (snapshot) => {
             snapshot.docChanges().forEach((change) => {
                 if (change.type === "added") {
                     const message = change.doc.data();
@@ -212,6 +222,10 @@ joinButton.onclick = function () {
                 }
             });
         });
+
+        console.log(`Pridruženi seji: ${chatRoomCode}`);
+    } else {
+        console.log("Ostajate v trenutni seji: ", chatRoomCode);
     }
 };
 
