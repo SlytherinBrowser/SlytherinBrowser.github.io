@@ -44,7 +44,7 @@
 
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
@@ -199,30 +199,38 @@ sendButton.onclick = async function () {
     }
 };
 
-       // Joining a chat room
-    joinButton.onclick = function() {
-        chatRoomCode = codeInput.value.trim();
-        if (chatRoomCode) {
-            db.ref(`chats/${chatRoomCode}`).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                addMessageToChatWindow(message, message.sender, false, 'Received');
-            });
-        }
-    };
-
+// Joining a chat room
+joinButton.onclick = function() {
+    chatRoomCode = codeInput.value.trim();
+    if (chatRoomCode) {
+        db.ref(`chats/${chatRoomCode}`).on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            addMessageToChatWindow(message, message.sender, false, 'Received');
+        });
+    }
+};
 
 // Ob začetni prijavi v javno sejo
 if (chatRoomCode === 'public') {
     loadMessages(chatRoomCode);
 }
+
 // Show the popup for reserving a session
 reserveButton.onclick = function () {
-    popupContainer.style.display = 'block';
+    if (popupContainer) {
+        popupContainer.style.display = 'block'; // Preveri, ali je element pravilen in ga prikaže
+    } else {
+        console.error("Popup container element not found!");
+    }
 };
 
 // Close the popup
 closeButton.onclick = function () {
-    popupContainer.style.display = 'none';
+    if (popupContainer) {
+        popupContainer.style.display = 'none'; // Skrij popup ob zaprtju
+    } else {
+        console.error("Popup container element not found!");
+    }
 };
 
 // Add email functionality
@@ -247,7 +255,6 @@ saveButton.onclick = function () {
         popupContainer.style.display = 'none'; // Close popup after saving
     }
 };
-
     </script>
 </body>
 </html>
