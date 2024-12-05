@@ -218,9 +218,19 @@ function loadMessages(chatRoomCode) {
     onSnapshot(chatRef, (querySnapshot) => {
         // Počisti trenutna sporočila v pogovoru
         chatWindow.innerHTML = '';
+        
+        // Pridobi in razvrsti sporočila glede na čas
+        const messages = [];
         querySnapshot.forEach((doc) => {
-            const message = doc.data();
-            addMessageToChatWindow(message, message.sender, false, 'Received');
+            messages.push({ id: doc.id, ...doc.data() });
+        });
+        messages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+
+        // Prikaz sporočil
+        messages.forEach((message) => {
+            const isSentByCurrentUser = currentUser && 
+                (currentUser.displayName === message.sender || currentUser.email === message.sender);
+            addMessageToChatWindow(message, message.sender, isSentByCurrentUser, 'Received');
         });
     });
 }
