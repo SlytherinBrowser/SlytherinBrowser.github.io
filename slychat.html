@@ -212,19 +212,22 @@ if (chatRoomCode === 'public') {
     loadMessages(chatRoomCode);
 }
 
-// Funkcija za nalaganje sporočil v seji
 function loadMessages(chatRoomCode) {
     const chatRef = collection(db, `chats/${chatRoomCode}`);
     onSnapshot(chatRef, (querySnapshot) => {
         // Počisti trenutna sporočila v pogovoru
         chatWindow.innerHTML = '';
-        
+
         // Pridobi in razvrsti sporočila glede na čas
         const messages = [];
         querySnapshot.forEach((doc) => {
-            messages.push({ id: doc.id, ...doc.data() });
+            const messageData = doc.data();
+            if (messageData.timestamp && messageData.timestamp.toMillis) {
+                messageData.timestamp = messageData.timestamp.toMillis(); // Pretvori timestamp
+            }
+            messages.push({ id: doc.id, ...messageData });
         });
-        messages.sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
+        messages.sort((a, b) => a.timestamp - b.timestamp);
 
         // Prikaz sporočil
         messages.forEach((message) => {
