@@ -245,35 +245,77 @@ color: black;
         background-color: #2980b9;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
     }
-            #dock {
-                position: fixed;
-                bottom: 0px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
-                border-radius: 5px;
-                padding: 10px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-                z-index: 999;
-                width: 100%;
-                height: auto;
-            }
-    
-            .icon {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                background-size: cover;
-                cursor: pointer;
-            }
-    
-            .icon:hover {
-                transform: scale(1.1);
-            }
-    
+             #dock {
+    position: fixed;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */
+    backdrop-filter: blur(10px); /* Srednje močna zameglitev */
+    border-radius: 5px; /* Majhna zaobljenost robov */
+    padding: 10px; /* Srednje veliko polnjenje */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    width: 100%;
+    height: auto;
+}
+
+.icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Okrogle ikone */
+    background-size: cover;
+    cursor: pointer;
+}
+
+.icon:hover {
+    transform: scale(1.1); /* Rahlo povečanje pri hoverju */
+}
+
+.set-link {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-link:hover {
+    transform: scale(1.1);
+}
+
+/* Pop-up styling */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
     
     #menu:hover,
     #buttonkng:hover{
