@@ -815,7 +815,7 @@ color: black;
 }
 
 
-.close-popup {
+#closePopup {
     padding: 10px 20px;
     margin-top: 10px;
     font-size: 16px;
@@ -826,7 +826,7 @@ color: black;
     color: white;
 }
 
-.close-popup:hover {
+#closePopup:hover {
     background-color: #2980b9;
 }
     #buttonkng{
