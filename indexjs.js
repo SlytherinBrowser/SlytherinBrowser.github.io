@@ -697,7 +697,7 @@ function applyMode(mode) {
 
 
 
-      const setLinkButton = document.querySelector('.set-link');
+     const setLinkButton = document.querySelector('.set-link');
         const openLinkButton = document.querySelector('.open-link');
         const popup = document.querySelector('.popup');
         const overlay = document.querySelector('.overlay');
@@ -716,10 +716,14 @@ function applyMode(mode) {
 
         let currentLink = loadLink();
 
-        // Prikaži pop-up
+        // Prikaži pop-up za prvi klik
         setLinkButton.addEventListener('click', () => {
-            popup.style.display = 'block';
-            overlay.style.display = 'block';
+            if (!currentLink) {
+                popup.style.display = 'block';
+                overlay.style.display = 'block';
+            } else {
+                window.open(currentLink, '_blank');
+            }
         });
 
         // Shrani povezavo in zapri pop-up
@@ -749,6 +753,3 @@ function applyMode(mode) {
             popup.style.display = 'none';
             overlay.style.display = 'none';
         });
-
-    localStorage.setItem("mode", mode);
-}
