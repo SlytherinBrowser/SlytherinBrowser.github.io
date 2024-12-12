@@ -815,17 +815,6 @@ color: black;
     z-index: 1000;
 }
 
-.overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-}
-
 input {
     width: 100%;
     padding: 10px;
@@ -835,6 +824,20 @@ input {
     font-size: 16px;
 }
 
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    background-color: #3498db;
+    color: white;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
     #buttonkng{
         position: fixed;
         width: 80px;
