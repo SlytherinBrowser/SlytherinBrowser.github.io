@@ -248,34 +248,52 @@ color: black;
         background-color: #2980b9;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
     }
-            #dock {
-                position: fixed;
-                bottom: 0px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
-                border-radius: 5px;
-                padding: 10px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-                z-index: 999;
-                width: 100%;
-                height: auto;
-            }
+           #dock {
+    position: fixed;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    width: 100%;
+    height: auto;
+}
 
-            .icon {
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                background-size: cover;
-                cursor: pointer;
-            }
+.icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-size: cover;
+    cursor: pointer;
+}
 
-            .icon:hover {
-                transform: scale(1.1);
-            }
+.icon:hover {
+    transform: scale(1.1);
+}
+
+#clickButton {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#clickButton:hover {
+    transform: scale(1.1);
+}
 
 
     #menu:hover,
@@ -710,37 +728,58 @@ color: black;
             }
 
     #dock {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(255, 255, 255, 0.1); /* Lighter background for subtlety */
-        backdrop-filter: blur(8px); /* Moderate blur for elegance */
-        border-radius: 20px; /* Smaller border radius for a sleek look */
-        padding: 12px; /* Balanced padding */
-        display: flex;
-        justify-content: space-evenly; /* Even spacing between icons */
-        align-items: center;
-        z-index: 999;
-        width: auto;
-        max-width: 90%; /* Wider max-width for better responsiveness */
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Softer shadow for depth */
-        transition: background-color 0.3s; /* Smooth transition for background color */
-    }
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.1); /* Subtilnejša ozadja */
+    backdrop-filter: blur(8px); /* Zmerna zameglitev */
+    border-radius: 20px; /* Ostrajšeni robovi za sodoben videz */
+    padding: 12px; /* Balansirana razdalja */
+    display: flex;
+    justify-content: space-evenly; /* Enakomerna poravnava ikon */
+    align-items: center;
+    z-index: 999;
+    width: auto;
+    max-width: 90%; /* Širša maks. širina za boljšo odzivnost */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Nežna senca za globino */
+    transition: background-color 0.3s ease; /* Gladek prehod ozadja */
+}
 
-    .icon {
-        width: 50px; /* Icon size */
-        height: 50px; /* Icon size */
-        border-radius: 50%; /* Circular icons */
-        background-size: cover;
-        cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-    }
+.icon {
+    width: 50px; /* Velikost ikone */
+    height: 50px; /* Velikost ikone */
+    border-radius: 50%; /* Okrogle ikone */
+    background-size: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Gladki prehodi */
+}
 
-    .icon:hover {
-        transform: translateY(-5px) scale(1.1); /* Slight lift and scale on hover */
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover for emphasis */
-    }
+.icon:hover {
+    transform: translateY(-5px) scale(1.1); /* Rahlo dvigovanje in povečanje ob hoverju */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Povečana senca pri hoverju */
+}
+
+#clickButton {
+    background-color: #3498db; /* Barva ozadja gumba */
+    color: white; /* Bela barva besedila */
+    padding: 12px 24px; /* Večje območje gumba za udobje */
+    font-size: 16px; /* Velikost pisave */
+    font-weight: 600; /* Poudarjeno besedilo */
+    border-radius: 25px; /* Mehak rob */
+    cursor: pointer; /* Kazalec spremeni na roko */
+    border: none; /* Odstranitev roba */
+    transition: transform 0.2s ease-in-out, background-color 0.3s ease; /* Gladek prehod pri klikih */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#clickButton:hover {
+    transform: scale(1.1); /* Povečanje pri hoverju */
+    background-color: #2980b9; /* Temnejša barva ozadja pri hoverju */
+}
+
 
     #buttonkng{
         position: fixed;
