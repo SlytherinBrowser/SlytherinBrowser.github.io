@@ -748,38 +748,86 @@ color: black;
                 transform: translateY(1px); /* Slight press down effect on click */
             }
             
-    #dock {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(255, 255, 255, 0.1); /* Lighter background for subtlety */
-        backdrop-filter: blur(8px); /* Moderate blur for elegance */
-        border-radius: 20px; /* Smaller border radius for a sleek look */
-        padding: 12px; /* Balanced padding */
-        display: flex;
-        justify-content: space-evenly; /* Even spacing between icons */
-        align-items: center;
-        z-index: 999;
-        width: auto;
-        max-width: 90%; /* Wider max-width for better responsiveness */
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Softer shadow for depth */
-        transition: background-color 0.3s; /* Smooth transition for background color */
-    }
-    
-    .icon {
-        width: 50px; /* Icon size */
-        height: 50px; /* Icon size */
-        border-radius: 50%; /* Circular icons */
-        background-size: cover;
-        cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
-    }
-    
-    .icon:hover {
-        transform: translateY(-5px) scale(1.1); /* Slight lift and scale on hover */
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover for emphasis */
-    }
+   #dock {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 999;
+    width: auto;
+    max-width: 90%;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s;
+}
+
+.icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-size: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.icon:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.set-link {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-link:hover {
+    transform: scale(1.1);
+}
+
+/* Pop-up styling */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+
+#closePopup {
+    padding: 10px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    background-color: #3498db;
+    color: white;
+}
+
+#closePopup:hover {
+    background-color: #2980b9;
+}
     
     #buttonkng{
         position: fixed;
