@@ -283,13 +283,18 @@ setLinkButton.addEventListener('click', () => {
 saveLinkButton.addEventListener('click', () => {
     const url = linkInput.value.trim();
     if (url) {
-        currentLink = url;
-        localStorage.setItem('savedLink', currentLink);
-        popup.style.display = 'none';
-        overlay.style.display = 'none';
-        linkInput.value = '';
+        try {
+            new URL(url); // Preveri, ali je vnesen URL veljaven
+            currentLink = url;
+            localStorage.setItem('savedLink', currentLink);
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+            linkInput.value = '';
+        } catch (e) {
+            alert('Prosim, vnesite veljaven URL.');
+        }
     } else {
-        alert('Prosim, vnesite veljaven URL.');
+        alert('Prosim, vnesite URL.');
     }
 });
 
@@ -298,6 +303,7 @@ overlay.addEventListener('click', () => {
     popup.style.display = 'none';
     overlay.style.display = 'none';
 });
+
 
     </script>
 
