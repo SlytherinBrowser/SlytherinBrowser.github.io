@@ -82,15 +82,17 @@
       </div>
 <div>
     <div class="button-container">
-        <button class="set-link">Nastavi / Odpri povezavo</button>
-    </div>
+        <div class="button-container" style="display: flex; gap: 15px; justify-content: center;">
+    <button class="set-link" style="background-color: #3498db; color: white;">Nastavi / Odpri povezavo</button>
+</div>
 
-    <div class="overlay"></div>
+<div class="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);"></div>
 
-    <div class="popup">
-        <input type="text" id="linkInput" placeholder="Vnesi URL povezave" />
-        <button id="saveLink">Shrani povezavo</button>
-    </div>
+<div class="popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background: white; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 10px; width: 50%;">
+    <input type="text" id="linkInput" placeholder="Vnesi URL povezave" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;" />
+    <button id="saveLink" style="width: 100%;">Shrani povezavo</button>
+</div>
+
 <div class="taskbar-icon" onclick="toggleCalendar()">
     <!-- SVG ikona (npr. ikona koledarja) -->
     <svg viewBox="0 0 24 24">
@@ -255,176 +257,6 @@
     });
 </script>
               <script>
-       // Funkcija za dodajanje CSS slogov v dokument
-function addCustomStyles() {
-    const style = document.createElement('style');
-    style.innerHTML = `
-        /* Stil za zaslone širše od 700px */
-        @media (max-width: 700px) {
-            .button-container {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-            }
-
-            #buttonlol {
-                position: fixed;
-                right: 100px;
-                bottom: 80px; /* Gumb je 80px nad dnom */
-                width: 100px;
-                height: 60px;
-                background-color: #3498db;
-                color: white;
-                border-radius: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 18px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                transition: transform 0.3s, background-color 0.3s;
-                cursor: pointer;
-            }
-
-            #buttonlol:hover {
-                background-color: #2980b9;
-                transform: translateY(-5px);
-            }
-
-            .set-link {
-                background-color: #3498db;
-                color: white;
-            }
-
-            .open-link {
-                background-color: #28a745;
-                color: white;
-            }
-
-            .popup {
-                display: none;
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 20px;
-                background: white;
-                border: 1px solid #ddd;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                width: 50%; /* Večje okno za širše zaslone */
-            }
-
-            .popup input {
-                width: 100%;
-                padding: 10px;
-                margin-bottom: 10px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-
-            .popup button {
-                width: 100%;
-            }
-
-            .overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-            }
-        }
-
-        /* Stil za zaslone ožje od 700px */
-        @media (min-width: 700px) {
-            .button-container {
-                display: flex;
-                flex-direction: column; /* Gumbi se zložijo eden pod drugim */
-                gap: 10px;
-                justify-content: center;
-                align-items: center;
-            }
-
-            #buttonlol {
-                position: fixed;
-                right: 100px;
-                bottom: 80px; /* Gumb je 20px nad dnom */
-                width: 80px;
-                height: 50px;
-                background-color: #ff6f61;
-                color: white;
-                border-radius: 15px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 16px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-                transition: transform 0.3s, background-color 0.3s;
-                cursor: pointer;
-            }
-
-            #buttonlol:hover {
-                background-color: #e65550;
-                transform: scale(1.1); /* Rahla povečava ob hoverju */
-            }
-
-            .set-link {
-                background-color: #ff6f61;
-                color: white;
-            }
-
-            .open-link {
-                background-color: #28a745;
-                color: white;
-            }
-
-            .popup {
-                display: none;
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                padding: 20px;
-                background: white;
-                border: 1px solid #ddd;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                border-radius: 10px;
-                width: 90%; /* Manjše okno za manjše zaslone */
-            }
-
-            .popup input {
-                width: 100%;
-                padding: 10px;
-                margin-bottom: 10px;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-                font-size: 16px;
-            }
-
-            .popup button {
-                width: 100%;
-            }
-
-            .overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Pokliči funkcijo za dodajanje stilov na stran
-addCustomStyles();
-
 // JavaScript za obvladovanje shranjevanja povezav in prikazovanja pop-up
 const setLinkButton = document.querySelector('.set-link');
 const popup = document.querySelector('.popup');
