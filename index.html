@@ -74,23 +74,24 @@
 
  <button id="clickButton">0</button>
      <div id="dock">
-        <!-- Povezave z ikonami -->
-        <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
-        <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
-        <a href="https://drive.google.com/" class="icon" target="load.html" style="background-image: url('drive.png');"></a>
-        <a href="https://mail.google.com/" class="icon" target="load.html" style="background-image: url('gmail.png');"></a>
-        <a href="https://www.youtube.com/" class="icon" target="load.html" style="background-image: url('yt.png');"></a>
+    <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
+    <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
+    <a href="https://drive.google.com/" class="icon" target="load.html" style="background-image: url('drive.png');"></a>
+    <a href="https://mail.google.com/" class="icon" target="load.html" style="background-image: url('gmail.png');"></a>
+    <a href="https://www.youtube.com/" class="icon" target="load.html" style="background-image: url('yt.png');"></a>
+    
+    <!-- Gumb za odpiranje pop-upa -->
+    <button class="set-link">Nastavite povezavo</button>
+</div>
 
-        <!-- Gumb buttonlol -->
-        <button id="buttonlol">Klikni me!</button>
-    </div>
-    <!-- Pop-up za vnos URL -->
+<!-- Pop-up element -->
 <div class="overlay"></div>
 <div class="popup">
-    <h2>Vnesite URL:</h2>
-    <input type="text" id="linkInput" placeholder="Vnesite URL...">
+    <h2>Vnesite povezavo</h2>
+    <input type="text" id="linkInput" placeholder="Vnesite URL">
     <button id="saveLink">Shrani povezavo</button>
 </div>
+
 <div>
     <div class="button-container">
         
@@ -259,14 +260,14 @@
     });
 </script>
               <script>
-// JavaScript za obvladovanje shranjevanja povezav in prikazovanja pop-up
+// Izberite elemente, ki so povezani z odprtjem pop-upa
 const setLinkButton = document.querySelector('.set-link');
 const popup = document.querySelector('.popup');
 const overlay = document.querySelector('.overlay');
 const linkInput = document.getElementById('linkInput');
 const saveLinkButton = document.getElementById('saveLink');
 
-// Naloži povezavo iz lokalnega shranjevanja
+// Funkcija za nalaganje shranjene povezave iz lokalnega shranjevanja
 const loadLink = () => {
     const savedLink = localStorage.getItem('savedLink');
     return savedLink || '';
@@ -274,14 +275,14 @@ const loadLink = () => {
 
 let currentLink = loadLink();
 
-// Prikaži pop-up ali odpri povezavo
+// Dogodek za odpiranje pop-upa ali odpiranje shranjene povezave
 setLinkButton.addEventListener('click', () => {
     if (!currentLink) {
-        // Če povezava ni shranjena, pokaži pop-up
+        // Če povezava ni shranjena, prikažite pop-up
         popup.style.display = 'block';
         overlay.style.display = 'block';
     } else {
-        // Če povezava obstaja, jo odpri
+        // Če povezava obstaja, jo odprite v novem zavihku
         window.open(currentLink, '_blank');
     }
 });
@@ -290,25 +291,20 @@ setLinkButton.addEventListener('click', () => {
 saveLinkButton.addEventListener('click', () => {
     const url = linkInput.value.trim();
     if (url) {
-        try {
-            new URL(url); // Preveri, ali je vnesen URL veljaven
-            currentLink = url;
-            localStorage.setItem('savedLink', currentLink);
-            popup.style.display = 'none';
-            overlay.style.display = 'none';
-            linkInput.value = '';
-        } catch (e) {
-            alert('Prosim, vnesite veljaven URL.');
-        }
+        currentLink = url;
+        localStorage.setItem('savedLink', currentLink);
+        popup.style.display = 'none';  // Zapri pop-up
+        overlay.style.display = 'none'; // Zapri overlay
+        linkInput.value = ''; // Počisti input polje
     } else {
-        alert('Prosim, vnesite URL.');
+        alert('Prosim, vnesite veljaven URL.');
     }
 });
 
-// Zapri pop-up, ko kliknete izven njega
+// Zapri pop-up, ko kliknete na overlay
 overlay.addEventListener('click', () => {
-    popup.style.display = 'none';
-    overlay.style.display = 'none';
+    popup.style.display = 'none'; // Zapri pop-up
+    overlay.style.display = 'none'; // Zapri overlay
 });
 
     </script>
