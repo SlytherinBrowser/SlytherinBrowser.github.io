@@ -695,6 +695,9 @@ function applyMode(mode) {
         winterStylesheet.disabled = false;
     }
 
+    localStorage.setItem("mode", mode);
+}
+
 
 
      const setLinkButton = document.querySelector('.set-link');
