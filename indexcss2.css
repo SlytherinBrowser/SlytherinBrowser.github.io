@@ -727,7 +727,7 @@ color: black;
                 transform: translateY(1px); /* Slight press down effect on click */
             }
 
-    #dock {
+   #dock {
     position: fixed;
     bottom: 20px;
     left: 50%;
@@ -760,7 +760,7 @@ color: black;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); /* Povečana senca pri hoverju */
 }
 
-#clickButton {
+#buttonlol {
     background-color: #3498db; /* Barva ozadja gumba */
     color: white; /* Bela barva besedila */
     padding: 12px 24px; /* Večje območje gumba za udobje */
@@ -775,11 +775,10 @@ color: black;
     justify-content: center;
 }
 
-#clickButton:hover {
+#buttonlol:hover {
     transform: scale(1.1); /* Povečanje pri hoverju */
     background-color: #2980b9; /* Temnejša barva ozadja pri hoverju */
 }
-
 
     #buttonkng{
         position: fixed;
