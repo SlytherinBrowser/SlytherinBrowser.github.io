@@ -814,16 +814,8 @@ color: black;
     z-index: 1000;
 }
 
-.input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-}
 
-.button {
+.close-popup {
     padding: 10px 20px;
     margin-top: 10px;
     font-size: 16px;
@@ -834,7 +826,7 @@ color: black;
     color: white;
 }
 
-.button:hover {
+.close-popup:hover {
     background-color: #2980b9;
 }
     #buttonkng{
