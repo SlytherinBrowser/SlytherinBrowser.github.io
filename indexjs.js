@@ -695,5 +695,60 @@ function applyMode(mode) {
         winterStylesheet.disabled = false;
     }
 
+
+
+      const setLinkButton = document.querySelector('.set-link');
+        const openLinkButton = document.querySelector('.open-link');
+        const popup = document.querySelector('.popup');
+        const overlay = document.querySelector('.overlay');
+        const linkInput = document.getElementById('linkInput');
+        const saveLinkButton = document.getElementById('saveLink');
+
+        // Naloži povezavo iz lokalnega shranjevanja
+        const loadLink = () => {
+            const savedLink = localStorage.getItem('savedLink');
+            if (savedLink) {
+                openLinkButton.disabled = false;
+                return savedLink;
+            }
+            return '';
+        };
+
+        let currentLink = loadLink();
+
+        // Prikaži pop-up
+        setLinkButton.addEventListener('click', () => {
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        });
+
+        // Shrani povezavo in zapri pop-up
+        saveLinkButton.addEventListener('click', () => {
+            const url = linkInput.value.trim();
+            if (url) {
+                currentLink = url;
+                localStorage.setItem('savedLink', currentLink);
+                openLinkButton.disabled = false;
+                popup.style.display = 'none';
+                overlay.style.display = 'none';
+                linkInput.value = '';
+            } else {
+                alert('Prosim, vnesite veljaven URL.');
+            }
+        });
+
+        // Odpri povezavo
+        openLinkButton.addEventListener('click', () => {
+            if (currentLink) {
+                window.open(currentLink, '_blank');
+            }
+        });
+
+        // Zapri pop-up, ko kliknete izven njega
+        overlay.addEventListener('click', () => {
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
     localStorage.setItem("mode", mode);
 }
