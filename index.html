@@ -261,9 +261,9 @@
               <script>
 const setLinkButton = document.querySelector('.set-link');
 const popup = document.querySelector('.popup');
-const overlay = document.querySelector('.overlay');
 const linkInput = document.getElementById('linkInput');
 const saveLinkButton = document.getElementById('saveLink');
+const closePopupButton = document.getElementById('closePopup');
 
 // Naloži povezavo iz lokalnega shranjevanja
 const loadLink = () => {
@@ -278,7 +278,6 @@ setLinkButton.addEventListener('click', () => {
     if (!currentLink) {
         // Če povezava ni shranjena, pokaži pop-up
         popup.style.display = 'block';
-        overlay.style.display = 'block';
     } else {
         // Če povezava obstaja, jo odpri
         window.open(currentLink, '_blank');
@@ -292,17 +291,15 @@ saveLinkButton.addEventListener('click', () => {
         currentLink = url;
         localStorage.setItem('savedLink', currentLink);
         popup.style.display = 'none';
-        overlay.style.display = 'none';
         linkInput.value = '';
     } else {
         alert('Prosim, vnesite veljaven URL.');
     }
 });
 
-// Zapri pop-up, ko kliknete izven njega
-overlay.addEventListener('click', () => {
+// Zapri pop-up ob kliku na gumb "Zapri"
+closePopupButton.addEventListener('click', () => {
     popup.style.display = 'none';
-    overlay.style.display = 'none';
 });
 
     </script>
