@@ -260,14 +260,13 @@
     });
 </script>
               <script>
-// Izberite elemente, ki so povezani z odprtjem pop-upa
 const setLinkButton = document.querySelector('.set-link');
 const popup = document.querySelector('.popup');
 const overlay = document.querySelector('.overlay');
 const linkInput = document.getElementById('linkInput');
 const saveLinkButton = document.getElementById('saveLink');
 
-// Funkcija za nalaganje shranjene povezave iz lokalnega shranjevanja
+// Naloži povezavo iz lokalnega shranjevanja
 const loadLink = () => {
     const savedLink = localStorage.getItem('savedLink');
     return savedLink || '';
@@ -275,14 +274,14 @@ const loadLink = () => {
 
 let currentLink = loadLink();
 
-// Dogodek za odpiranje pop-upa ali odpiranje shranjene povezave
+// Prikaži pop-up ali odpri povezavo
 setLinkButton.addEventListener('click', () => {
     if (!currentLink) {
-        // Če povezava ni shranjena, prikažite pop-up
+        // Če povezava ni shranjena, pokaži pop-up
         popup.style.display = 'block';
         overlay.style.display = 'block';
     } else {
-        // Če povezava obstaja, jo odprite v novem zavihku
+        // Če povezava obstaja, jo odpri
         window.open(currentLink, '_blank');
     }
 });
@@ -293,18 +292,18 @@ saveLinkButton.addEventListener('click', () => {
     if (url) {
         currentLink = url;
         localStorage.setItem('savedLink', currentLink);
-        popup.style.display = 'none';  // Zapri pop-up
-        overlay.style.display = 'none'; // Zapri overlay
-        linkInput.value = ''; // Počisti input polje
+        popup.style.display = 'none';
+        overlay.style.display = 'none';
+        linkInput.value = '';
     } else {
         alert('Prosim, vnesite veljaven URL.');
     }
 });
 
-// Zapri pop-up, ko kliknete na overlay
+// Zapri pop-up, ko kliknete izven njega
 overlay.addEventListener('click', () => {
-    popup.style.display = 'none'; // Zapri pop-up
-    overlay.style.display = 'none'; // Zapri overlay
+    popup.style.display = 'none';
+    overlay.style.display = 'none';
 });
 
     </script>
