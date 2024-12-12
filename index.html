@@ -12,7 +12,7 @@
 </head>
     <style>
         /* Stil za zaslone širše od 700px */
-@media (min-width: 700px) {
+@media (max-width: 700px) {
     .button-container {
         display: flex;
         gap: 15px;
@@ -91,7 +91,7 @@
 }
 
 /* Stil za zaslone ožje od 700px */
-@media (max-width: 700px) {
+@media (min-width: 700px) {
     .button-container {
         display: flex;
         flex-direction: column; /* Gumbi se zložijo eden pod drugim */
@@ -102,7 +102,7 @@
 
     #buttonlol {
         position: fixed;
-        right: 1000px;
+        right: 100px;
         bottom: 80px; /* Gumb je 20px nad dnom */
         width: 80px;
         height: 50px;
