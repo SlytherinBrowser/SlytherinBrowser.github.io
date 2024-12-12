@@ -10,6 +10,167 @@
 <link id="winterStylesheet" rel="stylesheet" href="indexcss2.css" disabled>
     <script defer src="indexjs.js"></script>
 </head>
+    <style>
+        /* Stil za zaslone širše od 700px */
+@media (min-width: 700px) {
+    .button-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    #buttonlol {
+        position: fixed;
+        right: 100px;
+        bottom: 80px; /* Gumb je 80px nad dnom */
+        width: 100px;
+        height: 60px;
+        background-color: #3498db;
+        color: white;
+        border-radius: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s, background-color 0.3s;
+        cursor: pointer;
+    }
+
+    #buttonlol:hover {
+        background-color: #2980b9;
+        transform: translateY(-5px);
+    }
+
+    .set-link {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .open-link {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        width: 50%; /* Večje okno za širše zaslone */
+    }
+
+    .popup input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .popup button {
+        width: 100%;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Stil za zaslone ožje od 700px */
+@media (max-width: 700px) {
+    .button-container {
+        display: flex;
+        flex-direction: column; /* Gumbi se zložijo eden pod drugim */
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #buttonlol {
+        position: fixed;
+        right: 1000px;
+        bottom: 80px; /* Gumb je 20px nad dnom */
+        width: 80px;
+        height: 50px;
+        background-color: #ff6f61;
+        color: white;
+        border-radius: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s, background-color 0.3s;
+        cursor: pointer;
+    }
+
+    #buttonlol:hover {
+        background-color: #e65550;
+        transform: scale(1.1); /* Rahla povečava ob hoverju */
+    }
+
+    .set-link {
+        background-color: #ff6f61;
+        color: white;
+    }
+
+    .open-link {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        width: 90%; /* Manjše okno za manjše zaslone */
+    }
+
+    .popup input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .popup button {
+        width: 100%;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+    }
+}
+</style>
 <style type="text/css">
         .eye-container {
                 position: fixed;
