@@ -74,8 +74,7 @@
 
  <button id="clickButton">0</button>
 <div class="button-container">
-        <button id="buttonlol" class="set-link">Nastavi povezavo</button>
-        <button id="buttonlol" class="open-link" disabled>Odpri povezavo</button>
+        <button class="set-link">Nastavi / Odpri povezavo</button>
     </div>
 
     <div class="overlay"></div>
@@ -255,9 +254,8 @@
         }, 3000);
     });
 </script>
-             <script>
+              <script>
         const setLinkButton = document.querySelector('.set-link');
-        const openLinkButton = document.querySelector('.open-link');
         const popup = document.querySelector('.popup');
         const overlay = document.querySelector('.overlay');
         const linkInput = document.getElementById('linkInput');
@@ -266,21 +264,19 @@
         // Naloži povezavo iz lokalnega shranjevanja
         const loadLink = () => {
             const savedLink = localStorage.getItem('savedLink');
-            if (savedLink) {
-                openLinkButton.disabled = false;
-                return savedLink;
-            }
-            return '';
+            return savedLink || '';
         };
 
         let currentLink = loadLink();
 
-        // Prikaži pop-up za prvi klik
+        // Prikaži pop-up ali odpri povezavo
         setLinkButton.addEventListener('click', () => {
             if (!currentLink) {
+                // Če povezava ni shranjena, pokaži pop-up
                 popup.style.display = 'block';
                 overlay.style.display = 'block';
             } else {
+                // Če povezava obstaja, jo odpri
                 window.open(currentLink, '_blank');
             }
         });
@@ -291,19 +287,11 @@
             if (url) {
                 currentLink = url;
                 localStorage.setItem('savedLink', currentLink);
-                openLinkButton.disabled = false;
                 popup.style.display = 'none';
                 overlay.style.display = 'none';
                 linkInput.value = '';
             } else {
                 alert('Prosim, vnesite veljaven URL.');
-            }
-        });
-
-        // Odpri povezavo
-        openLinkButton.addEventListener('click', () => {
-            if (currentLink) {
-                window.open(currentLink, '_blank');
             }
         });
 
