@@ -17,7 +17,10 @@
 
 
 
-
+.button-container {
+            display: flex;
+            gap: 10px;
+        }
 
  #buttonlol {
             text-align: center;
@@ -555,6 +558,72 @@ color: black;
 
 
 
+
+
+.button-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #buttonlol {
+            position: fixed;
+            width: 80px;
+            height: 50px;
+            bottom: 80px; /* Gumb je postavljen 80px od spodnjega roba */
+            right: 100px;
+            border: none;
+            background-color: #0078d7;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+            transition: box-shadow 0.3s; /* Prehod za senčenje */
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .set-link {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .open-link {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .popup input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .popup button {
+            width: 100%;
+        }
+
+
+
+
+        
 
                 #clickButton {
               position: fixed;
