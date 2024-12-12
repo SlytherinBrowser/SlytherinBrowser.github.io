@@ -267,10 +267,10 @@ label {
     bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(44, 62, 80, 0.9);
-    backdrop-filter: blur(15px);
-    border-radius: 25px;
-    padding: 10px 20px;
+    background-color: rgba(44, 62, 80, 0.9); /* Temno modro ozadje z večjo neprosojnostjo */
+    backdrop-filter: blur(15px); /* Močnejša zameglitev */
+    border-radius: 25px; /* Večja zaobljenost robov za moderen izgled */
+    padding: 10px 20px; /* Dodano večje polnjenje */
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -282,15 +282,75 @@ label {
 .icon {
     width: 50px;
     height: 50px;
-    border-radius: 15px;
+    border-radius: 15px; /* Srednje zaobljene ikone */
     background-size: cover;
     cursor: pointer;
     transition: transform 0.3s;
 }
 
 .icon:hover {
-    transform: scale(1.2);
+    transform: scale(1.2); /* Večje povečanje pri hoverju */
 }
+
+.set-link {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-link:hover {
+    transform: scale(1.1);
+}
+
+/* Pop-up styling */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(44, 62, 80, 0.95); /* Temno modra barva za pop-up ozadje */
+    padding: 20px;
+    border-radius: 15px; /* Večja zaobljenost robov */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Nežna senca za pop-up */
+    color: white; /* Bela barva besedila */
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+.close-popup {
+    background-color: #e74c3c; /* Rdeča barva gumba za zaprtje */
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.close-popup:hover {
+    background-color: #c0392b; /* Temnejša rdeča ob hoverju */
+}
+
 #buttonkng{
       width: 50%;
       right: 0;
@@ -824,34 +884,92 @@ label {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(34, 49, 63, 0.85); /* Darker background for depth */
-    backdrop-filter: blur(20px); /* Stronger blur for sophistication */
-    border-radius: 40px; /* Larger border radius for a more rounded look */
-    padding: 12px 25px; /* Balanced padding for spaciousness */
+    background-color: rgba(34, 49, 63, 0.85); /* Temno sivo-modro ozadje */
+    backdrop-filter: blur(20px); /* Močna zameglitev za eleganten videz */
+    border-radius: 40px; /* Večja zaobljenost robov */
+    padding: 12px 25px; /* Srednje polnjenje za uravnoteženo velikost */
     display: flex;
-    justify-content: space-evenly; /* Even spacing between icons */
+    justify-content: space-evenly;
     align-items: center;
     z-index: 999;
     width: auto;
     max-width: calc(100% - 40px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); /* Deeper shadow for more depth */
-    transition: background-color 0.3s, transform 0.3s; /* Transition for smooth hover effect */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); /* Globlja senca za večji učinek */
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .icon {
-    width: 55px; /* Slightly larger icon size */
-    height: 55px; /* Slightly larger icon size */
-    border-radius: 30%; /* Slightly rounded corners for a softer look */
+    width: 55px; /* Malenkost večje ikone */
+    height: 55px;
+    border-radius: 30%; /* Srednja zaobljenost ikone */
     background-size: cover;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions for hover effects */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .icon:hover {
-    transform: translateY(-4px) scale(1.15); /* Upward movement and scaling on hover */
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); /* Increased shadow effect on hover for emphasis */
+    transform: translateY(-4px) scale(1.15); /* Rahlo premikanje in povečanje */
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); /* Večja senca za večji učinek */
 }
 
+.set-link {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.set-link:hover {
+    transform: scale(1.1);
+}
+
+/* Pop-up styling */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(34, 49, 63, 0.9); /* Temno modra za pop-up ozadje */
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Nežna senca */
+    color: white;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+.close-popup {
+    background-color: #e74c3c; /* Rdeča barva za gumb zaprtja */
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    border: none;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.close-popup:hover {
+    background-color: #c0392b; /* Temnejša barva pri hoverju */
+}
 
 #menu{
     left: 20px;
