@@ -65,6 +65,9 @@ const provider = new GoogleAuthProvider();
 
 const chatInput = document.getElementById('chat-input');
 const sendButton = document.getElementById('send-button');
+const googleSignInButton = document.getElementById('google-sign-in-button');
+const googleSignOutButton = document.getElementById('google-sign-out-button');
+const userNamesContainer = document.getElementById('user-names');
 const popupContainer = document.getElementById('popup-container');
 const addEmailButton = document.getElementById('add-email');
 const emailContainer = document.getElementById('email-container');
@@ -72,6 +75,60 @@ const saveButton = document.getElementById('save-button');
 const closeButton = document.getElementById('close-button');
 let currentUser = null;
 let emailList = [];
+
+// Google Sign-In functionality
+googleSignInButton.onclick = () => {
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            const user = result.user;
+            currentUser = user;
+            updateUI(user);
+        })
+        .catch((error) => {
+            console.error("Error during sign-in: ", error);
+            alert("Sign-in failed. Please try again.");
+        });
+};
+
+// Google Sign-Out functionality
+googleSignOutButton.onclick = () => {
+    signOut(auth)
+        .then(() => {
+            currentUser = null;
+            updateUI(null);
+        })
+        .catch((error) => {
+            console.error("Error during sign-out: ", error);
+        });
+};
+
+// Listen for auth state changes
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        updateUI(user);
+    } else {
+        currentUser = null;
+        updateUI(null);
+    }
+});
+
+// Update UI based on auth state
+function updateUI(user) {
+    if (user) {
+        userNamesContainer.textContent = `Logged in as: ${user.displayName || user.email}`;
+        googleSignInButton.style.display = 'none';
+        googleSignOutButton.style.display = 'block';
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+    } else {
+        userNamesContainer.textContent = 'No user logged in';
+        googleSignInButton.style.display = 'block';
+        googleSignOutButton.style.display = 'none';
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+    }
+}
 
 // Add email functionality with validation
 addEmailButton.onclick = function () {
