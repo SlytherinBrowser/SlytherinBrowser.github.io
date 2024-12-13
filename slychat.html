@@ -159,19 +159,28 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
     <script type="module">
-        const firebaseConfig = {
-            apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
-            authDomain: "slychat-e0a59.firebaseapp.com",
-            projectId: "slychat-e0a59",
-            storageBucket: "slychat-e0a59.appspot.com",
-            messagingSenderId: "462724887870",
-            appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
-            measurementId: "G-52CMK3FJYW"
-        };
+       // Importiranje potrebnih modulov iz Firebase 9
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getDatabase, ref, set, onValue } from 'firebase/database';
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+// Firebase konfiguracija
+const firebaseConfig = {
+    apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
+    authDomain: "slychat-e0a59.firebaseapp.com",
+    projectId: "slychat-e0a59",
+    storageBucket: "slychat-e0a59.appspot.com",
+    messagingSenderId: "462724887870",
+    appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
+    measurementId: "G-52CMK3FJYW"
+};
+
+// Inicializacija Firebase aplikacije
+const app = initializeApp(firebaseConfig);
+
+// Nastavite Firebase Auth in Database
+const auth = getAuth(app);
+const db = getDatabase(app);
 
         // Check if user is logged in on page load
         auth.onAuthStateChanged(user => {
@@ -189,43 +198,47 @@
             }
         });
 
-        // Register user
-        function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value;
+        // Funkcija za registracijo
+function register() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value;
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    userCredential.user.updateProfile({
-                        displayName: username
-                    });
-                    document.getElementById('auth-message').innerText = "Registered successfully!";
-                    toggleAuthForm('login');
-                })
-                .catch((error) => {
-                    document.getElementById('auth-message').innerText = error.message;
-                });
-        }
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            user.updateProfile({
+                displayName: username
+            }).then(() => {
+                document.getElementById('auth-message').innerText = "Registered successfully!";
+                toggleAuthForm('login');
+            }).catch((error) => {
+                document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
+            });
+        })
+        .catch((error) => {
+            document.getElementById('auth-message').innerText = "Error: " + error.message;
+        });
+}
 
-        // Login user
-        function login() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+// Funkcija za prijavo
+function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => {
-                    document.getElementById('login-message').innerText = "Logged in successfully!";
-                    document.getElementById('chat-container').style.display = 'block';
-                    document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('messageInput').disabled = false;
-                    document.querySelector('button').disabled = false;
-                    listenForMessages();
-                })
-                .catch((error) => {
-                    document.getElementById('login-message').innerText = error.message;
-                });
-        }
+    signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+            document.getElementById('login-message').innerText = "Logged in successfully!";
+            document.getElementById('chat-container').style.display = 'block';
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('messageInput').disabled = false;
+            document.querySelector('button').disabled = false;
+            listenForMessages();
+        })
+        .catch((error) => {
+            document.getElementById('login-message').innerText = "Error: " + error.message;
+        });
+}
 
         // Toggle between login and register form
         function toggleAuthForm(form) {
@@ -257,20 +270,39 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // Send message
-        function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const messageText = messageInput.value;
-            if (messageText.trim() !== '') {
-                const username = auth.currentUser.displayName;
-                const messageRef = database.ref('messages');
-                messageRef.push({
-                    username: username,
-                    text: messageText
-                });
-                messageInput.value = '';
+       // Funkcija za pošiljanje sporočil v Firebase
+function sendMessage() {
+    const message = document.getElementById('messageInput').value;
+    const username = auth.currentUser.displayName;
+    const messageRef = ref(db, 'messages/' + Date.now());
+
+    set(messageRef, {
+        username: username,
+        message: message
+    });
+
+    document.getElementById('messageInput').value = ''; // Pošljite sporočilo in počistite polje
+}
+
+// Funkcija za poslušanje sporočil
+function listenForMessages() {
+    const messagesRef = ref(db, 'messages');
+    onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const messagesList = document.getElementById('messages-list');
+        messagesList.innerHTML = ''; // Počisti seznam pred nalaganjem novih sporočil
+
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const message = data[key];
+                const li = document.createElement('li');
+                li.textContent = `${message.username}: ${message.message}`;
+                messagesList.appendChild(li);
             }
         }
+    });
+}
+
 
         // Sign out user
         function signOut() {
