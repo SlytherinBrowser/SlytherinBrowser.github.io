@@ -4,208 +4,207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlyChat</title>
-   <style>
-    body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #222222;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: #f1f1f1;
-        transition: background-color 0.3s ease-in-out;
-    }
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #222222;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #f1f1f1;
+            transition: background-color 0.3s ease-in-out;
+        }
 
-    .auth-container, .chat-container {
-        background: linear-gradient(135deg, #00c6ff, #0072ff);
-        border-radius: 20px;
-        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
-        padding: 40px;
-        width: 400px;
-        max-width: 100%;
-        transform: scale(0.98);
-        animation: zoomIn 0.6s ease-out forwards;
-    }
+        .auth-container, .chat-container {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 400px;
+            max-width: 100%;
+            transform: scale(0.98);
+            animation: zoomIn 0.6s ease-out forwards;
+        }
 
-    @keyframes zoomIn {
-        from {
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        h2 {
+            font-size: 28px;
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .auth-container input, .input-container input {
+            width: 100%;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            font-size: 16px;
+            background-color: #333;
+            color: #f1f1f1;
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .auth-container input:focus, .input-container input:focus {
+            border-color: #00c6ff;
+            box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+            transform: scale(1.05);
+        }
+
+        .auth-container button, .input-container button {
+            width: 100%;
+            padding: 16px;
+            background-color: #00c6ff;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .auth-container button:hover, .input-container button:hover {
+            background-color: #0072ff;
+            transform: translateY(-4px);
+        }
+
+        .auth-container button:active, .input-container button:active {
+            transform: translateY(2px);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #f1f1f1;
+            cursor: pointer;
+            text-decoration: underline;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .auth-toggle:hover {
+            color: #00c6ff;
+        }
+
+        .messages {
+            background-color: #2d2d2d;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .message {
+            padding: 14px;
+            margin: 12px 0;
+            background-color: #444;
+            border-radius: 12px;
+            font-size: 16px;
+            word-wrap: break-word;
             opacity: 0;
-            transform: scale(0.8);
+            animation: slideIn 0.5s ease-out forwards;
         }
-        to {
-            opacity: 1;
-            transform: scale(1);
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
-    }
 
-    h2 {
-        font-size: 28px;
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 30px;
-        letter-spacing: 1px;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .auth-container input, .input-container input {
-        width: 100%;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border-radius: 12px;
-        border: 2px solid #ddd;
-        font-size: 16px;
-        background-color: #333;
-        color: #f1f1f1;
-        box-sizing: border-box;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .auth-container input:focus, .input-container input:focus {
-        border-color: #00c6ff;
-        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
-        transform: scale(1.05);
-    }
-
-    .auth-container button, .input-container button {
-        width: 100%;
-        padding: 16px;
-        background-color: #00c6ff;
-        color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .auth-container button:hover, .input-container button:hover {
-        background-color: #0072ff;
-        transform: translateY(-4px);
-    }
-
-    .auth-container button:active, .input-container button:active {
-        transform: translateY(2px);
-    }
-
-    .auth-toggle {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 14px;
-        color: #f1f1f1;
-        cursor: pointer;
-        text-decoration: underline;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .auth-toggle:hover {
-        color: #00c6ff;
-    }
-
-    .messages {
-        background-color: #2d2d2d;
-        padding: 20px;
-        height: 300px;
-        overflow-y: auto;
-        border-radius: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .message {
-        padding: 14px;
-        margin: 12px 0;
-        background-color: #444;
-        border-radius: 12px;
-        font-size: 16px;
-        word-wrap: break-word;
-        opacity: 0;
-        animation: slideIn 0.5s ease-out forwards;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
+        .message .sender {
+            font-weight: bold;
+            color: #00c6ff;
         }
-        to {
-            opacity: 1;
-            transform: translateX(0);
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
-    }
 
-    .message .sender {
-        font-weight: bold;
-        color: #00c6ff;
-    }
+        .input-container input {
+            width: 80%;
+            border-radius: 12px;
+            font-size: 16px;
+            background-color: #333;
+            border: 2px solid #444;
+            padding: 14px;
+            margin-right: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease-in-out;
+        }
 
-    .input-container {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-    }
+        .input-container input:focus {
+            transform: scale(1.05);
+            box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+        }
 
-    .input-container input {
-        width: 80%;
-        border-radius: 12px;
-        font-size: 16px;
-        background-color: #333;
-        border: 2px solid #444;
-        padding: 14px;
-        margin-right: 10px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease-in-out;
-    }
+        .input-container button {
+            width: 15%;
+            background-color: #00c6ff;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease;
+        }
 
-    .input-container input:focus {
-        transform: scale(1.05);
-        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
-    }
+        .input-container button:hover {
+            background-color: #0072ff;
+            transform: translateY(-4px);
+        }
 
-    .input-container button {
-        width: 15%;
-        background-color: #00c6ff;
-        color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out, transform 0.2s ease;
-    }
+        .input-container button:active {
+            transform: translateY(2px);
+        }
 
-    .input-container button:hover {
-        background-color: #0072ff;
-        transform: translateY(-4px);
-    }
+        .auth-container p {
+            font-size: 14px;
+            color: #f1f1f1;
+            text-align: center;
+            transition: color 0.3s ease-in-out;
+        }
 
-    .input-container button:active {
-        transform: translateY(2px);
-    }
+        .auth-container p a {
+            color: #00c6ff;
+            text-decoration: none;
+            transition: color 0.3s ease-in-out;
+        }
 
-    .auth-container p {
-        font-size: 14px;
-        color: #f1f1f1;
-        text-align: center;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .auth-container p a {
-        color: #00c6ff;
-        text-decoration: none;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .auth-container p a:hover {
-        color: #0072ff;
-        text-decoration: underline;
-    }
-</style>
-
+        .auth-container p a:hover {
+            color: #0072ff;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div id="chat-container" class="chat-container" style="display: none;">
-        <h2>Chat Room</h2>
+        <h2>SlyChat</h2>
         <div id="messages" class="messages"></div>
         <div class="input-container">
             <input type="text" id="messageInput" placeholder="Type a message" disabled>
@@ -239,30 +238,27 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
     <script type="module">
-       // Importiranje potrebnih modulov iz Firebase 9
-import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { getDatabase, ref, set, onValue } from 'firebase/database';
+        // Importiranje potrebnih modulov iz Firebase 9
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+        import { getDatabase, ref, set, onValue, remove } from 'firebase/database';
 
-// Firebase konfiguracija
-const firebaseConfig = {
-    apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
-    authDomain: "slychat-e0a59.firebaseapp.com",
-    projectId: "slychat-e0a59",
-    storageBucket: "slychat-e0a59.appspot.com",
-    messagingSenderId: "462724887870",
-    appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
-    measurementId: "G-52CMK3FJYW"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
+            authDomain: "slychat-e0a59.firebaseapp.com",
+            projectId: "slychat-e0a59",
+            storageBucket: "slychat-e0a59.appspot.com",
+            messagingSenderId: "462724887870",
+            appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
+            measurementId: "G-52CMK3FJYW"
+        };
 
-// Inicializacija Firebase aplikacije
-const app = initializeApp(firebaseConfig);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-// Nastavite Firebase Auth in Database
-const auth = getAuth(app);
-const db = getDatabase(app);
+        let isAdmin = false; // Admin status (za tvoj uporabniški račun)
 
-        // Check if user is logged in on page load
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('chat-container').style.display = 'block';
@@ -270,6 +266,9 @@ const db = getDatabase(app);
                 document.getElementById('messageInput').disabled = false;
                 document.querySelector('button').disabled = false;
                 listenForMessages();
+                if (user.email === "admin@example.com") { // Preveri, če je uporabnik admin
+                    isAdmin = true;
+                }
             } else {
                 document.getElementById('chat-container').style.display = 'none';
                 document.getElementById('auth-container').style.display = 'block';
@@ -278,100 +277,86 @@ const db = getDatabase(app);
             }
         });
 
-        // Funkcija za registracijo
-function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
+        function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+            const username = auth.currentUser.displayName;
+            const messageRef = ref(db, 'messages/' + Date.now());
 
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            user.updateProfile({
-                displayName: username
-            }).then(() => {
-                document.getElementById('auth-message').innerText = "Registered successfully!";
-                toggleAuthForm('login');
-            }).catch((error) => {
-                document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
+            set(messageRef, {
+                username: username,
+                message: message
             });
-        })
-        .catch((error) => {
-            document.getElementById('auth-message').innerText = "Error: " + error.message;
-        });
-}
 
-// Funkcija za prijavo
-function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-            document.getElementById('login-message').innerText = "Logged in successfully!";
-            document.getElementById('chat-container').style.display = 'block';
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('messageInput').disabled = false;
-            document.querySelector('button').disabled = false;
-            listenForMessages();
-        })
-        .catch((error) => {
-            document.getElementById('login-message').innerText = "Error: " + error.message;
-        });
-}
-
-        // Toggle between login and register form
-        function toggleAuthForm(form) {
-            if (form === 'register') {
-                document.getElementById('register-form').style.display = "block";
-                document.getElementById('login-form').style.display = "none";
-            } else {
-                document.getElementById('login-form').style.display = "block";
-                document.getElementById('register-form').style.display = "none";
-            }
+            document.getElementById('messageInput').value = ''; 
         }
 
-        // Funkcija za pošiljanje sporočil v Firebase
-function sendMessage() {
-    const message = document.getElementById('messageInput').value;
-    const username = auth.currentUser.displayName;
-    const messageRef = ref(db, 'messages/' + Date.now());
+        function listenForMessages() {
+            const messagesRef = ref(db, 'messages');
+            onValue(messagesRef, (snapshot) => {
+                const data = snapshot.val();
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
 
-    set(messageRef, {
-        username: username,
-        message: message
-    });
-
-    document.getElementById('messageInput').value = ''; // Pošljite sporočilo in počistite polje
-}
-
-        // Funkcija za izpis sporočil
-function listenForMessages() {
-    const messagesRef = ref(db, 'messages');
-    onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML = '';
-
-        for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-                const message = data[key];
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
-                messagesDiv.appendChild(messageDiv);
-            }
+                for (const key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        const message = data[key];
+                        const messageDiv = document.createElement('div');
+                        messageDiv.classList.add('message');
+                        messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
+                        messagesDiv.appendChild(messageDiv);
+                    }
+                }
+            });
         }
-    });
-}
 
-        // Odjava uporabnika
         function signOut() {
             auth.signOut().then(() => {
                 document.getElementById('chat-container').style.display = 'none';
                 document.getElementById('auth-container').style.display = 'block';
             });
         }
+
+        function adminCommands(command) {
+            const [cmd, ...args] = command.split('@');
+
+            if (!isAdmin) {
+                alert("Only admin can use these commands.");
+                return;
+            }
+
+            if (cmd === '/slyclean') {
+                const messagesRef = ref(db, 'messages');
+                remove(messagesRef); // Pobriše vse sporočila
+            }
+
+            if (cmd === '/slycolor' && args.length === 2) {
+                const username = args[0];
+                const color = args[1];
+                const messagesRef = ref(db, 'messages');
+                onValue(messagesRef, (snapshot) => {
+                    const data = snapshot.val();
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            const message = data[key];
+                            if (message.username === username) {
+                                const messageDiv = document.createElement('div');
+                                messageDiv.classList.add('message');
+                                messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
+                                document.getElementById('messages').appendChild(messageDiv);
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (cmd === '/slypause') {
+                document.getElementById('chat-container').style.display = 'none';
+                setTimeout(() => {
+                    document.getElementById('chat-container').style.display = 'block';
+                }, 3600000); // Chat bo nedostopen eno uro
+            }
+        }
+
     </script>
 </body>
 </html>
