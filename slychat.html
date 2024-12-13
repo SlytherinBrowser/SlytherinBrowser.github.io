@@ -3,183 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>slyChat</title>
-    <link rel="stylesheet" href="slychat.css">
+    <title>Firebase Chat</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .auth-container, .chat-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 400px;
+            max-width: 100%;
+        }
+        h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .auth-container input, .input-container input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+        .auth-container input:focus, .input-container input:focus {
+            border-color: #4CAF50;
+        }
+        .auth-container button, .input-container button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .auth-container button:hover, .input-container button:hover {
+            background-color: #45a049;
+        }
+        .auth-toggle {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #007BFF;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .messages {
+            background-color: #f9f9f9;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        .message {
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #e8e8e8;
+            border-radius: 8px;
+            font-size: 16px;
+            word-wrap: break-word;
+        }
+        .message .sender {
+            font-weight: bold;
+            color: #333;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .input-container input {
+            width: 80%;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 12px;
+            margin-right: 10px;
+        }
+        .input-container button {
+            width: 15%;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .input-container button:hover {
+            background-color: #45a049;
+        }
+        .auth-container p {
+            font-size: 14px;
+            color: #555;
+        }
+        .auth-container p a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        .auth-container p a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="code-container">
-            <div id="user-list">
-                <h4>Logged-in Users</h4>
-                <div id="user-names">
-                    <!-- Tu se bodo izpisovali prijavljeni uporabniki -->
-                </div>
-            </div>
-            <div>
-                <input type="text" id="code-input" placeholder="Enter 6-digit code">
-                <button id="join-button">Join Chat</button>
-                <button id="reserve-button">Reserve Session</button>
-                <button id="google-sign-in-button">Sign in with Google</button>
-                <button id="google-sign-out-button" style="display:none;">Sign Out</button>
-            </div>
+    <div id="chat-container" class="chat-container" style="display: none;">
+        <h2>Chat Room</h2>
+        <div id="messages" class="messages"></div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type a message" disabled>
+            <button onclick="sendMessage()" disabled>Send</button>
         </div>
-        <div id="chat-window"></div>
-        <input type="text" id="chat-input" placeholder="Type a message...">
-        <button id="send-button">Send</button>
+        <button onclick="signOut()">Sign out</button>
     </div>
 
-    <!-- Popup Container -->
-    <div id="popup-container" style="display:none;">
-        <h3>Reserve Session</h3>
-        <input type="text" id="reservation-code" placeholder="Enter 6-digit code">
-        <div id="email-container">
-            <div class="email-input">
-                <input type="email" placeholder="Enter email">
-                <button id="add-email">+</button>
-            </div>
+    <div id="auth-container" class="auth-container">
+        <div id="register-form" style="display: none;">
+            <h2>Register</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <input type="text" id="username" placeholder="Username (for registration)">
+            <button onclick="register()">Register</button>
+            <p id="auth-message"></p>
+            <p class="auth-toggle" onclick="toggleAuthForm('login')">Already have an account? Login</p>
         </div>
-        <button id="save-button">Save</button>
-        <button id="close-button">Close</button>
+
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p id="login-message"></p>
+            <p class="auth-toggle" onclick="toggleAuthForm('register')">Don't have an account? Register</p>
+        </div>
     </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
+            authDomain: "slychat-e0a59.firebaseapp.com",
+            projectId: "slychat-e0a59",
+            storageBucket: "slychat-e0a59.appspot.com",
+            messagingSenderId: "462724887870",
+            appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
+            measurementId: "G-52CMK3FJYW"
+        };
 
-// Firebase config
-const firebaseConfig = {
-    apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
-    authDomain: "slychat-e0a59.firebaseapp.com",
-    projectId: "slychat-e0a59",
-    storageBucket: "slychat-e0a59.appspot.com",
-    messagingSenderId: "462724887870",
-    appId: "1:462724887870:web:72d25e58b20af6e2d2286f",
-    measurementId: "G-52CMK3FJYW"
-};
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
-const provider = new GoogleAuthProvider();
-
-const chatInput = document.getElementById('chat-input');
-const sendButton = document.getElementById('send-button');
-const googleSignInButton = document.getElementById('google-sign-in-button');
-const googleSignOutButton = document.getElementById('google-sign-out-button');
-const userNamesContainer = document.getElementById('user-names');
-const popupContainer = document.getElementById('popup-container');
-const addEmailButton = document.getElementById('add-email');
-const emailContainer = document.getElementById('email-container');
-const saveButton = document.getElementById('save-button');
-const closeButton = document.getElementById('close-button');
-let currentUser = null;
-let emailList = [];
-
-// Google Sign-In functionality
-googleSignInButton.onclick = () => {
-    signInWithPopup(auth, provider)
-        .then((result) => {
-            const user = result.user;
-            currentUser = user;
-            updateUI(user);
-        })
-        .catch((error) => {
-            console.error("Error during sign-in: ", error);
-            alert("Sign-in failed. Please try again.");
+        // Check if user is logged in on page load
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('chat-container').style.display = 'block';
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('messageInput').disabled = false;
+                document.querySelector('button').disabled = false;
+                listenForMessages();
+            } else {
+                document.getElementById('chat-container').style.display = 'none';
+                document.getElementById('auth-container').style.display = 'block';
+                document.getElementById('messageInput').disabled = true;
+                document.querySelector('button').disabled = true;
+            }
         });
-};
 
-// Google Sign-Out functionality
-googleSignOutButton.onclick = () => {
-    signOut(auth)
-        .then(() => {
-            currentUser = null;
-            updateUI(null);
-        })
-        .catch((error) => {
-            console.error("Error during sign-out: ", error);
-        });
-};
+        // Register user
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
 
-// Listen for auth state changes
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        updateUI(user);
-    } else {
-        currentUser = null;
-        updateUI(null);
-    }
-});
-
-// Update UI based on auth state
-function updateUI(user) {
-    if (user) {
-        userNamesContainer.textContent = `Logged in as: ${user.displayName || user.email}`;
-        googleSignInButton.style.display = 'none';
-        googleSignOutButton.style.display = 'block';
-        chatInput.disabled = false;
-        sendButton.disabled = false;
-    } else {
-        userNamesContainer.textContent = 'No user logged in';
-        googleSignInButton.style.display = 'block';
-        googleSignOutButton.style.display = 'none';
-        chatInput.disabled = true;
-        sendButton.disabled = true;
-    }
-}
-
-// Add email functionality with validation
-addEmailButton.onclick = function () {
-    const emailInput = emailContainer.querySelector('.email-input input[type="email"]');
-    const email = emailInput.value.trim();
-    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        if (!emailList.includes(email)) {
-            emailList.push(email);
-            const emailDiv = document.createElement('div');
-            emailDiv.textContent = email;
-            emailDiv.classList.add('email-entry');
-            emailContainer.appendChild(emailDiv);
-            emailInput.value = '';
-        } else {
-            alert('Email already added.');
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    userCredential.user.updateProfile({
+                        displayName: username
+                    });
+                    document.getElementById('auth-message').innerText = "Registered successfully!";
+                    toggleAuthForm('login');
+                })
+                .catch((error) => {
+                    document.getElementById('auth-message').innerText = error.message;
+                });
         }
-    } else {
-        alert('Please enter a valid email address.');
-    }
-};
 
-// Save reservation functionality with validation
-saveButton.onclick = function () {
-    const reservationCode = document.getElementById('reservation-code').value.trim();
-    if (/^\d{6}$/.test(reservationCode)) {
-        console.log('Reservation Code:', reservationCode);
-        console.log('Email List:', emailList);
-        popupContainer.style.display = 'none';
-    } else {
-        alert('Please enter a valid 6-digit reservation code.');
-    }
-};
+        // Login user
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
-// Close popup
-closeButton.onclick = function () {
-    popupContainer.style.display = 'none';
-};
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    document.getElementById('login-message').innerText = "Logged in successfully!";
+                    document.getElementById('chat-container').style.display = 'block';
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('messageInput').disabled = false;
+                    document.querySelector('button').disabled = false;
+                    listenForMessages();
+                })
+                .catch((error) => {
+                    document.getElementById('login-message').innerText = error.message;
+                });
+        }
 
-// Adjust background color
-const now = new Date();
-const hour = now.getHours();
-const colors = [
-    '#FF0000', '#FF4500', '#FF8C00', '#FFD700',
-    '#ADFF2F', '#32CD32', '#00FF00', '#20B2AA',
-    '#00CED1', '#1E90FF', '#0000FF', '#4B0082',
-    '#8A2BE2', '#9400D3', '#800080', '#C71585',
-    '#FF1493', '#FF69B4', '#FFB6C1', '#FFA07A',
-    '#FFA500', '#FF6347', '#DC143C', '#8B0000'
-];
-document.body.style.backgroundColor = colors[hour] || '#FFFFFF'; // Default to white if hour is invalid
-</script>
+        // Toggle between login and register form
+        function toggleAuthForm(form) {
+            if (form === 'register') {
+                document.getElementById('register-form').style.display = "block";
+                document.getElementById('login-form').style.display = "none";
+            } else {
+                document.getElementById('login-form').style.display = "block";
+                document.getElementById('register-form').style.display = "none";
+            }
+        }
 
+        // Listen for new messages
+        function listenForMessages() {
+            const messagesRef = database.ref('messages');
+            messagesRef.on('child_added', function(snapshot) {
+                const message = snapshot.val();
+                displayMessage(message);
+            });
+        }
+
+        // Display message
+        function displayMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.text}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Send message
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value;
+            if (messageText.trim() !== '') {
+                const username = auth.currentUser.displayName;
+                const messageRef = database.ref('messages');
+                messageRef.push({
+                    username: username,
+                    text: messageText
+                });
+                messageInput.value = '';
+            }
+        }
+
+        // Sign out user
+        function signOut() {
+            auth.signOut().then(() => {
+                document.getElementById('chat-container').style.display = 'none';
+                document.getElementById('auth-container').style.display = 'block';
+            });
+        }
+    </script>
 </body>
 </html>
