@@ -4,82 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlyChat</title>
-    <style>
+   <style>
     body {
         font-family: 'Roboto', sans-serif;
-        background-color: #f1f1f1;
+        background-color: #222222;
         margin: 0;
         padding: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
+        color: #f1f1f1;
         transition: background-color 0.3s ease-in-out;
     }
+
     .auth-container, .chat-container {
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 40px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #00c6ff, #0072ff);
+        border-radius: 20px;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
         padding: 40px;
         width: 400px;
         max-width: 100%;
-        transform: scale(0.95);
-        animation: fadeInUp 0.5s ease-out forwards;
+        transform: scale(0.98);
+        animation: zoomIn 0.6s ease-out forwards;
     }
 
-    @keyframes fadeInUp {
+    @keyframes zoomIn {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: scale(0.8);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: scale(1);
         }
     }
 
     h2 {
-        font-size: 26px;
-        color: #333;
-        margin-bottom: 20px;
+        font-size: 28px;
+        color: #ffffff;
         text-align: center;
+        margin-bottom: 30px;
         letter-spacing: 1px;
         transition: color 0.3s ease-in-out;
     }
 
     .auth-container input, .input-container input {
         width: 100%;
-        padding: 14px 18px;
+        padding: 16px 20px;
         margin-bottom: 20px;
-        border-radius: 8px;
-        border: 1px solid #ddd;
+        border-radius: 12px;
+        border: 2px solid #ddd;
         font-size: 16px;
-        background-color: #f9f9f9;
+        background-color: #333;
+        color: #f1f1f1;
         box-sizing: border-box;
-        transition: all 0.3s ease;
+        transition: all 0.3s ease-in-out;
     }
 
     .auth-container input:focus, .input-container input:focus {
-        border-color: #4CAF50;
-        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
-        transform: scale(1.02);
+        border-color: #00c6ff;
+        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+        transform: scale(1.05);
     }
 
     .auth-container button, .input-container button {
         width: 100%;
-        padding: 14px;
-        background-color: #4CAF50;
+        padding: 16px;
+        background-color: #00c6ff;
         color: white;
         font-size: 16px;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        transition: all 0.3s ease-in-out;
     }
 
     .auth-container button:hover, .input-container button:hover {
-        background-color: #45a049;
-        transform: translateY(-2px);
+        background-color: #0072ff;
+        transform: translateY(-4px);
     }
 
     .auth-container button:active, .input-container button:active {
@@ -90,42 +93,42 @@
         text-align: center;
         margin-top: 20px;
         font-size: 14px;
-        color: #007BFF;
+        color: #f1f1f1;
         cursor: pointer;
-        text-decoration: none;
-        transition: color 0.3s ease;
+        text-decoration: underline;
+        transition: color 0.3s ease-in-out;
     }
 
     .auth-toggle:hover {
-        color: #0056b3;
+        color: #00c6ff;
     }
 
     .messages {
-        background-color: #f9f9f9;
+        background-color: #2d2d2d;
         padding: 20px;
         height: 300px;
         overflow-y: auto;
-        border-radius: 12px;
+        border-radius: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         transition: all 0.3s ease;
     }
 
     .message {
         padding: 14px;
         margin: 12px 0;
-        background-color: #e8e8e8;
-        border-radius: 8px;
+        background-color: #444;
+        border-radius: 12px;
         font-size: 16px;
         word-wrap: break-word;
         opacity: 0;
-        animation: fadeInMessage 0.6s ease-out forwards;
+        animation: slideIn 0.5s ease-out forwards;
     }
 
-    @keyframes fadeInMessage {
+    @keyframes slideIn {
         from {
             opacity: 0;
-            transform: translateX(-10px);
+            transform: translateX(-20px);
         }
         to {
             opacity: 1;
@@ -135,7 +138,7 @@
 
     .message .sender {
         font-weight: bold;
-        color: #333;
+        color: #00c6ff;
     }
 
     .input-container {
@@ -146,34 +149,34 @@
 
     .input-container input {
         width: 80%;
-        border-radius: 8px;
+        border-radius: 12px;
         font-size: 16px;
-        background-color: #f9f9f9;
-        border: 1px solid #ddd;
+        background-color: #333;
+        border: 2px solid #444;
         padding: 14px;
         margin-right: 10px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease-in-out;
     }
 
     .input-container input:focus {
-        transform: scale(1.02);
-        box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        transform: scale(1.05);
+        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
     }
 
     .input-container button {
         width: 15%;
-        background-color: #4CAF50;
+        background-color: #00c6ff;
         color: white;
         font-size: 16px;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
+        transition: background-color 0.3s ease-in-out, transform 0.2s ease;
     }
 
     .input-container button:hover {
-        background-color: #45a049;
-        transform: translateY(-2px);
+        background-color: #0072ff;
+        transform: translateY(-4px);
     }
 
     .input-container button:active {
@@ -182,19 +185,19 @@
 
     .auth-container p {
         font-size: 14px;
-        color: #555;
+        color: #f1f1f1;
         text-align: center;
-        transition: color 0.3s ease;
+        transition: color 0.3s ease-in-out;
     }
 
     .auth-container p a {
-        color: #007BFF;
+        color: #00c6ff;
         text-decoration: none;
-        transition: color 0.3s ease;
+        transition: color 0.3s ease-in-out;
     }
 
     .auth-container p a:hover {
-        color: #0056b3;
+        color: #0072ff;
         text-decoration: underline;
     }
 </style>
