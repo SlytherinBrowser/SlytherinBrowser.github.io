@@ -251,26 +251,7 @@ function login() {
             }
         }
 
-        // Listen for new messages
-        function listenForMessages() {
-            const messagesRef = database.ref('messages');
-            messagesRef.on('child_added', function(snapshot) {
-                const message = snapshot.val();
-                displayMessage(message);
-            });
-        }
-
-        // Display message
-        function displayMessage(message) {
-            const messagesDiv = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.text}`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-       // Funkcija za pošiljanje sporočil v Firebase
+        // Funkcija za pošiljanje sporočil v Firebase
 function sendMessage() {
     const message = document.getElementById('messageInput').value;
     const username = auth.currentUser.displayName;
@@ -284,27 +265,27 @@ function sendMessage() {
     document.getElementById('messageInput').value = ''; // Pošljite sporočilo in počistite polje
 }
 
-// Funkcija za poslušanje sporočil
+        // Funkcija za izpis sporočil
 function listenForMessages() {
     const messagesRef = ref(db, 'messages');
     onValue(messagesRef, (snapshot) => {
         const data = snapshot.val();
-        const messagesList = document.getElementById('messages-list');
-        messagesList.innerHTML = ''; // Počisti seznam pred nalaganjem novih sporočil
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
 
         for (const key in data) {
             if (data.hasOwnProperty(key)) {
                 const message = data[key];
-                const li = document.createElement('li');
-                li.textContent = `${message.username}: ${message.message}`;
-                messagesList.appendChild(li);
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
+                messagesDiv.appendChild(messageDiv);
             }
         }
     });
 }
 
-
-        // Sign out user
+        // Odjava uporabnika
         function signOut() {
             auth.signOut().then(() => {
                 document.getElementById('chat-container').style.display = 'none';
