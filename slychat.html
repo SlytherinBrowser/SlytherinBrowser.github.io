@@ -308,50 +308,53 @@
         });
 
         function toggleAuthForm(formType) {
-            if (formType === 'register') {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('register-form').style.display = 'block';
-            } else {
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('register-form').style.display = 'none';
-            }
-        }
+    if (formType === 'register') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('register-form').style.display = 'block';
+    } else {
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('register-form').style.display = 'none';
+    }
+}
+
 
         function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value;
 
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    set(ref(db, 'users/' + user.uid), {
-                        username: username,
-                        email: email
-                    });
-                    alert("Registration successful!");
-                    toggleAuthForm('login');
-                })
-                .catch((error) => {
-                    const errorMessage = error.message;
-                    document.getElementById('auth-message').textContent = errorMessage;
-                });
-        }
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            set(ref(db, 'users/' + user.uid), {
+                username: username,
+                email: email
+            });
+            alert("Registration successful!");
+            toggleAuthForm('login');
+        })
+        .catch((error) => {
+            const errorMessage = error.message;
+            document.getElementById('auth-message').textContent = errorMessage;
+        });
+}
 
-        function login() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
 
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    document.getElementById('login-message').textContent = "Logged in as: " + user.email;
-                })
-                .catch((error) => {
-                    const errorMessage = error.message;
-                    document.getElementById('login-message').textContent = errorMessage;
-                });
-        }
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            document.getElementById('login-message').textContent = "Logged in as: " + user.email;
+            // Tu se lahko povežete z začetkom klepeta
+        })
+        .catch((error) => {
+            const errorMessage = error.message;
+            document.getElementById('login-message').textContent = errorMessage;
+        });
+}
+
 
         function sendMessage() {
             const message = document.getElementById('messageInput').value;
