@@ -268,6 +268,25 @@ saveButton.onclick = function () {
         popupContainer.style.display = 'none';
     }
 };
+
+
+    // Pridobi trenutni čas
+const zdaj = new Date();
+const ura = zdaj.getHours();
+
+// Mapa barv za vsako uro dneva (24 barv)
+const barve = [
+    '#FF0000', '#FF4500', '#FF8C00', '#FFD700', // 0:00–3:59
+    '#ADFF2F', '#32CD32', '#00FF00', '#20B2AA', // 4:00–7:59
+    '#00CED1', '#1E90FF', '#0000FF', '#4B0082', // 8:00–11:59
+    '#8A2BE2', '#9400D3', '#800080', '#C71585', // 12:00–15:59
+    '#FF1493', '#FF69B4', '#FFB6C1', '#FFA07A', // 16:00–19:59
+    '#FFA500', '#FF6347', '#DC143C', '#8B0000'  // 20:00–23:59
+];
+
+// Nastavi barvo ozadja glede na trenutno uro
+document.body.style.backgroundColor = barve[ura];
+
 </script>
 
 </body>
