@@ -42,10 +42,10 @@
 
     <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
     <div class="eye-container">
-    <div class="eye">
+    <div class="eye" onclick="openWebsite()">
         <div class="pupil" id="pupil1"></div>
     </div>
-    <div class="eye">
+    <div class="eye" onclick="openWebsite()">
         <div class="pupil" id="pupil2"></div>
     </div>
 </div>
@@ -155,7 +155,7 @@
 
         <audio id="backgroundMusic" loop>
        <source src="https://www.youtube.com/watch?v=3CWJNqyub3o&ab_channel=ChristmasSongsandCarols-LovetoSing" type="audio/mpeg">
-                    <script>
+<script>
     const pupils = document.querySelectorAll('.pupil');
     let isBlinking = false;
     let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
@@ -212,6 +212,11 @@
         event.preventDefault();
         moveEyes(event);
     });
+
+    // Funkcija za odpiranje spletne strani ob kliku na oči
+    function openWebsite() {
+        window.open('https://www.example.com', '_blank');
+    }
 </script>
 <script>
     let count = 0;
