@@ -89,20 +89,6 @@
             transform: translateY(2px);
         }
 
-        .auth-toggle {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #f1f1f1;
-            cursor: pointer;
-            text-decoration: underline;
-            transition: color 0.3s ease-in-out;
-        }
-
-        .auth-toggle:hover {
-            color: #00c6ff;
-        }
-
         .messages {
             background-color: #2d2d2d;
             padding: 20px;
@@ -238,9 +224,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
     <script type="module">
-        // Importiranje potrebnih modulov iz Firebase 9
         import { initializeApp } from 'firebase/app';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
         import { getDatabase, ref, set, onValue, remove } from 'firebase/database';
 
         const firebaseConfig = {
@@ -256,26 +241,70 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-
-        let isAdmin = false; // Admin status (za tvoj uporabniški račun)
+        let isAdmin = false;
 
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('chat-container').style.display = 'block';
                 document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('messageInput').disabled = false;
-                document.querySelector('button').disabled = false;
-                listenForMessages();
-                if (user.email === "denis.robinek76@gmail.com") { // Preveri, če je uporabnik admin
+                const username = user.displayName;
+                if (user.email === "denis.robinek76@gmail.com") { // Admin check
                     isAdmin = true;
                 }
+                document.getElementById('messageInput').disabled = false;
+                document.querySelector('.input-container button').disabled = false;
+                listenForMessages();
             } else {
                 document.getElementById('chat-container').style.display = 'none';
                 document.getElementById('auth-container').style.display = 'block';
-                document.getElementById('messageInput').disabled = true;
-                document.querySelector('button').disabled = true;
             }
         });
+
+        function toggleAuthForm(formType) {
+            if (formType === 'register') {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            } else {
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            }
+        }
+
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    set(ref(db, 'users/' + user.uid), {
+                        username: username,
+                        email: email
+                    });
+                    alert("Registration successful!");
+                    toggleAuthForm('login');
+                })
+                .catch((error) => {
+                    const errorMessage = error.message;
+                    document.getElementById('auth-message').textContent = errorMessage;
+                });
+        }
+
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    document.getElementById('login-message').textContent = "Logged in as: " + user.email;
+                })
+                .catch((error) => {
+                    const errorMessage = error.message;
+                    document.getElementById('login-message').textContent = errorMessage;
+                });
+        }
 
         function sendMessage() {
             const message = document.getElementById('messageInput').value;
@@ -304,19 +333,21 @@
                         messageDiv.classList.add('message');
                         messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
                         messagesDiv.appendChild(messageDiv);
-                           // Prikaz sporočil za administratorja
+                        
+                        // Admin view: add admin-specific message
                         if (isAdmin && message.username !== 'admin') {
                             const adminMessageDiv = document.createElement('div');
                             adminMessageDiv.classList.add('message');
-                            adminMessageDiv.innerHTML = `<span class="sender">Admin:</span> Odprem sporočilo: ${message.message}`;
+                            adminMessageDiv.innerHTML = `<span class="sender">Admin:</span> Responding to message: ${message.message}`;
                             messagesDiv.appendChild(adminMessageDiv);
+                        }
                     }
                 }
             });
         }
 
         function signOut() {
-            auth.signOut().then(() => {
+            firebaseSignOut(auth).then(() => {
                 document.getElementById('chat-container').style.display = 'none';
                 document.getElementById('auth-container').style.display = 'block';
             });
@@ -332,7 +363,7 @@
 
             if (cmd === '/slyclean') {
                 const messagesRef = ref(db, 'messages');
-                remove(messagesRef); // Pobriše vse sporočila
+                remove(messagesRef); // Delete all messages
             }
 
             if (cmd === '/slycolor' && args.length === 2) {
@@ -359,10 +390,9 @@
                 document.getElementById('chat-container').style.display = 'none';
                 setTimeout(() => {
                     document.getElementById('chat-container').style.display = 'block';
-                }, 3600000); // Chat bo nedostopen eno uro
+                }, 3600000); // Chat will be unavailable for one hour
             }
         }
-
     </script>
 </body>
 </html>
