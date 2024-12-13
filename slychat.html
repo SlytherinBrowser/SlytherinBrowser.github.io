@@ -236,7 +236,7 @@
 
 </head>
 <body>
-    <div id="chat-container" class="chat-container" style="display: block;">
+    <div id="chat-container" class="chat-container" style="display: none;">
         <h2>SlyChat</h2>
         <div id="messages" class="messages"></div>
         <div class="input-container">
@@ -244,6 +244,26 @@
             <button onclick="sendMessage()" disabled>Send</button>
         </div>
         <button onclick="signOut()">Sign out</button>
+    </div>
+<div id="auth-container" class="auth-container">
+        <div id="register-form" style="display: none;">
+            <h2>Register</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <input type="text" id="username" placeholder="Username (for registration)">
+            <button onclick="register()">Register</button>
+            <p id="auth-message"></p>
+            <p class="auth-toggle" onclick="toggleAuthForm('login')">Already have an account? Login</p>
+        </div>
+
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p id="login-message"></p>
+            <p class="auth-toggle" onclick="toggleAuthForm('register')">Don't have an account? Register</p>
+        </div>
     </div>
 
     
