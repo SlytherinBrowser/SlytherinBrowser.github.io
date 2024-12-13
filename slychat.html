@@ -307,18 +307,20 @@
             }
         });
 
-        function toggleAuthForm(formType) {
-    if (formType === 'register') {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('register-form').style.display = 'block';
-    } else {
-        document.getElementById('login-form').style.display = 'block';
-        document.getElementById('register-form').style.display = 'none';
-    }
-}
+        // Toggle between login and register form
+        function toggleAuthForm(form) {
+            if (form === 'register') {
+                document.getElementById('register-form').style.display = "block";
+                document.getElementById('login-form').style.display = "none";
+            } else {
+                document.getElementById('login-form').style.display = "block";
+                document.getElementById('register-form').style.display = "none";
+            }
+        }
 
 
-        function register() {
+          // Funkcija za registracijo
+function register() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const username = document.getElementById('username').value;
@@ -340,6 +342,7 @@ createUserWithEmailAndPassword(auth, email, password)
         });
 }
         
+// Funkcija za prijavo
 function login() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
