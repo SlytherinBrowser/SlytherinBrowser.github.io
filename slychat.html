@@ -304,6 +304,12 @@
                         messageDiv.classList.add('message');
                         messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
                         messagesDiv.appendChild(messageDiv);
+                           // Prikaz sporočil za administratorja
+                        if (isAdmin && message.username !== 'admin') {
+                            const adminMessageDiv = document.createElement('div');
+                            adminMessageDiv.classList.add('message');
+                            adminMessageDiv.innerHTML = `<span class="sender">Admin:</span> Odprem sporočilo: ${message.message}`;
+                            messagesDiv.appendChild(adminMessageDiv);
                     }
                 }
             });
