@@ -5,123 +5,200 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlyChat</title>
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f1f1f1;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f1f1f1;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        transition: background-color 0.3s ease-in-out;
+    }
+    .auth-container, .chat-container {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+        width: 400px;
+        max-width: 100%;
+        transform: scale(0.95);
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
         }
-        .auth-container, .chat-container {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            width: 400px;
-            max-width: 100%;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        h2 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 26px;
+        color: #333;
+        margin-bottom: 20px;
+        text-align: center;
+        letter-spacing: 1px;
+        transition: color 0.3s ease-in-out;
+    }
+
+    .auth-container input, .input-container input {
+        width: 100%;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 16px;
+        background-color: #f9f9f9;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+    }
+
+    .auth-container input:focus, .input-container input:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+        transform: scale(1.02);
+    }
+
+    .auth-container button, .input-container button {
+        width: 100%;
+        padding: 14px;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .auth-container button:hover, .input-container button:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+    }
+
+    .auth-container button:active, .input-container button:active {
+        transform: translateY(2px);
+    }
+
+    .auth-toggle {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #007BFF;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .auth-toggle:hover {
+        color: #0056b3;
+    }
+
+    .messages {
+        background-color: #f9f9f9;
+        padding: 20px;
+        height: 300px;
+        overflow-y: auto;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .message {
+        padding: 14px;
+        margin: 12px 0;
+        background-color: #e8e8e8;
+        border-radius: 8px;
+        font-size: 16px;
+        word-wrap: break-word;
+        opacity: 0;
+        animation: fadeInMessage 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInMessage {
+        from {
+            opacity: 0;
+            transform: translateX(-10px);
         }
-        .auth-container input, .input-container input {
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            box-sizing: border-box;
-            font-size: 16px;
-            background-color: #f9f9f9;
-            transition: border-color 0.3s ease;
+        to {
+            opacity: 1;
+            transform: translateX(0);
         }
-        .auth-container input:focus, .input-container input:focus {
-            border-color: #4CAF50;
-        }
-        .auth-container button, .input-container button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .auth-container button:hover, .input-container button:hover {
-            background-color: #45a049;
-        }
-        .auth-toggle {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #007BFF;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .messages {
-            background-color: #f9f9f9;
-            padding: 20px;
-            height: 300px;
-            overflow-y: auto;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        }
-        .message {
-            padding: 12px;
-            margin: 10px 0;
-            background-color: #e8e8e8;
-            border-radius: 8px;
-            font-size: 16px;
-            word-wrap: break-word;
-        }
-        .message .sender {
-            font-weight: bold;
-            color: #333;
-        }
-        .input-container {
-            display: flex;
-            justify-content: space-between;
-        }
-        .input-container input {
-            width: 80%;
-            border-radius: 8px;
-            font-size: 16px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            padding: 12px;
-            margin-right: 10px;
-        }
-        .input-container button {
-            width: 15%;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .input-container button:hover {
-            background-color: #45a049;
-        }
-        .auth-container p {
-            font-size: 14px;
-            color: #555;
-        }
-        .auth-container p a {
-            color: #007BFF;
-            text-decoration: none;
-        }
-        .auth-container p a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    }
+
+    .message .sender {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .input-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .input-container input {
+        width: 80%;
+        border-radius: 8px;
+        font-size: 16px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        padding: 14px;
+        margin-right: 10px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-container input:focus {
+        transform: scale(1.02);
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+    }
+
+    .input-container button {
+        width: 15%;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .input-container button:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+    }
+
+    .input-container button:active {
+        transform: translateY(2px);
+    }
+
+    .auth-container p {
+        font-size: 14px;
+        color: #555;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+
+    .auth-container p a {
+        color: #007BFF;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .auth-container p a:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+</style>
+
 </head>
 <body>
     <div id="chat-container" class="chat-container" style="display: none;">
