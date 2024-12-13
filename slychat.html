@@ -43,10 +43,10 @@
     </div>
 
 
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -65,7 +65,7 @@ const auth = getAuth();
 const db = getFirestore();
 const provider = new GoogleAuthProvider();
 
-// Elementi
+// Elements
 const chatWindow = document.getElementById('chat-window');
 const chatInput = document.getElementById('chat-input');
 const sendButton = document.getElementById('send-button');
@@ -81,13 +81,11 @@ const emailContainer = document.getElementById('email-container');
 const saveButton = document.getElementById('save-button');
 const closeButton = document.getElementById('close-button');
 
-let currentUser = null;  // Trenutni uporabnik
-let chatRoomCode = 'public'; // Privzeto javna seja
+let currentUser = null;  // Current user
+let chatRoomCode = 'public'; // Default public room
 const emailList = [];
 
 function addMessageToChatWindow(message, sender, isSentByCurrentUser, status) {
-    console.log('Dodajanje sporočila:', message, sender, isSentByCurrentUser, status);
-
     const msgElement = document.createElement('div');
     msgElement.classList.add('message-box');
 
@@ -112,21 +110,19 @@ function addMessageToChatWindow(message, sender, isSentByCurrentUser, status) {
     msgElement.appendChild(msgTextElement);
     msgElement.appendChild(msgStatusElement);
 
-    // Preveri, če obstaja 'chatWindow'
     if (chatWindow) {
         chatWindow.appendChild(msgElement);
-        chatWindow.scrollTop = chatWindow.scrollHeight; // Pomakni se navzdol do zadnjega sporočila
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     } else {
-        console.error('Element #chat-window ne obstaja v HTML.');
+        console.error('Element #chat-window does not exist in the HTML.');
     }
 }
 
-// Google prijava
+// Google sign-in
 googleSignInButton.onclick = () => {
     signInWithPopup(auth, provider)
         .then((result) => {
             const user = result.user;
-            console.log("User signed in: ", user);
             currentUser = user;
             updateUI(user);
         })
@@ -135,11 +131,10 @@ googleSignInButton.onclick = () => {
         });
 };
 
-// Google odjava
+// Google sign-out
 googleSignOutButton.onclick = () => {
     signOut(auth)
         .then(() => {
-            console.log("User signed out.");
             currentUser = null;
             updateUI(null);
         })
@@ -151,17 +146,14 @@ googleSignOutButton.onclick = () => {
 // Listen for auth state changes
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log("User is signed in: ", user);
         currentUser = user;
         updateUI(user);
     } else {
-        console.log("No user is signed in.");
         currentUser = null;
         updateUI(null);
     }
 });
 
-// Spremeni stran glede na to ali si prijavljen
 function updateUI(user) {
     if (user) {
         userNamesContainer.textContent = user.displayName || user.email;
@@ -178,18 +170,17 @@ function updateUI(user) {
     }
 }
 
-// Chat sending functionality
+// Send chat message
 sendButton.onclick = async function () {
     const message = chatInput.value;
     if (message.trim() !== '') {
         const chatMessage = {
             text: message,
             sender: currentUser ? currentUser.displayName || currentUser.email : 'Anonymous',
-            timestamp: new Date()
+            timestamp: serverTimestamp()
         };
 
         try {
-            // Shrani sporočilo v Firestore
             await addDoc(collection(db, `chats/${chatRoomCode}`), chatMessage);
             addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
             chatInput.value = '';
@@ -199,7 +190,7 @@ sendButton.onclick = async function () {
     }
 };
 
-// Joining a chat room
+// Join chat room
 joinButton.onclick = function() {
     chatRoomCode = codeInput.value.trim();
     if (chatRoomCode) {
@@ -207,29 +198,23 @@ joinButton.onclick = function() {
     }
 };
 
-// Ob začetni prijavi v javno sejo
-if (chatRoomCode === 'public') {
-    loadMessages(chatRoomCode);
-}
-
+// Load chat messages
 function loadMessages(chatRoomCode) {
     const chatRef = collection(db, `chats/${chatRoomCode}`);
     onSnapshot(chatRef, (querySnapshot) => {
-        // Počisti trenutna sporočila v pogovoru
         chatWindow.innerHTML = '';
 
-        // Pridobi in razvrsti sporočila glede na čas
         const messages = [];
         querySnapshot.forEach((doc) => {
             const messageData = doc.data();
             if (messageData.timestamp && messageData.timestamp.toMillis) {
-                messageData.timestamp = messageData.timestamp.toMillis(); // Pretvori timestamp
+                messageData.timestamp = messageData.timestamp.toMillis();
             }
             messages.push({ id: doc.id, ...messageData });
         });
+
         messages.sort((a, b) => a.timestamp - b.timestamp);
 
-        // Prikaz sporočil
         messages.forEach((message) => {
             const isSentByCurrentUser = currentUser && 
                 (currentUser.displayName === message.sender || currentUser.email === message.sender);
@@ -238,19 +223,24 @@ function loadMessages(chatRoomCode) {
     });
 }
 
-// Show the popup for reserving a session
+// Load messages for the public room
+if (chatRoomCode === 'public') {
+    loadMessages(chatRoomCode);
+}
+
+// Show popup
 reserveButton.onclick = function () {
     if (popupContainer) {
-        popupContainer.style.display = 'flex'; // Preveri, ali je element pravilen in ga prikaže
+        popupContainer.style.display = 'flex';
     } else {
         console.error("Popup container element not found!");
     }
 };
 
-// Close the popup
+// Close popup
 closeButton.onclick = function () {
     if (popupContainer) {
-        popupContainer.style.display = 'none'; // Skrij popup ob zaprtju
+        popupContainer.style.display = 'none';
     } else {
         console.error("Popup container element not found!");
     }
@@ -265,7 +255,7 @@ addEmailButton.onclick = function () {
         const emailDiv = document.createElement('div');
         emailDiv.textContent = email;
         emailContainer.appendChild(emailDiv);
-        emailInput.value = ''; // Clear input field
+        emailInput.value = '';
     }
 };
 
@@ -275,9 +265,10 @@ saveButton.onclick = function () {
     if (reservationCode) {
         console.log('Reservation Code:', reservationCode);
         console.log('Email List:', emailList);
-        popupContainer.style.display = 'none'; // Close popup after saving
+        popupContainer.style.display = 'none';
     }
 };
-    </script>
+</script>
+
 </body>
 </html>
