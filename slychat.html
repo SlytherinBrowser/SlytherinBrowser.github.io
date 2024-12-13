@@ -18,9 +18,9 @@
             <div>
                 <input type="text" id="code-input" placeholder="Enter 6-digit code">
                 <button id="join-button">Join Chat</button>
-                <button id="reserve-button">Reserve Session</button> <!-- New button for reserving a session -->
-                <button id="google-sign-in-button">Sign in with Google</button> <!-- Google Sign-In button -->
-                <button id="google-sign-out-button" style="display:none;">Sign Out</button> <!-- Google Sign-Out button -->
+                <button id="reserve-button">Reserve Session</button>
+                <button id="google-sign-in-button">Sign in with Google</button>
+                <button id="google-sign-out-button" style="display:none;">Sign Out</button>
             </div>
         </div>
         <div id="chat-window"></div>
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Popup Container -->
-    <div id="popup-container">
+    <div id="popup-container" style="display:none;">
         <h3>Reserve Session</h3>
         <input type="text" id="reservation-code" placeholder="Enter 6-digit code">
         <div id="email-container">
@@ -42,13 +42,12 @@
         <button id="close-button">Close</button>
     </div>
 
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
 
-// Firebase configuration
+// Firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
     authDomain: "slychat-e0a59.firebaseapp.com",
@@ -59,234 +58,70 @@ const firebaseConfig = {
     measurementId: "G-52CMK3FJYW"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
 const db = getFirestore();
 const provider = new GoogleAuthProvider();
 
-// Elements
-const chatWindow = document.getElementById('chat-window');
 const chatInput = document.getElementById('chat-input');
 const sendButton = document.getElementById('send-button');
-const codeInput = document.getElementById('code-input');
-const joinButton = document.getElementById('join-button');
-const reserveButton = document.getElementById('reserve-button');
-const googleSignInButton = document.getElementById('google-sign-in-button');
-const googleSignOutButton = document.getElementById('google-sign-out-button');
-const userNamesContainer = document.getElementById('user-names');
 const popupContainer = document.getElementById('popup-container');
 const addEmailButton = document.getElementById('add-email');
 const emailContainer = document.getElementById('email-container');
 const saveButton = document.getElementById('save-button');
 const closeButton = document.getElementById('close-button');
+let currentUser = null;
+let emailList = [];
 
-let currentUser = null;  // Current user
-let chatRoomCode = 'public'; // Default public room
-const emailList = [];
-
-function addMessageToChatWindow(message, sender, isSentByCurrentUser, status) {
-    const msgElement = document.createElement('div');
-    msgElement.classList.add('message-box');
-
-    const senderNameElement = document.createElement('div');
-    senderNameElement.classList.add('sender-name');
-    senderNameElement.textContent = sender;
-
-    const msgTextElement = document.createElement('div');
-    msgTextElement.textContent = message.text;
-
-    const msgStatusElement = document.createElement('div');
-    msgStatusElement.classList.add('message-status');
-    msgStatusElement.textContent = status;
-
-    if (isSentByCurrentUser) {
-        msgElement.classList.add('sent');
-    } else {
-        msgElement.classList.add('received');
-    }
-
-    msgElement.appendChild(senderNameElement);
-    msgElement.appendChild(msgTextElement);
-    msgElement.appendChild(msgStatusElement);
-
-    if (chatWindow) {
-        chatWindow.appendChild(msgElement);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    } else {
-        console.error('Element #chat-window does not exist in the HTML.');
-    }
-}
-
-// Google sign-in
-googleSignInButton.onclick = () => {
-    signInWithPopup(auth, provider)
-        .then((result) => {
-            const user = result.user;
-            currentUser = user;
-            updateUI(user);
-        })
-        .catch((error) => {
-            console.error("Error during sign-in: ", error);
-        });
-};
-
-// Google sign-out
-googleSignOutButton.onclick = () => {
-    signOut(auth)
-        .then(() => {
-            currentUser = null;
-            updateUI(null);
-        })
-        .catch((error) => {
-            console.error("Error during sign-out: ", error);
-        });
-};
-
-// Listen for auth state changes
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        updateUI(user);
-    } else {
-        currentUser = null;
-        updateUI(null);
-    }
-});
-
-function updateUI(user) {
-    if (user) {
-        userNamesContainer.textContent = user.displayName || user.email;
-        googleSignInButton.style.display = 'none';
-        googleSignOutButton.style.display = 'block';
-        chatInput.disabled = false;
-        sendButton.disabled = false;
-    } else {
-        userNamesContainer.textContent = 'No user logged in';
-        googleSignInButton.style.display = 'block';
-        googleSignOutButton.style.display = 'none';
-        chatInput.disabled = true;
-        sendButton.disabled = true;
-    }
-}
-
-// Send chat message
-sendButton.onclick = async function () {
-    const message = chatInput.value;
-    if (message.trim() !== '') {
-        const chatMessage = {
-            text: message,
-            sender: currentUser ? currentUser.displayName || currentUser.email : 'Anonymous',
-            timestamp: serverTimestamp()
-        };
-
-        try {
-            await addDoc(collection(db, `chats/${chatRoomCode}`), chatMessage);
-            addMessageToChatWindow(chatMessage, chatMessage.sender, true, 'Sent');
-            chatInput.value = '';
-        } catch (error) {
-            console.error('Error sending message: ', error);
+// Add email functionality with validation
+addEmailButton.onclick = function () {
+    const emailInput = emailContainer.querySelector('.email-input input[type="email"]');
+    const email = emailInput.value.trim();
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (!emailList.includes(email)) {
+            emailList.push(email);
+            const emailDiv = document.createElement('div');
+            emailDiv.textContent = email;
+            emailDiv.classList.add('email-entry');
+            emailContainer.appendChild(emailDiv);
+            emailInput.value = '';
+        } else {
+            alert('Email already added.');
         }
-    }
-};
-
-// Join chat room
-joinButton.onclick = function() {
-    chatRoomCode = codeInput.value.trim();
-    if (chatRoomCode) {
-        loadMessages(chatRoomCode);
-    }
-};
-
-// Load chat messages
-function loadMessages(chatRoomCode) {
-    const chatRef = collection(db, `chats/${chatRoomCode}`);
-    onSnapshot(chatRef, (querySnapshot) => {
-        chatWindow.innerHTML = '';
-
-        const messages = [];
-        querySnapshot.forEach((doc) => {
-            const messageData = doc.data();
-            if (messageData.timestamp && messageData.timestamp.toMillis) {
-                messageData.timestamp = messageData.timestamp.toMillis();
-            }
-            messages.push({ id: doc.id, ...messageData });
-        });
-
-        messages.sort((a, b) => a.timestamp - b.timestamp);
-
-        messages.forEach((message) => {
-            const isSentByCurrentUser = currentUser && 
-                (currentUser.displayName === message.sender || currentUser.email === message.sender);
-            addMessageToChatWindow(message, message.sender, isSentByCurrentUser, 'Received');
-        });
-    });
-}
-
-// Load messages for the public room
-if (chatRoomCode === 'public') {
-    loadMessages(chatRoomCode);
-}
-
-// Show popup
-reserveButton.onclick = function () {
-    if (popupContainer) {
-        popupContainer.style.display = 'flex';
     } else {
-        console.error("Popup container element not found!");
+        alert('Please enter a valid email address.');
+    }
+};
+
+// Save reservation functionality with validation
+saveButton.onclick = function () {
+    const reservationCode = document.getElementById('reservation-code').value.trim();
+    if (/^\d{6}$/.test(reservationCode)) {
+        console.log('Reservation Code:', reservationCode);
+        console.log('Email List:', emailList);
+        popupContainer.style.display = 'none';
+    } else {
+        alert('Please enter a valid 6-digit reservation code.');
     }
 };
 
 // Close popup
 closeButton.onclick = function () {
-    if (popupContainer) {
-        popupContainer.style.display = 'none';
-    } else {
-        console.error("Popup container element not found!");
-    }
+    popupContainer.style.display = 'none';
 };
 
-// Add email functionality
-addEmailButton.onclick = function () {
-    const emailInput = emailContainer.querySelector('input[type="email"]');
-    const email = emailInput.value.trim();
-    if (email) {
-        emailList.push(email);
-        const emailDiv = document.createElement('div');
-        emailDiv.textContent = email;
-        emailContainer.appendChild(emailDiv);
-        emailInput.value = '';
-    }
-};
-
-// Save session functionality
-saveButton.onclick = function () {
-    const reservationCode = document.getElementById('reservation-code').value.trim();
-    if (reservationCode) {
-        console.log('Reservation Code:', reservationCode);
-        console.log('Email List:', emailList);
-        popupContainer.style.display = 'none';
-    }
-};
-
-
-    // Pridobi trenutni čas
-const zdaj = new Date();
-const ura = zdaj.getHours();
-
-// Mapa barv za vsako uro dneva (24 barv)
-const barve = [
-    '#FF0000', '#FF4500', '#FF8C00', '#FFD700', // 0:00–3:59
-    '#ADFF2F', '#32CD32', '#00FF00', '#20B2AA', // 4:00–7:59
-    '#00CED1', '#1E90FF', '#0000FF', '#4B0082', // 8:00–11:59
-    '#8A2BE2', '#9400D3', '#800080', '#C71585', // 12:00–15:59
-    '#FF1493', '#FF69B4', '#FFB6C1', '#FFA07A', // 16:00–19:59
-    '#FFA500', '#FF6347', '#DC143C', '#8B0000'  // 20:00–23:59
+// Adjust background color
+const now = new Date();
+const hour = now.getHours();
+const colors = [
+    '#FF0000', '#FF4500', '#FF8C00', '#FFD700',
+    '#ADFF2F', '#32CD32', '#00FF00', '#20B2AA',
+    '#00CED1', '#1E90FF', '#0000FF', '#4B0082',
+    '#8A2BE2', '#9400D3', '#800080', '#C71585',
+    '#FF1493', '#FF69B4', '#FFB6C1', '#FFA07A',
+    '#FFA500', '#FF6347', '#DC143C', '#8B0000'
 ];
-
-// Nastavi barvo ozadja glede na trenutno uro
-document.body.style.backgroundColor = barve[ura];
-
+document.body.style.backgroundColor = colors[hour] || '#FFFFFF'; // Default to white if hour is invalid
 </script>
 
 </body>
