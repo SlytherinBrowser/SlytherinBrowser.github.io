@@ -290,7 +290,7 @@
         const db = getDatabase(app);
         let isAdmin = false;
 
-        auth.onAuthStateChanged(user => {
+         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('chat-container').style.display = 'block';
                 document.getElementById('auth-container').style.display = 'none';
@@ -307,7 +307,7 @@
             }
         });
 
-        // Toggle between login and register form
+        // Funkcija za preklop obrazcev
         function toggleAuthForm(form) {
             if (form === 'register') {
                 document.getElementById('register-form').style.display = "block";
@@ -318,48 +318,48 @@
             }
         }
 
-
           // Funkcija za registracijo
-function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
+// Funkcija za registracijo
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
 
-createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            user.updateProfile({
-                displayName: username
-            }).then(() => {
-                document.getElementById('auth-message').innerText = "Registered successfully!";
-                toggleAuthForm('login');
-            }).catch((error) => {
-                document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
-            });
-        })
-        .catch((error) => {
-            document.getElementById('auth-message').innerText = "Error: " + error.message;
-        });
-}
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    user.updateProfile({
+                        displayName: username
+                    }).then(() => {
+                        document.getElementById('auth-message').innerText = "Registered successfully!";
+                        toggleAuthForm('login');
+                    }).catch((error) => {
+                        document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
+                    });
+                })
+                .catch((error) => {
+                    document.getElementById('auth-message').innerText = "Error: " + error.message;
+                });
+        }
         
-// Funkcija za prijavo
-function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+ // Funkcija za prijavo
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
-   signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-            document.getElementById('login-message').innerText = "Logged in successfully!";
-            document.getElementById('chat-container').style.display = 'block';
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('messageInput').disabled = false;
-            document.querySelector('button').disabled = false;
-            listenForMessages();
-        })
-        .catch((error) => {
-            document.getElementById('login-message').innerText = "Error: " + error.message;
-        });
-}
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    document.getElementById('login-message').innerText = "Logged in successfully!";
+                    document.getElementById('chat-container').style.display = 'block';
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('messageInput').disabled = false;
+                    document.querySelector('.input-container button').disabled = false;
+                    listenForMessages();
+                })
+                .catch((error) => {
+                    document.getElementById('login-message').innerText = "Error: " + error.message;
+                });
+        }
 
 
         function sendMessage() {
