@@ -449,6 +449,15 @@
                 }, 3600000); // Chat will be unavailable for one hour
             }
         }
+
+         // Handle @mention visibility
+        function handleMention(message) {
+            const userName = auth.currentUser.displayName;
+            if (message.includes('@' + userName)) {
+                return message; // only show if it's the user being mentioned
+            }
+            return message; // show for everyone
+        }
     </script>
 </body>
 </html>
