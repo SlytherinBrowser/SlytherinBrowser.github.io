@@ -138,22 +138,23 @@
     const signature1 = document.getElementById('signature1').value;
     const signature2 = document.getElementById('signature2').value;
 
-    // Preveri, če so vsa polja izpolnjena
+    
+
+    Preveri, če so vsa polja izpolnjena
     if (!email1 || !email2 || !signature1 || !signature2) {
         alert('Prosimo, izpolnite vsa polja!');
         return;
     }
 
-    // Nastavi e-poštna naslova
-    const emails = [email1, email2].join(','); // Pošlji na oba e-poštna naslova
-    const replyTo = [email1, email2].join(','); // Nastavi Reply-To na oba e-poštna naslova
+    // Nastavi e-poštna naslova ločena z vejico
+    const emails = `${email1}, ${email2}`;  // Ločena z vejico
 
     // Parametri za predlogo
     const templateParams = {
-        to: emails,
-        reply_to: replyTo, // Nastavi Reply-To
-        podpis1: signature1,
-        podpis2: signature2
+        to: emails,           // Pošlji na oba e-poštna naslova
+        reply_to: emails,     // Reply-To nastavi na oba naslova
+        podpis1: signature1,  // Podpis 1
+        podpis2: signature2   // Podpis 2
     };
 
     // Pošlji e-pošto z EmailJS
@@ -163,7 +164,6 @@
         }, function(error) {
             alert('Napaka: ' + JSON.stringify(error));
         });
-}
     </script>
 </body>
 </html>
