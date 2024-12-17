@@ -31,13 +31,20 @@
             animation: pulse 3s infinite;
         }
 
+        h2 {
+            font-size: 2.5rem;
+            color: #ffebf0;
+            margin: 0;
+            animation: fadeIn 4s forwards;
+        }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
 
-        .thoughts, .timeTogether {
+        .thoughts {
             font-size: 1.8rem;
             max-width: 70%;
             margin: 20px auto;
@@ -55,7 +62,7 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
-       .heart {
+        .heart {
             position: absolute;
             top: -10vh;
             color: #ff6b81;
@@ -86,8 +93,9 @@
 </head>
 <body>
     <h1>Zate, moja ljubezen</h1>
+    <h2>Nika ❤️</h2>
     <div class="thoughts" id="romanticThoughts"></div>
-    <div class="timeTogether" id="timeTogether"></div>
+    <div id="timeTogether" class="thoughts"></div>
     <div class="footer">Ljubim te bolj kot vse na svetu. ❤️</div>
 
     <script>
@@ -115,6 +123,7 @@
             "Moje srce pripada tebi in vedno bo."  
         ];
 
+        // Dinamično izpisovanje misli
         const thoughtsContainer = document.getElementById('romanticThoughts');
         let index = 0;
 
@@ -125,26 +134,22 @@
         displayThoughts();
         setInterval(displayThoughts, 4000);
 
-        // Prikaz časa, ki sta skupaj
-        const startDate = new Date("2024-12-04T16:43:23"); // Vnesi datum in uro v tem formatu: "leto-mesec-danThh:mm:ss"
+        // Štetje časa, odkar sta skupaj
+        const startDate = new Date("2024-12-04T16:43:23"); // Nastavi datum in čas vajine zveze
         const timeTogetherContainer = document.getElementById('timeTogether');
 
         function calculateTimeTogether() {
             const now = new Date();
             const diff = now - startDate;
 
-            const seconds = Math.floor(diff / 1000) % 60;
-            const minutes = Math.floor(diff / (1000 * 60)) % 60;
-            const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24)) % 7;
-            const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) % 4;
-            const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30)) % 12;
-            const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
 
-            timeTogetherContainer.textContent = `Skupaj sva že: ${years} let, ${months} mesecev, ${weeks} tednov, ${days} dni, ${hours} ur, ${minutes} minut in ${seconds} sekund.`;
+            timeTogetherContainer.textContent = `Skupaj sva že ${days} dni, ${hours} ur, ${minutes} minut in ${seconds} sekund.`;
         }
         setInterval(calculateTimeTogether, 1000);
-        calculateTimeTogether();
 
         // Padajoči srčki
         function createHeart() {
