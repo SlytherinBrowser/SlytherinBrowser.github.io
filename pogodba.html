@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ljubezenska zaveza</title>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffe6e6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background: #fff;
+            margin: 30px auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #d147a3;
+            margin-bottom: 10px;
+        }
+
+        .contract-text {
+            text-align: justify;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .person-section {
+            width: 45%;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .person-section h3 {
+            margin-bottom: 10px;
+            color: #a83784;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"], input[type="email"] {
+            padding: 8px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 30px;
+            background-color: #d147a3;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #a83784;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ljubezenska zaveza</h1>
+        <p class="contract-text">
+            Ta zaveza simbolizira neprekinjeno zavezo med obema osebama, ki sta podpisali spodaj. S to zavezo se zavezujeta, 
+            da bosta drug drugega spoštovala, ljubila in podpirala v vseh življenjskih okoliščinah, ne glede na čas, prostor 
+            ali izzive, ki bi se lahko pojavili. Ta zaveza je utemeljena na zaupanju, razumevanju in ljubezni ter predstavlja 
+            njuno večno željo po skupni prihodnosti.
+        </p>
+        <div class="form-container">
+            <!-- Sekcija za prvo osebo -->
+            <div class="person-section">
+                <h3>Podatki prve osebe</h3>
+                <label for="email1">E-poštni naslov:</label>
+                <input type="email" id="email1" placeholder="Vnesite svoj e-mail" required>
+
+                <label for="signature1">Podpis:</label>
+                <input type="text" id="signature1" placeholder="Vaš podpis" required>
+            </div>
+
+            <!-- Sekcija za drugo osebo -->
+            <div class="person-section">
+                <h3>Podatki druge osebe</h3>
+                <label for="email2">E-poštni naslov:</label>
+                <input type="email" id="email2" placeholder="Vnesite e-mail partnerja" required>
+
+                <label for="signature2">Podpis:</label>
+                <input type="text" id="signature2" placeholder="Partnerjev podpis" required>
+            </div>
+        </div>
+        <button type="button" onclick="sendContract()">Pošlji zavezo</button>
+    </div>
+
+    <script>
+        (function() {
+            emailjs.init("XtCGRCAxUCqWbgH1w"); // Zamenjajte z vašim EmailJS Public Key
+        })();
+
+        function sendContract() {
+            const email1 = document.getElementById('email1').value;
+            const email2 = document.getElementById('email2').value;
+            const signature1 = document.getElementById('signature1').value;
+            const signature2 = document.getElementById('signature2').value;
+
+            if (!email1 || !email2 || !signature1 || !signature2) {
+                alert('Prosimo, izpolnite vsa polja!');
+                return;
+            }
+
+            const templateParams = {
+                email_to_1: email1,
+                email_to_2: email2,
+                podpis1: signature1,
+                podpis2: signature2
+            };
+
+            emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
+                .then(function(response) {
+                    alert('Zaveza je bila uspešno poslana!');
+                }, function(error) {
+                    alert('Napaka: ' + JSON.stringify(error));
+                });
+        }
+    </script>
+</body>
+</html>
