@@ -143,13 +143,12 @@
                 return;
             }
 
-            const templateParams = {
-                email_to_1: email1,
-                email_to_2: email2,
-                podpis1: signature1,
-                podpis2: signature2
-            };
-
+             const templateParams = {
+    to: emails, // Pošlji na oba e-poštna naslova
+    reply_to: [email1, email2].join(','), // Nastavi Reply-To na oba e-poštna naslova
+    podpis1: signature1,
+    podpis2: signature2
+};
             emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
                 .then(function(response) {
                     alert('Zaveza je bila uspešno poslana!');
