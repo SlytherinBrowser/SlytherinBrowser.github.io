@@ -119,10 +119,18 @@
         <button type="button" onclick="sendContract()">Pošlji zavezo</button>
     </div>
 
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+</script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init({
+        publicKey: "XtCGRCAxUCqWbgH1w",
+      });
+   })();
+</script>
     <script>
-        (function() {
-            emailjs.init("XtCGRCAxUCqWbgH1w"); // Zamenjajte z vašim EmailJS Public Key
-        })();
+
 
         function sendContract() {
             const email1 = document.getElementById('email1').value;
