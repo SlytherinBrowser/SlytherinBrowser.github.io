@@ -38,12 +38,6 @@
             animation: fadeIn 4s forwards;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
         .thoughts {
             font-size: 1.8rem;
             max-width: 70%;
@@ -55,11 +49,6 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             animation: fadeIn 4s forwards;
-        }
-
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
         }
 
         .heart {
@@ -75,6 +64,12 @@
             to {
                 transform: translateY(100vh);
             }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         @keyframes wiggle {
@@ -110,20 +105,9 @@
             "V tvojih očeh vidim prihodnost, ki si jo želim.",
             "Brez tebe je moje življenje kot nebo brez zvezd.",
             "Tvoj nasmeh je razlog, zakaj se vsako jutro zbudim srečen.",
-            "Zate bi prehodil tisoč milj in premagal vse ovire.",
-            "Moje srce bije v ritmu tvoje ljubezni.",
-            "S tabo so moji najlepši spomini šele začetek.",
-            "Ko te pogledam, vem, da sem našel svoje pravo mesto.",
-            "Vsak dotik tvoje roke mi pove več kot tisoč besed.",
-            "Ti si moj navdih in moja večna sreča.",
-            "Vsaka sekunda brez tebe je kot večnost.",
-            "V tvojih objemih najdem svoj dom.",
-            "Hvala, ker si me naučila, kaj pomeni prava ljubezen.",
-            "S teboj je vse lepše, celo najtemnejši trenutki.",
-            "Moje srce pripada tebi in vedno bo."  
+            "Zate bi prehodil tisoč milj in premagal vse ovire."
         ];
 
-        // Dinamično izpisovanje misli
         const thoughtsContainer = document.getElementById('romanticThoughts');
         let index = 0;
 
@@ -134,22 +118,46 @@
         displayThoughts();
         setInterval(displayThoughts, 4000);
 
-        // Štetje časa, odkar sta skupaj
-        const startDate = new Date("2024-12-04T16:43:23"); // Nastavi datum in čas vajine zveze
+        // Štetje časa skupaj
+        const startDate = new Date("2024-12-04T16:43:23");
         const timeTogetherContainer = document.getElementById('timeTogether');
 
         function calculateTimeTogether() {
             const now = new Date();
-            const diff = now - startDate;
+            let years = now.getFullYear() - startDate.getFullYear();
+            let months = now.getMonth() - startDate.getMonth();
+            let days = now.getDate() - startDate.getDate();
+            let hours = now.getHours() - startDate.getHours();
+            let minutes = now.getMinutes() - startDate.getMinutes();
+            let seconds = now.getSeconds() - startDate.getSeconds();
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((diff / (1000 * 60)) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
+            // Popravki za negativne vrednosti
+            if (seconds < 0) {
+                seconds += 60;
+                minutes--;
+            }
+            if (minutes < 0) {
+                minutes += 60;
+                hours--;
+            }
+            if (hours < 0) {
+                hours += 24;
+                days--;
+            }
+            if (days < 0) {
+                const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += lastMonth.getDate();
+                months--;
+            }
+            if (months < 0) {
+                months += 12;
+                years--;
+            }
 
-            timeTogetherContainer.textContent = `Skupaj sva že ${days} dni, ${hours} ur, ${minutes} minut in ${seconds} sekund.`;
+            timeTogetherContainer.textContent = `Skupaj sva že ${years} let, ${months} mesecev, ${days} dni, ${hours} ur, ${minutes} minut in ${seconds} sekund.`;
         }
         setInterval(calculateTimeTogether, 1000);
+        calculateTimeTogether();
 
         // Padajoči srčki
         function createHeart() {
