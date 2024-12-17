@@ -133,29 +133,37 @@
 
 
         function sendContract() {
-            const email1 = document.getElementById('email1').value;
-            const email2 = document.getElementById('email2').value;
-            const signature1 = document.getElementById('signature1').value;
-            const signature2 = document.getElementById('signature2').value;
+    const email1 = document.getElementById('email1').value;
+    const email2 = document.getElementById('email2').value;
+    const signature1 = document.getElementById('signature1').value;
+    const signature2 = document.getElementById('signature2').value;
 
-            if (!email1 || !email2 || !signature1 || !signature2) {
-                alert('Prosimo, izpolnite vsa polja!');
-                return;
-            }
+    // Preveri, če so vsa polja izpolnjena
+    if (!email1 || !email2 || !signature1 || !signature2) {
+        alert('Prosimo, izpolnite vsa polja!');
+        return;
+    }
 
-             const templateParams = {
-    to: emails, // Pošlji na oba e-poštna naslova
-    reply_to: [email1, email2].join(','), // Nastavi Reply-To na oba e-poštna naslova
-    podpis1: signature1,
-    podpis2: signature2
-};
-            emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
-                .then(function(response) {
-                    alert('Zaveza je bila uspešno poslana!');
-                }, function(error) {
-                    alert('Napaka: ' + JSON.stringify(error));
-                });
-        }
+    // Nastavi e-poštna naslova
+    const emails = [email1, email2].join(','); // Pošlji na oba e-poštna naslova
+    const replyTo = [email1, email2].join(','); // Nastavi Reply-To na oba e-poštna naslova
+
+    // Parametri za predlogo
+    const templateParams = {
+        to: emails,
+        reply_to: replyTo, // Nastavi Reply-To
+        podpis1: signature1,
+        podpis2: signature2
+    };
+
+    // Pošlji e-pošto z EmailJS
+    emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
+        .then(function(response) {
+            alert('Zaveza je bila uspešno poslana!');
+        }, function(error) {
+            alert('Napaka: ' + JSON.stringify(error));
+        });
+}
     </script>
 </body>
 </html>
