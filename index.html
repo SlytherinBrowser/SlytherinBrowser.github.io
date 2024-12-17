@@ -17,37 +17,43 @@
             display: flex;
             gap: 30px;
         }
-        .eye {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background-color: white;
-            position: relative;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-        .pupil {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: black;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.2s ease-in-out;
-        }
+     .eye {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: white;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.pupil {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: black;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Dodana senca zenici */
+}
+
+.eye:hover .pupil {
+    transform: translate(-50%, -50%) scale(1.2); /* Dinamična velikost zenice */
+}
 </style>
 <body>
 
     <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
     <div class="eye-container">
-    <div class="eye" onclick="openWebsite()">
-        <div class="pupil" id="pupil1"></div>
-    </div>
-    <div class="eye" onclick="openWebsite()">
-        <div class="pupil" id="pupil2"></div>
-    </div>
+   <div class="eye eye-left">
+    <div class="pupil"></div>
+</div>
+<div class="eye eye-right">
+    <div class="pupil"></div>
+</div>
 </div>
     <img id="logo" src="Slytherin.png"></img>
 
@@ -213,10 +219,14 @@
         moveEyes(event);
     });
 
-    // Funkcija za odpiranje spletne strani ob kliku na oči
-    function openWebsite() {
-        window.open('mojevse.html', '_blank');
-    }
+    // Dodajanje dogodkov za klik na oči
+document.querySelector('.eye-left').addEventListener('click', () => {
+    window.open('pogodba.html', '_blank'); // Stran za levo oko
+});
+
+document.querySelector('.eye-right').addEventListener('click', () => {
+    window.open('mojevse.html', '_blank'); // Stran za desno oko
+});
 </script>
 <script>
     let count = 0;
