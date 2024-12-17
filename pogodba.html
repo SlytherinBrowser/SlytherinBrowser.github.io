@@ -132,33 +132,34 @@
     <script>
 
 function sendContract() {
-    const email1 = document.getElementById('email1').value;
-    const email2 = document.getElementById('email2').value;
-    const signature1 = document.getElementById('signature1').value;
-    const signature2 = document.getElementById('signature2').value;
+            const email1 = document.getElementById('email1').value;
+            const email2 = document.getElementById('email2').value;
+            const signature1 = document.getElementById('signature1').value;
+            const signature2 = document.getElementById('signature2').value;
 
-    if (!email1 || !email2 || !signature1 || !signature2) {
-        alert('Prosimo, izpolnite vsa polja!');
-        return;
-    }
+            if (!email1 || !email2 || !signature1 || !signature2) {
+                alert('Prosimo, izpolnite vsa polja!');
+                return;
+            }
 
-    // Preverimo, da sta oba e-poštna naslova vnesena
-    const emails = [email1, email2].join(',');  // Pošlji na oba e-poštna naslova
+            // Preverimo, da sta oba e-poštna naslova vnesena
+            const emails = [email1, email2].join(',');  // Pošlji na oba e-poštna naslova
 
-    const templateParams = {
-        to: emails, // Pošlji na oba e-poštna naslova
-        reply_to: [email1, email2].join(','), // Nastavi Reply-To na oba e-poštna naslova
-        podpis1: signature1,
-        podpis2: signature2
-    };
+            const templateParams = {
+                email_to1: email1,  // E-poštni naslov 1
+                email_to2: email2,  // E-poštni naslov 2
+                podpis1: signature1,  // Podpis 1. osebe
+                podpis2: signature2,  // Podpis 2. osebe
+            };
 
-    emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
-        .then(function(response) {
-            alert('Zaveza je bila uspešno poslana!');
-        }, function(error) {
-            alert('Napaka: ' + JSON.stringify(error));
-        });
-}
+            // Pošlji e-pošto preko EmailJS
+            emailjs.send("service_tu1xw9f", "template_fhghbed", templateParams)
+                .then(function(response) {
+                    alert('Zaveza je bila uspešno poslana!');
+                }, function(error) {
+                    alert('Napaka: ' + JSON.stringify(error));
+                });
+        }
     </script>
 </body>
 </html>
