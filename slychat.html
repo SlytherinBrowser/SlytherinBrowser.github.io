@@ -286,178 +286,176 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-        let isAdmin = false;
+const auth = getAuth(app);
+const db = getDatabase(app);
+let isOwner = false;
 
-         auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('chat-container').style.display = 'block';
-                document.getElementById('auth-container').style.display = 'none';
-                const username = user.displayName;
-                if (user.email === "denis.robinek76@gmail.com") { // Admin check
-                    isAdmin = true;
-                }
-                document.getElementById('messageInput').disabled = false;
-                document.querySelector('.input-container button').disabled = false;
-                listenForMessages();
-            } else {
-                document.getElementById('chat-container').style.display = 'none';
-                document.getElementById('auth-container').style.display = 'block';
-            }
-        });
-
-        // Funkcija za preklop obrazcev
-        function toggleAuthForm(form) {
-            if (form === 'register') {
-                document.getElementById('register-form').style.display = "block";
-                document.getElementById('login-form').style.display = "none";
-            } else {
-                document.getElementById('login-form').style.display = "block";
-                document.getElementById('register-form').style.display = "none";
-            }
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById('chat-container').style.display = 'block';
+        document.getElementById('auth-container').style.display = 'none';
+        const username = user.displayName;
+        if (user.email === "denis.robinek76@gmail.com") { // Owner check
+            isOwner = true;
         }
+        document.getElementById('messageInput').disabled = false;
+        document.querySelector('.input-container button').disabled = false;
+        listenForMessages();
+    } else {
+        document.getElementById('chat-container').style.display = 'none';
+        document.getElementById('auth-container').style.display = 'block';
+    }
+});
 
-          // Funkcija za registracijo
+// Funkcija za preklop obrazcev
+function toggleAuthForm(form) {
+    if (form === 'register') {
+        document.getElementById('register-form').style.display = "block";
+        document.getElementById('login-form').style.display = "none";
+    } else {
+        document.getElementById('login-form').style.display = "block";
+        document.getElementById('register-form').style.display = "none";
+    }
+}
+
 // Funkcija za registracijo
-        function register() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value;
+function register() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const username = document.getElementById('username').value;
 
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    user.updateProfile({
-                        displayName: username
-                    }).then(() => {
-                        document.getElementById('auth-message').innerText = "Registered successfully!";
-                        toggleAuthForm('login');
-                    }).catch((error) => {
-                        document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
-                    });
-                })
-                .catch((error) => {
-                    document.getElementById('auth-message').innerText = "Error: " + error.message;
-                });
-        }
-        
- // Funkcija za prijavo
-        function login() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    document.getElementById('login-message').innerText = "Logged in successfully!";
-                    document.getElementById('chat-container').style.display = 'block';
-                    document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('messageInput').disabled = false;
-                    document.querySelector('.input-container button').disabled = false;
-                    listenForMessages();
-                })
-                .catch((error) => {
-                    document.getElementById('login-message').innerText = "Error: " + error.message;
-                });
-        }
-
-
-        function sendMessage() {
-            const message = document.getElementById('messageInput').value;
-            const username = auth.currentUser.displayName;
-            const messageRef = ref(db, 'messages/' + Date.now());
-
-            set(messageRef, {
-                username: username,
-                message: message
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            const user = userCredential.user;
+            user.updateProfile({
+                displayName: username
+            }).then(() => {
+                document.getElementById('auth-message').innerText = "Registered successfully!";
+                toggleAuthForm('login');
+            }).catch((error) => {
+                document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
             });
+        })
+        .catch((error) => {
+            document.getElementById('auth-message').innerText = "Error: " + error.message;
+        });
+}
 
-            document.getElementById('messageInput').value = ''; 
+// Funkcija za prijavo
+function login() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+            document.getElementById('login-message').innerText = "Logged in successfully!";
+            document.getElementById('chat-container').style.display = 'block';
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('messageInput').disabled = false;
+            document.querySelector('.input-container button').disabled = false;
+            listenForMessages();
+        })
+        .catch((error) => {
+            document.getElementById('login-message').innerText = "Error: " + error.message;
+        });
+}
+
+function sendMessage() {
+    const message = document.getElementById('messageInput').value;
+    const username = auth.currentUser.displayName;
+    const messageRef = ref(db, 'messages/' + Date.now());
+
+    set(messageRef, {
+        username: username,
+        message: message
+    });
+
+    document.getElementById('messageInput').value = ''; 
+}
+
+function listenForMessages() {
+    const messagesRef = ref(db, 'messages');
+    onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML = '';
+
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const message = data[key];
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
+                messagesDiv.appendChild(messageDiv);
+
+                // Owner view: add owner-specific message
+                if (isOwner && message.username !== 'owner') {
+                    const ownerMessageDiv = document.createElement('div');
+                    ownerMessageDiv.classList.add('message');
+                    ownerMessageDiv.innerHTML = `<span class="sender">Owner:</span> Responding to message: ${message.message}`;
+                    messagesDiv.appendChild(ownerMessageDiv);
+                }
+            }
         }
+    });
+}
 
-        function listenForMessages() {
-            const messagesRef = ref(db, 'messages');
-            onValue(messagesRef, (snapshot) => {
-                const data = snapshot.val();
-                const messagesDiv = document.getElementById('messages');
-                messagesDiv.innerHTML = '';
+function signOut() {
+    firebaseSignOut(auth).then(() => {
+        document.getElementById('chat-container').style.display = 'none';
+        document.getElementById('auth-container').style.display = 'block';
+    });
+}
 
-                for (const key in data) {
-                    if (data.hasOwnProperty(key)) {
-                        const message = data[key];
+function adminCommands(command) {
+    const [cmd, ...args] = command.split('@');
+
+    if (!isOwner) {
+        alert("Only the owner can use these commands.");
+        return;
+    }
+
+    if (cmd === '/slyclean') {
+        const messagesRef = ref(db, 'messages');
+        remove(messagesRef); // Delete all messages
+    }
+
+    if (cmd === '/slycolor' && args.length === 2) {
+        const username = args[0];
+        const color = args[1];
+        const messagesRef = ref(db, 'messages');
+        onValue(messagesRef, (snapshot) => {
+            const data = snapshot.val();
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    const message = data[key];
+                    if (message.username === username) {
                         const messageDiv = document.createElement('div');
                         messageDiv.classList.add('message');
-                        messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
-                        messagesDiv.appendChild(messageDiv);
-                        
-                        // Admin view: add admin-specific message
-                        if (isAdmin && message.username !== 'admin') {
-                            const adminMessageDiv = document.createElement('div');
-                            adminMessageDiv.classList.add('message');
-                            adminMessageDiv.innerHTML = `<span class="sender">Admin:</span> Responding to message: ${message.message}`;
-                            messagesDiv.appendChild(adminMessageDiv);
-                        }
+                        messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
+                        document.getElementById('messages').appendChild(messageDiv);
                     }
                 }
-            });
-        }
-
-        function signOut() {
-            firebaseSignOut(auth).then(() => {
-                document.getElementById('chat-container').style.display = 'none';
-                document.getElementById('auth-container').style.display = 'block';
-            });
-        }
-
-        function adminCommands(command) {
-            const [cmd, ...args] = command.split('@');
-
-            if (!isAdmin) {
-                alert("Only admin can use these commands.");
-                return;
             }
+        });
+    }
 
-            if (cmd === '/slyclean') {
-                const messagesRef = ref(db, 'messages');
-                remove(messagesRef); // Delete all messages
-            }
+    if (cmd === '/slypause') {
+        document.getElementById('chat-container').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('chat-container').style.display = 'block';
+        }, 3600000); // Chat will be unavailable for one hour
+    }
+}
 
-            if (cmd === '/slycolor' && args.length === 2) {
-                const username = args[0];
-                const color = args[1];
-                const messagesRef = ref(db, 'messages');
-                onValue(messagesRef, (snapshot) => {
-                    const data = snapshot.val();
-                    for (const key in data) {
-                        if (data.hasOwnProperty(key)) {
-                            const message = data[key];
-                            if (message.username === username) {
-                                const messageDiv = document.createElement('div');
-                                messageDiv.classList.add('message');
-                                messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
-                                document.getElementById('messages').appendChild(messageDiv);
-                            }
-                        }
-                    }
-                });
-            }
-
-            if (cmd === '/slypause') {
-                document.getElementById('chat-container').style.display = 'none';
-                setTimeout(() => {
-                    document.getElementById('chat-container').style.display = 'block';
-                }, 3600000); // Chat will be unavailable for one hour
-            }
-        }
-
-         // Handle @mention visibility
-        function handleMention(message) {
-            const userName = auth.currentUser.displayName;
-            if (message.includes('@' + userName)) {
-                return message; // only show if it's the user being mentioned
-            }
-            return message; // show for everyone
-        }
+// Handle @mention visibility
+function handleMention(message) {
+    const userName = auth.currentUser.displayName;
+    if (message.includes('@' + userName)) {
+        return message; // only show if it's the user being mentioned
+    }
+    return message; // show for everyone
+}
     </script>
 </body>
 </html>
