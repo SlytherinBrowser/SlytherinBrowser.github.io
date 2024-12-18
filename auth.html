@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlyAuth</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #f1f1f1;
+            margin: 0;
+        }
+
+        .auth-container {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-container h2 {
+            margin-bottom: 20px;
+        }
+
+        .auth-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .auth-container button {
+            width: 100%;
+            padding: 10px;
+            background: #0072ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .auth-container button:hover {
+            background: #00c6ff;
+        }
+
+        .auth-container p {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .auth-container p a {
+            color: #f1f1f1;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div id="register-form" style="display: none;">
+            <h2>Register</h2>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <input type="text" id="username" placeholder="Username">
+            <button onclick="register()">Register</button>
+            <p><a onclick="toggleAuthForm('login')">Already have an account? Login</a></p>
+        </div>
+
+        <div id="login-form">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p><a onclick="toggleAuthForm('register')">Don't have an account? Register</a></p>
+        </div>
+    </div>
+
+    <script>
+        function toggleAuthForm(form) {
+            if (form === 'register') {
+                document.getElementById('register-form').style.display = 'block';
+                document.getElementById('login-form').style.display = 'none';
+            } else {
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            }
+        }
+
+        function register() {
+            alert("Registered successfully!");
+            toggleAuthForm('login');
+        }
+
+        function login() {
+            alert("Logged in successfully!");
+            window.location.href = "slychat.html";
+        }
+    </script>
+</body>
+</html>
