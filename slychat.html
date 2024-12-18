@@ -5,276 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlyChat</title>
     <style>
-    body {
-        font-family: 'Roboto', sans-serif;
-        background: #2c3e50;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: #f1f1f1;
-        overflow: hidden;
-        background-image: radial-gradient(circle, rgba(0, 0, 0, 0.8), rgba(34, 34, 34, 0.9));
-    }
+        body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #2c3e50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-    .container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 50px;
-        max-width: 800px;
-        width: 100%;
-        padding: 50px;
-        background: linear-gradient(135deg, #00c6ff, #0072ff);
-        border-radius: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        animation: fadeIn 0.8s ease-out, scaleIn 0.5s ease-out forwards;
-    }
+#chat-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px;
+    background: #34495e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    animation: scaleIn 0.5s ease-out;
+}
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
     }
-
-    @keyframes scaleIn {
-        from {
-            transform: scale(0.8);
-        }
-        to {
-            transform: scale(1);
-        }
+    to {
+        transform: scale(1);
     }
+}
 
-    h2 {
-        font-size: 32px;
-        text-align: center;
-        color: #f1f1f1;
-        margin-bottom: 30px;
-        letter-spacing: 1px;
-        font-weight: 700;
-        text-transform: uppercase;
-        animation: slideIn 0.8s ease-out;
-    }
+#messages {
+    padding: 20px;
+    height: 300px;
+    overflow-y: auto;
+    border-bottom: 1px solid #7f8c8d;
+    background: #2c3e50;
+    color: #ecf0f1;
+    font-size: 16px;
+    font-weight: 400;
+    border-radius: 0;
+    animation: fadeIn 0.8s ease-out;
+}
 
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .auth-container, .chat-container {
-        width: 100%;
-        max-width: 600px;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 40px;
-        box-sizing: border-box;
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease-in-out;
-    }
-
-    .auth-container {
-        background: #00c6ff;
-        animation: fadeInUp 0.8s ease-out;
-    }
-
-    .chat-container {
-        background: #0072ff;
-        animation: fadeInUp 0.8s ease-out;
-    }
-
-    .auth-container input, .input-container input {
-        width: 100%;
-        padding: 16px;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        border: 2px solid #ddd;
-        font-size: 16px;
-        background-color: #e0f7fa;
-        color: #0072ff;
-        box-sizing: border-box;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .auth-container input:focus, .input-container input:focus {
-        border-color: #00c6ff;
-        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
-        transform: scale(1.05);
-    }
-
-    .auth-container button, .input-container button {
-        width: 100%;
-        padding: 16px;
-        background-color: #0072ff;
-        color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .auth-container button:hover, .input-container button:hover {
-        background-color: #00c6ff;
-        transform: translateY(-4px);
-    }
-
-    .auth-container button:active, .input-container button:active {
-        transform: translateY(2px);
-    }
-
-    .messages {
-        background-color: #34495e;
-        padding: 20px;
-        height: 300px;
-        overflow-y: auto;
-        border-radius: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-    }
-
-    .message {
-        padding: 14px;
-        margin: 12px 0;
-        background-color: #444;
-        border-radius: 12px;
-        font-size: 16px;
-        word-wrap: break-word;
+@keyframes fadeIn {
+    from {
         opacity: 0;
-        animation: slideIn 0.5s ease-out forwards;
     }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
+    to {
+        opacity: 1;
     }
+}
 
-    .message .sender {
-        font-weight: bold;
-        color: #00c6ff;
+.message {
+    margin-bottom: 15px;
+    padding: 12px;
+    background-color: #34495e;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
     }
-
-    .input-container {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
+}
 
-    .input-container input {
-        width: 80%;
-        border-radius: 12px;
-        font-size: 16px;
-        background-color: #333;
-        border: 2px solid #444;
-        padding: 14px;
-        margin-right: 10px;
-        transition: transform 0.2s ease, box-shadow 0.2s ease-in-out;
-    }
+.sender {
+    font-weight: bold;
+    color: #00c6ff;
+}
 
-    .input-container input:focus {
-        transform: scale(1.05);
-        box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
-    }
+#message-input {
+    display: flex;
+    padding: 15px;
+    background-color: #34495e;
+    border-top: 1px solid #7f8c8d;
+}
 
-    .input-container button {
-        width: 15%;
-        background-color: #00c6ff;
-        color: white;
-        font-size: 16px;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: background-color 0.3s ease-in-out, transform 0.2s ease;
-    }
+#message-input input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #7f8c8d;
+    border-radius: 25px;
+    margin-right: 12px;
+    font-size: 16px;
+    background-color: #f4f6f7;
+    color: #2c3e50;
+    transition: all 0.3s ease-in-out;
+}
 
-    .input-container button:hover {
-        background-color: #0072ff;
-        transform: translateY(-4px);
-    }
+#message-input input:focus {
+    border-color: #00c6ff;
+    box-shadow: 0 0 8px rgba(0, 198, 255, 0.7);
+    transform: scale(1.05);
+}
 
-    .input-container button:active {
-        transform: translateY(2px);
-    }
+#message-input button {
+    padding: 12px 25px;
+    border: none;
+    background-color: #00c6ff;
+    color: white;
+    font-size: 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
 
-    .auth-container p {
-        font-size: 14px;
-        color: #f1f1f1;
-        text-align: center;
-        transition: color 0.3s ease-in-out;
-    }
+#message-input button:hover {
+    background-color: #0072ff;
+    transform: translateY(-4px);
+}
 
-    .auth-container p a {
-        color: #00c6ff;
-        text-decoration: none;
-        transition: color 0.3s ease-in-out;
-    }
-
-    .auth-container p a:hover {
-        color: #0072ff;
-        text-decoration: underline;
-    }
-</style>
-
+#message-input button:active {
+    transform: translateY(2px);
+}
+    </style>
 </head>
 <body>
-    <div id="chat-container" class="chat-container" style="display: none;">
-        <h2>SlyChat</h2>
-        <div id="messages" class="messages"></div>
-        <div class="input-container">
-            <input type="text" id="messageInput" placeholder="Type a message" disabled>
-            <button onclick="sendMessage()" disabled>Send</button>
-        </div>
-        <button onclick="signOut()">Sign out</button>
-    </div>
-<div id="auth-container" class="auth-container">
-        <div id="register-form" style="display: none;">
-            <h2>Register</h2>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
-            <input type="text" id="username" placeholder="Username (for registration)">
-            <button onclick="register()">Register</button>
-            <p id="auth-message"></p>
-            <p class="auth-toggle" onclick="toggleAuthForm('login')">Already have an account? Login</p>
-        </div>
-
-        <div id="login-form">
-            <h2>Login</h2>
-            <input type="email" id="login-email" placeholder="Email">
-            <input type="password" id="login-password" placeholder="Password">
-            <button onclick="login()">Login</button>
-            <p id="login-message"></p>
-            <p class="auth-toggle" onclick="toggleAuthForm('register')">Don't have an account? Register</p>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <div id="message-input">
+            <input type="text" id="message" placeholder="Enter your message">
+            <button onclick="sendMessage()">Send</button>
         </div>
     </div>
-
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    <script type="module">
-        import { initializeApp } from 'firebase/app';
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut as firebaseSignOut } from 'firebase/auth';
-        import { getDatabase, ref, set, onValue, remove } from 'firebase/database';
-
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-database.js"></script>
+    <script>
+        // Firebase konfiguracija
         const firebaseConfig = {
             apiKey: "AIzaSyA2l2SEcXPrLGpSOiTyyC55l35OMln1VUM",
             authDomain: "slychat-e0a59.firebaseapp.com",
@@ -285,177 +153,99 @@
             measurementId: "G-52CMK3FJYW"
         };
 
-        const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-let isOwner = false;
+        // Inicializacija Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const ownerEmail = "owner@example.com"; // Lastnikov email
 
-auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById('chat-container').style.display = 'block';
-        document.getElementById('auth-container').style.display = 'none';
-        const username = user.displayName;
-        if (user.email === "denis.robinek76@gmail.com") { // Owner check
-            isOwner = true;
+        // Pošlji sporočilo
+        function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const message = messageInput.value.trim();
+            const user = auth.currentUser;
+
+            if (message && user) {
+                db.ref('messages').push({
+                    username: user.displayName,
+                    message: message
+                });
+                messageInput.value = '';
+            }
         }
-        document.getElementById('messageInput').disabled = false;
-        document.querySelector('.input-container button').disabled = false;
-        listenForMessages();
-    } else {
-        document.getElementById('chat-container').style.display = 'none';
-        document.getElementById('auth-container').style.display = 'block';
-    }
-});
 
-// Funkcija za preklop obrazcev
-function toggleAuthForm(form) {
-    if (form === 'register') {
-        document.getElementById('register-form').style.display = "block";
-        document.getElementById('login-form').style.display = "none";
-    } else {
-        document.getElementById('login-form').style.display = "block";
-        document.getElementById('register-form').style.display = "none";
-    }
-}
-
-// Funkcija za registracijo
-function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const username = document.getElementById('username').value;
-
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            const user = userCredential.user;
-            user.updateProfile({
-                displayName: username
-            }).then(() => {
-                document.getElementById('auth-message').innerText = "Registered successfully!";
-                toggleAuthForm('login');
-            }).catch((error) => {
-                document.getElementById('auth-message').innerText = "Error updating profile: " + error.message;
-            });
-        })
-        .catch((error) => {
-            document.getElementById('auth-message').innerText = "Error: " + error.message;
-        });
-}
-
-// Funkcija za prijavo
-function login() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-            document.getElementById('login-message').innerText = "Logged in successfully!";
-            document.getElementById('chat-container').style.display = 'block';
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('messageInput').disabled = false;
-            document.querySelector('.input-container button').disabled = false;
-            listenForMessages();
-        })
-        .catch((error) => {
-            document.getElementById('login-message').innerText = "Error: " + error.message;
-        });
-}
-
-function sendMessage() {
-    const message = document.getElementById('messageInput').value;
-    const username = auth.currentUser.displayName;
-    const messageRef = ref(db, 'messages/' + Date.now());
-
-    set(messageRef, {
-        username: username,
-        message: message
-    });
-
-    document.getElementById('messageInput').value = ''; 
-}
-
-function listenForMessages() {
-    const messagesRef = ref(db, 'messages');
-    onValue(messagesRef, (snapshot) => {
-        const data = snapshot.val();
+        // Poslušaj za nova sporočila
         const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML = '';
+        db.ref('messages').on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<span class="sender">${data.username}:</span> ${handleMention(data.message)}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
 
-        for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-                const message = data[key];
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-                messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
-                messagesDiv.appendChild(messageDiv);
+        // Funkcije za administrativne ukaze
+        function adminCommands(command) {
+            const [cmd, ...args] = command.split('@');
+            const isOwner = auth.currentUser && auth.currentUser.email === ownerEmail;
 
-                // Owner view: add owner-specific message
-                if (isOwner && message.username !== 'owner') {
-                    const ownerMessageDiv = document.createElement('div');
-                    ownerMessageDiv.classList.add('message');
-                    ownerMessageDiv.innerHTML = `<span class="sender">Owner:</span> Responding to message: ${message.message}`;
-                    messagesDiv.appendChild(ownerMessageDiv);
-                }
+            if (!isOwner) {
+                alert("Only the owner can use these commands.");
+                return;
+            }
+
+            if (cmd === '/slyclean') {
+                db.ref('messages').remove().then(() => {
+                    messagesDiv.innerHTML = '';
+                    alert("All messages cleared!");
+                });
+            }
+
+            if (cmd === '/slycolor' && args.length === 2) {
+                const username = args[0].trim();
+                const color = args[1].trim();
+
+                db.ref('messages').once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    messagesDiv.innerHTML = '';
+                    for (const key in data) {
+                        const message = data[key];
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message';
+
+                        if (message.username === username) {
+                            messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
+                        } else {
+                            messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
+                        }
+
+                        messagesDiv.appendChild(messageDiv);
+                    }
+                });
+            }
+
+            if (cmd === '/slypause') {
+                document.getElementById('chat-container').style.display = 'none';
+                setTimeout(() => {
+                    document.getElementById('chat-container').style.display = 'block';
+                }, 3600000);
             }
         }
-    });
-}
 
-function signOut() {
-    firebaseSignOut(auth).then(() => {
-        document.getElementById('chat-container').style.display = 'none';
-        document.getElementById('auth-container').style.display = 'block';
-    });
-}
-
-function adminCommands(command) {
-    const [cmd, ...args] = command.split('@');
-
-    if (!isOwner) {
-        alert("Only the owner can use these commands.");
-        return;
-    }
-
-    if (cmd === '/slyclean') {
-        const messagesRef = ref(db, 'messages');
-        remove(messagesRef); // Delete all messages
-    }
-
-    if (cmd === '/slycolor' && args.length === 2) {
-        const username = args[0];
-        const color = args[1];
-        const messagesRef = ref(db, 'messages');
-        onValue(messagesRef, (snapshot) => {
-            const data = snapshot.val();
-            for (const key in data) {
-                if (data.hasOwnProperty(key)) {
-                    const message = data[key];
-                    if (message.username === username) {
-                        const messageDiv = document.createElement('div');
-                        messageDiv.classList.add('message');
-                        messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
-                        document.getElementById('messages').appendChild(messageDiv);
-                    }
-                }
+        // Funkcija za obravnavo omemb
+        function handleMention(message) {
+            const userName = auth.currentUser ? auth.currentUser.displayName : null;
+            if (userName && message.includes('@' + userName)) {
+                return `<b>You were mentioned:</b> ${message}`;
             }
+            return message;
+        }
+
+        // Simuliraj prijavo uporabnika
+        auth.signInAnonymously().then(() => {
+            auth.currentUser.displayName = "User" + Math.floor(Math.random() * 1000);
         });
-    }
-
-    if (cmd === '/slypause') {
-        document.getElementById('chat-container').style.display = 'none';
-        setTimeout(() => {
-            document.getElementById('chat-container').style.display = 'block';
-        }, 3600000); // Chat will be unavailable for one hour
-    }
-}
-
-// Handle @mention visibility
-function handleMention(message) {
-    const userName = auth.currentUser.displayName;
-    if (message.includes('@' + userName)) {
-        return message; // only show if it's the user being mentioned
-    }
-    return message; // show for everyone
-}
     </script>
 </body>
 </html>
