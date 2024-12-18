@@ -87,24 +87,52 @@
 
     <script>
         function toggleAuthForm(form) {
-            if (form === 'register') {
-                document.getElementById('register-form').style.display = 'block';
-                document.getElementById('login-form').style.display = 'none';
-            } else {
-                document.getElementById('register-form').style.display = 'none';
-                document.getElementById('login-form').style.display = 'block';
-            }
-        }
+    if (form === 'register') {
+        document.getElementById('register-form').style.display = 'block';
+        document.getElementById('login-form').style.display = 'none';
+    } else {
+        document.getElementById('register-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+    }
+}
 
-        function register() {
-            alert("Registered successfully!");
-            toggleAuthForm('login');
-        }
+function register() {
+    // Pridobi vrednosti iz vnosnih polj
+    var username = document.getElementById('register-username').value;
+    var password = document.getElementById('register-password').value;
+    var confirmPassword = document.getElementById('confirm-password').value;
 
-        function login() {
-            alert("Logged in successfully!");
-            window.location.href = "slychat.html";
-        }
+    // Preveri, če so polja pravilno izpolnjena
+    if (username === "" || password === "" || confirmPassword === "") {
+        alert("Vsa polja morajo biti izpolnjena!");
+        return; // Prepreči nadaljevanje, dokler niso vsa polja izpolnjena
+    }
+
+    // Preveri, če se geslo in potrjeno geslo ujemata
+    if (password !== confirmPassword) {
+        alert("Geslo in potrjeno geslo se ne ujemata!");
+        return;
+    }
+
+    alert("Registered successfully!");
+    toggleAuthForm('login');
+}
+
+function login() {
+    // Pridobi vrednosti iz vnosnih polj
+    var username = document.getElementById('username').value;
+    var password = document.getElementById('password').value;
+
+    // Preveri, če so polja pravilno izpolnjena
+    if (username === "" || password === "") {
+        alert("Vse vrstice morajo biti izpolnjene!");
+        return; // Prepreči nadaljevanje, dokler niso vsa polja izpolnjena
+    }
+
+    alert("Logged in successfully!");
+    window.location.href = "slychat.html";
+}
+
     </script>
 </body>
 </html>
