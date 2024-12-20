@@ -130,7 +130,7 @@
     </style>
 </head>
 <body>
-    <div id="chat-container" style="display: none;">
+    <div id="chat-container">
         <div id="messages"></div>
         <div id="message-input">
             <input type="text" id="message" placeholder="Enter your message">
@@ -157,7 +157,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        const ownerEmail = "denis.robinek76@gmail.com"; // Lastnikov email
+        const ownerEmail = "owner@example.com"; // Lastnikov email
 
         // Pošlji sporočilo
         function sendMessage() {
@@ -180,7 +180,7 @@
             const data = snapshot.val();
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
-            messageDiv.innerHTML = `<span class="sender">${data.username}:</span> ${handleMention(data.message)}`;
+            messageDiv.innerHTML = <span class="sender">${data.username}:</span> ${handleMention(data.message)};
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         });
@@ -215,9 +215,9 @@
                         messageDiv.className = 'message';
 
                         if (message.username === username) {
-                            messageDiv.innerHTML = `<span class="sender" style="color: ${color};">${message.username}:</span> ${message.message}`;
+                            messageDiv.innerHTML = <span class="sender" style="color: ${color};">${message.username}:</span> ${message.message};
                         } else {
-                            messageDiv.innerHTML = `<span class="sender">${message.username}:</span> ${message.message}`;
+                            messageDiv.innerHTML = <span class="sender">${message.username}:</span> ${message.message};
                         }
 
                         messagesDiv.appendChild(messageDiv);
@@ -237,21 +237,14 @@
         function handleMention(message) {
             const userName = auth.currentUser ? auth.currentUser.displayName : null;
             if (userName && message.includes('@' + userName)) {
-                return `<b>You were mentioned:</b> ${message}`;
+                return <b>You were mentioned:</b> ${message};
             }
             return message;
         }
 
-        // Prijava uporabnika preko Google
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                document.getElementById('chat-container').style.display = 'block';
-            } else {
-                auth.signInWithPopup(provider).catch((error) => {
-                    console.error("Authentication failed: ", error);
-                });
-            }
+        // Simuliraj prijavo uporabnika
+        auth.signInAnonymously().then(() => {
+            auth.currentUser.displayName = "User" + Math.floor(Math.random() * 1000);
         });
     </script>
 </body>
