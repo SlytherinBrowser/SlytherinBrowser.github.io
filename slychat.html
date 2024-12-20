@@ -130,7 +130,7 @@
     </style>
 </head>
 <body>
-    <div id="chat-container">
+    <div id="chat-container" style="display: none;">
         <div id="messages"></div>
         <div id="message-input">
             <input type="text" id="message" placeholder="Enter your message">
@@ -157,7 +157,7 @@
         const app = firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-        const ownerEmail = "owner@example.com"; // Lastnikov email
+        const ownerEmail = "denis.robinek76@gmail.com"; // Lastnikov email
 
         // Pošlji sporočilo
         function sendMessage() {
@@ -242,9 +242,16 @@
             return message;
         }
 
-        // Simuliraj prijavo uporabnika
-        auth.signInAnonymously().then(() => {
-            auth.currentUser.displayName = "User" + Math.floor(Math.random() * 1000);
+        // Prijava uporabnika preko Google
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('chat-container').style.display = 'block';
+            } else {
+                auth.signInWithPopup(provider).catch((error) => {
+                    console.error("Authentication failed: ", error);
+                });
+            }
         });
     </script>
 </body>
