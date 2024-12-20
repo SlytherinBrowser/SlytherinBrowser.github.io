@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iskalna vrstica z iFrame</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom, #74ebd5, #acb6e5);
+        }
+
+        #searchForm {
+            width: 50%;
+            background: radial-gradient(circle, #3498db, #2980b9);
+            border: 2px solid #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #search {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            border: 2px solid #fff;
+            padding: 20px;
+            font-size: 18px;
+            width: 90%;
+            height: 74px;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+        }
+
+        #search:focus {
+            border-color: #007bff;
+            background: linear-gradient(to right, #e74c3c, #2980b9);
+        }
+
+        iframe {
+            width: 80%;
+            height: 70vh;
+            border: none;
+            margin-top: 20px;
+            display: none;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #searchForm.active {
+            transform: translateY(-50px);
+        }
+
+        iframe.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <form id="searchForm">
+        <label for="search">Vnesi besedo:</label>
+        <input type="text" id="search" placeholder="Napiši ključne besede...">
+    </form>
+    <iframe id="resultFrame"></iframe>
+
+    <script>
+        const searchInput = document.getElementById('search');
+        const searchForm = document.getElementById('searchForm');
+        const resultFrame = document.getElementById('resultFrame');
+
+        const links = {
+            "novice": "https://www.rtvslo.si",
+            "vreme": "https://www.arso.gov.si",
+            "šport": "https://www.sportklub.si",
+            "glasba": "https://www.spotify.com"
+        };
+
+        searchInput.addEventListener('input', () => {
+            const value = searchInput.value.toLowerCase();
+            if (links[value]) {
+                searchForm.classList.add('active');
+                resultFrame.src = links[value];
+                resultFrame.classList.add('active');
+            } else {
+                searchForm.classList.remove('active');
+                resultFrame.src = '';
+                resultFrame.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
