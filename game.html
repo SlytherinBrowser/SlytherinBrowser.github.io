@@ -70,6 +70,44 @@
         iframe.active {
             display: block;
         }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 400px;
+        }
+
+        #popup ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #popup li {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+
+        #popupButton {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #popupButton:hover {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -78,11 +116,41 @@
         <input type="text" id="search" placeholder="Napiši ključne besede...">
     </form>
     <iframe id="resultFrame"></iframe>
+    <button id="popupButton">Pokaži seznam ključnih besed</button>
+    <div id="popup">
+        <h3>Seznam ključnih besed:</h3>
+        <ul>
+            <li>agar</li>
+            <li>slither</li>
+            <li>diep</li>
+            <li>paper</li>
+            <li>wormax</li>
+            <li>wormszone</li>
+            <li>wormate</li>
+            <li>littlebigsnake</li>
+            <li>wormaxio</li>
+            <li>wormszoneio</li>
+            <li>slithercraft</li>
+            <li>moomoo</li>
+            <li>zombsroyale</li>
+            <li>krunker</li>
+            <li>lordz.io</li>
+            <li>warlordsio</li>
+            <li>wasteland</li>
+            <li>wing.io</li>
+            <li>tank.io</li>
+            <li>flyordie</li>
+            <li>typeracer</li>
+        </ul>
+        <button onclick="closePopup()">Zapri</button>
+    </div>
 
     <script>
         const searchInput = document.getElementById('search');
         const searchForm = document.getElementById('searchForm');
         const resultFrame = document.getElementById('resultFrame');
+        const popupButton = document.getElementById('popupButton');
+        const popup = document.getElementById('popup');
 
         const links = {
             "agar": "https://agar.io",
@@ -120,6 +188,14 @@
                 resultFrame.classList.remove('active');
             }
         });
+
+        popupButton.addEventListener('click', () => {
+            popup.style.display = 'block';
+        });
+
+        function closePopup() {
+            popup.style.display = 'none';
+        }
     </script>
 </body>
 </html>
