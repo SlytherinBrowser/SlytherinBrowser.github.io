@@ -5,131 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gameportal</title>
     <style>
-      body {
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background: linear-gradient(to bottom, #68e5d8, #b1c6f5);
-    color: #333;
-}
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom, #68e5d8, #b1c6f5);
+            color: #333;
+        }
 
-#searchForm {
-    width: 50%;
-    background: radial-gradient(circle, #3fa9ff, #2473b2);
-    border: 2px solid #fff;
-    border-radius: 20px;
-    padding: 25px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-    transition: transform 0.5s ease-in-out, box-shadow 0.3s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+        #searchForm {
+            width: 50%;
+            background: radial-gradient(circle, #3fa9ff, #2473b2);
+            border: 2px solid #fff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            transition: transform 0.5s ease-in-out, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-#searchForm:hover {
-    box-shadow: 0 6px 40px rgba(0, 0, 0, 0.6);
-}
+        #searchForm:hover {
+            box-shadow: 0 6px 40px rgba(0, 0, 0, 0.6);
+        }
 
-label {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 16px;
-    color: #fff;
-}
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #fff;
+        }
 
-#search {
-    background: linear-gradient(to right, #3fa9ff, #2473b2);
-    border: 2px solid #fff;
-    padding: 20px;
-    font-size: 18px;
-    width: 90%;
-    height: 74px;
-    border-radius: 10px;
-    color: #fff;
-    outline: none;
-    transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s, box-shadow 0.3s;
-}
+        #search {
+            background: linear-gradient(to right, #3fa9ff, #2473b2);
+            border: 2px solid #fff;
+            padding: 20px;
+            font-size: 18px;
+            width: 90%;
+            height: 74px;
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s, box-shadow 0.3s;
+        }
 
-#search:focus {
-    border-color: #007bff;
-    background: linear-gradient(to right, #e74c3c, #2473b2);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-}
+        #search:focus {
+            border-color: #007bff;
+            background: linear-gradient(to right, #e74c3c, #2473b2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+        }
 
-iframe {
-    width: 100%;
-    height: 90%;
-    border: none;
-    margin-top: 20px;
-    display: none;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-}
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            margin-top: 20px;
+            display: none;
+            border-radius: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
 
-#searchForm.active {
-    transform: translateY(-50px);
-}
+        iframe.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-iframe.active {
-    display: block;
-}
+        #searchForm.active {
+            transform: translateY(-50px);
+        }
 
-#popup {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    width: 80%;
-    max-width: 400px;
-    animation: fadeIn 0.3s ease-in-out;
-}
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 400px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
-#popup ul {
-    list-style-type: none;
-    padding: 0;
-}
+        #popup ul {
+            list-style-type: none;
+            padding: 0;
+        }
 
-#popup li {
-    margin: 10px 0;
-    font-size: 18px;
-    color: #333;
-}
+        #popup li {
+            margin: 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
 
-#popupButton {
-    width: 50%;
-    background-color: #3fa9ff;
-    color: #fff;
-    padding: 12px 25px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s ease-in-out;
-}
+        #popupButton {
+            width: 50%;
+            background-color: #3fa9ff;
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s ease-in-out;
+        }
 
-#popupButton:hover {
-    background-color: #2473b2;
-    transform: scale(1.05);
-}
+        #popupButton:hover {
+            background-color: #2473b2;
+            transform: scale(1.05);
+        }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translate(-50%, -60%);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-    }
-}
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
     </style>
 </head>
 <body>
