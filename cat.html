@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maček lovi miško</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 80vw;
+            height: 80vh;
+            background-color: #ffffff;
+            border: 2px solid #000;
+        }
+
+        #cat {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: orange;
+            border-radius: 50%;
+        }
+
+        #mouse {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: gray;
+            border-radius: 50%;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            border-radius: 10%;
+        }
+
+        #timer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            color: #000;
+        }
+
+        .gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="cat"></div>
+        <div id="mouse"></div>
+        <div id="timer">Preostali čas: <span id="time">120</span> sekund</div>
+    </div>
+    <div id="gameOver" class="gameOver" style="display: none;">Konec igre! Miška se je zaletela v oviro!</div>
+    <script>
+        let gameArea = document.getElementById('gameArea');
+        let cat = document.getElementById('cat');
+        let mouse = document.getElementById('mouse');
+        let timeDisplay = document.getElementById('time');
+        let gameOver = document.getElementById('gameOver');
+        
+        let catSpeed = 40; // Hitrost mačka
+        let mouseSpeed = 0.01; // Hitrost miške
+        let gameTime = 120; // Začetni čas (120 sekund)
+        let levelTime = 120; // Začetni čas za stopnjo (2 minuti)
+        let gameInterval, catMoveInterval;
+        let obstacles = [];
+
+        // Nastavite začetne položaje
+        function setInitialPositions() {
+            cat.style.left = Math.random() * (gameArea.clientWidth - 50) + 'px';
+            cat.style.top = Math.random() * (gameArea.clientHeight - 50) + 'px';
+            mouse.style.left = Math.random() * (gameArea.clientWidth - 30) + 'px';
+            mouse.style.top = Math.random() * (gameArea.clientHeight - 30) + 'px';
+            createObstacles();
+        }
+
+        // Ustvari ovire na naključnih mestih
+        function createObstacles() {
+            // Najprej izbrišemo vse stare ovire
+            obstacles.forEach(obstacle => {
+                obstacle.remove();
+            });
+            obstacles = [];
+            
+            // Ustvari 3 ovire na naključnih mestih
+            for (let i = 0; i < 3; i++) {
+                let obstacle = document.createElement('div');
+                obstacle.classList.add('obstacle');
+                obstacle.style.left = Math.random() * (gameArea.clientWidth - 50) + 'px';
+                obstacle.style.top = Math.random() * (gameArea.clientHeight - 50) + 'px';
+                gameArea.appendChild(obstacle);
+                obstacles.push(obstacle);
+            }
+        }
+
+        // Preverite, če se maček zaleti v oviro
+        function checkCollision() {
+            let catRect = cat.getBoundingClientRect();
+            for (let obstacle of obstacles) {
+                let obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    catRect.left < obstacleRect.right &&
+                    catRect.right > obstacleRect.left &&
+                    catRect.top < obstacleRect.bottom &&
+                    catRect.bottom > obstacleRect.top
+                ) {
+                    gameOver.style.display = 'block';
+                    clearInterval(gameInterval);
+                    clearInterval(catMoveInterval);
+                    alert("Konec igre! Maček se je zaletel v oviro!");
+                    return true; // Konec igre zaradi trka z oviro
+                }
+            }
+            return false;
+        }
+
+        // Preverite, če se miška zaleti v oviro
+        function checkMouseCollision() {
+            let mouseRect = mouse.getBoundingClientRect();
+            for (let obstacle of obstacles) {
+                let obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    mouseRect.left < obstacleRect.right &&
+                    mouseRect.right > obstacleRect.left &&
+                    mouseRect.top < obstacleRect.bottom &&
+                    mouseRect.bottom > obstacleRect.top
+                ) {
+                    gameOver.style.display = 'block';
+                    clearInterval(gameInterval);
+                    clearInterval(catMoveInterval);
+                    alert("Konec igre! Miška se je zaletela v oviro!");
+                    return true; // Konec igre zaradi trka z oviro
+                }
+            }
+            return false;
+        }
+
+        // Premik mačka
+        function moveCat() {
+            let catX = parseFloat(cat.style.left);
+            let catY = parseFloat(cat.style.top);
+            let mouseX = parseFloat(mouse.style.left);
+            let mouseY = parseFloat(mouse.style.top);
+
+            // Izračunajte razdaljo med mačkom in miško
+            let dx = mouseX - catX;
+            let dy = mouseY - catY;
+            let angle = Math.atan2(dy, dx);
+
+            // Pametno premikanje mačka: izogibanje oviram
+            let newCatX = catX + Math.cos(angle) * catSpeed;
+            let newCatY = catY + Math.sin(angle) * catSpeed;
+
+            // Preveri, če bo maček trčil v oviro
+            let catRect = { left: newCatX, top: newCatY, right: newCatX + 50, bottom: newCatY + 50 };
+            for (let obstacle of obstacles) {
+                let obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    catRect.left < obstacleRect.right &&
+                    catRect.right > obstacleRect.left &&
+                    catRect.top < obstacleRect.bottom &&
+                    catRect.bottom > obstacleRect.top
+                ) {
+                    // Če bi trčil v oviro, izberi naključni kot za premik
+                    angle = Math.random() * 2 * Math.PI;
+                    newCatX = catX + Math.cos(angle) * catSpeed;
+                    newCatY = catY + Math.sin(angle) * catSpeed;
+                    break;
+                }
+            }
+
+            cat.style.left = newCatX + 'px';
+            cat.style.top = newCatY + 'px';
+
+            // Preveri, če je maček ujel miško
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 30) {
+                gameOver.style.display = 'block';
+                clearInterval(gameInterval);
+                clearInterval(catMoveInterval);
+                alert("Konec igre! Maček te je ujel!");
+            }
+        }
+
+        // Premik miške s pomočjo premikanja računalniške miške
+        gameArea.addEventListener('mousemove', (e) => {
+            mouse.style.left = e.clientX - gameArea.offsetLeft - 15 + 'px';
+            mouse.style.top = e.clientY - gameArea.offsetTop - 15 + 'px';
+
+            // Preverite, ali se miška zaleti v oviro
+            if (checkMouseCollision()) {
+                return;
+            }
+        });
+
+        // Posodobi timer
+        function updateTimer() {
+            gameTime--;
+            timeDisplay.textContent = gameTime;
+
+            if (gameTime <= 0) {
+                clearInterval(gameInterval);
+                clearInterval(catMoveInterval);
+                alert("Zmagal si! Naslednja stopnja!");
+                gameTime = 180; // 3 minute za naslednjo stopnjo
+                catSpeed = 8; // Povečanje hitrosti mačka za naslednjo stopnjo
+                levelTime = 180; // Nastavitev časa na 3 minute za naslednjo stopnjo
+                setInitialPositions();
+                startGame();
+            }
+        }
+
+        // Začetek igre
+        function startGame() {
+            setInitialPositions();
+            gameInterval = setInterval(updateTimer, 1000);
+            catMoveInterval = setInterval(moveCat, 70); // Pospešitev premikanja mačka
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
