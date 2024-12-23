@@ -237,6 +237,70 @@
                 searchForm.classList.add('shrunk'); // Hide search bar when iframe is maximized
             }
         });
+         function getTimePlayedToday() {
+            const today = new Date().toISOString().split('T')[0];
+            const data = JSON.parse(localStorage.getItem('playTime')) || {};
+            return data[today] || 0;
+        }
+
+        function updateTimePlayed(duration) {
+            const today = new Date().toISOString().split('T')[0];
+            const data = JSON.parse(localStorage.getItem('playTime')) || {};
+            data[today] = (data[today] || 0) + duration;
+            localStorage.setItem('playTime', JSON.stringify(data));
+        }
+
+        function getTotalTimePlayed() {
+            const data = JSON.parse(localStorage.getItem('playTime')) || {};
+            return Object.values(data).reduce((total, time) => total + time, 0);
+        }
+
+        function enforceChildMode() {
+            if (getTimePlayedToday() >= 3 * 60 * 60 * 1000) {
+                alert('Dosežen je dnevni časovni limit igranja (3 ure).');
+                resultFrame.classList.add('hidden');
+            }
+        }
+
+        searchInput.addEventListener('input', () => {
+            const value = searchInput.value.toLowerCase();
+            if (links[value]) {
+                resultFrame.src = links[value];
+                resultFrame.classList.remove('hidden');
+                toggleButton.disabled = false;
+                startTime = Date.now();
+            } else {
+                resultFrame.classList.add('hidden');
+                toggleButton.disabled = true;
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const command = searchInput.value.toLowerCase();
+                if (command === 'todaytime') {
+                    alert(`Danes si igral ${Math.floor(getTimePlayedToday() / 60000)} minut.`);
+                } else if (command === 'time') {
+                    alert(`Skupno si igral ${Math.floor(getTotalTimePlayed() / 60000)} minut.`);
+                } else if (command === 'child') {
+                    isChildMode = true;
+                    enforceChildMode();
+                } else if (command === '18') {
+                    isChildMode = false;
+                    alert('Preklopljeno na način brez omejitev.');
+                }
+            }
+        });
+
+        setInterval(() => {
+            if (startTime) {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                updateTimePlayed(elapsed);
+                startTime = now;
+                if (isChildMode) enforceChildMode();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
