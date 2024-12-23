@@ -21,6 +21,7 @@
             height: 80vh;
             background-color: #ffffff;
             border: 2px solid #000;
+            cursor: pointer;
         }
 
         #cat {
@@ -85,6 +86,7 @@
         let levelTime = 120; // Začetni čas za stopnjo (2 minuti)
         let gameInterval, catMoveInterval;
         let obstacles = [];
+        let gameStarted = false;
 
         // Nastavite začetne položaje
         function setInitialPositions() {
@@ -204,12 +206,14 @@
 
         // Premik miške s pomočjo premikanja računalniške miške
         gameArea.addEventListener('mousemove', (e) => {
-            mouse.style.left = e.clientX - gameArea.offsetLeft - 15 + 'px';
-            mouse.style.top = e.clientY - gameArea.offsetTop - 15 + 'px';
+            if (gameStarted) {
+                mouse.style.left = e.clientX - gameArea.offsetLeft - 15 + 'px';
+                mouse.style.top = e.clientY - gameArea.offsetTop - 15 + 'px';
 
-            // Preverite, ali se miška zaleti v oviro
-            if (checkMouseCollision()) {
-                return;
+                // Preverite, ali se miška zaleti v oviro
+                if (checkMouseCollision()) {
+                    return;
+                }
             }
         });
 
@@ -230,14 +234,15 @@
             }
         }
 
-        // Začetek igre
-        function startGame() {
-            setInitialPositions();
-            gameInterval = setInterval(updateTimer, 1000);
-            catMoveInterval = setInterval(moveCat, 70); // Pospešitev premikanja mačka
-        }
-
-        startGame();
+        // Začetek igre ob kliku
+        gameArea.addEventListener('click', () => {
+            if (!gameStarted) {
+                gameStarted = true;
+                setInitialPositions();
+                gameInterval = setInterval(updateTimer, 1000);
+                catMoveInterval = setInterval(moveCat, 70); // Pospešitev premikanja mačka
+            }
+        });
     </script>
 </body>
 </html>
