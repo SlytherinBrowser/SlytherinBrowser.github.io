@@ -711,7 +711,6 @@ let imageFile = null;
         "https://www.instagram.com/: "insta.png",
         "https://www.tiktok.com/": "tik.png",
     };
- let url = '';
 
     // Prikaz modalnega okna ob kliku na gumb
     const modal = document.getElementById('myModal');
@@ -742,15 +741,24 @@ let imageFile = null;
         }
     }
 
-    // Funkcija za obdelavo URL povezave
-    function handleUrl(event) {
-        url = event.target.value;
-        if (imageFile && url) {
-            addLinkWithImage(url, imageFile);
-            // Zapri modalno okno po dodajanju
-            modal.style.display = 'none';
+     // Funkcija za obdelavo URL povezave
+    document.getElementById('urlInput').addEventListener('change', function(event) {
+        const url = event.target.value;
+
+        if (predefinedIcons[url]) {
+            // Če je URL vnaprej določen, uporabimo prednastavljeno sliko
+            addLinkWithImage(url, predefinedIcons[url]);
+        } else if (imageFile) {
+            // Če ni prednastavljen, uporabimo naloženo sliko
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                addLinkWithImage(url, e.target.result);
+            };
+            reader.readAsDataURL(imageFile);
         }
-    }
+
+        modal.style.display = 'none';
+    });
 
     // Funkcija za dodajanje ikone z URL povezavo
     function addLinkWithImage(url, imageFile) {
