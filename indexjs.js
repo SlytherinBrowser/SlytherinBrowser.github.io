@@ -697,3 +697,98 @@ function applyMode(mode) {
 
     localStorage.setItem("mode", mode);
 }
+
+
+
+
+
+
+
+ let imageFile = null;
+    let url = '';
+
+    // Prikaz modalnega okna ob kliku na gumb
+    const modal = document.getElementById('myModal');
+    const addIconButton = document.getElementById('addIconButton');
+    const closeButton = document.getElementsByClassName('close')[0];
+
+    addIconButton.addEventListener('click', function() {
+        modal.style.display = 'block';
+    });
+
+    // Zapri modalno okno
+    closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    // Zapri modalno okno, če uporabnik klikne izven modalnega okna
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Funkcija za obdelavo slike
+    function handleImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            imageFile = file;
+        }
+    }
+
+    // Funkcija za obdelavo URL povezave
+    function handleUrl(event) {
+        url = event.target.value;
+        if (imageFile && url) {
+            addLinkWithImage(url, imageFile);
+            // Zapri modalno okno po dodajanju
+            modal.style.display = 'none';
+        }
+    }
+
+    // Funkcija za dodajanje ikone z URL povezavo
+    function addLinkWithImage(url, imageFile) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Ustvarimo novo povezavo (a element) z ikono
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.classList.add('icon');
+            link.style.backgroundImage = `url(${e.target.result})`;
+
+            // Dodamo ikono v dock
+            document.getElementById('dock').insertBefore(link, addIconButton);
+
+            // Shranimo ikono v localStorage
+            saveToLocalStorage(url, e.target.result);
+        };
+        
+        reader.readAsDataURL(imageFile);
+    }
+
+    // Funkcija za shranjevanje ikon v localStorage
+    function saveToLocalStorage(url, imageUrl) {
+        let icons = JSON.parse(localStorage.getItem('icons')) || [];
+        icons.push({ url: url, imageUrl: imageUrl });
+        localStorage.setItem('icons', JSON.stringify(icons));
+    }
+
+    // Funkcija za nalaganje ikon iz localStorage
+    function loadIconsFromLocalStorage() {
+        const icons = JSON.parse(localStorage.getItem('icons')) || [];
+        icons.forEach(icon => {
+            const link = document.createElement('a');
+            link.href = icon.url;
+            link.target = '_blank';
+            link.classList.add('icon');
+            link.style.backgroundImage = `url(${icon.imageUrl})`;
+            document.getElementById('dock').insertBefore(link, addIconButton);
+        });
+    }
+
+    // Naloži ikone ob nalaganju strani
+    window.onload = function() {
+        loadIconsFromLocalStorage();
+    };
