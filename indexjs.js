@@ -704,8 +704,13 @@ function applyMode(mode) {
 
 
 
- let imageFile = null;
-    let url = '';
+let imageFile = null;
+    const predefinedIcons = {
+        "https://web.snapchat.com/": "snap.png",
+        "https://sl-si.facebook.com/": "fb.png",
+        "https://www.instagram.com/: "insta.png",
+        "https://www.tiktok.com/": "tik.png",
+    };
 
     // Prikaz modalnega okna ob kliku na gumb
     const modal = document.getElementById('myModal');
