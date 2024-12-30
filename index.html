@@ -91,20 +91,15 @@
     <!-- Gumb za dodajanje novih ikon -->
     <button id="addIconButton">  +  </button>
 </div>
-<!-- Modalno okno -->
+!-- Modalno okno -->
 <div id="myModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>Dodaj Ikono</h2>
-        <input type="file" id="fileInput" accept="image/png, image/jpeg" onchange="handleImage(event)">
-        <input type="text" id="urlInput" placeholder="Vnesite URL" onchange="handleUrl(event)">
-        <div class="modal-actions">
-            <button id="saveButton" disabled>Shrani</button>
-            <button class="cancel" onclick="closeModal()">Prekliči</button>
-        </div>
+        <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)">
+        <input type="text" id="urlInput" placeholder="Vnesite URL" oninput="handleUrl(event)">
+        <button id="saveButton">Shrani</button>
     </div>
 </div>
-
 <!-- Pop-up element -->
 <div class="popup">
     <h2>Vnesite povezavo</h2>
