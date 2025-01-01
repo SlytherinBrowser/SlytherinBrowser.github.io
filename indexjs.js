@@ -278,7 +278,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         "Motivacija je ključ do uspeha in premagovanja ovir."
     ]
 };
- Je kaj napak?
 
 let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
 let history = {}; // Zgodovina odgovorov za vsako vprašanje
