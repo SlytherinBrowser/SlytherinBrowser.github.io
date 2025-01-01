@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
-let lastResponse = ""; // Shrani zadnji odgovor
+let history = {}; // Zgodovina odgovorov za vsako vprašanje
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
@@ -360,15 +360,26 @@ function getResponse(userInput) {
     }
 
     if (bestMatch) {
-        // Naključno izbira odgovor iz možnih odgovorov
+        // Preverimo zgodovino odgovorov za to vprašanje
+        if (!history[bestMatch]) {
+            history[bestMatch] = []; // Če še ni zgodovine, jo ustvarimo
+        }
+
         let randomIndex;
+        let response;
         do {
             randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
-        } while (botResponses[bestMatch][randomIndex] === lastResponse); // Preverimo, če je odgovor enak prejšnjemu
+            response = botResponses[bestMatch][randomIndex];
+        } while (history[bestMatch].includes(response)); // Preverimo, če je odgovor že bil uporabljen
 
-        const selectedResponse = botResponses[bestMatch][randomIndex];
-        lastResponse = selectedResponse; // Shrani izbran odgovor kot zadnji odgovor
-        return selectedResponse;
+        history[bestMatch].push(response); // Dodamo odgovor v zgodovino
+
+        // Omejimo zgodovino, da ne raste preveč
+        if (history[bestMatch].length > botResponses[bestMatch].length) {
+            history[bestMatch].shift(); // Odstranimo najstarejši odgovor
+        }
+
+        return response;
     } else {
         return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
     }
