@@ -704,93 +704,79 @@ function applyMode(mode) {
 
 
 
+
+
+
+// Prikaz modalnega okna
+const modal = document.getElementById('myModal');
+const addIconButton = document.getElementById('addIconButton');
+const closeButton = document.querySelector('.close');
+const saveButton = document.getElementById('saveButton');
+const fileInput = document.getElementById('fileInput');
+const urlInput = document.getElementById('urlInput');
+const dock = document.getElementById('dock');
+
 let imageFile = null;
 let url = '';
 
-// Prikaz modalnega okna ob kliku na gumb
-const modal = document.getElementById('myModal');
-const addIconButton = document.getElementById('addIconButton');
-const closeButton = document.getElementsByClassName('close')[0];
-
 addIconButton.addEventListener('click', function() {
-    modal.style.display = 'block';
+    modal.style.display = 'block'; // Prikaži modalno okno
 });
 
-// Zapri modalno okno
 closeButton.addEventListener('click', function() {
-    modal.style.display = 'none';
+    modal.style.display = 'none'; // Zapri modalno okno
 });
 
-// Zapri modalno okno, če uporabnik klikne izven modalnega okna
 window.addEventListener('click', function(event) {
     if (event.target === modal) {
-        modal.style.display = 'none';
+        modal.style.display = 'none'; // Zapri modalno okno, če klikneš zunaj njega
     }
 });
 
-// Funkcija za obdelavo slike
-function handleImage(event) {
+// Obdelava slike
+fileInput.addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (file) {
-        imageFile = file;
+        imageFile = file; // Shrani izbrano datoteko
     }
-}
+});
 
-// Funkcija za obdelavo URL povezave
-function handleUrl(event) {
-    url = event.target.value;
+// Obdelava URL-ja
+urlInput.addEventListener('input', function(event) {
+    url = event.target.value; // Shrani vneseni URL
+});
+
+// Shrani in dodaj ikono
+saveButton.addEventListener('click', function() {
     if (imageFile && url) {
-        addLinkWithImage(url, imageFile);
-        saveToLocalStorage(url, imageFile);
-        // Zapri modalno okno po dodajanju
-        modal.style.display = 'none';
+        addLinkWithImage(url, imageFile); // Dodaj novo ikono
+        modal.style.display = 'none'; // Zapri modalno okno po shranjevanju
+        resetModalInputs(); // Ponastavi vnosna polja
+    } else {
+        alert('Prosimo, izberite sliko in vnesite URL.');
     }
-}
+});
 
-// Funkcija za dodajanje ikone z URL povezavo
-function addLinkWithImage(url, imageFile, base64 = null) {
+function addLinkWithImage(url, imageFile) {
     const reader = new FileReader();
 
     reader.onload = function(e) {
-        const imageSrc = base64 || e.target.result;
-
-        // Ustvarimo novo povezavo (a element) z ikono
         const link = document.createElement('a');
         link.href = url;
         link.target = '_blank';
         link.classList.add('icon');
-        link.style.backgroundImage = `url(${imageSrc})`;
+        link.style.backgroundImage = `url(${e.target.result})`;
 
-        // Dodamo ikono v dock
-        document.getElementById('dock').insertBefore(link, addIconButton);
+        dock.appendChild(link); // Dodaj ikono v dock
     };
 
-    if (base64) {
-        // Če je podana osnova64, ne rabimo brati slike
-        reader.onload();
-    } else {
-        reader.readAsDataURL(imageFile);
-    }
-}
-
-// Funkcija za shranjevanje podatkov v localStorage
-function saveToLocalStorage(url, imageFile) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const links = JSON.parse(localStorage.getItem('dockLinks')) || [];
-        links.push({ url, image: e.target.result });
-        localStorage.setItem('dockLinks', JSON.stringify(links));
-    };
     reader.readAsDataURL(imageFile);
 }
 
-// Funkcija za nalaganje podatkov iz localStorage
-function loadFromLocalStorage() {
-    const links = JSON.parse(localStorage.getItem('dockLinks')) || [];
-    links.forEach(link => {
-        addLinkWithImage(link.url, null, link.image);
-    });
+// Ponastavi vnosna polja
+function resetModalInputs() {
+    fileInput.value = '';
+    urlInput.value = '';
+    imageFile = null;
+    url = '';
 }
-
-// Naloži podatke ob zagonu
-document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
