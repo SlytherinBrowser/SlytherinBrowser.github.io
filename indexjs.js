@@ -700,21 +700,54 @@ function applyMode(mode) {
 
 
 
+let imageFile = null;
+let url = '';
 
+// Prikaz modalnega okna ob kliku na gumb
+const modal = document.getElementById('myModal');
+const addIconButton = document.getElementById('addIconButton');
+const closeButton = document.getElementsByClassName('close')[0];
 
-// Inicializacija in nalaganje ikon iz lokalnega storage ob zagonu
-document.addEventListener('DOMContentLoaded', function() {
-    const storedIcons = JSON.parse(localStorage.getItem('icons')) || [];
-    storedIcons.forEach(icon => {
-        createIconElement(icon.url, icon.image);
-    });
+// Odpiranje modala
+addIconButton.addEventListener('click', function () {
+    modal.style.display = 'block';
 });
+
+// Zapiranje modala ob kliku na "X"
+closeButton.addEventListener('click', function () {
+    modal.style.display = 'none';
+});
+
+// Zapiranje modala ob kliku izven modala
+window.addEventListener('click', function (event) {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+// Funkcija za obdelavo slike
+function handleImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+        imageFile = file;
+    }
+}
+
+// Funkcija za obdelavo URL povezave
+function handleUrl(event) {
+    url = event.target.value;
+    if (imageFile && url) {
+        addLinkWithImage(url, imageFile);
+        // Zapri modalno okno po dodajanju
+        modal.style.display = 'none';
+    }
+}
 
 // Funkcija za dodajanje nove ikone z URL povezavo
 function addLinkWithImage(url, imageFile) {
     const reader = new FileReader();
 
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const imageData = e.target.result;
 
         // Ustvarimo novo povezavo (a element) z ikono
@@ -736,7 +769,7 @@ function createIconElement(url, imageData) {
     link.style.backgroundImage = `url(${imageData})`;
 
     // Dodamo ikono v dock
-    document.getElementById('dock').insertBefore(link, addIconButton);
+    document.getElementById('dock').appendChild(link);
 }
 
 // Funkcija za shranjevanje podatkov v lokalni storage
@@ -745,3 +778,11 @@ function saveToLocalStorage(url, imageData) {
     storedIcons.push({ url, image: imageData });
     localStorage.setItem('icons', JSON.stringify(storedIcons));
 }
+
+// Inicializacija in nalaganje ikon iz lokalnega storage ob zagonu
+document.addEventListener('DOMContentLoaded', function () {
+    const storedIcons = JSON.parse(localStorage.getItem('icons')) || [];
+    storedIcons.forEach(icon => {
+        createIconElement(icon.url, icon.image);
+    });
+});
