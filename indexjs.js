@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 };
 
 
-let botName = "Chatbot"; // Privzeto ime chatbota
+let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
@@ -386,6 +386,7 @@ function handleMessage() {
 function setBotName(inputName) {
     if (inputName && inputName.trim()) {
         botName = inputName.trim();
+        localStorage.setItem("botName", botName); // Shrani ime v localStorage
     } else {
         alert("Prosimo, vnesite veljavno ime.");
     }
@@ -406,7 +407,6 @@ document.getElementById("chatInput").addEventListener("keypress", function(event
         handleMessage();
     }
 });
-
 
 
 
