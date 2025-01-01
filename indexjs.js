@@ -768,8 +768,8 @@ function createIconElement(url, imageData) {
     link.classList.add('icon');
     link.style.backgroundImage = `url(${imageData})`;
 
-    // Dodamo ikono v dock
-    document.getElementById('dock').appendChild(link);
+    // Dodamo ikono pred gumb v dock
+    document.getElementById('dock').insertBefore(link, addIconButton);
 }
 
 // Funkcija za shranjevanje podatkov v lokalni storage
