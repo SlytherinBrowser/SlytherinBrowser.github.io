@@ -283,6 +283,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
 
+// Predhodni odgovori
+const botResponses = {
+    "Kako si?": ["Dobro sem, hvala!", "Odlično, kako pa ti?"],
+    "Kaj znaš?": ["Znam izvajati osnovne matematične operacije.", "Pomagam pri odgovorih na vprašanja."]
+};
+
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
     const validExpression = /^[\d+\-*/().=\s]*$/;
