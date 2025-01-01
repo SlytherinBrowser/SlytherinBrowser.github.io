@@ -281,10 +281,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
 };
 
 
+let botName = "Chatbot"; // Privzeto ime chatbota
+
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
     const validExpression = /^[\d+\-*/().=\s]*$/;
-    
+
     if (validExpression.test(expression)) {
         try {
             const cleanedExpression = expression.replace("=", "").trim();
@@ -340,6 +342,13 @@ function getResponse(userInput) {
         return calculateExpression(userInput);
     }
 
+    // Preveri, ali je uporabnik spremenil ime chatbota
+    if (userInput.toLowerCase().startsWith("ime ti je")) {
+        let name = userInput.slice(8).trim(); // Odstranimo "ime ti je" in pridobimo ime
+        setBotName(name);
+        return `Hvala! Moje ime je zdaj ${botName}.`;
+    }
+
     // Poišči najboljši odgovor
     for (let key in botResponses) {
         const similarityScore = similarity(userInput, key);
@@ -354,7 +363,7 @@ function getResponse(userInput) {
         const randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
         return botResponses[bestMatch][randomIndex];
     } else {
-        return "Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!";
+        return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
     }
 }
 
@@ -366,10 +375,19 @@ function handleMessage() {
     if (userInput) {
         const botReply = getResponse(userInput);
         chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
-        chatArea.innerHTML += `<div><strong>Chatbot:</strong> ${botReply}</div>`;
+        chatArea.innerHTML += `<div><strong>${botName}:</strong> ${botReply}</div>`;
 
         document.getElementById("chatInput").value = "";
         chatArea.scrollTop = chatArea.scrollHeight;
+    }
+}
+
+// Funkcija za nastavitev imena chatbota
+function setBotName(inputName) {
+    if (inputName && inputName.trim()) {
+        botName = inputName.trim();
+    } else {
+        alert("Prosimo, vnesite veljavno ime.");
     }
 }
 
