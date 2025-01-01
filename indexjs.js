@@ -707,16 +707,26 @@ function applyMode(mode) {
 let imageFile = null;
 let url = '';
 
-// Odpri modal
-document.getElementById('addButton').addEventListener('click', function () {
-    document.getElementById('myModal').style.display = 'block';
+// Prikaz modalnega okna ob kliku na gumb
+const modal = document.getElementById('myModal');
+const addIconButton = document.getElementById('addIconButton');
+const closeButton = document.getElementsByClassName('close')[0];
+
+addIconButton.addEventListener('click', function() {
+    modal.style.display = 'block';
 });
 
-// Zapri modal
-function closeModal() {
-    document.getElementById('myModal').style.display = 'none';
-    resetModalFields();
-}
+// Zapri modalno okno
+closeButton.addEventListener('click', function() {
+    modal.style.display = 'none';
+});
+
+// Zapri modalno okno, če uporabnik klikne izven modalnega okna
+window.addEventListener('click', function(event) {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
 
 // Funkcija za obdelavo slike
 function handleImage(event) {
@@ -726,63 +736,61 @@ function handleImage(event) {
     }
 }
 
-// Funkcija za shranjevanje ikone
-function saveIcon() {
-    const urlInput = document.getElementById('urlInput');
-    url = urlInput.value;
-
+// Funkcija za obdelavo URL povezave
+function handleUrl(event) {
+    url = event.target.value;
     if (imageFile && url) {
         addLinkWithImage(url, imageFile);
-        closeModal();
-    } else {
-        alert('Prosim vnesite URL in izberite sliko.');
+        saveToLocalStorage(url, imageFile);
+        // Zapri modalno okno po dodajanju
+        modal.style.display = 'none';
     }
 }
 
-// Funkcija za dodajanje ikone z URL in sliko
-function addLinkWithImage(url, imageFile) {
+// Funkcija za dodajanje ikone z URL povezavo
+function addLinkWithImage(url, imageFile, base64 = null) {
     const reader = new FileReader();
 
-    reader.onload = function (e) {
-        const iconContainer = document.createElement('div');
-        iconContainer.classList.add('dock-icon');
+    reader.onload = function(e) {
+        const imageSrc = base64 || e.target.result;
 
+        // Ustvarimo novo povezavo (a element) z ikono
         const link = document.createElement('a');
         link.href = url;
         link.target = '_blank';
+        link.classList.add('icon');
+        link.style.backgroundImage = `url(${imageSrc})`;
 
-        const image = document.createElement('img');
-        image.src = e.target.result;
-        link.appendChild(image);
-        iconContainer.appendChild(link);
-
-        document.getElementById('iconsContainer').appendChild(iconContainer);
-
-        saveIconToLocalStorage(url, e.target.result);
+        // Dodamo ikono v dock
+        document.getElementById('dock').insertBefore(link, addIconButton);
     };
 
+    if (base64) {
+        // Če je podana osnova64, ne rabimo brati slike
+        reader.onload();
+    } else {
+        reader.readAsDataURL(imageFile);
+    }
+}
+
+// Funkcija za shranjevanje podatkov v localStorage
+function saveToLocalStorage(url, imageFile) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const links = JSON.parse(localStorage.getItem('dockLinks')) || [];
+        links.push({ url, image: e.target.result });
+        localStorage.setItem('dockLinks', JSON.stringify(links));
+    };
     reader.readAsDataURL(imageFile);
 }
 
-// Shrani ikono v localStorage
-function saveIconToLocalStorage(url, imageSrc) {
-    const savedIcons = JSON.parse(localStorage.getItem('icons')) || [];
-    savedIcons.push({ url, imageSrc });
-    localStorage.setItem('icons', JSON.stringify(savedIcons));
-}
-
-// Ponastavi polja v modalu
-function resetModalFields() {
-    document.getElementById('urlInput').value = '';
-    document.getElementById('imageInput').value = '';
-    imageFile = null;
-    url = '';
-}
-
-// Preberi ikone iz localStorage ob nalaganju
-window.onload = function () {
-    const savedIcons = JSON.parse(localStorage.getItem('icons')) || [];
-    savedIcons.forEach(icon => {
-        addLinkWithImage(icon.url, icon.imageSrc);
+// Funkcija za nalaganje podatkov iz localStorage
+function loadFromLocalStorage() {
+    const links = JSON.parse(localStorage.getItem('dockLinks')) || [];
+    links.forEach(link => {
+        addLinkWithImage(link.url, null, link.image);
     });
-};
+}
+
+// Naloži podatke ob zagonu
+document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
