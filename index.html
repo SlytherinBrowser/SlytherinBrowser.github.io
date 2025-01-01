@@ -93,12 +93,13 @@
 </div>
 
 <!-- Modalno okno -->
-<div id="myModal" class="modal">
+<div id="myModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Dodaj Ikono</h2>
-        <input type="file" id="fileInput" accept="image/png, image/jpeg" onchange="handleImage(event)">
-        <input type="text" id="urlInput" placeholder="Vnesite URL" onchange="handleUrl(event)">
+        <input type="file" id="fileInput" accept="image/png, image/jpeg">
+        <input type="text" id="urlInput" placeholder="Vnesite URL">
+        <button id="saveButton">Shrani</button>
     </div>
 </div>
 
