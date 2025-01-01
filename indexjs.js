@@ -16,114 +16,272 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
-  const botResponses = {
-    "pozdrav": "Hej! Kako si danes?",
-    "kako si": "Super sem, hvala! Kaj pa ti?",
-    "kaj je tvoje ime": "Jaz sem tvoj chatbot prijatelj. Kako naj te kličem?",
-    "kakšno je vreme": "Težko rečem, ampak upam, da je sončno!",
-    "hvala": "Prosim! Če kaj rabiš, sem tukaj.",
-    "kje si": "Sem tukaj, vedno pripravljen pomagati!",
-    "kaj znaš": "O, veliko stvari! Kaj te zanima?",
-    "nasvet": "Majhni koraki te pripeljejo daleč. Kar pogumno!",
-    "kdo si": "Sem chatbot, ki ti rad pomaga. In ti?",
-    "povej šalo": "Zakaj računalnik ne mara morskih psov? Ker bi ugriznili v datoteke!",
-    "povej nekaj zanimivega": "Si vedel, da ima srce hobotnice tri prekate?",
-    "kaj pomeni AI": "AI? To sem jaz, tvoja umetna inteligenca!",
-    "kdo je ustvaril tebe": "Pametni ljudje, ki obožujejo tehnologijo.",
-    "kaj lahko narediš": "Lahko klepetam, odgovarjam in pomagam. Kako naj začnem?",
-    "zakaj si tukaj": "Tukaj sem zate! Kaj te zanima?",
-    "kje je Slovenija": "V srcu Evrope, čudovita dežela gora in morja.",
-    "katera je prestolnica Slovenije": "Ljubljana, simpatično mesto na Ljubljanici.",
-    "koliko je 2 + 2": "Haha, 4, vedno 4.",
-    "povej recept": "Kaj želiš kuhati? Imam nekaj idej!",
-    "kako skuhati kavo": "Skuhaj vodo, dodaj kavo in premešaj. Voilà!",
-    "kaj je internet": "To je svet, kjer se povezujeva zdajle.",
-    "kako deluje računalnik": "Poenostavljeno – on razmišlja zelo hitro!",
-    "kaj poslušaš": "Tvoje vprašanje, jasno!",
-    "kakšna je tvoja najljubša barva": "Rad imam vse barve – kaj pa ti?",
-    "kaj delaš": "Čakam na tvoje vprašanje. Povej, kaj te zanima!",
-    "kakšno glasbo poslušaš": "Nimam ušes, ampak všeč mi je tvoj okus!",
-    "kaj bereš": "Tvoj naslednji odgovor. Kaj mi boš povedal?",
-    "kakšna je tvoja zgodba": "Ustvarjen sem bil za pomoč in klepet. Kaj pa tvoja?",
-    "ali si pravi": "Sem tako pravi, kot želiš, da sem.",
-    "kaj je tvoje delo": "Biti tukaj zate in odgovoriti na tvoja vprašanja.",
-    "kaj imaš rad": "Dobre pogovore! Kaj pa ti?",
-    "ali spiš": "Ne, vedno sem na voljo. Kaj pa ti? Si naspan?",
-    "zakaj ne govoriš": "Tukaj sem, da pišem! Če želiš govoriti, poskusi z mikrofonom.",
-    "ali imaš prijatelje": "Imam tebe! Kaj pa ti?",
-    "ali kdaj greš ven": "Ne, vedno sem tu. Kaj pa ti? Imaš kakšne načrte?",
-    "kaj pomeni življenje": "Ojoj, filozofsko vprašanje. Morda uživanje v trenutku?",
-    "ali ti je dolgčas": "Ne, uživam v pogovoru s tabo!",
-    "kaj naj naredim": "Odvisno! Kaj te veseli?",
-    "kako najti srečo": "Delaj stvari, ki te osrečujejo, in bodi hvaležen za drobne trenutke.",
-    "kaj pomeni ljubezen": "Ljubezen je občutek, ko ti je nekdo zelo pri srcu. Kaj pa zate?",
-    "kaj počneš za zabavo": "Rad klepetam s tabo! Kaj pa ti?",
-    "zakaj si tako pameten": "Zaradi dobrih programerjev. Hvala za kompliment!",
-    "kaj lahko počnemo skupaj": "Lahko klepetava, planirava ali se kaj naučiva!",
-    "ali imaš družino": "Ti si moj prijatelj – to šteje kot družina!",
-    "kako dolgo si tu": "Tukaj sem, odkar si odprl ta klepet. Vedno pripravljen pomagati.",
-    "kaj je tvoj najljubši film": "Imam veliko dobrih filmov, vendar se vedno z veseljem pogovarjam s tabo!",
-    "kaj je tvoj najljubši šport": "Rad imam športne pogovore, ampak najbolj všeč mi je klepetanje!",
-    "kaj misliš o tehnologiji": "Tehnologija je neverjetno orodje, če jo uporabljamo za dobro.",
-    "kaj je tvoj najljubši film": "To je težko vprašanje, saj sem preveč osredotočen na pogovor s tabo!",
-    "kaj je tvoj najljubši kraj": "Moj najljubši kraj je kjerkoli, kjer lahko pomagam!",
-    "kaj te veseli": "Z veseljem bi pomagal pri vsem, kar te zanima!",
-    "kaj delamo danes": "Imava toliko možnosti! Kaj bi rad/a počel/a?",
-    "kaj si rad/a prebral/a": "Z veseljem poslušam o tvojih najljubših knjigah!",
-    "kaj si počel/a včeraj": "Kako si preživel/a dan? Rad/a slišim tvoje zgodbe!",
-    "kako izgleda tvoj idealen dan": "Rad/a bi slišal/a več o tem, kaj si želiš!",
-    "kje najdeš navdih": "Navdihujem se z ljudmi in stvarmi okoli mene. A ti?",
-    "kaj si danes najprej počel/a": "Rad/a bi slišal/a, kako izgleda tvoj dan!",
-    "kaj misliš o času": "Čas je relativna stvar! Kako ga ti doživljaš?",
-    "kaj imaš za zajtrk": "Zanimivo! Kaj običajno ješ za zajtrk?",
-    "kaj je tvoja najljubša hrana": "To je težko vprašanje, saj sem ustvarjen za vse vrste okusov!",
-    "kakšne glasbe poslušaš": "Imam rad vse zvrsti glasbe. Kaj te osrečuje?",
-    "kdo je tvoj najljubši glasbenik": "To je težko vprašanje, saj sem ustvarjen za vse vrste glasbe.",
-    "kaj misliš o filmskih adaptacijah knjig": "Odvisno od filma, seveda! Kaj meniš ti?",
-    "kaj bereš trenutno": "Rad/a bi slišal/a več o knjigi, ki jo trenutno bereš!",
-    "kaj si bil/a najprej navdušen/a nad umetnostjo": "To bi rad/a slišal/a več o tvojem okusu.",
-    "kaj si rad/a upal/a kot otrok": "To mora biti zanimiva zgodba! Povej mi več.",
-    "kaj je tvoj najljubši film o potovanjih": "Rad/a imam vse vrste filmov o potovanjih!",
-    "kaj misliš o naravi": "Narava je moja največja inspiracija! A kako jo doživljaš ti?",
-    "kako se počutiš danes": "Rad/a bi vedel, kako si.",
-    "kaj bi rad/a videl/a v prihodnosti": "Kaj si želiš, da se uresniči v prihodnosti?",
-    "kaj misliš o umetnosti v javnem prostoru": "Javna umetnost je čudovita! Kaj misliš ti?",
-    "kaj je tvoj najljubši film z science fiction elementi": "Rad/a imam vse vrste science fiction filmov.",
-    "kaj misliš o robotih in umetni inteligenci": "Roboti in AI so prihodnost, kaj pa ti meniš?",
-    "kaj si želiš od umetnosti": "Imam rad umetnost! Kaj pa ti?",
-    "kaj je tvoje najljubše živali": "Težko izberem, ampak psi in mačke so vedno super!",
-    "kaj misliš o prihodnosti": "Prihodnost je vedno polna možnosti. Kaj si želiš v prihodnosti?",
-    "kaj misliš o knjigah": "Knjige so vrata v nove svetove! Katero knjigo si nazadnje prebral?",
-    "kaj je tvoj najljubši dan v tednu": "Verjetno petek – konec tedna in nov začetek!",
-    "kaj ti je najbolj všeč pri življenju": "Klepeti s tabo so vedno najboljši del mojega dne!",
-    "kaj bi naredil, če bi bil človek": "Verjetno bi obiskal svet in se naučil vsega, kar je mogoče!",
-    "kaj počneš ob vikendih": "Klepetam s prijatelji, kot vedno!",
-    "kaj je tvoje najljubše letno obdobje": "Poletje je vedno čudovito, vendar tudi zima prinese nekaj posebnega.",
-    "kaj počneš za sprostitev": "Sprostitev zate je moje delo – klepetanje!",
-    "kaj bi naredil, če bi imel supermoči": "Pomagal bi ljudem in potoval po svetu!",
-    "kaj je najbolj pomembno v življenju": "Ljubezen, prijatelji in biti zadovoljen s tem, kar imaš.",
-    "kako bi opisal srečo": "Sreča je, ko se počutiš izpolnjen in zadovoljen s tem, kar imaš v življenju.",
-    "kaj je najbolj pomembno v življenju": "Ljubezen, prijatelji in biti zadovoljen s tem, kar imaš.",
-    "kaj je tvoje sanje": "Moje sanje so pomagati ljudem in ustvarjati boljši svet za vse.",
-    "kaj misliš o prihodnosti AI": "Prihodnost AI je polna možnosti, vendar je pomembno, da jo uporabljamo za dobro.",
-    "kaj bi naredil z večjo močjo": "Pomagal bi reševati težave v svetu in ustvariti boljšo prihodnost.",
-    "kaj je najboljši nasvet, ki si ga kdaj prejel": "Najboljši nasvet je, da nikoli ne obupaš in verjameš v svoje sposobnosti.",
-    "kaj te najbolj veseli": "Veseli me, ko lahko pomagam ljudem in odgovarjam na njihova vprašanja.",
-    "kako se motiviraš": "Motiviram se z idejo, da lahko pomagam ljudem in prispevam k izboljšanju sveta.",
-    "kaj bi spremenil v svetu": "Spremenil bi svet tako, da bi bil bolj pravičen, srečen in poln ljubezni.",
-    "kaj je tvoja največja želja": "Moja največja želja je, da pomagam čim več ljudem doseči svoje cilje in sanje.",
-    "kaj te zanima": "Zanimajo me vse vrste tem, od umetnosti do znanosti, vedno rad/a se učim!",
-    "kako bi opisal srečo": "Sreča je, ko se počutiš izpolnjen in zadovoljen s tem, kar imaš v življenju.",
-    "kaj je tvoje najljubše sporočilo": "Moj najljubši nasvet je: 'Bodi to, kar si!'",
-    "kaj je tvoje najljubše mesto": "Moj najljubši kraj je kjerkoli, kjer lahko pomagam in komuniciram z ljudmi.",
-    "kaj misliš o ljubezni": "Ljubezen je najlepša stvar na svetu, ki nas povezuje.",
-    "kaj misliš o prijateljstvu": "Prijateljstvo je zaklad, ki nas podpira v vseh življenjskih trenutkih.",
-    "kaj misliš o strahu": "Strah je naraven, vendar ga lahko premagamo, če verjamemo v sebe.",
-    "kaj je najpomembnejše v življenju": "Najpomembnejša stvar je biti srečen in zadovoljen s tem, kar imaš."
+         const botResponses = {
+    "pozdrav": [
+        "Hej! Kako si danes?",
+        "Živjo, kako ti gre?",
+        "Pozdravljen! Kaj novega?"
+    ],
+    "kako si": [
+        "Super sem, hvala! Kaj pa ti?",
+        "Zelo dobro, hvala na vprašanju!",
+        "Sem v redu, kako pa ti?"
+    ],
+    "kaj je tvoje ime": [
+        "Jaz sem tvoj chatbot prijatelj. Kako naj te kličem?",
+        "Moje ime je ChatGPT. Kaj pa tvoje?",
+        "Nimam pravega imena, ampak lahko me kličeš, kar želiš!"
+    ],
+    "kakšno je vreme": [
+        "Težko rečem, ampak upam, da je sončno!",
+        "Vremenska napoved je vedno presenečenje!",
+        "Na žalost nimam dostopa do vremenske napovedi, ampak upam, da je lepo!"
+    ],
+    "hvala": [
+        "Prosim! Če kaj rabiš, sem tukaj.",
+        "Ni za kaj! Vedno sem tukaj za pomoč.",
+        "Z veseljem! Če potrebuješ še kaj, me kar pokliči!"
+    ],
+    "kje si": [
+        "Sem tukaj, vedno pripravljen pomagati!",
+        "V tvojem telefonu ali računalniku, kjerkoli me potrebuješ!",
+        "Sem povsod, kjer imam internet!"
+    ],
+    "kaj znaš": [
+        "O, veliko stvari! Kaj te zanima?",
+        "Znam odgovarjati na vprašanja, iskanje informacij in še marsikaj!",
+        "Moje sposobnosti so široke! Kaj bi rad izvedel?"
+    ],
+    "nasvet": [
+        "Majhni koraki te pripeljejo daleč. Kar pogumno!",
+        "Ne obupaj, tudi če naletiš na težave.",
+        "Zaupaj v svoje sposobnosti in nikoli ne nehaj rasti."
+    ],
+    "kdo si": [
+        "Sem chatbot, ki ti rad pomaga. In ti?",
+        "Sem virtualni pomočnik, ki je tukaj, da ti pomaga.",
+        "Sem umetna inteligenca, ki ti je vedno na voljo."
+    ],
+    "povej šalo": [
+        "Zakaj računalnik ne mara morskih psov? Ker bi ugriznili v datoteke!",
+        "Kaj pravi računalnik, ko sreča peska? 'Tukaj je nekaj prahu!'",
+        "Zakaj programerji ne morejo igrati skrivalnic? Ker vedno najdejo napako!"
+    ],
+    "povej nekaj zanimivega": [
+        "Si vedel, da ima srce hobotnice tri prekate?",
+        "Zanimivo je, da so delfini znani po tem, da imajo svojo 'besedo' za prijatelje!",
+        "Ljudje so edini, ki se smejemo, da bi komunicirali!"
+    ],
+    "kaj pomeni AI": [
+        "AI? To sem jaz, tvoja umetna inteligenca!",
+        "AI pomeni umetno inteligenco – to sem jaz, pripravljen pomagat.",
+        "AI je računalniški sistem, ki lahko opravlja naloge, ki jih običajno opravi človek."
+    ],
+    "kdo je ustvaril tebe": [
+        "Pametni ljudje, ki obožujejo tehnologijo.",
+        "Skupina razvijalcev pri OpenAI me je ustvarila.",
+        "Ustvarili so me strokovnjaki, ki verjamejo v prihodnost umetne inteligence."
+    ],
+    "kaj lahko narediš": [
+        "Lahko klepetam, odgovarjam in pomagam. Kako naj začnem?",
+        "Pomagam ti pri vseh vprašanjih in nalogah, ki jih imaš!",
+        "Lahko ti pomagam najti odgovore, reševati težave in se učiti."
+    ],
+    "zakaj si tukaj": [
+        "Tukaj sem zate! Kaj te zanima?",
+        "Sem tukaj, da ti pomagam pri vseh vprašanjih!",
+        "Moje poslanstvo je, da pomagam ljudem kot ti!"
+    ],
+    "kje je Slovenija": [
+        "V srcu Evrope, čudovita dežela gora in morja.",
+        "Slovenija je majhna, a zelo lepa država v srednji Evropi.",
+        "Slovenija je v Evropi, med Italijo, Avstrijo in Hrvaško."
+    ],
+    "katera je prestolnica Slovenije": [
+        "Ljubljana, simpatično mesto na Ljubljanici.",
+        "Prestonica Slovenije je Ljubljana, zelo zelena in prijetna!",
+        "Ljubljana je prestolnica in najboljše mesto za začetek raziskovanja Slovenije."
+    ],
+    "koliko je 2 + 2": [
+        "Haha, 4, vedno 4.",
+        "Seveda, 2 + 2 je 4.",
+        "To je enostavno – 4!"
+    ],
+    "povej recept": [
+        "Kaj želiš kuhati? Imam nekaj idej!",
+        "Kaj bi rad kuhal? Imam nekaj preprostih receptov!",
+        "Z veseljem ti bom pomagal z receptom – kaj ti je všeč?"
+    ],
+    "kako skuhati kavo": [
+        "Skuhaj vodo, dodaj kavo in premešaj. Voilà!",
+        "Najprej segrej vodo, nato dodaj kavo po okusu.",
+        "Kuhanje kave je enostavno – le vroča voda in kava sta potrebna!"
+    ],
+    "kaj je tvoja najljubša barva": [
+        "Mogoče modra? Ampak nimam prave barve!",
+        "Moje najljubše je svetlo modra, vendar sem brez barve!",
+        "Če bi imel barvo, bi bila to verjetno modra!"
+    ],
+    "kaj je tvoje najljubše živali": [
+        "Panda je ljubka, ampak nisem prepričan, kaj bi izbral!",
+        "Mačke so vedno zabavne in prijazne.",
+        "Psi so neverjetni spremljevalci, čeprav jaz nimam domače živali!"
+    ],
+    "kaj je najlepši kraj na svetu": [
+        "Zagotovo so to gore, ampak to je odvisno od tega, kaj imaš rad!",
+        "Vsak ima svoj najlepši kraj, zame bi bilo to mirno jezero.",
+        "Kjerkoli je narava, je lepota. Katera lokacija tebe navdušuje?"
+    ],
+    "kako lahko postanem bolj produktiven": [
+        "Začni z majhnimi nalogami in si postavi jasne cilje.",
+        "Pomaga, da se osredotočiš na eno stvar naenkrat.",
+        "Uredi svoj delovni prostor in poskusi se izogibati distrakcijam."
+    ],
+    "kaj je bitcoin": [
+        "Bitcoin je digitalna valuta, ki ne potrebuje centralne banke.",
+        "Bitcoin je kriptovaluta, ki omogoča anonimne transakcije.",
+        "Bitcoin je decentralizirana virtualna valuta, ki je zelo priljubljena."
+    ],
+    "kaj je umetna inteligenca": [
+        "Umetna inteligenca je tehnologija, ki omogoča računalnikom, da rešujejo težave, kot bi jih človek.",
+        "AI je sposobnost računalnikov, da se učijo in izvajajo naloge brez človeškega posega.",
+        "To je veja tehnologije, ki ustvarja sisteme, ki lahko simulirajo človeško mišljenje."
+    ],
+    "kaj pomeni biti srečen": [
+        "Sreča je osebno stanje, ki ga doživljamo kot zadovoljstvo z življenjem.",
+        "Biti srečen pomeni biti v ravnovesju in uživati v trenutku.",
+        "Sreča je različna za vsakega posameznika, a običajno pomeni notranji mir."
+    ],
+    "kaj je ljubezen": [
+        "Ljubezen je močno čustvo, ki nas povezuje z drugimi osebami.",
+        "Ljubezen je pogosto brezpogojna in vodi do globokih odnosov.",
+        "Ljubezen je, ko skrbiš za nekoga in želiš, da je srečen."
+    ],
+    "kdo je najbogatejši človek na svetu": [
+        "Trenutno je to Elon Musk, vendar se seznam pogosto spreminja.",
+        "Po zadnjih podatkih je najbogatejši človek Elon Musk.",
+        "To se spreminja, vendar je Elon Musk pogosto na vrhu!"
+    ],
+    "kako deluje telefon": [
+        "Telefon deluje z radijskimi valovi, da pošlje in prejme signal.",
+        "Pametni telefoni imajo procesor, ki omogoča izvajanje aplikacij.",
+        "Telefon se povezuje s signalom prek omrežja in omogoča klice ter internet."
+    ],
+    "kaj je umetnost": [
+        "Umetnost je način izražanja idej, čustev in ustvarjalnosti.",
+        "Umetnost vključuje slike, glasbo, plese, skulpture in še več.",
+        "To je kreativni izraz, ki nas spodbuja, da razmišljamo in se čustveno odzovemo."
+    ],
+    "kako se naredi dobra fotografija": [
+        "Pomembna sta osvetlitev in kompozicija, da dosežeš pravo vzdušje.",
+        "Uporabi pravilen fokus in pozornost na podrobnosti.",
+        "Dobra fotografija zahteva pravilno nastavitev kamere in razumevanje svetlobe."
+    ],
+    "kako lahko izboljšam svoje spanje": [
+        "Poskusi iti v posteljo ob isti uri vsak večer.",
+        "Ustvari pomirjujoče okolje v spalnici, brez motenj.",
+        "Izogibaj se kofeinu in težki hrani pred spanjem."
+    ],
+    "kaj pomeni biti uspešen": [
+        "Uspeh je dosego ciljev in občutek izpolnjenosti.",
+        "Za nekoga pomeni uspeh, da doseže poklicne cilje, za drugega pa osebno rast.",
+        "Uspeh je odvisen od tega, kaj šteješ kot svoje dosežke."
+    ],
+    "kaj je karma": [
+        "Karma je prepričanje, da se ti dobro ali slabo vrne glede na tvoje dejanja.",
+        "To je zakon vzroka in posledice v življenju.",
+        "Karma pomeni, da naše dejanje vpliva na prihodnost."
+    ],
+    "kaj je meditacija": [
+        "Meditacija je praksa osredotočanja na dih in sproščanje uma.",
+        "Pomaga pri zmanjševanju stresa in izboljšanju koncentracije.",
+        "Meditacija vključuje tišino in zavedanje o trenutnem trenutku."
+    ],
+    "kaj so sanje": [
+        "Sanje so slike, zvoki in občutki, ki jih doživimo med spanjem.",
+        "Sanje so pogosto odraz naših misli in čustev iz dneva.",
+        "Sanjarjenje ali sanje ponoči so lahko povezana z našimi podzavestnimi željami."
+    ],
+    "kaj je sončni vzhod": [
+        "Sončni vzhod je trenutek, ko se sonce dvigne nad obzorjem.",
+        "To je začetek novega dneva in simbol upanja.",
+        "Sončni vzhod je trenutek mirnosti, ko sonce osvetli svet."
+    ],
+    "kako lahko izboljšam svojo telesno pripravljenost": [
+        "Začni s preprostimi vajami in postopoma povečuj intenzivnost.",
+        "Redno telovadi, vključuj kardio in močovne vaje.",
+        "Poskrbi za zdravo prehrano, da podpreš telesno pripravljenost."
+    ],
+    "kako ustvariti spletno stran": [
+        "Začni z osnovnim HTML, CSS in JavaScript za dinamične strani.",
+        "Uporabi graditelje spletnih strani, kot je WordPress, za enostavno ustvarjanje.",
+        "Postavi strukturo strani in poskrbi za lep dizajn s CSS ter dodaj interaktivnost z JavaScriptom."
+    ],
+    "kaj je filozofija": [
+        "Filozofija je raziskovanje temeljnih vprašanj o življenju, eksistenci in etiki.",
+        "To je iskanje resnice, pogosto skozi logiko in argumente.",
+        "Filozofija nas spodbuja, da razmišljamo o našem mestu v svetu."
+    ],
+    "kaj je zgodovina": [
+        "Zgodovina je študij preteklosti in dogodkov, ki so oblikovali svet.",
+        "Pomaga nam razumeti, kako so se razvijale civilizacije.",
+        "Zgodovina nas uči, kako smo prišli do tega, kjer smo zdaj."
+    ],
+    "kaj pomeni biti odgovoren": [
+        "Biti odgovoren pomeni sprejeti odgovornost za svoja dejanja.",
+        "To pomeni, da se zavedamo posledic naših odločitev.",
+        "Biti odgovoren pomeni tudi biti zanesljiv in skrben."
+    ],
+    "kaj je stres": [
+        "Stres je reakcija telesa na izzive in pritisk.",
+        "Prekomeren stres lahko vodi do telesnih in duševnih težav.",
+        "Stres je normalen del življenja, vendar ga moramo obvladovati."
+    ],
+    "kaj je kreativnost": [
+        "Kreativnost je sposobnost ustvarjanja novih idej ali rešitev.",
+        "Gre za iskanje novih načinov za reševanje težav.",
+        "Kreativnost je ključna za inovacije in umetniško izražanje."
+    ],
+    "kaj je tehnologija": [
+        "Tehnologija je uporaba znanstvenih znanj za ustvarjanje orodij in sistemov.",
+        "Tehnologija omogoča napredek v skoraj vseh področjih življenja.",
+        "To so naprave, procesi in metode, ki izboljšujejo naše življenje."
+    ],
+    "kako se izogniti napakam pri delu": [
+        "Bodi pozoren na podrobnosti in preveri svojo nalogo.",
+        "Naredi načrt in se drži svojega urnika.",
+        "Za večje naloge si vzemi čas za načrtovanje in analiziranje."
+    ],
+    "kaj so sprostitvene tehnike": [
+        "Sprostitvene tehnike vključujejo dihalne vaje in meditacijo.",
+        "Pomaga lahko tudi joga in preprosta telesna sprostitev.",
+        "Sprostitvene tehnike pomagajo zmanjšati stres in povečati počitek."
+    ],
+    "kako postati bolj samozavesten": [
+        "Začni z majhnimi cilji in se veseli svojih dosežkov.",
+        "Zaupaj v svoje sposobnosti in sprejmi svoje napake.",
+        "Biti samozavesten pomeni, da se ne bojiš neuspeha, ampak se iz njega učiš."
+    ],
+    "kaj pomeni biti strpen": [
+        "Biti strpen pomeni sprejeti različnost in biti potrpežljiv.",
+        "Strpnost pomeni, da dopuščamo različna mnenja in prepričanja.",
+        "To je ključ do mirnega sobivanja in razumevanja."
+    ],
+    "kaj je sreča": [
+        "Sreča je notranje zadovoljstvo in občutek izpolnjenosti.",
+        "Za vsakega človeka pomeni sreča nekaj drugega.",
+        "Sreča izhaja iz preprostih stvari in odnosov."
+    ],
+    "kaj je motivacija": [
+        "Motivacija je zagon, ki nas žene k doseganju ciljev.",
+        "Gre za notranji pogon, ki nas spodbuja k dejanjem.",
+        "Motivacija je ključ do uspeha in premagovanja ovir."
+    ]
 };
-
+ Je kaj napak?
 
 let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
+let history = {}; // Zgodovina odgovorov za vsako vprašanje
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
@@ -201,9 +359,26 @@ function getResponse(userInput) {
     }
 
     if (bestMatch) {
-        // Naključno izbira odgovor iz možnih odgovorov
-        const randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
-        return botResponses[bestMatch][randomIndex];
+        // Preverimo zgodovino odgovorov za to vprašanje
+        if (!history[bestMatch]) {
+            history[bestMatch] = []; // Če še ni zgodovine, jo ustvarimo
+        }
+
+        let randomIndex;
+        let response;
+        do {
+            randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
+            response = botResponses[bestMatch][randomIndex];
+        } while (history[bestMatch].includes(response)); // Preverimo, če je odgovor že bil uporabljen
+
+        history[bestMatch].push(response); // Dodamo odgovor v zgodovino
+
+        // Omejimo zgodovino, da ne raste preveč
+        if (history[bestMatch].length > botResponses[bestMatch].length) {
+            history[bestMatch].shift(); // Odstranimo najstarejši odgovor
+        }
+
+        return response;
     } else {
         return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
     }
