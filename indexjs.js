@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         "Skuhaj vodo, dodaj kavo in premešaj. Voilà!",
         "Najprej segrej vodo, nato dodaj kavo po okusu.",
         "Kuhanje kave je enostavno – le vroča voda in kava sta potrebna!"
-    ]
+    ],
     "kaj je tvoja najljubša barva": [
         "Mogoče modra? Ampak nimam prave barve!",
         "Moje najljubše je svetlo modra, vendar sem brez barve!",
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 };
 
 
-let botName = "Salazar"; // Privzeto ime chatbota
+let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
@@ -342,6 +342,13 @@ function getResponse(userInput) {
         return calculateExpression(userInput);
     }
 
+    // Preveri, ali je uporabnik spremenil ime chatbota
+    if (userInput.toLowerCase().startsWith("ime ti je")) {
+        let name = userInput.slice(8).trim(); // Odstranimo "ime ti je" in pridobimo ime
+        setBotName(name);
+        return `Hvala! Moje ime je zdaj ${botName}.`;
+    }
+
     // Poišči najboljši odgovor
     for (let key in botResponses) {
         const similarityScore = similarity(userInput, key);
@@ -375,6 +382,16 @@ function handleMessage() {
     }
 }
 
+// Funkcija za nastavitev imena chatbota
+function setBotName(inputName) {
+    if (inputName && inputName.trim()) {
+        botName = inputName.trim();
+        localStorage.setItem("botName", botName); // Shrani ime v localStorage
+    } else {
+        alert("Prosimo, vnesite veljavno ime.");
+    }
+}
+
 // Funkcija za prikaz ali skrivanje popup okna
 document.getElementById("chatButton").addEventListener("click", function() {
     const chatPopup = document.getElementById("chatPopup");
@@ -390,6 +407,9 @@ document.getElementById("chatInput").addEventListener("keypress", function(event
         handleMessage();
     }
 });
+
+
+
 
 
 
