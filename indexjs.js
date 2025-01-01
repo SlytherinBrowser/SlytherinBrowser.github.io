@@ -710,27 +710,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Funkcija za obdelavo slike
-function handleImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-        imageFile = file;
-    }
-}
-
-// Funkcija za obdelavo URL povezave
-function handleUrl(event) {
-    url = event.target.value;
-}
-
-// Funkcija za zapiranje modalnega okna in samodejno shranjevanje
-function closeModal() {
-    modal.style.display = 'none';
-    if (imageFile && url) {
-        addLinkWithImage(url, imageFile);
-    }
-}
-
 // Funkcija za dodajanje nove ikone z URL povezavo
 function addLinkWithImage(url, imageFile) {
     const reader = new FileReader();
@@ -766,18 +745,3 @@ function saveToLocalStorage(url, imageData) {
     storedIcons.push({ url, image: imageData });
     localStorage.setItem('icons', JSON.stringify(storedIcons));
 }
-
-// Prikaz modalnega okna ob kliku na gumb
-addIconButton.addEventListener('click', function() {
-    modal.style.display = 'block';
-});
-
-// Zapri modalno okno
-closeButton.addEventListener('click', closeModal);
-
-// Zapri modalno okno, če uporabnik klikne izven njega
-window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-        closeModal();
-    }
-});
