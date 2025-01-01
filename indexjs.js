@@ -704,65 +704,46 @@ function applyMode(mode) {
 
 
 
-
-
-let imageFile = null;
-    let url = '';
-
-    // Prikaz modalnega okna ob kliku na gumb
-    const modal = document.getElementById('myModal');
-    const addIconButton = document.getElementById('addIconButton');
-    const closeButton = document.getElementsByClassName('close')[0];
-
-    addIconButton.addEventListener('click', function() {
-        modal.style.display = 'block';
+// Inicializacija in nalaganje ikon iz lokalnega storage ob zagonu
+document.addEventListener('DOMContentLoaded', function() {
+    const storedIcons = JSON.parse(localStorage.getItem('icons')) || [];
+    storedIcons.forEach(icon => {
+        createIconElement(icon.url, icon.image);
     });
+});
 
-    // Zapri modalno okno
-    closeButton.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
+// Funkcija za dodajanje nove ikone z URL povezavo
+function addLinkWithImage(url, imageFile) {
+    const reader = new FileReader();
 
-    // Zapri modalno okno, če uporabnik klikne izven modalnega okna
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
+    reader.onload = function(e) {
+        const imageData = e.target.result;
 
-    // Funkcija za obdelavo slike
-    function handleImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            imageFile = file;
-        }
-    }
+        // Ustvarimo novo povezavo (a element) z ikono
+        createIconElement(url, imageData);
 
-    // Funkcija za obdelavo URL povezave
-    function handleUrl(event) {
-        url = event.target.value;
-        if (imageFile && url) {
-            addLinkWithImage(url, imageFile);
-            // Zapri modalno okno po dodajanju
-            modal.style.display = 'none';
-        }
-    }
+        // Shranimo podatke v lokalni storage
+        saveToLocalStorage(url, imageData);
+    };
 
-    // Funkcija za dodajanje ikone z URL povezavo
-    function addLinkWithImage(url, imageFile) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            // Ustvarimo novo povezavo (a element) z ikono
-            const link = document.createElement('a');
-            link.href = url;
-            link.target = '_blank';
-            link.classList.add('icon');
-            link.style.backgroundImage = `url(${e.target.result})`;
+    reader.readAsDataURL(imageFile);
+}
 
-            // Dodamo ikono v dock
-            document.getElementById('dock').insertBefore(link, addIconButton);
-        };
-        
-        reader.readAsDataURL(imageFile);
-    }
+// Funkcija za ustvarjanje ikone v docku
+function createIconElement(url, imageData) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.classList.add('icon');
+    link.style.backgroundImage = `url(${imageData})`;
+
+    // Dodamo ikono v dock
+    document.getElementById('dock').insertBefore(link, addIconButton);
+}
+
+// Funkcija za shranjevanje podatkov v lokalni storage
+function saveToLocalStorage(url, imageData) {
+    const storedIcons = JSON.parse(localStorage.getItem('icons')) || [];
+    storedIcons.push({ url, image: imageData });
+    localStorage.setItem('icons', JSON.stringify(storedIcons));
+}
