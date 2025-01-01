@@ -706,77 +706,63 @@ function applyMode(mode) {
 
 
 
-
-// Prikaz modalnega okna
-const modal = document.getElementById('myModal');
-const addIconButton = document.getElementById('addIconButton');
-const closeButton = document.querySelector('.close');
-const saveButton = document.getElementById('saveButton');
-const fileInput = document.getElementById('fileInput');
-const urlInput = document.getElementById('urlInput');
-const dock = document.getElementById('dock');
-
 let imageFile = null;
-let url = '';
+    let url = '';
 
-addIconButton.addEventListener('click', function() {
-    modal.style.display = 'block'; // Prikaži modalno okno
-});
+    // Prikaz modalnega okna ob kliku na gumb
+    const modal = document.getElementById('myModal');
+    const addIconButton = document.getElementById('addIconButton');
+    const closeButton = document.getElementsByClassName('close')[0];
 
-closeButton.addEventListener('click', function() {
-    modal.style.display = 'none'; // Zapri modalno okno
-});
+    addIconButton.addEventListener('click', function() {
+        modal.style.display = 'block';
+    });
 
-window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-        modal.style.display = 'none'; // Zapri modalno okno, če klikneš zunaj njega
+    // Zapri modalno okno
+    closeButton.addEventListener('click', function() {
+        modal.style.display = 'none';
+    });
+
+    // Zapri modalno okno, če uporabnik klikne izven modalnega okna
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Funkcija za obdelavo slike
+    function handleImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            imageFile = file;
+        }
     }
-});
 
-// Obdelava slike
-fileInput.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        imageFile = file; // Shrani izbrano datoteko
+    // Funkcija za obdelavo URL povezave
+    function handleUrl(event) {
+        url = event.target.value;
+        if (imageFile && url) {
+            addLinkWithImage(url, imageFile);
+            // Zapri modalno okno po dodajanju
+            modal.style.display = 'none';
+        }
     }
-});
 
-// Obdelava URL-ja
-urlInput.addEventListener('input', function(event) {
-    url = event.target.value; // Shrani vneseni URL
-});
+    // Funkcija za dodajanje ikone z URL povezavo
+    function addLinkWithImage(url, imageFile) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            // Ustvarimo novo povezavo (a element) z ikono
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.classList.add('icon');
+            link.style.backgroundImage = `url(${e.target.result})`;
 
-// Shrani in dodaj ikono
-saveButton.addEventListener('click', function() {
-    if (imageFile && url) {
-        addLinkWithImage(url, imageFile); // Dodaj novo ikono
-        modal.style.display = 'none'; // Zapri modalno okno po shranjevanju
-        resetModalInputs(); // Ponastavi vnosna polja
-    } else {
-        alert('Prosimo, izberite sliko in vnesite URL.');
+            // Dodamo ikono v dock
+            document.getElementById('dock').insertBefore(link, addIconButton);
+        };
+        
+        reader.readAsDataURL(imageFile);
     }
-});
-
-function addLinkWithImage(url, imageFile) {
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.classList.add('icon');
-        link.style.backgroundImage = `url(${e.target.result})`;
-
-        dock.appendChild(link); // Dodaj ikono v dock
-    };
-
-    reader.readAsDataURL(imageFile);
-}
-
-// Ponastavi vnosna polja
-function resetModalInputs() {
-    fileInput.value = '';
-    urlInput.value = '';
-    imageFile = null;
-    url = '';
-}
