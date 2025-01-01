@@ -282,6 +282,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
+let lastResponse = ""; // Shrani zadnji odgovor
 
 // Funkcija za izvajanje matematičnih operacij
 function calculateExpression(expression) {
@@ -360,8 +361,14 @@ function getResponse(userInput) {
 
     if (bestMatch) {
         // Naključno izbira odgovor iz možnih odgovorov
-        const randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
-        return botResponses[bestMatch][randomIndex];
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
+        } while (botResponses[bestMatch][randomIndex] === lastResponse); // Preverimo, če je odgovor enak prejšnjemu
+
+        const selectedResponse = botResponses[bestMatch][randomIndex];
+        lastResponse = selectedResponse; // Shrani izbran odgovor kot zadnji odgovor
+        return selectedResponse;
     } else {
         return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
     }
@@ -407,7 +414,6 @@ document.getElementById("chatInput").addEventListener("keypress", function(event
         handleMessage();
     }
 });
-
 
 
 
