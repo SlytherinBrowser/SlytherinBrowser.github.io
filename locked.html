@@ -52,43 +52,66 @@
 </div>
 
 <script>
-    const gesla = ["magic", "hogwarts", "slytherin", "browser", "potion"];
-    let trenutnaPozicija = 0;
-    let vneseno = "";
-    let kot = 0;
-    let circle = document.getElementById("circle");
-    let image = document.getElementById("image");
+const gesla = ["magic", "hogwarts", "slytherin", "browser", "potion"];
+let trenutnaPozicija = 0;
+let vneseno = "";
+let kot = 0;
+let circle = document.getElementById("circle");
+let image = document.getElementById("image");
 
-    document.addEventListener("keydown", (e) => {
-        vneseno += e.key;
+let timeout;
 
-        if (gesla[trenutnaPozicija] === vneseno) {
-            trenutnaPozicija++;
-            vneseno = ""; // Takoj omogoči vnos naslednjega gesla
+document.addEventListener("keydown", (e) => {
+    // Ponastavi časovni omejevalnik ob vsakem vnosu
+    clearTimeout(timeout);
 
-            if (trenutnaPozicija === 1) {
-                circle.style.transform = `translateZ(50px)`;
-            } else {
-                kot += 45;
-                circle.style.transform = `translateZ(50px) rotate(${kot}deg)`;
-                image.style.transform = `rotate(${kot}deg)`;
-            }
+    vneseno += e.key;
 
-            if (trenutnaPozicija === gesla.length) {
-                image.addEventListener("click", unlock);
-            }
-        } else if (!gesla[trenutnaPozicija].startsWith(vneseno)) {
-            vneseno = ""; // Ponastavi vnos, če je napačen
-        }
-    });
-
-    function unlock() {
-        circle.style.transform = `translateZ(0) rotate(0deg)`;
-        image.style.transform = `rotate(0deg)`;
-        setTimeout(() => {
-            window.location.href = "example.html";
-        }, 2000);
+    // Če je vnesena napačna črka, ponastavi na začetek
+    if (!gesla[trenutnaPozicija].startsWith(vneseno)) {
+        reset();
+        return;
     }
+
+    // Če je geslo pravilno vpisano, premakni naprej
+    if (gesla[trenutnaPozicija] === vneseno) {
+        trenutnaPozicija++;
+        vneseno = ""; // Takoj omogoči vnos naslednjega gesla
+
+        if (trenutnaPozicija === 1) {
+            circle.style.transform = `translateZ(70px)`;
+        } else {
+            kot += 45;
+            circle.style.transform = `translateZ(70px) rotate(${kot}deg)`;
+            image.style.transform = `rotate(${kot}deg)`;
+        }
+
+        if (trenutnaPozicija === gesla.length) {
+            image.addEventListener("click", unlock);
+        }
+
+        // Po uspešnem vnosu gesla, nastavi 10-sekundni časovnik
+        timeout = setTimeout(reset, 10000);
+    }
+});
+
+// Funkcija za ponastavitev, če je preteklo 10 sekund brez pravilnega vnosa ali če je napačna črka
+function reset() {
+    trenutnaPozicija = 0;
+    vneseno = "";
+    kot = 0;
+    circle.style.transform = `translateZ(0) rotate(0deg)`;
+    image.style.transform = `rotate(0deg)`;
+}
+
+// Funkcija za zaklepanje po uspešnem zaključku vseh gesel
+function unlock() {
+    circle.style.transform = `translateZ(0) rotate(0deg)`;
+    image.style.transform = `rotate(0deg)`;
+    setTimeout(() => {
+        window.location.href = "example.html";
+    }, 2000);
+}
 </script>
 
 </body>
