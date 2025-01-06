@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaklenjena Stran</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        .container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.5s ease-in-out;
+            transform-style: preserve-3d;
+        }
+
+        .container img {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="circle">
+    <img src="Slytherin.png" id="image" alt="Slika">
+</div>
+
+<script>
+    const gesla = ["magic", "hogwarts", "slytherin", "browser", "potion"];
+    let trenutnaPozicija = 0;
+    let vneseno = "";
+    let kot = 0;
+    let circle = document.getElementById("circle");
+    let image = document.getElementById("image");
+
+    document.addEventListener("keydown", (e) => {
+        vneseno += e.key;
+
+        if (gesla[trenutnaPozicija] === vneseno) {
+            trenutnaPozicija++;
+            vneseno = ""; // Takoj omogoči vnos naslednjega gesla
+
+            if (trenutnaPozicija === 1) {
+                circle.style.transform = `translateZ(50px)`;
+            } else {
+                kot += 45;
+                circle.style.transform = `translateZ(50px) rotate(${kot}deg)`;
+                image.style.transform = `rotate(${kot}deg)`;
+            }
+
+            if (trenutnaPozicija === gesla.length) {
+                image.addEventListener("click", unlock);
+            }
+        } else if (!gesla[trenutnaPozicija].startsWith(vneseno)) {
+            vneseno = ""; // Ponastavi vnos, če je napačen
+        }
+    });
+
+    function unlock() {
+        circle.style.transform = `translateZ(0) rotate(0deg)`;
+        image.style.transform = `rotate(0deg)`;
+        setTimeout(() => {
+            window.location.href = "example.html";
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
