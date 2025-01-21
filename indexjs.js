@@ -15,6 +15,31 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
+// Funkcija za razširitev in skrčenje docka
+document.getElementById('toggleDock').addEventListener('click', function () {
+    const dock = document.getElementById('dock');
+    dock.classList.toggle('expanded');
+    dock.classList.toggle('collapsed');
+});
+
+// Funkcija za dodajanje novih ikon
+document.getElementById('addIconButton').addEventListener('click', function () {
+    const newIcon = document.createElement('a');
+    newIcon.href = "#";
+    newIcon.target = "load.html";
+    newIcon.className = "icon";
+    newIcon.style.backgroundImage = "url('default.png')"; // Spremeni sliko
+    document.getElementById('dockIcons').appendChild(newIcon);
+});
+
+
+
+
+
+
+
+
+
 
          const botResponses = {
     "pozdrav": [
