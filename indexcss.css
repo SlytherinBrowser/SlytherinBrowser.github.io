@@ -343,51 +343,99 @@ color: black;
         background-color: #2980b9;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
     }
-             #dock {
+             /* Osnovni slog za dock */
+#dock {
     position: fixed;
-    bottom: 0px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */
     backdrop-filter: blur(10px); /* Srednje močna zameglitev */
-    border-radius: 5px; /* Majhna zaobljenost robov */
-    padding: 10px; /* Srednje veliko polnjenje */
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+    border-radius: 50%; /* Zaobljen dock ob začetnem stanju */
+    padding: 10px;
     z-index: 999;
-    width: 100%;
-    height: auto;
-}
-
-.icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%; /* Okrogle ikone */
-    background-size: cover;
-    cursor: pointer;
-}
-
-.icon:hover {
-    transform: scale(1.1); /* Rahlo povečanje pri hoverju */
-}
-
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
+    width: 60px; /* Začetna velikost */
+    height: 60px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    transition: all 0.4s ease-in-out; /* Animacija pri prehodih */
+    overflow: hidden;
 }
 
-.set-link:hover {
+/* Razširjen dock */
+#dock.expanded {
+    border-radius: 10px; /* Kvadratna oblika ob razširitvi */
+    width: 80%; /* Širina docka */
+    height: auto;
+    padding: 10px;
+    justify-content: space-around;
+}
+
+/* Skrivanje ikon, ko je dock skrčen */
+#dock.collapsed #dockIcons,
+#dock.collapsed #addIconButton {
+    display: none;
+}
+
+/* Vidne ikone in gumb, ko je dock razširjen */
+#dock.expanded #dockIcons,
+#dock.expanded #addIconButton {
+    display: flex;
+    gap: 10px;
+}
+
+/* Slog za ikone */
+.icon {
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Animacija ikon pri hoverju */
+.icon:hover {
     transform: scale(1.1);
+}
+
+/* Gumb za hišico */
+#toggleDock {
+    width: 40px;
+    height: 40px;
+    background: url('house.png') no-repeat center center; /* Slika za hišico */
+    background-size: cover;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transition: transform 0.4s ease;
+}
+
+/* Gumb za dodajanje ikon */
+#addIconButton {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.2); /* Temno ozadje za gumb */
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Animacija gumba za dodajanje ikon pri hoverju */
+#addIconButton:hover {
+    transform: scale(1.1);
+}
+
+/* Animacija pri kliku za hišico */
+#dock.expanded #toggleDock {
+    transform: rotate(180deg);
 }
 
 /* Pop-up styling */
@@ -945,57 +993,100 @@ color: black;
                 transform: translateY(1px); /* Slight press down effect on click */
             }
             
-   #dock {
+   /* Osnovni slog za dock */
+#dock {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    border-radius: 20px;
-    padding: 12px;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */
+    backdrop-filter: blur(10px); /* Srednje močna zameglitev */
+    border-radius: 50%; /* Zaobljen dock ob začetnem stanju */
+    padding: 10px;
     z-index: 999;
-    width: auto;
-    max-width: 90%;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.3s;
-}
-
-.icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.icon:hover {
-    transform: translateY(-5px) scale(1.1);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
+    width: 60px; /* Začetna velikost */
+    height: 60px;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    transition: all 0.4s ease-in-out; /* Animacija pri prehodih */
+    overflow: hidden;
 }
 
-.set-link:hover {
+/* Razširjen dock */
+#dock.expanded {
+    border-radius: 10px; /* Kvadratna oblika ob razširitvi */
+    width: 80%; /* Širina docka */
+    height: auto;
+    padding: 10px;
+    justify-content: space-around;
+}
+
+/* Skrivanje ikon, ko je dock skrčen */
+#dock.collapsed #dockIcons,
+#dock.collapsed #addIconButton {
+    display: none;
+}
+
+/* Vidne ikone in gumb, ko je dock razširjen */
+#dock.expanded #dockIcons,
+#dock.expanded #addIconButton {
+    display: flex;
+    gap: 10px;
+}
+
+/* Slog za ikone */
+.icon {
+    width: 40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Animacija ikon pri hoverju */
+.icon:hover {
     transform: scale(1.1);
 }
 
+/* Gumb za hišico */
+#toggleDock {
+    width: 40px;
+    height: 40px;
+    background: url('house.png') no-repeat center center; /* Slika za hišico */
+    background-size: cover;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    transition: transform 0.4s ease;
+}
+
+/* Gumb za dodajanje ikon */
+#addIconButton {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.2); /* Temno ozadje za gumb */
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Animacija gumba za dodajanje ikon pri hoverju */
+#addIconButton:hover {
+    transform: scale(1.1);
+}
+
+/* Animacija pri kliku za hišico */
+#dock.expanded #toggleDock {
+    transform: rotate(180deg);
+}
 /* Pop-up styling */
 .popup {
     display: none;
