@@ -79,17 +79,21 @@
 <button id="clickButton">0</button>
 
  
-<div id="dock">
-    <!-- Ikone so že tukaj -->
-    <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
-    <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
-    <a href="https://drive.google.com/" class="icon" target="load.html" style="background-image: url('drive.png');"></a>
-    <a href="https://login.microsoftonline.com" target="load.html" class="icon" style="background-image: url('teams.png');"></a>
-    <a href="https://mail.google.com/" class="icon" target="load.html" style="background-image: url('gmail.png');"></a>
-    <a href="https://www.youtube.com/" class="icon" target="load.html" style="background-image: url('yt.png');"></a>
+<div id="dock" class="collapsed">
+    <!-- Gumb za razširitev/zapiranje docka -->
+    <button id="toggleDock" class="icon home"></button>
 
-    <!-- Gumb za dodajanje novih ikon -->
-    <button id="addIconButton">  +  </button>
+    <!-- Ikone za aplikacije -->
+    <div id="dockIcons">
+        <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>
+        <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>
+        <a href="https://drive.google.com/" class="icon" target="load.html" style="background-image: url('drive.png');"></a>
+        <a href="https://login.microsoftonline.com" target="load.html" class="icon" style="background-image: url('teams.png');"></a>
+        <a href="https://mail.google.com/" class="icon" target="load.html" style="background-image: url('gmail.png');"></a>
+        <a href="https://www.youtube.com/" target="load.html" class="icon" style="background-image: url('yt.png');"></a>
+   <!-- Gumb za dodajanje novih ikon -->
+    <button id="addIconButton" class="icon">+</button>
+    </div>
 </div>
 <!-- Modalno okno -->
 <div id="myModal" class="modal">
