@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     ]
 };
 
-let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota, če ni shranjeno v localStorage
+let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota
 let history = {}; // Zgodovina odgovorov za vsako vprašanje
 
 // Funkcija za izvajanje matematičnih operacij
@@ -339,6 +339,13 @@ function editDistance(s1, s2) {
     return costs[s2.length];
 }
 
+// Funkcija za dešifriranje s ključno besedo
+function decryptWithKey(text, key) {
+    const numberResult = numbersToText(text);
+    const rot13Result = rot13(numberResult);
+    return vigenereDecrypt(rot13Result, key);
+}
+
 // Funkcija za iskanje najbližjega odgovora
 function getResponse(userInput) {
     const threshold = 0.5;
@@ -350,7 +357,7 @@ function getResponse(userInput) {
         return calculateExpression(userInput);
     }
 
-    // Preveri, ali je uporabnik spremenil ime chatbota
+    // Preveri, ali uporabnik spremenil ime chatbota
     if (userInput.toLowerCase().startsWith("ime ti je")) {
         let name = userInput.slice(8).trim(); // Odstranimo "ime ti je" in pridobimo ime
         setBotName(name);
@@ -367,9 +374,8 @@ function getResponse(userInput) {
     }
 
     if (bestMatch) {
-        // Preverimo zgodovino odgovorov za to vprašanje
         if (!history[bestMatch]) {
-            history[bestMatch] = []; // Če še ni zgodovine, jo ustvarimo
+            history[bestMatch] = [];
         }
 
         let randomIndex;
@@ -377,15 +383,12 @@ function getResponse(userInput) {
         do {
             randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
             response = botResponses[bestMatch][randomIndex];
-        } while (history[bestMatch].includes(response)); // Preverimo, če je odgovor že bil uporabljen
+        } while (history[bestMatch].includes(response));
 
-        history[bestMatch].push(response); // Dodamo odgovor v zgodovino
-
-        // Omejimo zgodovino, da ne raste preveč
+        history[bestMatch].push(response);
         if (history[bestMatch].length > botResponses[bestMatch].length) {
-            history[bestMatch].shift(); // Odstranimo najstarejši odgovor
+            history[bestMatch].shift();
         }
-
         return response;
     } else {
         return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
@@ -398,7 +401,22 @@ function handleMessage() {
     const chatArea = document.getElementById("chatArea");
 
     if (userInput) {
-        const botReply = getResponse(userInput);
+        let botReply;
+        
+        // Preveri, ali uporabnik želi dešifrirati (vnos oblike ":kljuc:sifra")
+        if (userInput.startsWith(":")) {
+            const parts = userInput.split(":");
+            if (parts.length === 3) {
+                const key = parts[1].trim();
+                const encryptedText = parts[2].trim();
+                botReply = decryptWithKey(encryptedText, key);
+            } else {
+                botReply = "Neveljaven format za dešifriranje. Uporabite ':kljuc:sifra'.";
+            }
+        } else {
+            botReply = getResponse(userInput);
+        }
+
         chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
         chatArea.innerHTML += `<div><strong>${botName}:</strong> ${botReply}</div>`;
 
