@@ -43,57 +43,63 @@ animation-duration: 8s;
 font-size: 1.8em;
 }
 
-/* Krog z navigacijskimi ikonami */
 .nav-circle {
-  position: fixed;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 80px;
   height: 80px;
-  background: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
+  background-color: #333;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transition: width 0.3s, height 0.3s;
-  z-index: 1000;
-}
-
-.nav-circle.expanded {
-  width: 300px;
-  height: 300px;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 40px;
+  transition: all 0.5s ease-in-out;
+  overflow: hidden;
 }
 
 .nav-item {
-  display: block;
-  font-size: 24px;
-  cursor: pointer;
-  text-align: center;
-  color: #333;
-  transition: transform 0.3s ease-in-out;
+  font-size: 30px;
+  color: white;
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.nav-item.active {
-  font-size: 28px;
-  transform: scale(1.2);
-  color: #007bff;
+.nav-circle.expanded {
+  width: 250px;
+  height: 250px;
 }
 
 .nav-circle.expanded .nav-item {
-  display: block;
+  opacity: 1;
 }
 
-.nav-circle:hover {
-  cursor: pointer;
+.nav-item:nth-child(1) {
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.nav-circle.expanded:hover {
-  cursor: default;
+.nav-item:nth-child(2) {
+  top: 50%;
+  left: 10%;
+  transform: translateY(-50%);
+}
+
+.nav-item:nth-child(3) {
+  top: 50%;
+  right: 10%;
+  transform: translateY(-50%);
+}
+
+.nav-item:nth-child(4) {
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-item:nth-child(5) {
+  bottom: 10%;
+  right: 10%;
 }
 
     /* Main title */  
@@ -403,29 +409,21 @@ display: grid;
 </div>
 
 <script>
-  function showCategory(category) {
-    // Skrij vse kategorije (lahko razširiš kasneje)
-    document.querySelectorAll('.app-list').forEach(list => {
-      list.style.display = 'none';
-    });
-
-    // Prikaz izbrane kategorije
-    document.getElementById(category).style.display = 'grid';
-
-    // Aktiviraj izbrano ikono
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelector(`#${category}-icon`).classList.add('active');
-  }
-
-  // Začetno stanje
-  showCategory('applications');
+ function showCategory(category) {
+  const navCircle = document.getElementById('navCircle');
   
-  // Toggle za razširitev navbar-a
-  document.getElementById("navCircle").addEventListener("click", function() {
-    this.classList.toggle("expanded");
-  });
+  // Toggle expanded state
+  navCircle.classList.toggle('expanded');
+
+  // Hide other icons until expansion is complete
+  if (category === 'applications') {
+    // Show only applications in the expanded view
+    document.getElementById('app-icon').style.opacity = '1';
+  } else {
+    // Hide all items when collapsed
+    document.querySelectorAll('.nav-item').forEach(item => item.style.opacity = '0');
+  }
+}
 </script>
  <script>  
         function isWinter() {  
