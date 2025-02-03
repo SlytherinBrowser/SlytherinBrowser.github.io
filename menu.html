@@ -70,7 +70,7 @@ font-size: 1.8em;
 }
 
 .nav-item {
-  display: none;
+  display: block;
   font-size: 24px;
   cursor: pointer;
   text-align: center;
@@ -79,7 +79,6 @@ font-size: 1.8em;
 }
 
 .nav-item.active {
-  display: block;
   font-size: 28px;
   transform: scale(1.2);
   color: #007bff;
@@ -384,7 +383,6 @@ display: grid;
         </a>  
     </li>  
 </ul>  
-
 <!-- Navigation Circle -->
 <div class="nav-circle">
   <a onclick="showCategory('applications')" class="nav-item" id="app-icon">
@@ -404,24 +402,20 @@ display: grid;
   </a>
 </div>
 
+
 <script>
   function showCategory(category) {
-    // Skrij vse kategorije
-    document.querySelectorAll('.app-list').forEach(list => {
-      list.style.display = 'none';
-    });
-    // Prikaži izbrano kategorijo
-    document.getElementById(category).style.display = 'grid';
+  // Skrij vse druge ikone, ne pa aplikacij ali drugih elementov
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
 
-    // Aktiviraj izbrano ikono
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelector(`#${category}-icon`).classList.add('active');
-  }
+  // Prikaži samo izbrano ikono
+  document.querySelector(`#${category}-icon`).classList.add('active');
+}
 
-  // Začetno stanje
-  showCategory('applications');
+// Začetno stanje - prikaži aplikacije
+showCategory('applications');
 </script>
  <script>  
         function isWinter() {  
