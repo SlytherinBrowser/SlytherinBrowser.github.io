@@ -46,7 +46,7 @@ font-size: 1.8em;
 /* Krog z navigacijskimi ikonami */
 .nav-circle {
   position: fixed;
-  bottom: 10%;  
+  bottom: 10%;
   left: 50%;
   transform: translateX(-50%);
   width: 80px;
@@ -76,18 +76,16 @@ font-size: 1.8em;
   text-align: center;
   color: #333;
   transition: transform 0.3s ease-in-out;
-  visibility: hidden;
 }
 
 .nav-item.active {
   font-size: 28px;
   transform: scale(1.2);
   color: #007bff;
-  visibility: visible;
 }
 
 .nav-circle.expanded .nav-item {
-  visibility: visible;
+  display: block;
 }
 
 .nav-circle:hover {
@@ -386,7 +384,7 @@ display: grid;
     </li>  
 </ul>  
 <!-- Navigation Circle -->
-<div class="nav-circle">
+<div class="nav-circle" id="navCircle">
   <a onclick="showCategory('applications')" class="nav-item" id="app-icon">
     <span>📱</span>
   </a>
@@ -411,7 +409,7 @@ display: grid;
       list.style.display = 'none';
     });
 
-    // Prikaz izbrane kategorije (trenutno samo 'applications')
+    // Prikaz izbrane kategorije
     document.getElementById(category).style.display = 'grid';
 
     // Aktiviraj izbrano ikono
@@ -423,6 +421,11 @@ display: grid;
 
   // Začetno stanje
   showCategory('applications');
+  
+  // Toggle za razširitev navbar-a
+  document.getElementById("navCircle").addEventListener("click", function() {
+    this.classList.toggle("expanded");
+  });
 </script>
  <script>  
         function isWinter() {  
