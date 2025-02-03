@@ -43,63 +43,45 @@ animation-duration: 8s;
 font-size: 1.8em;
 }
 
-.nav-circle {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background-color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.5s ease-in-out;
-  overflow: hidden;
+iOS-style Dock Navigation Bar */
+.navbar {
+display: flex;
+justify-content: space-around;
+background-color: rgba(255, 255, 255, 0.95);
+padding: 12px 0;
+position: fixed;
+bottom: 0;
+width: 100%;
+box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+border-radius: 25px;
+backdrop-filter: blur(15px);
+z-index: 1000;
 }
 
-.nav-item {
-  font-size: 30px;
-  color: white;
-  position: absolute;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
+.navbar a {    
+    display: flex;    
+    flex-direction: column;    
+    align-items: center;    
+    text-decoration: none;    
+    color: #333;    
+    font-family: 'myfont', sans-serif;    
+    transition: transform 0.3s, color 0.3s;    
+}    
 
-.nav-circle.expanded {
-  width: 250px;
-  height: 250px;
-}
+.navbar a span {    
+    font-size: 28px; /* Slightly larger icons */    
+    margin-bottom: 6px;    
+}    
 
-.nav-circle.expanded .nav-item {
-  opacity: 1;
-}
+.navbar a p {    
+    font-size: 13px; /* Slightly larger text */    
+    margin: 0;    
+    text-transform: uppercase; /* Uppercase text for uniformity */    
+}    
 
-.nav-item:nth-child(1) {
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.nav-item:nth-child(2) {
-  top: 50%;
-  left: 10%;
-  transform: translateY(-50%);
-}
-
-.nav-item:nth-child(3) {
-  top: 50%;
-  right: 10%;
-  transform: translateY(-50%);
-}
-
-.nav-item:nth-child(4) {
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.nav-item:nth-child(5) {
-  bottom: 10%;
-  right: 10%;
+.navbar a:hover {    
+    transform: scale(1.1);    
+    color: #007bff; /* Highlight color */    
 }
 
     /* Main title */  
@@ -409,21 +391,12 @@ display: grid;
 </div>
 
 <script>
- function showCategory(category) {
-  const navCircle = document.getElementById('navCircle');
-  
-  // Toggle expanded state
-  navCircle.classList.toggle('expanded');
-
-  // Hide other icons until expansion is complete
-  if (category === 'applications') {
-    // Show only applications in the expanded view
-    document.getElementById('app-icon').style.opacity = '1';
-  } else {
-    // Hide all items when collapsed
-    document.querySelectorAll('.nav-item').forEach(item => item.style.opacity = '0');
-  }
-}
+    function showCategory(category) {    
+        document.querySelectorAll('.app-list').forEach(list => {    
+            list.style.display = 'none';    
+        });    
+        document.getElementById(category).style.display = 'grid';    
+    } 
 </script>
  <script>  
         function isWinter() {  
