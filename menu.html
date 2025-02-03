@@ -1,179 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link id="favicon" rel="icon" href="Slytherin.png">
-    <title>Seznam Aplikacij</title>
-    <style>
-      body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navigation App</title>
+  <style>
+    /* Osnovni stil za aplikacije */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+    }
 
-.circle-navbar {
-    position: fixed;
-    bottom: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0, 0, 0, 0.8);
-    border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
+    /* Krožna navigacijska vrstica */
+    .circular-navbar {
+        position: fixed;
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        justify-content: center;
+        z-index: 1000;
+    }
 
-.circle-nav-item {
-    display: none;
-    color: white;
-    font-size: 32px;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.3s ease;
-}
+    .circle-nav {
+        width: 100px;
+        height: 100px;
+        border: 2px solid #333;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        position: relative;
+        background-color: white;
+    }
 
-.circle-nav-item.active {
-    display: block;
-}
+    .nav-item {
+        position: absolute;
+        font-size: 20px;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
 
-.content-section {
-    margin-top: 20%;
-    font-size: 24px;
-}
-        @font-face {
-            font-family: myfont;
-            src: url(Jaro-Regular.ttf);
+    #app-icon { top: 0; left: 50%; transform: translate(-50%, -120%); }
+    #game-icon { right: 0; top: 50%; transform: translate(120%, -50%); }
+    #personal-icon { bottom: 0; left: 50%; transform: translate(-50%, 120%); }
+    #horoscope-icon { left: 0; top: 50%; transform: translate(-120%, -50%); }
+    #other-icon { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+    /* Navigacija mobilna gesta */
+    .circular-navbar {
+        touch-action: pan-x;
+    }
+
+    @media (min-width: 700px) {
+        .circle-nav:hover {
+            cursor: pointer;
         }
+    }
 
-
-.snowflake {
-            color: #fff;
-            font-size: 1.5em;
-            position: absolute;
-            top: -10%;
-            animation: snowfall 10s linear infinite;
-        }
-        @keyframes snowfall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-                opacity: 0.3;
-            }
-        }
-        .snowflake:nth-child(odd) {
-            animation-duration: 12s;
-            font-size: 1.2em;
-        }
-        .snowflake:nth-child(even) {
-            animation-duration: 8s;
-            font-size: 1.8em;
-        }
-
-   
-        /* Main title */
-        h1 {
-            text-align: center;
-            background-color: #fff;
-            padding: 25px;
-            margin: 0;
-            border-bottom: 3px solid #007bff;
-            border-bottom-left-radius: 50% 30px;
-            border-bottom-right-radius: 50% 30px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* App list styling */
-.app-list {
-    display: none;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
-    margin: 0;
-    gap: 15px; /* Slightly smaller gap */
-}
-
-.app-list.grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
-    margin: 0 auto;
-    gap: 15px; /* Slightly smaller gap */
-    max-width: 400px; /* Adjusted max-width for smaller layout */
-}
-
-.app-list.horoscope-grid {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 600px; /* Adjusted max-width for horoscope grid */
-    gap: 10px; /* Slightly smaller gap for horoscope grid */
-}
-
-.app-item {
-    position: relative;
-    width: 100%;
-    max-width: 140px; /* Adjusted max-width for app items */
-    text-align: center;
-    cursor: pointer;
-    border-radius: 8px; /* Slightly smaller border-radius */
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.app-item img {
-    width: 100%;
-    height: auto;
-    display: block;
-    transition: transform 0.3s;
-}
-
-.app-item:hover img {
-    transform: scale(1.03); /* Slightly smaller zoom effect */
-}
-
-.app-item .overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.6);
-    overflow: hidden;
-    width: 100%;
-    height: 0;
-    transition: height 0.5s ease;
-    border-radius: 8px; /* Consistent border-radius */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.app-item:hover .overlay {
-    height: 100%;
-}
-
-.app-item .text {
-    color: #fff;
-    font-size: 16px; /* Adjusted font size for smaller layout */
-    text-align: center;
-    padding: 8px;
-}
-        .active {
-            display: grid;
-        }
-    </style>
+    /* Snowflake animation */
+    @keyframes snow {
+        0% { opacity: 0; transform: translateY(-10px); }
+        100% { opacity: 1; transform: translateY(100vh); }
+    }
+    .snowflake {
+        position: absolute;
+        color: white;
+        font-size: 1.5em;
+        pointer-events: none;
+        animation: snow linear infinite;
+    }
+  </style>
 </head>
-<body>
-    <!-- Main title -->
-    <h1>Seznam Aplikacij</h1>
 
+<body>
     <!-- Application List -->
     <ul class="app-list grid" id="applications">
         <li class="app-item">
@@ -365,85 +267,54 @@
             </a>
         </li>
     </ul>
-
-    <div class="circle-navbar">
-    <div class="circle-nav-item active" data-category="applications">
-        📱
-    </div>
-    <div class="circle-nav-item" data-category="games">
-        🎮
-    </div>
-    <div class="circle-nav-item" data-category="my">
-        👤
-    </div>
-    <div class="circle-nav-item" data-category="hor">
-        🔮
-    </div>
-    <div class="circle-nav-item" data-category="other">
-        🗂️
+<!-- Navigation Bar - Circular Style -->
+<div class="circular-navbar">
+    <div class="circle-nav">
+        <div class="nav-item" id="app-icon" onclick="showCategory('applications')">📱</div>
+        <div class="nav-item" id="game-icon" onclick="showCategory('games')">🎮</div>
+        <div class="nav-item" id="personal-icon" onclick="showCategory('my')">👤</div>
+        <div class="nav-item" id="horoscope-icon" onclick="showCategory('hor')">🔮</div>
+        <div class="nav-item" id="other-icon" onclick="showCategory('other')">🗂️</div>
     </div>
 </div>
 
-<div class="content-section" id="applications">Aplikacije</div>
-<div class="content-section" id="games" style="display: none;">Igre</div>
-<div class="content-section" id="my" style="display: none;">Osebno</div>
-<div class="content-section" id="hor" style="display: none;">Horoskop</div>
-<div class="content-section" id="other" style="display: none;">Ostalo</div>
+<script>
+  function showCategory(category) {  
+      document.querySelectorAll('.app-list').forEach(list => {  
+          list.style.display = 'none';  
+      });  
+      document.getElementById(category).style.display = 'grid';  
+  }
 
+  // Gesta za premikanje (do 700px)
+  const circleNav = document.querySelector('.circle-nav');
+  let startX = 0;
+  circleNav.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+  });
 
-    <script>
-        let currentIndex = 0;
-const navItems = document.querySelectorAll('.circle-nav-item');
-const sections = document.querySelectorAll('.content-section');
+  circleNav.addEventListener('touchmove', e => {
+      const deltaX = e.touches[0].clientX - startX;
+      if (deltaX > 50) {
+          console.log('Swipe right');
+      } else if (deltaX < -50) {
+          console.log('Swipe left');
+      }
+  });
 
-function updateActiveItem(index) {
-    navItems.forEach((item, i) => {
-        item.classList.toggle('active', i === index);
-    });
-    sections.forEach((section, i) => {
-        section.style.display = i === index ? 'block' : 'none';
-    });
-}
+  // Scroll navigacija nad 700px
+  window.addEventListener('wheel', e => {
+      if (window.innerWidth >= 700) {
+          if (e.deltaY > 0) {
+              console.log('Scroll Down');
+          } else {
+              console.log('Scroll Up');
+          }
+      }
+  });
 
-function navigate(direction) {
-    currentIndex = (currentIndex + direction + navItems.length) % navItems.length;
-    updateActiveItem(currentIndex);
-}
-
-function handleWheel(event) {
-    navigate(event.deltaY > 0 ? 1 : -1);
-}
-
-window.addEventListener('wheel', handleWheel);
-
-navItems.forEach((item, index) => {
-    item.addEventListener('touchstart', (event) => {
-        const startX = event.touches[0].clientX;
-        item.addEventListener('touchmove', (event) => {
-            const currentX = event.touches[0].clientX;
-            if (currentX - startX > 50) navigate(-1);
-            else if (currentX - startX < -50) navigate(1);
-        }, { once: true });
-    });
-});
-
-updateActiveItem(currentIndex);
-
-        function createSnowflakes() {
-            if (isWinter()) {
-                for (let i = 0; i < 50; i++) {
-                    let snowflake = document.createElement('div');
-                    snowflake.className = 'snowflake';
-                    snowflake.textContent = '❄';
-                    snowflake.style.left = Math.random() * 100 + 'vw';
-                    snowflake.style.animationDelay = Math.random() * 5 + 's';
-                    document.body.appendChild(snowflake);
-                }
-            }
-        }
-
-        // Pokličemo funkcijo za ustvarjanje snežink
-        createSnowflakes();
-    </script>
+  // Show applications by default  
+  showCategory('applications');
+</script>
 </body>
 </html>
