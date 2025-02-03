@@ -1,342 +1,157 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link id="favicon" rel="icon" href="Slytherin.ico">
+    <title>Seznam Aplikacij</title>
+    <style>
+      body {
+            font-family: 'myfont', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        @font-face {
+            font-family: myfont;
+            src: url(Jaro-Regular.ttf);
+        }
 
-<title>Seznam Aplikacij</title>
-
-<style>
-
-  body {
-
-        font-family: 'myfont', sans-serif;
-
-        margin: 0;
-
-        padding: 0;
-
-        background-color: #f0f0f0;
-
-        color: #333;
-
-    }
-
-
-
-    @font-face {
-
-        font-family: myfont;
-
-        src: url(Jaro-Regular.ttf);
-
-    }
 
 .snowflake {
-
-color: #fff;
-
-        font-size: 1.5em;
-
-        position: absolute;
-
-        top: -10%;
-
-        animation: snowfall 10s linear infinite;
-
-    }
-
-    @keyframes snowfall {
-
-        0% {
-
-            transform: translateY(0) rotate(0deg);
-
-            opacity: 1;
-
+            color: #fff;
+            font-size: 1.5em;
+            position: absolute;
+            top: -10%;
+            animation: snowfall 10s linear infinite;
+        }
+        @keyframes snowfall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        .snowflake:nth-child(odd) {
+            animation-duration: 12s;
+            font-size: 1.2em;
+        }
+        .snowflake:nth-child(even) {
+            animation-duration: 8s;
+            font-size: 1.8em;
         }
 
-        100% {
+       
 
-            transform: translateY(110vh) rotate(360deg);
-
-            opacity: 0.3;
-
+        /* Main title */
+        h1 {
+            text-align: center;
+            background-color: #fff;
+            padding: 25px;
+            margin: 0;
+            border-bottom: 3px solid #007bff;
+            border-bottom-left-radius: 50% 30px;
+            border-bottom-right-radius: 50% 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-    }
-
-    .snowflake:nth-child(odd) {
-
-        animation-duration: 12s;
-
-        font-size: 1.2em;
-
-    }
-
-    .snowflake:nth-child(even) {
-
-        animation-duration: 8s;
-
-        font-size: 1.8em;
-
-    }
-
-
-
-    /* iOS-style Dock Navigation Bar */
-
-    .navbar {
-
-        display: flex;
-
-        justify-content: space-around;
-
-        background-color: rgba(255, 255, 255, 0.95);
-
-        padding: 12px 0;
-
-        position: fixed;
-
-        bottom: 0;
-
-        width: 100%;
-
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-
-        border-radius: 25px;
-
-        backdrop-filter: blur(15px);
-
-        z-index: 1000;
-
-    }
-
-
-
-    .navbar a {
-
-        display: flex;
-
-        flex-direction: column;
-
-        align-items: center;
-
-        text-decoration: none;
-
-        color: #333;
-
-        font-family: 'myfont', sans-serif;
-
-        transition: transform 0.3s, color 0.3s;
-
-    }
-
-
-
-    .navbar a span {
-
-        font-size: 28px; /* Slightly larger icons */
-
-        margin-bottom: 6px;
-
-    }
-
-
-
-    .navbar a p {
-
-        font-size: 13px; /* Slightly larger text */
-
-        margin: 0;
-
-        text-transform: uppercase; /* Uppercase text for uniformity */
-
-    }
-
-
-
-    .navbar a:hover {
-
-        transform: scale(1.1);
-
-        color: #007bff; /* Highlight color */
-
-    }
-
-
-
-    /* Main title */
-
-    h1 {
-
-        text-align: center;
-
-        background-color: #fff;
-
-        padding: 25px;
-
-        margin: 0;
-
-        border-bottom: 3px solid #007bff;
-
-        border-bottom-left-radius: 50% 30px;
-
-        border-bottom-right-radius: 50% 30px;
-
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-
-    }
-
-
-
-    /* App list styling */
-
+        /* App list styling */
 .app-list {
-
-display: none;
-
-justify-content: center;
-
-align-items: flex-start;
-
-padding: 20px;
-
-margin: 0;
-
-gap: 15px; /* Slightly smaller gap */
-
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 0;
+    gap: 15px; /* Slightly smaller gap */
 }
 
 .app-list.grid {
-
-display: grid;
-
-grid-template-columns: repeat(2, 1fr);
-
-justify-content: center;
-
-align-items: flex-start;
-
-padding: 20px;
-
-margin: 0 auto;
-
-gap: 15px; /* Slightly smaller gap */
-
-max-width: 400px; /* Adjusted max-width for smaller layout */
-
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 0 auto;
+    gap: 15px; /* Slightly smaller gap */
+    max-width: 400px; /* Adjusted max-width for smaller layout */
 }
 
 .app-list.horoscope-grid {
-
-grid-template-columns: repeat(3, 1fr);
-
-max-width: 600px; /* Adjusted max-width for horoscope grid */
-
-gap: 10px; /* Slightly smaller gap for horoscope grid */
-
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 600px; /* Adjusted max-width for horoscope grid */
+    gap: 10px; /* Slightly smaller gap for horoscope grid */
 }
 
 .app-item {
-
-position: relative;
-
-width: 100%;
-
-max-width: 140px; /* Adjusted max-width for app items */
-
-text-align: center;
-
-cursor: pointer;
-
-border-radius: 8px; /* Slightly smaller border-radius */
-
-overflow: hidden;
-
-transition: transform 0.3s, box-shadow 0.3s;
-
+    position: relative;
+    width: 100%;
+    max-width: 140px; /* Adjusted max-width for app items */
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px; /* Slightly smaller border-radius */
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .app-item img {
-
-width: 100%;
-
-height: auto;
-
-display: block;
-
-transition: transform 0.3s;
-
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s;
 }
 
 .app-item:hover img {
-
-transform: scale(1.03); /* Slightly smaller zoom effect */
-
+    transform: scale(1.03); /* Slightly smaller zoom effect */
 }
 
 .app-item .overlay {
-
-position: absolute;
-
-bottom: 0;
-
-left: 0;
-
-right: 0;
-
-background: rgba(0, 0, 0, 0.6);
-
-overflow: hidden;
-
-width: 100%;
-
-height: 0;
-
-transition: height 0.5s ease;
-
-border-radius: 8px; /* Consistent border-radius */
-
-display: flex;
-
-align-items: center;
-
-justify-content: center;
-
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    width: 100%;
+    height: 0;
+    transition: height 0.5s ease;
+    border-radius: 8px; /* Consistent border-radius */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .app-item:hover .overlay {
-
-height: 100%;
-
+    height: 100%;
 }
 
 .app-item .text {
-
-color: #fff;
-
-font-size: 16px; /* Adjusted font size for smaller layout */
-
-text-align: center;
-
-padding: 8px;
-
+    color: #fff;
+    font-size: 16px; /* Adjusted font size for smaller layout */
+    text-align: center;
+    padding: 8px;
 }
+        .active {
+            display: grid;
+        }
+    </style>
+</head>
+<body>
+     <div id="popup" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+      <h2>Izberite navigacijo</h2>
+      <button onclick="selectNavigation('easy')" style="margin: 10px; padding: 10px 20px;">Easy</button>
+      <button onclick="selectNavigation('new')" style="margin: 10px; padding: 10px 20px;">New</button>
+    </div>
+  </div>
+    <!-- Main title -->
+    <h1>Seznam Aplikacij</h1>
 
-.active {
-
-        display: grid;
-
-    }
-
-</style>
-
-</head><body><!-- Main title -->
-
-<h1>Seznam Aplikacij</h1>
-
-
-
-<!-- Application List -->
+    <!-- Application List -->
 
 <ul class="app-list grid" id="applications">
 
@@ -718,128 +533,283 @@ padding: 8px;
 
 </ul>
 
+   <div id="easyNav" style="display: none;">
+    <!-- Navigation Bar - iOS-style Dock -->
+    <div class="navbar">
+      <a onclick="showCategory('applications')">
+        <span>📱</span>
+        <p>Aplikacije</p>
+      </a>
+      <a onclick="showCategory('games')">
+        <span>🎮</span>
+        <p>Igre</p>
+      </a>
+      <a onclick="showCategory('my')">
+        <span>👤</span>
+        <p>Osebno</p>
+      </a>
+      <a onclick="showCategory('hor')">
+        <span>🔮</span>
+        <p>Horoskop</p>
+      </a>
+      <a onclick="showCategory('other')">
+        <span>🗂️</span>
+        <p>Ostalo</p>
+      </a>
+    </div>
+  </div>
 
+  <div id="newNav" style="display: none;">
+    <div class="nav-container">
+      <div class="nav-circle" id="navCircle">
+        <i class="icon" id="navIcon">📱</i>
+      </div>
+      <div class="category" id="category">Aplikacije</div>
+    </div>
+  </div>
 
-<!-- Navigation Bar - iOS-style Dock -->
-
-<div class="navbar"><a onclick="showCategory('applications')">
-
-    <span>📱</span>
-
-    <p>Aplikacije</p>
-
-</a>
-
-<a onclick="showCategory('games')">
-
-    <span>🎮</span>
-
-    <p>Igre</p>
-
-</a>
-
-<a onclick="showCategory('my')">
-
-    <span>👤</span>
-
-    <p>Osebno</p>
-
-</a>
-
-<a onclick="showCategory('hor')">
-
-    <span>🔮</span>
-
-    <p>Horoskop</p>
-
-</a>
-
-<a onclick="showCategory('other')">
-
-    <span>🗂️</span>
-
-    <p>Ostalo</p>
-
-</a>
-
-</div><script>
-
-    function showCategory(category) {
-
-        document.querySelectorAll('.app-list').forEach(list => {
-
-            list.style.display = 'none';
-
-        });
-
-        document.getElementById(category).style.display = 'grid';
-
+  <script>
+    // Show popup if navigation choice not set
+    if (!localStorage.getItem('navigationChoice')) {
+      document.getElementById('popup').style.display = 'flex';
+    } else {
+      loadNavigation(localStorage.getItem('navigationChoice'));
     }
 
+    function selectNavigation(choice) {
+      localStorage.setItem('navigationChoice', choice);
+      document.getElementById('popup').style.display = 'none';
+      loadNavigation(choice);
+    }
 
+    function loadNavigation(choice) {
+      if (choice === 'easy') {
+        document.getElementById('easyNav').style.display = 'block';
+        initializeEasyNav();
+      } else if (choice === 'new') {
+        document.getElementById('newNav').style.display = 'block';
+        initializeNewNav();
+      }
+    }
 
-    // Show applications by default
+     function initializeEasyNav() {
+      // Inject CSS for iOS-style Dock Navigation Bar
+      const style = document.createElement('style');
+      style.textContent = `
+        /* iOS-style Dock Navigation Bar */
+        .navbar {
+          display: flex;
+          justify-content: space-around;
+          background-color: rgba(255, 255, 255, 0.95);
+          padding: 12px 0;
+          position: fixed;
+          bottom: 0;
+          width: 100%;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+          border-radius: 25px;
+          backdrop-filter: blur(15px);
+          z-index: 1000;
+        }
 
-    showCategory('applications');
+        .navbar a {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-decoration: none;
+          color: #333;
+          font-family: 'myfont', sans-serif;
+          transition: transform 0.3s, color 0.3s;
+        }
 
-</script>
+        .navbar a span {
+          font-size: 28px;
+          margin-bottom: 6px;
+        }
 
+        .navbar a p {
+          font-size: 13px;
+          margin: 0;
+          text-transform: uppercase;
+        }
+
+        .navbar a:hover {
+          transform: scale(1.1);
+          color: #007bff;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Show category function for application lists
+      window.showCategory = function(category) {
+        document.querySelectorAll('.app-list').forEach(list => {
+          list.style.display = 'none';
+        });
+        const categoryElement = document.getElementById(category);
+        if (categoryElement) {
+          categoryElement.style.display = 'grid';
+        }
+      };
+
+      showCategory('applications');
+    }
+
+    function initializeNewNav() {
+      // Inject CSS for New Navigation Bar
+      const style = document.createElement('style');
+      style.textContent = `
+         * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        .nav-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          position: fixed;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+        }
+
+        .nav-circle {
+          width: 60px;
+          height: 60px;
+          background-color: #3498db;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          transition: background-color 0.3s;
+        }
+
+        .nav-circle:hover {
+          background-color: #2980b9;
+        }
+
+        .icon {
+          font-size: 24px;
+        }
+
+        .category {
+          margin-top: 10px;
+          font-size: 18px;
+          font-weight: bold;
+          display: none;
+        }
+
+        .category.active {
+          display: block;
+        }
+      `;
+      document.head.appendChild(style);
+
+      const navCircle = document.getElementById('navCircle');
+      const navIcon = document.getElementById('navIcon');
+      const category = document.getElementById('category');
+
+      let categories = [
+        { name: 'Aplikacije', icon: '📱', id: 'applications' },
+        { name: 'Igre', icon: '🎮', id: 'games' },
+        { name: 'Osebno', icon: '👤', id: 'my' },
+        { name: 'Horoskop', icon: '🔮', id: 'hor' },
+        { name: 'Ostalo', icon: '🗂️', id: 'other' }
+      ];
+
+      let currentCategoryIndex = 0;
+
+      function changeCategory() {
+        currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
+        navIcon.textContent = categories[currentCategoryIndex].icon;
+        category.textContent = categories[currentCategoryIndex].name;
+
+        document.querySelectorAll('.app-list').forEach(list => {
+          list.style.display = 'none';
+        });
+
+        const activeCategory = document.getElementById(categories[currentCategoryIndex].id);
+        if (activeCategory) {
+          activeCategory.style.display = 'grid';
+        }
+
+        category.classList.remove('active');
+        setTimeout(() => {
+          category.classList.add('active');
+        }, 100);
+      }
+
+      navIcon.textContent = categories[currentCategoryIndex].icon;
+      category.textContent = categories[currentCategoryIndex].name;
+      category.classList.add('active');
+
+      document.querySelectorAll('.app-list').forEach(list => {
+        list.style.display = 'none';
+      });
+      const initialCategory = document.getElementById(categories[currentCategoryIndex].id);
+      if (initialCategory) {
+        initialCategory.style.display = 'grid';
+      }
+
+      navCircle.addEventListener('click', changeCategory);
+
+      navCircle.addEventListener('wheel', (event) => {
+        if (event.deltaY > 0) {
+          currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
+        } else {
+          currentCategoryIndex = (currentCategoryIndex - 1 + categories.length) % categories.length;
+        }
+        navIcon.textContent = categories[currentCategoryIndex].icon;
+        category.textContent = categories[currentCategoryIndex].name;
+
+        document.querySelectorAll('.app-list').forEach(list => {
+          list.style.display = 'none';
+        });
+
+        const activeCategory = document.getElementById(categories[currentCategoryIndex].id);
+        if (activeCategory) {
+          activeCategory.style.display = 'grid';
+        }
+
+        category.classList.remove('active');
+        setTimeout(() => {
+          category.classList.add('active');
+        }, 100);
+      });
+    }
+  </script>
  <script>
-  
         function isWinter() {
-  
             const now = new Date();
-  
             const month = now.getMonth();  // November is 10, December is 11, February is 1
-  
             const day = now.getDate();
-  
 
-  
             // Preverimo, če je med 20. novembrom in 28. februarjem
-  
             if (month === 10 && day >= 20) return true; // november 20+
-  
             if (month === 11) return true; // december
-  
             if (month === 0) return true;  // januar
-  
             if (month === 1 && day <= 28) return true; // februar do 28
-  
             return false;
-  
         }
-  
 
-  
         function createSnowflakes() {
-  
             if (isWinter()) {
-  
                 for (let i = 0; i < 50; i++) {
-  
                     let snowflake = document.createElement('div');
-  
                     snowflake.className = 'snowflake';
-  
                     snowflake.textContent = '❄';
-  
                     snowflake.style.left = Math.random() * 100 + 'vw';
-  
                     snowflake.style.animationDelay = Math.random() * 5 + 's';
-  
                     document.body.appendChild(snowflake);
-  
                 }
-  
             }
-  
         }
-  
 
-  
         // Pokličemo funkcijo za ustvarjanje snežink
-  
         createSnowflakes();
-  
-    </script></body></html>
+    </script>
+</body>
+</html>
