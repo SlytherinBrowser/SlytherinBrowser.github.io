@@ -43,46 +43,59 @@ animation-duration: 8s;
 font-size: 1.8em;
 }
 
-/* iOS-style Dock Navigation Bar */  
-    .navbar {  
-        display: flex;  
-        justify-content: space-around;  
-        background-color: rgba(255, 255, 255, 0.95);  
-        padding: 12px 0;  
-        position: fixed;  
-        bottom: 0;  
-        width: 100%;  
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);  
-        border-radius: 25px;  
-        backdrop-filter: blur(15px);  
-        z-index: 1000;  
-    }  
+/* Krog z navigacijskimi ikonami */
+.nav-circle {
+  position: fixed;
+  bottom: 10%;  
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: width 0.3s, height 0.3s;
+  z-index: 1000;
+}
 
-    .navbar a {  
-        display: flex;  
-        flex-direction: column;  
-        align-items: center;  
-        text-decoration: none;  
-        color: #333;  
-        font-family: 'myfont', sans-serif;  
-        transition: transform 0.3s, color 0.3s;  
-    }  
+.nav-circle.expanded {
+  width: 300px;
+  height: 300px;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 40px;
+}
 
-    .navbar a span {  
-        font-size: 28px; /* Slightly larger icons */  
-        margin-bottom: 6px;  
-    }  
+.nav-item {
+  display: none;
+  font-size: 24px;
+  cursor: pointer;
+  text-align: center;
+  color: #333;
+  transition: transform 0.3s ease-in-out;
+}
 
-    .navbar a p {  
-        font-size: 13px; /* Slightly larger text */  
-        margin: 0;  
-        text-transform: uppercase; /* Uppercase text for uniformity */  
-    }  
+.nav-item.active {
+  display: block;
+  font-size: 28px;
+  transform: scale(1.2);
+  color: #007bff;
+}
 
-    .navbar a:hover {  
-        transform: scale(1.1);  
-        color: #007bff; /* Highlight color */  
-    }  
+.nav-circle.expanded .nav-item {
+  display: block;
+}
+
+.nav-circle:hover {
+  cursor: pointer;
+}
+
+.nav-circle.expanded:hover {
+  cursor: default;
+}
 
     /* Main title */  
     h1 {  
@@ -372,41 +385,44 @@ display: grid;
     </li>  
 </ul>  
 
-<!-- Navigation Bar - iOS-style Dock -->
+<!-- Navigation Circle -->
+<div class="nav-circle">
+  <a onclick="showCategory('applications')" class="nav-item" id="app-icon">
+    <span>📱</span>
+  </a>
+  <a onclick="showCategory('games')" class="nav-item" id="games-icon">
+    <span>🎮</span>
+  </a>
+  <a onclick="showCategory('my')" class="nav-item" id="my-icon">
+    <span>👤</span>
+  </a>
+  <a onclick="showCategory('hor')" class="nav-item" id="hor-icon">
+    <span>🔮</span>
+  </a>
+  <a onclick="showCategory('other')" class="nav-item" id="other-icon">
+    <span>🗂️</span>
+  </a>
+</div>
 
-<div class="navbar">  
-    <a onclick="showCategory('applications')">  
-        <span>📱</span>  
-        <p>Aplikacije</p>  
-    </a>  
-    <a onclick="showCategory('games')">  
-        <span>🎮</span>  
-        <p>Igre</p>  
-    </a>  
-    <a onclick="showCategory('my')">  
-        <span>👤</span>  
-        <p>Osebno</p>  
-    </a>  
-    <a onclick="showCategory('hor')">  
-        <span>🔮</span>  
-        <p>Horoskop</p>  
-    </a>  
-    <a onclick="showCategory('other')">  
-        <span>🗂️</span>  
-        <p>Ostalo</p>  
-    </a>  
-</div>  <script>  
-    function showCategory(category) {  
-        document.querySelectorAll('.app-list').forEach(list => {  
-            list.style.display = 'none';  
-        });  
-        document.getElementById(category).style.display = 'grid';  
-    }  
+<script>
+  function showCategory(category) {
+    // Skrij vse kategorije
+    document.querySelectorAll('.app-list').forEach(list => {
+      list.style.display = 'none';
+    });
+    // Prikaži izbrano kategorijo
+    document.getElementById(category).style.display = 'grid';
 
-    // Show applications by default  
-    showCategory('applications');  
+    // Aktiviraj izbrano ikono
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    document.querySelector(`#${category}-icon`).classList.add('active');
+  }
+
+  // Začetno stanje
+  showCategory('applications');
 </script>
-
  <script>  
         function isWinter() {  
             const now = new Date();  
