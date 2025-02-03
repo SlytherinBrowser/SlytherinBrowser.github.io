@@ -76,16 +76,18 @@ font-size: 1.8em;
   text-align: center;
   color: #333;
   transition: transform 0.3s ease-in-out;
+  visibility: hidden;
 }
 
 .nav-item.active {
   font-size: 28px;
   transform: scale(1.2);
   color: #007bff;
+  visibility: visible;
 }
 
 .nav-circle.expanded .nav-item {
-  display: block;
+  visibility: visible;
 }
 
 .nav-circle:hover {
@@ -402,20 +404,25 @@ display: grid;
   </a>
 </div>
 
-
 <script>
   function showCategory(category) {
-  // Skrij vse druge ikone, ne pa aplikacij ali drugih elementov
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.classList.remove('active');
-  });
+    // Skrij vse kategorije (lahko razširiš kasneje)
+    document.querySelectorAll('.app-list').forEach(list => {
+      list.style.display = 'none';
+    });
 
-  // Prikaži samo izbrano ikono
-  document.querySelector(`#${category}-icon`).classList.add('active');
-}
+    // Prikaz izbrane kategorije (trenutno samo 'applications')
+    document.getElementById(category).style.display = 'grid';
 
-// Začetno stanje - prikaži aplikacije
-showCategory('applications');
+    // Aktiviraj izbrano ikono
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    document.querySelector(`#${category}-icon`).classList.add('active');
+  }
+
+  // Začetno stanje
+  showCategory('applications');
 </script>
  <script>  
         function isWinter() {  
