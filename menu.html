@@ -46,7 +46,7 @@
             font-size: 1.8em;
         }
 
-       
+
 
         /* Main title */
         h1 {
@@ -568,7 +568,7 @@
     </div>
   </div>
 
-  <script>
+ <script>
     // Show popup if navigation choice not set
     if (!localStorage.getItem('navigationChoice')) {
       document.getElementById('popup').style.display = 'flex';
@@ -592,11 +592,9 @@
       }
     }
 
-     function initializeEasyNav() {
-      // Inject CSS for iOS-style Dock Navigation Bar
+    function initializeEasyNav() {
       const style = document.createElement('style');
       style.textContent = `
-        /* iOS-style Dock Navigation Bar */
         .navbar {
           display: flex;
           justify-content: space-around;
@@ -639,25 +637,30 @@
       `;
       document.head.appendChild(style);
 
-      // Show category function for application lists
-      window.showCategory = function(category) {
-        document.querySelectorAll('.app-list').forEach(list => {
-          list.style.display = 'none';
-        });
-        const categoryElement = document.getElementById(category);
-        if (categoryElement) {
-          categoryElement.style.display = 'grid';
-        }
-      };
+      window.showCategory = function (category) {
+    const categoryElement = document.getElementById(category);
 
-      showCategory('applications');
+    if (categoryElement.style.display === 'grid') {
+      // Switch to "new" navigation mode
+      localStorage.setItem('navigationChoice', 'new');
+      location.reload();
+    } else {
+      document.querySelectorAll('.app-list').forEach(list => {
+        list.style.display = 'none';
+      });
+      if (categoryElement) {
+        categoryElement.style.display = 'grid';
+      }
     }
+  };
+
+  showCategory('applications');
+}
 
     function initializeNewNav() {
-      // Inject CSS for New Navigation Bar
       const style = document.createElement('style');
       style.textContent = `
-         * {
+        * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
@@ -676,10 +679,10 @@
         }
 
         .nav-circle {
-          width: 60px;
+          width: 64px;
           height: 60px;
           background-color: #3498db;
-          border-radius: 50%;
+          border-radius: 50% 50% 100% 100%;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -736,6 +739,10 @@
           activeCategory.style.display = 'grid';
         }
 
+        animateCategoryChange();
+      }
+
+      function animateCategoryChange() {
         category.classList.remove('active');
         setTimeout(() => {
           category.classList.add('active');
@@ -744,17 +751,51 @@
 
       navIcon.textContent = categories[currentCategoryIndex].icon;
       category.textContent = categories[currentCategoryIndex].name;
-      category.classList.add('active');
+      animateCategoryChange();
 
       document.querySelectorAll('.app-list').forEach(list => {
         list.style.display = 'none';
       });
+
       const initialCategory = document.getElementById(categories[currentCategoryIndex].id);
       if (initialCategory) {
         initialCategory.style.display = 'grid';
       }
 
       navCircle.addEventListener('click', changeCategory);
+
+      // Touch swipe detection
+      let touchStartX = 0;
+      navCircle.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+      });
+
+      navCircle.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        if (touchEndX < touchStartX - 30) {
+          currentCategoryIndex = (currentCategoryIndex + 1) % categories.length;
+        } else if (touchEndX > touchStartX + 30) {
+          currentCategoryIndex = (currentCategoryIndex - 1 + categories.length) % categories.length;
+        }
+        navIcon.textContent = categories[currentCategoryIndex].icon;
+        category.textContent = categories[currentCategoryIndex].name;
+
+        document.querySelectorAll('.app-list').forEach(list => {
+          list.style.display = 'none';
+        });
+
+        const activeCategory = document.getElementById(categories[currentCategoryIndex].id);
+        if (activeCategory) {
+          activeCategory.style.display = 'grid';
+        }
+
+        animateCategoryChange();
+      });
+
+      navCircle.addEventListener('click', () => {
+        localStorage.setItem('navigationChoice', 'easy');
+        location.reload();
+      });
 
       navCircle.addEventListener('wheel', (event) => {
         if (event.deltaY > 0) {
@@ -774,10 +815,7 @@
           activeCategory.style.display = 'grid';
         }
 
-        category.classList.remove('active');
-        setTimeout(() => {
-          category.classList.add('active');
-        }, 100);
+        animateCategoryChange();
       });
     }
   </script>
