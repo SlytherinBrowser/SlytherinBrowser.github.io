@@ -371,23 +371,27 @@ display: grid;
         </a>  
     </li>  
 </ul>  
-<!-- Navigation Circle -->
-<div class="nav-circle" id="navCircle">
-  <a onclick="showCategory('applications')" class="nav-item" id="app-icon">
-    <span>📱</span>
-  </a>
-  <a onclick="showCategory('games')" class="nav-item" id="games-icon">
-    <span>🎮</span>
-  </a>
-  <a onclick="showCategory('my')" class="nav-item" id="my-icon">
-    <span>👤</span>
-  </a>
-  <a onclick="showCategory('hor')" class="nav-item" id="hor-icon">
-    <span>🔮</span>
-  </a>
-  <a onclick="showCategory('other')" class="nav-item" id="other-icon">
-    <span>🗂️</span>
-  </a>
+<!-- Navigation Bar - iOS-style Dock -->  <div class="navbar">    
+    <a onclick="showCategory('applications')">    
+        <span>📱</span>    
+        <p>Aplikacije</p>    
+    </a>    
+    <a onclick="showCategory('games')">    
+        <span>🎮</span>    
+        <p>Igre</p>    
+    </a>    
+    <a onclick="showCategory('my')">    
+        <span>👤</span>    
+        <p>Osebno</p>    
+    </a>    
+    <a onclick="showCategory('hor')">    
+        <span>🔮</span>    
+        <p>Horoskop</p>    
+    </a>    
+    <a onclick="showCategory('other')">    
+        <span>🗂️</span>    
+        <p>Ostalo</p>    
+    </a>    
 </div>
 
 <script>
