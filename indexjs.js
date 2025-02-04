@@ -631,27 +631,26 @@ function handleShortcut(searchTerm) {
 let isDragging = false;
 let offsetX, offsetY;
 
-const calendar = document.getElementById('calendar');
+const calendar = document.querySelector('.calendar-container');
 
 calendar.addEventListener('mousedown', (e) => {
     isDragging = true;
     offsetX = e.clientX - calendar.getBoundingClientRect().left;
     offsetY = e.clientY - calendar.getBoundingClientRect().top;
-    calendar.style.transition = 'none'; // Disable transition during dragging
 });
 
 document.addEventListener('mousemove', (e) => {
     if (isDragging) {
-        calendar.style.left = `${e.clientX - offsetX}px`;
-        calendar.style.top = `${e.clientY - offsetY}px`;
+        const x = e.clientX - offsetX;
+        const y = e.clientY - offsetY;
+        calendar.style.left = `${x}px`;
+        calendar.style.top = `${y}px`;
     }
 });
 
 document.addEventListener('mouseup', () => {
     isDragging = false;
-    calendar.style.transition = 'left 0.2s ease, top 0.2s ease'; // Re-enable transition
 });
-
         document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
 
         const calendarBody = document.getElementById('calendar-body');
