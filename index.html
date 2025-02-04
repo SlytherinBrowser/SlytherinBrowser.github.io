@@ -323,5 +323,44 @@ closePopupButton.addEventListener('click', () => {
 
     </script>
 
+<script>
+  let currentView = 'dock';
+  let touchStartX = 0;
+
+  // Prikaz in skritje komponent
+  function toggleView(view) {
+    if (view === 'dock') {
+      document.getElementById('dock').classList.remove('hidden');
+      document.getElementById('commandBar').classList.add('hidden');
+      currentView = 'dock';
+    } else {
+      document.getElementById('dock').classList.add('hidden');
+      document.getElementById('commandBar').classList.remove('hidden');
+      document.getElementById('commandInput').focus();
+      currentView = 'commandBar';
+    }
+  }
+
+  // Dogodek za kolesce miške
+  window.addEventListener('wheel', (event) => {
+    if (event.deltaY < 0 || event.deltaY > 0) {
+      toggleView(currentView === 'dock' ? 'commandBar' : 'dock');
+    }
+  });
+
+  // Dotik na zaslonu
+  window.addEventListener('touchstart', (event) => {
+    touchStartX = event.touches[0].clientX;
+  });
+
+  window.addEventListener('touchend', (event) => {
+    const touchEndX = event.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX;
+
+    if (Math.abs(deltaX) > 50) {
+      toggleView(currentView === 'dock' ? 'commandBar' : 'dock');
+    }
+  });
+</script>
 </body>
 </html>
