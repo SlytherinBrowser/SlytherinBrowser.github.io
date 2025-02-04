@@ -548,8 +548,8 @@ label {
 }
 
 .calendar-container:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6); /* Povečano senčenje ob hoverju */
-    transform: scale(1.02); /* Rahla povečava ob hoverju */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); /* Povečanje senčenja ob prehodu */
+    transform: scale(1.05); /* Rahlo povečanje ob prehodu */
 }
 
 .calendar-header {
