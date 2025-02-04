@@ -627,6 +627,31 @@ function handleShortcut(searchTerm) {
         const firstDayOfMonth = new Date(year, month, 1);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+
+let isDragging = false;
+let offsetX, offsetY;
+
+const calendar = document.getElementById('calendar');
+
+calendar.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - calendar.getBoundingClientRect().left;
+    offsetY = e.clientY - calendar.getBoundingClientRect().top;
+    calendar.style.transition = 'none'; // Disable transition during dragging
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        calendar.style.left = `${e.clientX - offsetX}px`;
+        calendar.style.top = `${e.clientY - offsetY}px`;
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    isDragging = false;
+    calendar.style.transition = 'left 0.2s ease, top 0.2s ease'; // Re-enable transition
+});
+
         document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
 
         const calendarBody = document.getElementById('calendar-body');
