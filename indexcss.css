@@ -343,62 +343,51 @@ color: black;
         background-color: #2980b9;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
     }
-             /* Osnovni slog za dock */
-#dockContainer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    padding: 10px;
-    z-index: 999;
-  }
+            /* Osnovni slog za dock */  
+#dock {  
+    position: fixed;  
+    bottom: 0px;  
+    left: 50%;  
+    transform: translateX(-50%);  
+    background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */  
+    backdrop-filter: blur(10px); /* Srednje močna zameglitev */  
+    border-radius: 5px; /* Majhna zaobljenost robov */  
+    padding: 10px; /* Srednje veliko polnjenje */  
+    display: flex;  
+    justify-content: space-around;  
+    align-items: center;  
+    z-index: 999;  
+    width: 100%;  
+    height: auto;  
+}  .icon {
+width: 50px;
+height: 50px;
+border-radius: 50%; /* Okrogle ikone */
+background-size: cover;
+cursor: pointer;
+}
 
-  #dock {
-    background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 5px;
-    padding: 10px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: auto;
-    width: 90%;
-  }
+.icon:hover {
+transform: scale(1.1); /* Rahlo povečanje pri hoverju */
+}
 
-  #commandBar {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    border-radius: 5px;
-    padding: 10px;
-    width: 30%;
-    display: flex;
-    justify-content: center;
-  }
+.set-link {
+background-color: #3498db;
+color: white;
+padding: 10px 20px;
+font-size: 16px;
+border-radius: 25px;
+cursor: pointer;
+border: none;
+transition: transform 0.2s ease-in-out;
+display: flex;
+align-items: center;
+justify-content: center;
+}
 
-  #commandInput {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-  }
-
-  .icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    cursor: pointer;
-  }
-
-  .icon:hover {
-    transform: scale(1.1);
-  }
-
-  .hidden {
-    display: none;
-  }
+.set-link:hover {
+transform: scale(1.1);
+}
 
 .set-link {
     background-color: #3498db;
@@ -972,62 +961,51 @@ color: black;
                 transform: translateY(1px); /* Slight press down effect on click */
             }
             
-                /* Osnovni slog za dock */
-#dockContainer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;
-    bottom: 0;
-    width: auto;
-    padding: 10px;
-    z-index: 999;
-  }
+               /* Osnovni slog za dock */  
+#dock {  
+    position: fixed;  
+    bottom: 0px;  
+    left: 50%;  
+    transform: translateX(-50%);  
+    background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */  
+    backdrop-filter: blur(10px); /* Srednje močna zameglitev */  
+    border-radius: 5px; /* Majhna zaobljenost robov */  
+    padding: 10px; /* Srednje veliko polnjenje */  
+    display: flex;  
+    justify-content: space-around;  
+    align-items: center;  
+    z-index: 999;  
+    width: auto;  
+    height: auto;  
+}  .icon {
+width: 50px;
+height: 50px;
+border-radius: 50%; /* Okrogle ikone */
+background-size: cover;
+cursor: pointer;
+}
 
-  #dock {
-    background-color: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    border-radius: 5px;
-    padding: 10px;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: auto;
-    width: 90%;
-  }
+.icon:hover {
+transform: scale(1.1); /* Rahlo povečanje pri hoverju */
+}
 
-  #commandBar {
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    border-radius: 5px;
-    padding: 10px;
-    width: 30%;
-    display: flex;
-    justify-content: center;
-  }
+.set-link {
+background-color: #3498db;
+color: white;
+padding: 10px 20px;
+font-size: 16px;
+border-radius: 25px;
+cursor: pointer;
+border: none;
+transition: transform 0.2s ease-in-out;
+display: flex;
+align-items: center;
+justify-content: center;
+}
 
-  #commandInput {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-  }
-
-  .icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    cursor: pointer;
-  }
-
-  .icon:hover {
-    transform: scale(1.1);
-  }
-
-  .hidden {
-    display: none;
-  }
+.set-link:hover {
+transform: scale(1.1);
+}
 .set-link {
     background-color: #3498db;
     color: white;
