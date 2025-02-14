@@ -48,6 +48,7 @@
             border-top: 5px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            cursor: pointer;
         }
 
         @keyframes spin {
@@ -60,46 +61,42 @@
 
     <div class="izbira">
         <h2>Izberi meni:</h2>
-        <button class="staro" onclick="izberi('staro')">Stari Meni</button>
-        <button class="novo" onclick="izberi('novo')">Novi Meni</button>
+        <button class="staro" onclick="izberi('menu.html')">Stari Meni</button>
+        <button class="novo" onclick="izberi('menu2.html')">Novi Meni</button>
     </div>
 
-    <div class="nalaganje"></div>
+    <div class="nalaganje" onclick="ponovnoIzberi()"></div>
 
     <script>
         function izberi(meni) {
             localStorage.setItem('izbraniMeni', meni);
-            prikaziNalaganje();
+            prikaziNalaganje(meni);
         }
 
-        function prikaziNalaganje() {
+        function prikaziNalaganje(meni) {
             document.querySelector('.izbira').style.display = 'none';
             let loader = document.querySelector('.nalaganje');
             loader.style.display = 'block';
 
             setTimeout(() => {
-                let meni = localStorage.getItem('izbraniMeni');
-                if (meni === 'staro') {
-                    window.location.href = 'menu.html';
-                } else if (meni === 'novo') {
-                    window.location.href = 'menu2.html';
-                }
+                window.location.href = meni;
             }, 1500);
         }
 
         function preveriIzbiro() {
             let meni = localStorage.getItem('izbraniMeni');
             if (meni) {
-                prikaziNalaganje();
+                prikaziNalaganje(meni);
             } else {
                 document.querySelector('.izbira').style.display = 'flex';
             }
         }
 
-        document.body.addEventListener('click', () => {
+        function ponovnoIzberi() {
             localStorage.removeItem('izbraniMeni');
-            location.reload();
-        });
+            document.querySelector('.nalaganje').style.display = 'none';
+            document.querySelector('.izbira').style.display = 'flex';
+        }
 
         preveriIzbiro();
     </script>
