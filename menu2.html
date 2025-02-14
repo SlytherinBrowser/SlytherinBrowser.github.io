@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animirana Navigacija</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: black;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            position: absolute;
+            width: 100vw;
+            top: 30px;
+            height: calc(100vh - 80px);
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            border-radius: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(100%);
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .container.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .app-grid {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .app-grid div {
+    background-color: lightgray;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    padding: 10px;
+    position: relative;
+    width: 100%;
+}
+
+.app-grid img {
+    width: 50px;
+    height: 60px;
+    margin-right: 10px;
+}
+
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: black;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            text-decoration: none;
+            padding: 5px 15px;
+            transition: color 0.3s, text-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: white;
+            text-shadow: 0 0 10px white;
+        }
+
+        input {
+    position: sticky;
+    bottom: 0%;
+    left: 0; /* Pazi, da bo input prilepljen na levo stran */
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 40px;
+    border-color: #eeeeee;
+    background-color: white; /* Da se vidi na vseh podlagah */
+}
+        .category-dropdown {
+            position: absolute;
+            bottom: 70px;
+            background-color: white;
+            width: 100%;
+            display: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-dropdown div {
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .category-dropdown div:hover {
+            background-color: lightgray;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white; position: fixed; top: 0;">Menu</h1>
+
+    <div class="container-wrapper">
+        <!-- Mreža aplikacij -->
+        <div class="container active" id="home">
+            <div class="app-grid" id="appGrid"></div>
+        </div>
+
+        <!-- Iskanje aplikacij -->
+        <div class="container" id="search">
+            <input type="search" placeholder="Vnesite ime ali kategorijo" oninput="filterApps(this.value)">
+            <div class="app-grid" id="searchGrid"></div>
+        </div>
+
+        <!-- Obvestila o aplikacijah -->
+        <div class="container" id="notifications">
+            <div class="notifications">
+                <p>Nove aplikacije:</p>
+                <ul>
+                    <li>Nova aplikacija 1</li>
+                    <li>Nova aplikacija 2</li>
+                    <li>Nova aplikacija 3</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigacija -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="changeTab(0)" id="homeNavItem">Aplikacije</div>
+        <div class="nav-item" onclick="changeTab(1)">Iskanje</div>
+        <div class="nav-item" onclick="changeTab(2)">Obvestila</div>
+    </nav>
+
+    <div class="category-dropdown" id="categoryDropdown">
+        <div onclick="selectCategory('applications')">Aplikacije</div>
+        <div onclick="selectCategory('games')">Igre</div>
+        <div onclick="selectCategory('my')">Moje</div>
+        <div onclick="selectCategory('hor')">Horoskop</div>
+        <div onclick="selectCategory('other')">Drugi</div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+        let currentCategory = 'applications'; // Privzeta kategorija
+
+        const appData = {
+            applications: [
+                { name: "Microsoft Word", link: "https://www.microsoft.com/en-us/microsoft-365/word", img: "word.png" },
+                { name: "Google Translate", link: "https://translate.google.com/", img: "prevajalnik.png" },
+                { name: "Remove.bg", link: "https://www.remove.bg/", img: "remove4.png" },
+                { name: "Adobe Premiere Pro", link: "https://www.adobe.com/products/premiere.html", img: "adobe.png" },
+                { name: "W3schools", link: "https://www.w3schools.com/", img: "w3school.png" },
+                { name: "Spotify", link: "https://www.spotify.com/", img: "spotify.png" }
+            ],
+            games: [
+                { name: "Guesses", link: "ugibanje.html", img: "guess.png" },
+                { name: "Spomin", link: "shortgame.html", img: "memory.png" },
+                { name: "Kocka", link: "kocka.html", img: "cube.png" },
+                { name: "Angry Birds", link: "angry.html", img: "angrybirds.png" },
+                { name: "Clicker", link: "clicker.html", img: "clicker.png" },
+                { name: "Gameportal", link: "game.html", img: "gameportal.png" }
+            ],
+            my: [
+                { name: "Spletni dnevnik", link: "2.html", img: "blog.png" },
+                { name: "Belezke", link: "bl.html", img: "notes.png" },
+                { name: "Seznam", link: "shoplist.html", img: "list.png" }
+            ],
+            hor: [
+                { name: "Oven", link: "https://siol.net/horoskop/dnevni/oven", img: "oven.png" },
+                { name: "Bik", link: "https://siol.net/horoskop/dnevni/bik", img: "bik.png" },
+                { name: "Dvojčka", link: "https://siol.net/horoskop/dnevni/dvojcka", img: "dvojcka.png" },
+                { name: "Rak", link: "https://siol.net/horoskop/dnevni/rak", img: "rak.png" },
+                { name: "Lev", link: "https://siol.net/horoskop/dnevni/lev", img: "lev.png" },
+                { name: "Devica", link: "https://siol.net/horoskop/dnevni/devica", img: "devica.png" },
+                { name: "Tehtnica", link: "https://siol.net/horoskop/dnevni/tehtnica", img: "tehtnica.png" },
+                { name: "Škorpijon", link: "https://siol.net/horoskop/dnevni/skorpijon", img: "skorpijon.png" },
+                { name: "Strelec", link: "https://siol.net/horoskop/dnevni/strelec", img: "strelec.png" },
+                { name: "Kozorog", link: "https://siol.net/horoskop/dnevni/kozorog", img: "kozorog.png" },
+                { name: "Vodnar", link: "https://siol.net/horoskop/dnevni/vodnar", img: "vodnar.png" },
+                { name: "Ribi", link: "https://siol.net/horoskop/dnevni/ribi", img: "ribi.png" }
+            ],
+            other: [
+                { name: "Razredni časopis", link: "https://razrednicasopis.github.io", img: "news.png" },
+                { name: "Klepet", link: "https://razrednicasopis.github.io/Resources/utills/klepet.html", img: "chat.png" },
+                { name: "Code Editor", link: "code.html", img: "code.png" },
+                { name: "ChipsChat", link: "https://ko22441111.github.io/spletna/chat.html", img: "chatt.png" },
+                { name: "Slytherin Converter", link: "decode.html", img: "decode.webp" }
+            ]
+        };
+
+        function changeTab(index) {
+            if (index === currentIndex) return;
+
+            const containers = document.querySelectorAll(".container");
+            const navItems = document.querySelectorAll(".nav-item");
+
+            containers[currentIndex].style.transform = index > currentIndex ? 'translateY(100%)' : 'translateY(-100%)';
+            containers[currentIndex].classList.remove('active');
+            navItems[currentIndex].classList.remove('active');
+            
+            containers[index].style.transform = 'translateY(0)';
+            containers[index].classList.add('active');
+            navItems[index].classList.add('active');
+            
+            currentIndex = index;
+            loadCategory(currentCategory);
+        }
+
+   function loadCategory(category) {
+            const appGrid = document.getElementById('appGrid');
+            appGrid.innerHTML = ''; // Počisti obstoječo vsebino
+
+            const apps = appData[category];
+            apps.forEach(app => {
+                const appDiv = document.createElement('div');
+                appDiv.classList.add('app-item');
+                
+                const appLink = document.createElement('a');
+                appLink.href = app.link;
+                appLink.target = "_blank";
+                appLink.style.textDecoration = "none";
+                appLink.style.color = "inherit";
+                
+                const appImage = document.createElement('img');
+                appImage.src = app.img;
+                
+                const appName = document.createElement('div');
+                appName.innerText = app.name;
+                
+                appLink.appendChild(appImage);
+                appLink.appendChild(appName);
+                appDiv.appendChild(appLink);
+                
+                appGrid.appendChild(appDiv);
+            });
+        }
+
+        function filterApps(query) {
+            const appGrid = document.getElementById('searchGrid');
+            appGrid.innerHTML = ''; // Počisti obstoječo vsebino
+            
+            const filteredApps = [];
+            Object.keys(appData).forEach(category => {
+                const apps = appData[category];
+                apps.forEach(app => {
+                    if (app.name.toLowerCase().includes(query.toLowerCase()) || category.toLowerCase().includes(query.toLowerCase())) {
+                        filteredApps.push(app);
+                    }
+                });
+            });
+
+            filteredApps.forEach(app => {
+                const appDiv = document.createElement('div');
+                appDiv.classList.add('app-item');
+                
+                const appLink = document.createElement('a');
+                appLink.href = app.link;
+                appLink.target = "_blank";
+                appLink.style.textDecoration = "none";
+                appLink.style.color = "inherit";
+                
+                const appImage = document.createElement('img');
+                appImage.src = app.img;
+                
+                const appName = document.createElement('div');
+                appName.innerText = app.name;
+                
+                appLink.appendChild(appImage);
+                appLink.appendChild(appName);
+                appDiv.appendChild(appLink);
+                
+                appGrid.appendChild(appDiv);
+            });
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            loadCategory(category);
+            document.getElementById('categoryDropdown').style.display = 'none'; // Skrij dropdown
+        }
+
+       document.getElementById('homeNavItem').addEventListener('click', () => changeTab(0));
+document.getElementById('homeNavItem').classList.add('active');
+loadCategory(currentCategory); // Nalaganje začetne kategorije
+
+// Funkcija za prikaz in skrivanje dropdown menija
+function toggleCategoryDropdown() {
+    const dropdown = document.getElementById('categoryDropdown');
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+
+// Dodaj dogodek za klik na gumb za kategorije
+document.getElementById('homeNavItem').addEventListener('click', toggleCategoryDropdown);
+
+// Funkcija za izbiro kategorije
+function selectCategory(category) {
+    currentCategory = category;
+    loadCategory(category);
+    document.getElementById('categoryDropdown').style.display = 'none'; // Skrij dropdown
+}
+    </script>
+</body>
+</html>

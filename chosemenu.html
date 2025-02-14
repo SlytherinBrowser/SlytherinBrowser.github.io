@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izbira Menija</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .izbira {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .izbira button {
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            width: 200px;
+            border-radius: 8px;
+        }
+
+        .staro { background: #007bff; color: white; }
+        .novo { background: #28a745; color: white; }
+
+        .nalaganje {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="izbira">
+        <h2>Izberi meni:</h2>
+        <button class="staro" onclick="izberi('staro')">Stari Meni</button>
+        <button class="novo" onclick="izberi('novo')">Novi Meni</button>
+    </div>
+
+    <div class="nalaganje"></div>
+
+    <script>
+        function izberi(meni) {
+            localStorage.setItem('izbraniMeni', meni);
+            prikaziNalaganje();
+        }
+
+        function prikaziNalaganje() {
+            document.querySelector('.izbira').style.display = 'none';
+            let loader = document.querySelector('.nalaganje');
+            loader.style.display = 'block';
+
+            setTimeout(() => {
+                let meni = localStorage.getItem('izbraniMeni');
+                if (meni === 'staro') {
+                    window.location.href = 'menu.html';
+                } else if (meni === 'novo') {
+                    window.location.href = 'menu2.html';
+                }
+            }, 1500);
+        }
+
+        function preveriIzbiro() {
+            let meni = localStorage.getItem('izbraniMeni');
+            if (meni) {
+                prikaziNalaganje();
+            } else {
+                document.querySelector('.izbira').style.display = 'flex';
+            }
+        }
+
+        document.body.addEventListener('click', () => {
+            localStorage.removeItem('izbraniMeni');
+            location.reload();
+        });
+
+        preveriIzbiro();
+    </script>
+
+</body>
+</html>
