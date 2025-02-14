@@ -499,7 +499,7 @@ function isWinter() {
 
 
  function menuking() {
-        window.location.href = "menu.html";
+        window.location.href = "chosemenu.html";
     }
 function lock() {
         window.location.href = "lock1.html";
