@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animirana Navigacija</title>
     <style>
+         
         * {
             margin: 0;
             padding: 0;
@@ -27,12 +28,12 @@
             height: 100vh;
             overflow: hidden;
         }
-
+@media (min-width: 700px){
         .container {
             position: absolute;
             width: 100vw;
             top: 35px;
-            height: calc(100vh - 13%);
+            height: calc(100vh - 80px);
             background: white;
             display: flex;
             flex-direction: column;
@@ -46,6 +47,7 @@
             overflow-y: auto;
             padding: 20px;
         }
+}
 
         .container.active {
             opacity: 1;
@@ -136,6 +138,28 @@
         .category-dropdown div:hover {
             background-color: lightgray;
         }
+    
+    @media (max-width: 700px){
+         .container {
+            position: absolute;
+            width: 100vw;
+            top: 30px;
+            height: calc(100vh - 17%);
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            border-radius: 40px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(100%);
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+    }
     </style>
 </head>
 <body>
