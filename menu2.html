@@ -121,24 +121,26 @@
     background-color: white; /* Da se vidi na vseh podlagah */
 }
         .category-dropdown {
-            position: absolute;
-            bottom: 70px;
-            background-color: white;
-            width: 100%;
-            display: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
+    position: absolute;
+    bottom: 70px;
+    background-color: rgba(50, 50, 50, 0.9); /* Temno prozorno ozadje */
+    width: 100%;
+    display: none;
+    border-radius: 20px; /* Večja zaobljenost */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
 
-        .category-dropdown div {
-            padding: 10px;
-            cursor: pointer;
-            text-align: center;
-        }
+.category-dropdown div {
+    padding: 12px;
+    cursor: pointer;
+    text-align: center;
+    color: white; /* Bela barva besedila */
+    transition: background-color 0.3s; /* Prehodni učinek */
+}
 
-        .category-dropdown div:hover {
-            background-color: lightgray;
-        }
+.category-dropdown div:hover {
+    background-color: rgba(70, 70, 70, 0.8); /* Srednja temna barva ob hover */
+}
     
     @media (max-width: 700px){
          .container {
