@@ -230,16 +230,22 @@
             popup.style.display = 'none';
         }
 
-        toggleButton.addEventListener('click', () => {
-            const isActive = resultFrame.classList.contains('active');
-            if (isActive) {
-                resultFrame.classList.remove('active');
-                searchForm.classList.remove('shrunk'); // Show search bar when iframe is minimized
-            } else {
-                resultFrame.classList.add('active');
-                searchForm.classList.add('shrunk'); // Hide search bar when iframe is maximized
-            }
-        });
+        let isExpanded = false;
+
+toggleButton.addEventListener('click', () => {
+    if (!isExpanded) {
+        resultFrame.style.height = '100vh';
+        resultFrame.style.width = '100%';
+        searchForm.classList.add('shrunk'); // Skrije iskalnik
+    } else {
+        resultFrame.style.height = '400px';
+        resultFrame.style.width = '100%';
+        searchForm.classList.remove('shrunk'); // Prikaže iskalnik
+    }
+    isExpanded = !isExpanded;
+});
+
+
          function getTimePlayedToday() {
             const today = new Date().toISOString().split('T')[0];
             const data = JSON.parse(localStorage.getItem('playTime')) || {};
