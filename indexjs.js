@@ -910,7 +910,7 @@ function getAvailableModes() {
 
     // If the date is between 20th November and 28th February, winterstyle is available
     if (today >= startDate && today <= endDate) {
-        return ["normal", "modern", "winterstyle"];
+        return ["normal", "modern"];
     }
     return ["normal", "modern"];
 }
