@@ -1,14 +1,11 @@
 @media screen and (max-width: 700px){
-    body {
+        body {
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 height: 100vh;
                 margin: 0;
-                background: url('winter1.png') no-repeat center center fixed;
-background-size: cover; /* Slika bo pokrila celoten zaslon */
-    background-position: center center; /* Slika bo centrirana */
-    background-attachment: fixed; /* Slika bo ostala na mestu pri pomikanju strani */
+                background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
 }
