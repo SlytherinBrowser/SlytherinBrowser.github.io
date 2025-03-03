@@ -897,46 +897,37 @@ document.getElementById("buttonkng").addEventListener("click", function() {
 function toggleMode() {
     const currentMode = localStorage.getItem("mode") || "normal";
     const availableModes = getAvailableModes();
-    const newMode = availableModes.includes(currentMode) ? currentMode : "normal";
-    const nextMode = newMode === "normal" ? "modern" : newMode === "modern" ? "winterstyle" : "normal";
+
+    const modeIndex = availableModes.indexOf(currentMode);
+    const nextMode = availableModes[(modeIndex + 1) % availableModes.length];
+
     applyMode(nextMode);
-    location.reload(); // Reload the page after toggling mode
+    location.reload(); // Reload strani po preklopu
 }
 
 function getAvailableModes() {
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), 10, 20); // 20th November
-    const endDate = new Date(today.getFullYear(), 1, 28); // 28th February
+    const startDate = new Date(today.getFullYear(), 10, 20); // 20. november
+    const endDate = new Date(today.getFullYear(), 1, 27); // 27. februar
 
-    // If the date is between 20th November and 28th February, winterstyle is available
-    if (today >= startDate && today <= endDate) {
-        return ["normal", "modern"];
+    if (today >= startDate || today <= endDate) {
+        return ["normal", "modern", "winterstyle"];
     }
     return ["normal", "modern"];
 }
 
 function applyMode(mode) {
-    const normalStylesheet = document.getElementById("normalStylesheet");
-    const modernStylesheet = document.getElementById("modernStylesheet");
-    const winterStylesheet = document.getElementById("winterStylesheet");
-
-    // Disable all stylesheets first
-    normalStylesheet.disabled = true;
-    modernStylesheet.disabled = true;
-    winterStylesheet.disabled = true;
-
-    // Enable the selected mode's stylesheet
-    if (mode === "normal") {
-        normalStylesheet.disabled = false;
-    } else if (mode === "modern") {
-        modernStylesheet.disabled = false;
-    } else if (mode === "winterstyle") {
-        winterStylesheet.disabled = false;
-    }
+    document.getElementById("normalStylesheet").disabled = mode !== "normal";
+    document.getElementById("modernStylesheet").disabled = mode !== "modern";
+    document.getElementById("winterStylesheet").disabled = mode !== "winterstyle";
 
     localStorage.setItem("mode", mode);
 }
 
+// Ob nalaganju strani uporabi shranjen način
+document.addEventListener("DOMContentLoaded", () => {
+    applyMode(localStorage.getItem("mode") || "normal");
+});
 
 
 let imageFile = null;
