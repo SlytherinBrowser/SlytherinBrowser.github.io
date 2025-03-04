@@ -76,7 +76,7 @@
     </div>
 </div>
 
-<button onclick="window.location.href='newbrowser.html'">Newmode</button>
+<button onclick="openNewBrowser()">Newmode</button>
 <div id="dock">  
     <!-- Ikone so že tukaj -->  
     <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>  
@@ -230,9 +230,14 @@ document.querySelector('.eye-right').addEventListener('click', () => {
 });
 </script>
 <script>
-   // Preveri, ali je uporabnik že bil preusmerjen
-    if (!sessionStorage.getItem("stayOnIndex")) {
-        window.location.href = "newbrowser.html"; // Samodejna preusmeritev
+  // Preveri LocalStorage, če mora preusmeriti uporabnika
+    if (localStorage.getItem("redirectToNewBrowser") !== "false") {
+        window.location.href = "newbrowser.html";
+    }
+
+    function openNewBrowser() {
+        localStorage.setItem("redirectToNewBrowser", "true"); // Nastavi preusmeritev
+        window.location.href = "newbrowser.html"; // Preusmeri uporabnika
     }
 </script>
               <script>
