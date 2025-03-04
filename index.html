@@ -230,15 +230,20 @@ document.querySelector('.eye-right').addEventListener('click', () => {
 });
 </script>
 <script>
-  // Preveri LocalStorage, če mora preusmeriti uporabnika
-    if (localStorage.getItem("redirectToNewBrowser") !== "false") {
+  <script>
+    // Če je shranjeno, da naj gre vedno na newbrowser.html, preusmeri
+    if (localStorage.getItem("redirectToNewBrowser") === "true") {
         window.location.href = "newbrowser.html";
     }
 
     function openNewBrowser() {
-        localStorage.setItem("redirectToNewBrowser", "true"); // Nastavi preusmeritev
-        window.location.href = "newbrowser.html"; // Preusmeri uporabnika
+        localStorage.setItem("redirectToNewBrowser", "true"); // Shrani, da mora preusmerjati
+        window.location.href = "newbrowser.html"; // Preusmeri na newbrowser.html
     }
+</script>
+
+<button onclick="openNewBrowser()">Odpri New Browser</button>
+
 </script>
               <script>
 const setLinkButton = document.querySelector('.set-link');
