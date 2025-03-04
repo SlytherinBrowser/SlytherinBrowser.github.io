@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="favicon" rel="icon" href="Slytherin.ico">
+<style>
+    body {
+    background: black;
+    color: cyan;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#chatContainer {
+    text-align: center;
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Chat okvir */
+.chat-box {
+    width: 80%;
+    max-width: 500px;
+    border: 2px solid cyan;
+    box-shadow: 0 0 10px cyan;
+    border-radius: 10px;
+    background: rgba(0, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+}
+
+.chat-area {
+        width: 80%;
+        max-width: 300px;
+        min-height: 50px;
+        max-height: 300px;
+        overflow-y: auto;
+        background: rgba(0, 255, 255, 0.1);
+        border: 2px solid cyan;
+        box-shadow: 0 0 10px cyan;
+        border-radius: 10px;
+        margin: 10px auto;
+        padding: 10px;
+        text-align: left;
+        display: none; /* Skrito privzeto */
+    }
+/* Container za input in gumbe */
+.chat-controls {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 5px; /* Razmik med elementi */
+}
+
+/* Nov container za input in gumb */
+.input-container {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+/* Vhod za sporočila */
+.chat-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid cyan;
+    background: transparent;
+    color: cyan;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+    border-radius: 5px;
+}
+
+/* Gumb za pošiljanje znotraj inputa */
+#sendButton {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px;
+    border: none;
+    background: rgba(0, 255, 255, 0.2);
+    color: cyan;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+/* Gumb za pošiljanje hover efekt */
+#sendButton:hover {
+    background: rgba(0, 255, 255, 0.3);
+}
+
+/* Gumbi za kalkulator in koledar */
+.popup-button {
+    padding: 10px;
+    border: 2px solid cyan;
+    background: rgba(0, 255, 255, 0.2);
+    color: cyan;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.popup-button:hover {
+    background: rgba(0, 255, 255, 0.3);
+}
+
+/* Gumb za kalkulator (levo) */
+#calculatorButton {
+    order: -1; /* Postavi ga na levo stran */
+}
+
+/* Gumb za koledar (desno) */
+#calendarButton {
+    order: 1; /* Postavi ga na desno stran */
+}
+
+/* Popup za koledar */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid cyan;
+    box-shadow: 0 0 10px cyan;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* Koledar */
+.calendar {
+    font-family: Arial, sans-serif;
+    color: cyan;
+}
+
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.calendar-button {
+    padding: 10px;
+    background-color: rgba(0, 255, 255, 0.2);
+    border: none;
+    color: cyan;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.calendar-button:hover {
+    background-color: rgba(0, 255, 255, 0.3);
+}
+
+.calendar-month {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Dnevi v koledarju */
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    padding: 10px 0;
+}
+
+.calendar-days span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    width: 40px;
+    background-color: rgba(0, 255, 255, 0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.calendar-days span:hover {
+    background-color: rgba(0, 255, 255, 0.3);
+}
+
+.calendar-days span.empty {
+    background-color: transparent;
+    cursor: default;
+}
+/* Glava koledarja z oznakami dni */
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding: 5px 0;
+    text-transform: uppercase;
+}
+
+.calendar-header span {
+    text-align: center;
+    font-size: 14px;
+    padding: 5px;
+    color: cyan;
+    opacity: 0.8;
+}
+/* Kalkulator */
+.calculator {
+    text-align: center;
+}
+
+.calc-display {
+    width: 98%;
+    height: 50px;
+    font-size: 24px;
+    text-align: right;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid cyan;
+    color: cyan;
+    border-radius: 5px;
+    box-shadow: 0 0 10px cyan;
+}
+
+.calc-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.calc-btn {
+    width: 100%;
+    padding: 20px;
+    font-size: 20px;
+    background: rgba(0, 255, 255, 0.1);
+    color: cyan;
+    border: 2px solid cyan;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 0 5px cyan;
+}
+
+.calc-btn:hover {
+    background: rgba(0, 255, 255, 0.3);
+}
+
+.clear-btn {
+    background: red;
+    color: white;
+    grid-column: span 2;
+}
+
+.close-btn {
+    background: red;
+    border: none;
+    padding: 5px 10px;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+
+ .clock {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            background: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+</style></head>
+<body>
+     <div class="clock" id="clock">00:00:00</div>
+    <div id="chatContainer">
+        <div class="chat-box">
+            <div class="chat-area" id="chatArea"></div>
+            <div class="chat-controls">
+                <!-- Kalkulator gumb na levo -->
+                <button id="calculatorButton" onclick="showPopup('calculator-popup')" class="popup-button">🧮</button>
+
+                <!-- Input polje in gumb za pošiljanje znotraj inputa -->
+                <div class="input-container">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Vpiši sporočilo...">
+                    <button id="sendButton" class="chat-button">📩</button>
+                </div>
+
+                <!-- Koledar gumb na desno -->
+                <button id="calendarButton" onclick="showPopup('calendar-popup')" class="popup-button">📅</button>
+            </div>
+        </div>
+    </div>
+    <div id="calendar-popup" class="popup">
+    <div class="calendar">
+        <div id="calendarControls" class="calendar-controls">
+            <button onclick="changeMonth(-1)" class="calendar-button">Prev</button>
+            <span id="currentMonth" class="calendar-month"></span>
+            <button onclick="changeMonth(1)" class="calendar-button">Next</button>
+        </div>
+        <!-- Glava s kratkimi oznakami dni -->
+        <div id="calendarHeader" class="calendar-header"></div>
+        <div id="calendarDays" class="calendar-days"></div>
+    </div>
+</div>
+
+
+    <!-- Kalkulator pop-up -->
+<div id="calculator-popup" class="popup">
+    <button class="close-btn" onclick="closePopup('calculator-popup')">X</button>
+    <div class="calculator">
+        <input type="text" id="calcDisplay" class="calc-display" disabled>
+        <div class="calc-buttons">
+            <button class="calc-btn" onclick="appendToDisplay('7')">7</button>
+            <button class="calc-btn" onclick="appendToDisplay('8')">8</button>
+            <button class="calc-btn" onclick="appendToDisplay('9')">9</button>
+            <button class="calc-btn" onclick="appendToDisplay('/')">/</button>
+
+            <button class="calc-btn" onclick="appendToDisplay('4')">4</button>
+            <button class="calc-btn" onclick="appendToDisplay('5')">5</button>
+            <button class="calc-btn" onclick="appendToDisplay('6')">6</button>
+            <button class="calc-btn" onclick="appendToDisplay('*')">*</button>
+
+            <button class="calc-btn" onclick="appendToDisplay('1')">1</button>
+            <button class="calc-btn" onclick="appendToDisplay('2')">2</button>
+            <button class="calc-btn" onclick="appendToDisplay('3')">3</button>
+            <button class="calc-btn" onclick="appendToDisplay('-')">-</button>
+
+            <button class="calc-btn" onclick="appendToDisplay('0')">0</button>
+            <button class="calc-btn" onclick="appendToDisplay('.')">.</button>
+            <button class="calc-btn" onclick="calculateResult()">=</button>
+            <button class="calc-btn" onclick="appendToDisplay('+')">+</button>
+
+            <button class="calc-btn clear-btn" onclick="clearDisplay()">C</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+
+
+ function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+
+// Kalkulator funkcije
+// Funkcija za odprtje pop-up okna (Kalkulator)
+function showPopup(popupId) {
+    document.getElementById(popupId).style.display = 'block';
+    document.addEventListener('click', outsideClickListener);
+}
+
+// Funkcija za zaprtje pop-up okna (Kalkulator)
+function closePopup(popupId) {
+    document.getElementById(popupId).style.display = 'none';
+    document.removeEventListener('click', outsideClickListener);
+}
+
+// Funkcija za skrivanje ob kliku izven (le kalkulator se skrije)
+function outsideClickListener(event) {
+    const calculatorPopup = document.getElementById('calculator-popup');
+    if (!calculatorPopup.contains(event.target)) {
+        closePopup('calculator-popup');
+    }
+}
+
+// Kalkulator funkcionalnosti
+function appendToDisplay(value) {
+    document.getElementById('calcDisplay').value += value;
+}
+
+function calculateResult() {
+    let display = document.getElementById('calcDisplay');
+    try {
+        display.value = eval(display.value);
+    } catch (e) {
+        display.value = 'Napaka';
+    }
+}
+
+function clearDisplay() {
+    document.getElementById('calcDisplay').value = '';
+}
+
+// Inicializacija trenutnega meseca
+let currentMonth = new Date();
+
+// Seznam mesecev in oznake dni (Ponedeljek prvi)
+let months = ["Januar", "Februar", "Marec", "April", "Maj", "Junij", "Julij", "Avgust", "September", "Oktober", "November", "December"];
+let weekDays = ["P", "T", "S", "Č", "P", "S", "N"]; // Prve črke dni
+
+// Prikaz glave s prvimi črkami dnevov
+function createCalendarHeader() {
+    let headerHTML = '';
+    weekDays.forEach(day => {
+        headerHTML += `<span>${day}</span>`;
+    });
+    document.getElementById('calendarHeader').innerHTML = headerHTML;
+}
+
+// Prikaz koledarja za trenutni mesec
+function showCalendar() {
+    let monthDays = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+    let firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+
+    // Popravimo indeks prvega dne (da ponedeljek začne teden)
+    firstDay = (firstDay === 0) ? 6 : firstDay - 1;
+
+    let calendarDays = '';
+
+    // Prazna polja na začetku meseca
+    for (let i = 0; i < firstDay; i++) {
+        calendarDays += '<span class="empty"></span>';
+    }
+
+    // Dnevi v mesecu
+    for (let day = 1; day <= monthDays; day++) {
+        calendarDays += `<span>${day}</span>`;
+    }
+
+    // Posodobi vsebino koledarja
+    document.getElementById('calendarDays').innerHTML = calendarDays;
+
+    // Posodobi naslov meseca
+    document.getElementById('currentMonth').textContent = `${months[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+}
+
+// Sprememba meseca (prejšnji/naslednji)
+function changeMonth(increment) {
+    currentMonth.setMonth(currentMonth.getMonth() + increment);
+    showCalendar();
+}
+
+// Prikaz koledarja ob nalaganju strani
+createCalendarHeader();
+showCalendar();
+
+// Funkcija za prikaz popup okna
+function showPopup(id) {
+    document.getElementById(id).style.display = 'block';
+    if (id === 'calendar-popup') {
+        showCalendar();
+    }
+}
+
+// Funkcija za skritje koledarja, ko klikneš izven njega
+document.addEventListener('click', function(event) {
+    const calendarPopup = document.getElementById('calendar-popup');
+    if (!calendarPopup.contains(event.target) && !event.target.matches('#calendarButton')) {
+        calendarPopup.style.display = 'none';
+    }
+});
+
+// Gumb za zapiranje popup okna
+document.querySelectorAll('.popup').forEach(function(popup) {
+    popup.addEventListener('click', function(e) {
+        if (e.target === popup) {
+            popup.style.display = 'none';
+        }
+    });
+});
+
+// Funkcija za prikazovanje in dodajanje sporočil
+document.getElementById('sendButton').addEventListener('click', function() {
+    const chatArea = document.getElementById('chatArea');
+    const chatInput = document.getElementById('chatInput').value;
+
+    if (chatInput.trim()) {
+        chatArea.innerHTML += `<div class="message">${chatInput}</div>`; // Dodaj sporočilo
+        document.getElementById('chatInput').value = ''; // Pošlji input
+    }
+});
+
+  let chatInput = document.getElementById("chatInput");
+    let chatArea = document.getElementById("chatArea");
+
+    chatInput.addEventListener("focus", function () {
+        chatArea.style.display = "block";
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!chatInput.contains(event.target) && !chatArea.contains(event.target)) {
+            chatArea.style.display = "none";
+        }
+    });
+
+
+
+     const botResponses = {
+    "pozdrav": [
+        "Hej! Kako si danes?",
+        "Živjo, kako ti gre?",
+        "Pozdravljen! Kaj novega?"
+    ],
+    "kako si": [
+        "Super sem, hvala! Kaj pa ti?",
+        "Zelo dobro, hvala na vprašanju!",
+        "Sem v redu, kako pa ti?"
+    ],
+    "kaj je tvoje ime": [
+        "Jaz sem tvoj chatbot prijatelj. Kako naj te kličem?",
+        "Moje ime je ChatGPT. Kaj pa tvoje?",
+        "Nimam pravega imena, ampak lahko me kličeš, kar želiš!"
+    ],
+    "kakšno je vreme": [
+        "Težko rečem, ampak upam, da je sončno!",
+        "Vremenska napoved je vedno presenečenje!",
+        "Na žalost nimam dostopa do vremenske napovedi, ampak upam, da je lepo!"
+    ],
+    "hvala": [
+        "Prosim! Če kaj rabiš, sem tukaj.",
+        "Ni za kaj! Vedno sem tukaj za pomoč.",
+        "Z veseljem! Če potrebuješ še kaj, me kar pokliči!"
+    ],
+    "kje si": [
+        "Sem tukaj, vedno pripravljen pomagati!",
+        "V tvojem telefonu ali računalniku, kjerkoli me potrebuješ!",
+        "Sem povsod, kjer imam internet!"
+    ],
+    "kaj znaš": [
+        "O, veliko stvari! Kaj te zanima?",
+        "Znam odgovarjati na vprašanja, iskanje informacij in še marsikaj!",
+        "Moje sposobnosti so široke! Kaj bi rad izvedel?"
+    ],
+    "nasvet": [
+        "Majhni koraki te pripeljejo daleč. Kar pogumno!",
+        "Ne obupaj, tudi če naletiš na težave.",
+        "Zaupaj v svoje sposobnosti in nikoli ne nehaj rasti."
+    ],
+    "kdo si": [
+        "Sem chatbot, ki ti rad pomaga. In ti?",
+        "Sem virtualni pomočnik, ki je tukaj, da ti pomaga.",
+        "Sem umetna inteligenca, ki ti je vedno na voljo."
+    ],
+    "povej šalo": [
+        "Zakaj računalnik ne mara morskih psov? Ker bi ugriznili v datoteke!",
+        "Kaj pravi računalnik, ko sreča peska? 'Tukaj je nekaj prahu!'",
+        "Zakaj programerji ne morejo igrati skrivalnic? Ker vedno najdejo napako!"
+    ],
+    "povej nekaj zanimivega": [
+        "Si vedel, da ima srce hobotnice tri prekate?",
+        "Zanimivo je, da so delfini znani po tem, da imajo svojo 'besedo' za prijatelje!",
+        "Ljudje so edini, ki se smejemo, da bi komunicirali!"
+    ],
+    "kaj pomeni AI": [
+        "AI? To sem jaz, tvoja umetna inteligenca!",
+        "AI pomeni umetno inteligenco – to sem jaz, pripravljen pomagat.",
+        "AI je računalniški sistem, ki lahko opravlja naloge, ki jih običajno opravi človek."
+    ],
+    "kdo je ustvaril tebe": [
+        "Pametni ljudje, ki obožujejo tehnologijo.",
+        "Skupina razvijalcev pri OpenAI me je ustvarila.",
+        "Ustvarili so me strokovnjaki, ki verjamejo v prihodnost umetne inteligence."
+    ],
+    "kaj lahko narediš": [
+        "Lahko klepetam, odgovarjam in pomagam. Kako naj začnem?",
+        "Pomagam ti pri vseh vprašanjih in nalogah, ki jih imaš!",
+        "Lahko ti pomagam najti odgovore, reševati težave in se učiti."
+    ],
+    "zakaj si tukaj": [
+        "Tukaj sem zate! Kaj te zanima?",
+        "Sem tukaj, da ti pomagam pri vseh vprašanjih!",
+        "Moje poslanstvo je, da pomagam ljudem kot ti!"
+    ],
+    "kje je Slovenija": [
+        "V srcu Evrope, čudovita dežela gora in morja.",
+        "Slovenija je majhna, a zelo lepa država v srednji Evropi.",
+        "Slovenija je v Evropi, med Italijo, Avstrijo in Hrvaško."
+    ],
+    "katera je prestolnica Slovenije": [
+        "Ljubljana, simpatično mesto na Ljubljanici.",
+        "Prestonica Slovenije je Ljubljana, zelo zelena in prijetna!",
+        "Ljubljana je prestolnica in najboljše mesto za začetek raziskovanja Slovenije."
+    ],
+    "koliko je 2 + 2": [
+        "Haha, 4, vedno 4.",
+        "Seveda, 2 + 2 je 4.",
+        "To je enostavno – 4!"
+    ],
+    "povej recept": [
+        "Kaj želiš kuhati? Imam nekaj idej!",
+        "Kaj bi rad kuhal? Imam nekaj preprostih receptov!",
+        "Z veseljem ti bom pomagal z receptom – kaj ti je všeč?"
+    ],
+    "kako skuhati kavo": [
+        "Skuhaj vodo, dodaj kavo in premešaj. Voilà!",
+        "Najprej segrej vodo, nato dodaj kavo po okusu.",
+        "Kuhanje kave je enostavno – le vroča voda in kava sta potrebna!"
+    ],
+    "kaj je tvoja najljubša barva": [
+        "Mogoče modra? Ampak nimam prave barve!",
+        "Moje najljubše je svetlo modra, vendar sem brez barve!",
+        "Če bi imel barvo, bi bila to verjetno modra!"
+    ],
+    "kaj je tvoje najljubše živali": [
+        "Panda je ljubka, ampak nisem prepričan, kaj bi izbral!",
+        "Mačke so vedno zabavne in prijazne.",
+        "Psi so neverjetni spremljevalci, čeprav jaz nimam domače živali!"
+    ],
+    "kaj je najlepši kraj na svetu": [
+        "Zagotovo so to gore, ampak to je odvisno od tega, kaj imaš rad!",
+        "Vsak ima svoj najlepši kraj, zame bi bilo to mirno jezero.",
+        "Kjerkoli je narava, je lepota. Katera lokacija tebe navdušuje?"
+    ],
+    "kako lahko postanem bolj produktiven": [
+        "Začni z majhnimi nalogami in si postavi jasne cilje.",
+        "Pomaga, da se osredotočiš na eno stvar naenkrat.",
+        "Uredi svoj delovni prostor in poskusi se izogibati distrakcijam."
+    ],
+    "kaj je bitcoin": [
+        "Bitcoin je digitalna valuta, ki ne potrebuje centralne banke.",
+        "Bitcoin je kriptovaluta, ki omogoča anonimne transakcije.",
+        "Bitcoin je decentralizirana virtualna valuta, ki je zelo priljubljena."
+    ],
+    "kaj je umetna inteligenca": [
+        "Umetna inteligenca je tehnologija, ki omogoča računalnikom, da rešujejo težave, kot bi jih človek.",
+        "AI je sposobnost računalnikov, da se učijo in izvajajo naloge brez človeškega posega.",
+        "To je veja tehnologije, ki ustvarja sisteme, ki lahko simulirajo človeško mišljenje."
+    ],
+    "kaj pomeni biti srečen": [
+        "Sreča je osebno stanje, ki ga doživljamo kot zadovoljstvo z življenjem.",
+        "Biti srečen pomeni biti v ravnovesju in uživati v trenutku.",
+        "Sreča je različna za vsakega posameznika, a običajno pomeni notranji mir."
+    ],
+    "kaj je ljubezen": [
+        "Ljubezen je močno čustvo, ki nas povezuje z drugimi osebami.",
+        "Ljubezen je pogosto brezpogojna in vodi do globokih odnosov.",
+        "Ljubezen je, ko skrbiš za nekoga in želiš, da je srečen."
+    ],
+    "kdo je najbogatejši človek na svetu": [
+        "Trenutno je to Elon Musk, vendar se seznam pogosto spreminja.",
+        "Po zadnjih podatkih je najbogatejši človek Elon Musk.",
+        "To se spreminja, vendar je Elon Musk pogosto na vrhu!"
+    ],
+    "kako deluje telefon": [
+        "Telefon deluje z radijskimi valovi, da pošlje in prejme signal.",
+        "Pametni telefoni imajo procesor, ki omogoča izvajanje aplikacij.",
+        "Telefon se povezuje s signalom prek omrežja in omogoča klice ter internet."
+    ],
+    "kaj je umetnost": [
+        "Umetnost je način izražanja idej, čustev in ustvarjalnosti.",
+        "Umetnost vključuje slike, glasbo, plese, skulpture in še več.",
+        "To je kreativni izraz, ki nas spodbuja, da razmišljamo in se čustveno odzovemo."
+    ],
+    "kako se naredi dobra fotografija": [
+        "Pomembna sta osvetlitev in kompozicija, da dosežeš pravo vzdušje.",
+        "Uporabi pravilen fokus in pozornost na podrobnosti.",
+        "Dobra fotografija zahteva pravilno nastavitev kamere in razumevanje svetlobe."
+    ],
+    "kako lahko izboljšam svoje spanje": [
+        "Poskusi iti v posteljo ob isti uri vsak večer.",
+        "Ustvari pomirjujoče okolje v spalnici, brez motenj.",
+        "Izogibaj se kofeinu in težki hrani pred spanjem."
+    ],
+    "kaj pomeni biti uspešen": [
+        "Uspeh je dosego ciljev in občutek izpolnjenosti.",
+        "Za nekoga pomeni uspeh, da doseže poklicne cilje, za drugega pa osebno rast.",
+        "Uspeh je odvisen od tega, kaj šteješ kot svoje dosežke."
+    ],
+    "kaj je karma": [
+        "Karma je prepričanje, da se ti dobro ali slabo vrne glede na tvoje dejanja.",
+        "To je zakon vzroka in posledice v življenju.",
+        "Karma pomeni, da naše dejanje vpliva na prihodnost."
+    ],
+    "kaj je meditacija": [
+        "Meditacija je praksa osredotočanja na dih in sproščanje uma.",
+        "Pomaga pri zmanjševanju stresa in izboljšanju koncentracije.",
+        "Meditacija vključuje tišino in zavedanje o trenutnem trenutku."
+    ],
+    "kaj so sanje": [
+        "Sanje so slike, zvoki in občutki, ki jih doživimo med spanjem.",
+        "Sanje so pogosto odraz naših misli in čustev iz dneva.",
+        "Sanjarjenje ali sanje ponoči so lahko povezana z našimi podzavestnimi željami."
+    ],
+    "kaj je sončni vzhod": [
+        "Sončni vzhod je trenutek, ko se sonce dvigne nad obzorjem.",
+        "To je začetek novega dneva in simbol upanja.",
+        "Sončni vzhod je trenutek mirnosti, ko sonce osvetli svet."
+    ],
+    "kako lahko izboljšam svojo telesno pripravljenost": [
+        "Začni s preprostimi vajami in postopoma povečuj intenzivnost.",
+        "Redno telovadi, vključuj kardio in močovne vaje.",
+        "Poskrbi za zdravo prehrano, da podpreš telesno pripravljenost."
+    ],
+    "kako ustvariti spletno stran": [
+        "Začni z osnovnim HTML, CSS in JavaScript za dinamične strani.",
+        "Uporabi graditelje spletnih strani, kot je WordPress, za enostavno ustvarjanje.",
+        "Postavi strukturo strani in poskrbi za lep dizajn s CSS ter dodaj interaktivnost z JavaScriptom."
+    ],
+    "kaj je filozofija": [
+        "Filozofija je raziskovanje temeljnih vprašanj o življenju, eksistenci in etiki.",
+        "To je iskanje resnice, pogosto skozi logiko in argumente.",
+        "Filozofija nas spodbuja, da razmišljamo o našem mestu v svetu."
+    ],
+    "kaj je zgodovina": [
+        "Zgodovina je študij preteklosti in dogodkov, ki so oblikovali svet.",
+        "Pomaga nam razumeti, kako so se razvijale civilizacije.",
+        "Zgodovina nas uči, kako smo prišli do tega, kjer smo zdaj."
+    ],
+    "kaj pomeni biti odgovoren": [
+        "Biti odgovoren pomeni sprejeti odgovornost za svoja dejanja.",
+        "To pomeni, da se zavedamo posledic naših odločitev.",
+        "Biti odgovoren pomeni tudi biti zanesljiv in skrben."
+    ],
+    "kaj je stres": [
+        "Stres je reakcija telesa na izzive in pritisk.",
+        "Prekomeren stres lahko vodi do telesnih in duševnih težav.",
+        "Stres je normalen del življenja, vendar ga moramo obvladovati."
+    ],
+    "kaj je kreativnost": [
+        "Kreativnost je sposobnost ustvarjanja novih idej ali rešitev.",
+        "Gre za iskanje novih načinov za reševanje težav.",
+        "Kreativnost je ključna za inovacije in umetniško izražanje."
+    ],
+    "kaj je tehnologija": [
+        "Tehnologija je uporaba znanstvenih znanj za ustvarjanje orodij in sistemov.",
+        "Tehnologija omogoča napredek v skoraj vseh področjih življenja.",
+        "To so naprave, procesi in metode, ki izboljšujejo naše življenje."
+    ],
+    "kako se izogniti napakam pri delu": [
+        "Bodi pozoren na podrobnosti in preveri svojo nalogo.",
+        "Naredi načrt in se drži svojega urnika.",
+        "Za večje naloge si vzemi čas za načrtovanje in analiziranje."
+    ],
+    "kaj so sprostitvene tehnike": [
+        "Sprostitvene tehnike vključujejo dihalne vaje in meditacijo.",
+        "Pomaga lahko tudi joga in preprosta telesna sprostitev.",
+        "Sprostitvene tehnike pomagajo zmanjšati stres in povečati počitek."
+    ],
+    "kako postati bolj samozavesten": [
+        "Začni z majhnimi cilji in se veseli svojih dosežkov.",
+        "Zaupaj v svoje sposobnosti in sprejmi svoje napake.",
+        "Biti samozavesten pomeni, da se ne bojiš neuspeha, ampak se iz njega učiš."
+    ],
+    "kaj pomeni biti strpen": [
+        "Biti strpen pomeni sprejeti različnost in biti potrpežljiv.",
+        "Strpnost pomeni, da dopuščamo različna mnenja in prepričanja.",
+        "To je ključ do mirnega sobivanja in razumevanja."
+    ],
+    "kaj je sreča": [
+        "Sreča je notranje zadovoljstvo in občutek izpolnjenosti.",
+        "Za vsakega človeka pomeni sreča nekaj drugega.",
+        "Sreča izhaja iz preprostih stvari in odnosov."
+    ],
+    "kaj je motivacija": [
+        "Motivacija je zagon, ki nas žene k doseganju ciljev.",
+        "Gre za notranji pogon, ki nas spodbuja k dejanjem.",
+        "Motivacija je ključ do uspeha in premagovanja ovir."
+    ]
+};
+
+let botName = localStorage.getItem("botName") || "Chatbot"; // Privzeto ime chatbota
+let history = {}; // Zgodovina odgovorov za vsako vprašanje
+
+// Funkcija za izvajanje matematičnih operacij
+function calculateExpression(expression) {
+    const validExpression = /^[\d+\-*/().=\s]*$/;
+
+    if (validExpression.test(expression)) {
+        try {
+            const cleanedExpression = expression.replace("=", "").trim();
+            return Function('return ' + cleanedExpression)();
+        } catch (e) {
+            return "Oprosti, ne morem izračunati tega.";
+        }
+    } else {
+        return "Oprosti, ta izraz vsebuje nedovoljene znake.";
+    }
+}
+
+// Funkcija za oceno podobnosti dveh nizov
+function similarity(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+    let longer = s1.length > s2.length ? s1 : s2;
+    let shorter = s1.length > s2.length ? s2 : s1;
+    let longerLength = longer.length;
+    if (longerLength === 0) return 1.0;
+    return (longerLength - editDistance(longer, shorter)) / longerLength;
+}
+
+// Funkcija za izračun razdalje (Levenshtein Distance)
+function editDistance(s1, s2) {
+    let costs = new Array();
+    for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+            if (i === 0)
+                costs[j] = j;
+            else if (j > 0) {
+                let newValue = costs[j - 1];
+                if (s1.charAt(i - 1) !== s2.charAt(j - 1))
+                    newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                costs[j - 1] = lastValue;
+                lastValue = newValue;
+            }
+        }
+        if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+}
+
+// Funkcija za dešifriranje s ključno besedo
+function decryptWithKey(text, key) {
+    const numberResult = numbersToText(text);
+    const rot13Result = rot13(numberResult);
+    return vigenereDecrypt(rot13Result, key);
+}
+
+// Funkcija za iskanje najbližjega odgovora
+function getResponse(userInput) {
+    const threshold = 0.5;
+    let bestMatch = null;
+    let highestSimilarity = 0;
+
+    // Preveri, ali je izraz matematičen in vsebuje "="
+    if (userInput.includes("=")) {
+        return calculateExpression(userInput);
+    }
+
+    // Preveri, ali uporabnik spremenil ime chatbota
+    if (userInput.toLowerCase().startsWith("ime ti je")) {
+        let name = userInput.slice(8).trim(); // Odstranimo "ime ti je" in pridobimo ime
+        setBotName(name);
+        return `Hvala! Moje ime je zdaj ${botName}.`;
+    }
+
+    // Poišči najboljši odgovor
+    for (let key in botResponses) {
+        const similarityScore = similarity(userInput, key);
+        if (similarityScore > highestSimilarity && similarityScore >= threshold) {
+            highestSimilarity = similarityScore;
+            bestMatch = key;
+        }
+    }
+
+    if (bestMatch) {
+        if (!history[bestMatch]) {
+            history[bestMatch] = [];
+        }
+
+        let randomIndex;
+        let response;
+        do {
+            randomIndex = Math.floor(Math.random() * botResponses[bestMatch].length);
+            response = botResponses[bestMatch][randomIndex];
+        } while (history[bestMatch].includes(response));
+
+        history[bestMatch].push(response);
+        if (history[bestMatch].length > botResponses[bestMatch].length) {
+            history[bestMatch].shift();
+        }
+        return response;
+    } else {
+        return `Oprosti, nisem prepričan, kaj si vprašal. Poskusi drugače!`;
+    }
+}
+
+// Funkcija za obravnavo pošiljanja sporočil
+function handleMessage() {
+    const userInput = document.getElementById("chatInput").value.trim();
+    const chatArea = document.getElementById("chatArea");
+
+    if (userInput) {
+        let botReply;
+        
+        // Preveri, ali uporabnik želi dešifrirati (vnos oblike ":kljuc:sifra")
+        if (userInput.startsWith(":")) {
+            const parts = userInput.split(":");
+            if (parts.length === 3) {
+                const key = parts[1].trim();
+                const encryptedText = parts[2].trim();
+                botReply = decryptWithKey(encryptedText, key);
+            } else {
+                botReply = "Neveljaven format za dešifriranje. Uporabite ':kljuc:sifra'.";
+            }
+        } else {
+            botReply = getResponse(userInput);
+        }
+
+        chatArea.innerHTML += `<div><strong>Ti:</strong> ${userInput}</div>`;
+        chatArea.innerHTML += `<div><strong>${botName}:</strong> ${botReply}</div>`;
+
+        document.getElementById("chatInput").value = "";
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+}
+
+// Funkcija za nastavitev imena chatbota
+function setBotName(inputName) {
+    if (inputName && inputName.trim()) {
+        botName = inputName.trim();
+        localStorage.setItem("botName", botName); // Shrani ime v localStorage
+    } else {
+        alert("Prosimo, vnesite veljavno ime.");
+    }
+}
+
+
+
+// Poslušalec za gumb pošiljanja
+document.getElementById("sendButton").addEventListener("click", handleMessage);
+
+// Omogoči pošiljanje s tipko Enter
+document.getElementById("chatInput").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        handleMessage();
+    }
+});
+</script></body></html>

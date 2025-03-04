@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogwartsbrowser</title>
+     <link id="favicon" rel="icon" href="Slytherin.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: black;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container-wrapper {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .search-bar {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            background-color: black;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100vw;
+            height: calc(97vh - 120px);
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: black;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: black;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+        }
+
+        .nav-item {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            text-decoration: none;
+            padding: 5px 15px;
+            transition: color 0.3s, text-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            color: white;
+            text-shadow: 0 0 10px white;
+        }
+
+        .nav-item.active {
+            color: white;
+            text-shadow: 0 0 10px white;
+        }
+        #logo {
+width: 70px;
+height: 70px;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="container-wrapper">
+         <img id="logo" src="Slytherin.png"></img>
+        <input type="text" class="search-bar" id="search" placeholder="Išči...">
+        <div class="container">
+            <iframe id="browser-frame" src="comand.html"></iframe>
+        </div>
+        <div class="nav-bar">
+            <a href="chosemenu.html" class="nav-item">Meni</a>
+             <a class="nav-item" onclick="resetFrame()">Domov</a>
+            <a id="lol"class="nav-item">Clasic</a>
+        </div>
+    </div>
+
+    <script>
+document.getElementById('search').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        let query = this.value.trim();
+        if (query) {
+            try {
+                let url = new URL(query.includes('://') ? query : 'http://' + query);
+                if (url.hostname.includes('.')) {
+                    document.getElementById('browser-frame').src = url.href;
+                    return;
+                }
+            } catch (e) {}
+
+            document.getElementById('browser-frame').src = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+        }
+    }
+});
+
+
+        function resetFrame() {
+            document.getElementById('browser-frame').src = 'comand.html';
+        }
+
+ document.getElementById("lol").addEventListener("click", function() {
+        localStorage.setItem("redirectToNewBrowser", "false"); // Izklopi samodejno preusmeritev
+        window.location.href = "index.html"; // Preusmeri nazaj na index.html
+    });
+
+
+
+    </script>
+</body>
+</html>
