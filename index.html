@@ -236,7 +236,7 @@ document.querySelector('.eye-right').addEventListener('click', () => {
     function checkTime() {
         let now = new Date();
         let hour = now.getHours();
-        let nightMode = (hour >= 20 || hour < 6); // Noč od 20:00 do 06:00
+        let nightMode = (hour >= 19 || hour < 6); // Noč od 19:00 do 06:00
 
         // Prejšnje stanje v localStorage
         let previousState = localStorage.getItem("nightMode");
