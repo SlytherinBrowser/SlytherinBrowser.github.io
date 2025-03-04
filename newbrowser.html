@@ -70,16 +70,6 @@
             padding: 10px 0;
         }
 
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: black;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-        }
-
         .nav-item {
             color: rgba(255, 255, 255, 0.5);
             font-size: 14px;
@@ -99,16 +89,44 @@
             text-shadow: 0 0 10px white;
         }
         #logo {
-width: 70px;
-height: 70px;
-
+            width: 70px;
+            height: 70px;
+        }
+        .quick-links {
+            position: absolute;
+            top: 15px;
+            display: flex;
+            gap: 15px;
+        }
+        .quick-links.left {
+            left: 90px;
+        }
+        .quick-links.right {
+            right: 10px;
+        }
+        .quick-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .quick-links a:hover {
+            color: lightgray;
         }
     </style>
 </head>
 <body>
     <div class="container-wrapper">
-         <img id="logo" src="Slytherin.png"></img>
+        <img id="logo" src="Slytherin.png"></img>
+        <div class="quick-links left">
+            <a href="https://mail.google.com" target="_blank">Gmail</a>
+            <a href="https://drive.google.com" target="_blank">Google Drive</a>
+        </div>
         <input type="text" class="search-bar" id="search" placeholder="Išči...">
+        <div class="quick-links right">
+            <a href="https://www.youtube.com" target="_blank">YouTube</a>
+            <a href="https://chat.openai.com" target="_blank">ChatGPT</a>
+        </div>
         <div class="container">
             <iframe id="browser-frame" src="comand.html"></iframe>
         </div>
@@ -148,42 +166,29 @@ document.getElementById('logo').addEventListener('click', function() {
     }
 });
 
+function goHome() {
+    window.location.href = "index.html"; // Preprosto odpre index.html
+}
 
+function checkTime() {
+    let now = new Date();
+    let hour = now.getHours();
+    let nightMode = (hour >= 19 || hour < 6); // Noč od 19:00 do 06:00
 
+    let previousState = localStorage.getItem("nightMode");
 
-    
-
-    function goHome() {
-        window.location.href = "index.html"; // Preprosto odpre index.html
+    if (nightMode && previousState !== "true") {
+        localStorage.setItem("nightMode", "true");
+        window.location.href = "newbrowser.html";
+    } 
+    else if (!nightMode && previousState !== "false") {
+        localStorage.setItem("nightMode", "false");
+        window.location.href = "index.html";
     }
+}
 
-    function checkTime() {
-        let now = new Date();
-        let hour = now.getHours();
-        let nightMode = (hour >= 19 || hour < 6); // Noč od 19:00 do 06:00
-
-        // Prejšnje stanje v localStorage
-        let previousState = localStorage.getItem("nightMode");
-
-        if (nightMode && previousState !== "true") {
-            // Prehod v noč -> Shrani stanje in preusmeri
-            localStorage.setItem("nightMode", "true");
-            window.location.href = "newbrowser.html";
-        } 
-        else if (!nightMode && previousState !== "false") {
-            // Prehod v dan -> Shrani stanje in preusmeri
-            localStorage.setItem("nightMode", "false");
-            window.location.href = "index.html";
-        }
-    }
-
-    // Preveri ob nalaganju strani
-    checkTime();
-
-    // Preverja vsako minuto, če je treba osvežiti/preusmeriti
-    setInterval(checkTime, 60000);
-
-
+checkTime();
+setInterval(checkTime, 60000);
     </script>
 </body>
 </html>
