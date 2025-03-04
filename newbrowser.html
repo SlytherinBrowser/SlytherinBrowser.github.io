@@ -115,7 +115,7 @@ height: 70px;
         <div class="nav-bar">
             <a href="chosemenu.html" class="nav-item">Meni</a>
              <a class="nav-item" onclick="resetFrame()">Domov</a>
-            <a id="lol"class="nav-item">Clasic</a>
+            <a onclick="goHome()"class="nav-item">Clasic</a>
         </div>
     </div>
 
@@ -153,12 +153,35 @@ document.getElementById('logo').addEventListener('click', function() {
 
     
 
-    document.getElementById("lol").addEventListener("click", function() {
-        localStorage.setItem("redirectToNewBrowser", "false"); // Nastavi, da ne preusmerja več
-        window.location.href = "index.html"; // Preusmeri nazaj na index.html
-    });
+    function goHome() {
+        window.location.href = "index.html"; // Preprosto odpre index.html
+    }
 
+    function checkTime() {
+        let now = new Date();
+        let hour = now.getHours();
+        let nightMode = (hour >= 20 || hour < 6); // Noč od 20:00 do 06:00
 
+        // Prejšnje stanje v localStorage
+        let previousState = localStorage.getItem("nightMode");
+
+        if (nightMode && previousState !== "true") {
+            // Prehod v noč -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "true");
+            window.location.href = "newbrowser.html";
+        } 
+        else if (!nightMode && previousState !== "false") {
+            // Prehod v dan -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "false");
+            window.location.href = "index.html";
+        }
+    }
+
+    // Preveri ob nalaganju strani
+    checkTime();
+
+    // Preverja vsako minuto, če je treba osvežiti/preusmeriti
+    setInterval(checkTime, 60000);
 
 
     </script>
