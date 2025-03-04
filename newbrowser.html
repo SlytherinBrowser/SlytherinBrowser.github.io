@@ -127,21 +127,31 @@ document.getElementById('search').addEventListener('keypress', function(event) {
             try {
                 let url = new URL(query.includes('://') ? query : 'http://' + query);
                 if (url.hostname.includes('.')) {
-                    window.open(url.href, '_blank'); // Odpre povezavo v novem zavihku
+                    localStorage.setItem("lastSearch", url.href); // Shrani zadnji obiskani URL
+                    window.open(url.href, '_blank');
                     return;
                 }
             } catch (e) {}
 
-            window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank'); // Odpre Google iskanje v novem zavihku
+            let searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+            localStorage.setItem("lastSearch", searchUrl); // Shrani zadnje iskanje
+            window.open(searchUrl, '_blank');
         }
+    }
+});
+
+// Klik na sliko odpre zadnje iskanje
+document.getElementById('logo').addEventListener('click', function() {
+    let lastSearch = localStorage.getItem("lastSearch");
+    if (lastSearch) {
+        window.open(lastSearch, '_blank');
     }
 });
 
 
 
-        function resetFrame() {
-            document.getElementById('browser-frame').src = 'comand.html';
-        }
+
+    
 
  document.getElementById("lol").addEventListener("click", function() {
         localStorage.setItem("redirectToNewBrowser", "false"); // Izklopi samodejno preusmeritev
