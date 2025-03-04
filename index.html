@@ -75,8 +75,7 @@
         <button id="sendButton">Pošlji</button>
     </div>
 </div>
-
-<button id="modebutton" onclick=""window.location.href = "newbrowser.html";>Newmode</button>
+<button onclick="openNewBrowser()">Newmode</button>
 <div id="dock">  
     <!-- Ikone so že tukaj -->  
     <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>  
@@ -258,6 +257,10 @@ document.querySelector('.eye-right').addEventListener('click', () => {
     // Preverja vsako minuto, če je treba osvežiti/preusmeriti
     setInterval(checkTime, 60000);
 
+    
+  function openNewBrowser() {
+        window.location.href = "newbrowser.html"; // Preprosto odpre newbrowser.html
+    }
 </script>
 
 
