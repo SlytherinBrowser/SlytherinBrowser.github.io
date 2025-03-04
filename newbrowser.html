@@ -127,15 +127,16 @@ document.getElementById('search').addEventListener('keypress', function(event) {
             try {
                 let url = new URL(query.includes('://') ? query : 'http://' + query);
                 if (url.hostname.includes('.')) {
-                    document.getElementById('browser-frame').src = url.href;
+                    window.open(url.href, '_blank'); // Odpre povezavo v novem zavihku
                     return;
                 }
             } catch (e) {}
 
-            document.getElementById('browser-frame').src = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+            window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank'); // Odpre Google iskanje v novem zavihku
         }
     }
 });
+
 
 
         function resetFrame() {
