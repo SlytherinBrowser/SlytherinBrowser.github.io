@@ -76,7 +76,7 @@
     </div>
 </div>
 
-<button id="clickButton">0</button>
+<button onclick="window.location.href='newbrowser.html'">Newmode</button>
 <div id="dock">  
     <!-- Ikone so že tukaj -->  
     <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>  
@@ -230,48 +230,10 @@ document.querySelector('.eye-right').addEventListener('click', () => {
 });
 </script>
 <script>
-    let count = 0;
-    const maxCount = 999;
-    let timeout;
-    const clickButton = document.getElementById('clickButton');
-    const clickImage = document.querySelector('.lamp');
-
-    clickButton.addEventListener('click', () => {
-        count++;
-        clickButton.textContent = count;
-
-        // Če doseže največjo vrednost, prikaže GIF
-        if (count >= maxCount) {
-            clickImage.src = 'lamp.gif'; // Zamenjaj z URL-jem tvoje GIF slike
-            clickImage.classList.add('gif');
-            clickImage.classList.remove('lamp');
-        } else if (!clickImage.classList.contains('gif')) {
-            // Obnovi sliko, če GIF še ni aktiven
-            clickImage.src = 'Slytherin.png'; // Zamenjaj z URL-jem začetne slike
-            clickImage.classList.add('lamp');
-            clickImage.classList.remove('gif');
-        }
-
-        if (count >= 100) {
-            clickButton.classList.add('bold');
-        } else {
-            clickButton.classList.remove('bold');
-        }
-
-        // Ponastavi časovnik
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            count = 0;
-            clickButton.textContent = count;
-
-            if (!clickImage.classList.contains('gif')) {
-                clickImage.src = 'Slytherin.png'; // Zamenjaj z URL-jem začetne slike
-                clickImage.classList.add('lamp');
-                clickImage.classList.remove('gif');
-            }
-            clickButton.classList.remove('bold');
-        }, 3000);
-    });
+   // Preveri, ali je uporabnik že bil preusmerjen
+    if (!sessionStorage.getItem("stayOnIndex")) {
+        window.location.href = "newbrowser.html"; // Samodejna preusmeritev
+    }
 </script>
               <script>
 const setLinkButton = document.querySelector('.set-link');
