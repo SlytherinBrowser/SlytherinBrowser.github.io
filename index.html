@@ -231,15 +231,39 @@ document.querySelector('.eye-right').addEventListener('click', () => {
 </script>
 <script>
   <script>
-    // Če je shranjeno, da naj gre vedno na newbrowser.html, preusmeri
-    if (localStorage.getItem("redirectToNewBrowser") === "true") {
-        window.location.href = "newbrowser.html";
+   <script>
+    function checkTime() {
+        let now = new Date();
+        let hour = now.getHours();
+        let nightMode = (hour >= 20 || hour < 6); // Noč od 20:00 do 06:00
+
+        // Prejšnje stanje v localStorage
+        let previousState = localStorage.getItem("nightMode");
+
+        if (nightMode && previousState !== "true") {
+            // Prehod v noč -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "true");
+            window.location.href = "newbrowser.html";
+        } 
+        else if (!nightMode && previousState !== "false") {
+            // Prehod v dan -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "false");
+            window.location.href = "index.html";
+        }
     }
 
-    function openNewBrowser() {
-        localStorage.setItem("redirectToNewBrowser", "true"); // Shrani, da mora preusmerjati
-        window.location.href = "newbrowser.html"; // Preusmeri na newbrowser.html
+    // Preveri ob nalaganju strani
+    checkTime();
+
+    // Preverja vsako minuto, če je treba osvežiti/preusmeriti
+    setInterval(checkTime, 60000);
+
+
+       function openNewBrowser() {
+        window.location.href = "newbrowser.html"; // Preprosto odpre newbrowser.html
     }
+</script>
+
 
 
 </script>
