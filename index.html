@@ -12,12 +12,15 @@
 </head>
 <style type="text/css">
         .eye-container {
-                position: fixed;
-                top: 0px;
-            display: flex;
-            gap: 30px;
-        }
-     .eye {
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 30px;
+}
+
+.eye {
     width: 100px;
     height: 100px;
     border-radius: 50%;
@@ -25,6 +28,15 @@
     position: relative;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease-in-out, box-shadow 0.2s;
+}
+
+.eye:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
 .pupil {
@@ -36,12 +48,34 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    transition: transform 0.2s ease-in-out;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Dodana senca zenici */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .eye:hover .pupil {
-    transform: translate(-50%, -50%) scale(1.2); /* Dinamična velikost zenice */
+    transform: translate(-50%, -50%) scale(1.2);
+}
+
+@keyframes blink {
+    0%, 100% {
+        transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(0.1) translateY(10px);
+    }
+}
+
+@keyframes boredMove {
+    0%, 100% { transform: translate(-50%, -50%) translate(10px, 0); }
+    50% { transform: translate(-50%, -50%) translate(-10px, 0); }
+}
+
+.blinking {
+    animation: blink 0.2s ease-in-out;
+}
+
+.bored {
+    animation: boredMove 3s infinite ease-in-out;
 }
 </style>
 <body>
@@ -164,71 +198,7 @@
         <audio id="backgroundMusic" loop>
        <source src="https://www.youtube.com/watch?v=3CWJNqyub3o&ab_channel=ChristmasSongsandCarols-LovetoSing" type="audio/mpeg">
 <script>
-    const pupils = document.querySelectorAll('.pupil');
-    let isBlinking = false;
-    let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
-
-    function moveEyes(event) {
-        if (isBlinking) return; // Če oči mežikajo, ne premikaj pupil
-
-        const mouseX = event.clientX || event.touches[0].clientX;
-        const mouseY = event.clientY || event.touches[0].clientY;
-
-        const eyes = document.querySelectorAll('.eye');
-        eyes.forEach((eye, index) => {
-            const eyeRect = eye.getBoundingClientRect();
-            const eyeCenterX = eyeRect.left + eyeRect.width / 2;
-            const eyeCenterY = eyeRect.top + eyeRect.height / 2;
-
-            const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
-            const distance = Math.min(eyeRect.width / 4, eyeRect.height / 4);
-
-            const pupil = pupils[index];
-            const newX = Math.cos(angle) * distance;
-            const newY = Math.sin(angle) * distance;
-
-            pupil.style.transform = `translate(-50%, -50%) translate(${newX}px, ${newY}px)`;
-
-            lastPositions[index] = {x: newX, y: newY};
-        });
-    }
-
-    function blink() {
-        if (isBlinking) return;
-
-        isBlinking = true;
-        pupils.forEach(pupil => {
-            pupil.style.transform = 'translate(-50%, -50%) scale(0)';
-        });
-
-        setTimeout(() => {
-            pupils.forEach((pupil, index) => {
-                pupil.style.transform = `translate(-50%, -50%) translate(${lastPositions[index].x}px, ${lastPositions[index].y}px) scale(1)`;
-            });
-            isBlinking = false;
-        }, 200);
-    }
-
-    // Zavijanje z očmi vsakih 5 sekund
-    setInterval(() => {
-        blink();
-    }, 5000);
-
-    // Dogodki za premikanje miške ali dotik
-    document.addEventListener('mousemove', moveEyes);
-    document.addEventListener('touchmove', (event) => {
-        event.preventDefault();
-        moveEyes(event);
-    });
-
-    // Dodajanje dogodkov za klik na oči
-document.querySelector('.eye-left').addEventListener('click', () => {
-    window.open('pogodba.html', '_blank'); // Stran za levo oko
-});
-
-document.querySelector('.eye-right').addEventListener('click', () => {
-    window.open('locked.html', '_blank'); // Stran za desno oko
-});
+    
 </script>
 <script>
     function checkTime() {
