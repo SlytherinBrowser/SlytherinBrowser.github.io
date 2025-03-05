@@ -13,7 +13,7 @@
 <style type="text/css">
         .eye-container {
     position: fixed;
-    top: 0px;
+    top: 20px; /* Rahlo spuščene oči */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -275,6 +275,102 @@ closePopupButton.addEventListener('click', () => {
     popup.style.display = 'none';
 });
 
+
+
+
+
+
+
+
+
+const pupils = document.querySelectorAll('.pupil');
+const eyes = document.querySelectorAll('.eye');
+let isBlinking = false;
+let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
+let idleTimeout;
+
+function moveEyes(event) {
+    if (isBlinking) return;
+
+    const mouseX = event.clientX || event.touches?.[0]?.clientX;
+    const mouseY = event.clientY || event.touches?.[0]?.clientY;
+
+    eyes.forEach((eye, index) => {
+        const eyeRect = eye.getBoundingClientRect();
+        const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+        const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+
+        const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
+        const distance = Math.min(eyeRect.width / 4, eyeRect.height / 4);
+
+        const newX = Math.cos(angle) * distance;
+        const newY = Math.sin(angle) * distance;
+
+        pupils[index].style.transform = `translate(-50%, -50%) translate(${newX}px, ${newY}px)`;
+        lastPositions[index] = {x: newX, y: newY};
+    });
+
+    resetIdleTimer();
+}
+
+function blink() {
+    if (isBlinking) return;
+    isBlinking = true;
+
+    eyes.forEach(eye => eye.classList.add('blinking'));
+
+    setTimeout(() => {
+        eyes.forEach(eye => eye.classList.remove('blinking'));
+        isBlinking = false;
+    }, 200);
+}
+
+function startBoredAnimation() {
+    pupils.forEach(pupil => {
+        pupil.style.animation = 'boredMove 4s infinite ease-in-out';
+    });
+}
+
+function stopBoredAnimation() {
+    pupils.forEach(pupil => {
+        pupil.style.animation = '';
+    });
+}
+
+function resetIdleTimer() {
+    clearTimeout(idleTimeout);
+    stopBoredAnimation();
+    idleTimeout = setTimeout(() => {
+        startBoredAnimation();
+    }, 10000); // Po 10 sekundah začnejo zdolgočaseno premikanje
+
+    setTimeout(() => {
+        if (!isBlinking) {
+            blink();
+        }
+    }, 15000); // Po 15 sekundah še mežiknejo
+}
+
+document.addEventListener('mousemove', moveEyes);
+document.addEventListener('touchmove', (event) => {
+    event.preventDefault();
+    moveEyes(event);
+});
+
+// Kliki na oči
+document.querySelector('.eye-left').addEventListener('click', () => {
+    window.open('pogodba.html', '_blank');
+});
+
+document.querySelector('.eye-right').addEventListener('click', () => {
+    window.open('locked.html', '_blank');
+});
+
+// Avtomatsko mežikanje
+setInterval(blink, 5000);
+
+// Začetek sledenja nedejavnosti
+resetIdleTimer();
     </script>
 
 
