@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test osebnosti</title>
+    <title>Test osebnosti in ljubezni</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -41,11 +41,23 @@
             transition: all 0.3s ease-in-out;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             transform: scale(1);
+            margin: 10px;
         }
 
         button:hover {
             background: #dfe9fd;
             transform: scale(1.1);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #test-selection {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         #question-container {
@@ -107,6 +119,11 @@
             animation: fadeIn 1s ease-in-out;
         }
 
+        #home-button {
+            display: none;
+            margin-top: 20px;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -116,19 +133,15 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        @keyframes buttonPress {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
     </style>
 </head>
 <body>
 
-    <h1>Hitri test osebnosti</h1>
-    <button onclick="startTest()">Začni test</button>
+    <h1>Izberi test</h1>
+    <div id="test-selection">
+        <button onclick="startTest('personality')">Test osebnosti</button>
+        <button onclick="startTest('love')">Ljubezenski test</button>
+    </div>
 
     <div id="question-container">
         <h2 id="question"></h2>
@@ -137,11 +150,12 @@
     </div>
 
     <div id="result"></div>
+    <button id="home-button" onclick="goHome()">Pojdi na začetno stran</button>
 
     <script>
-        const questions = [
-            ["Morje", "Gore"], ["Dan", "Noč"], ["Kava", "Čaj"], ["Mesto", "Vas"], 
-            ["Mačka", "Pes"], ["Zima", "Poletje"], ["Knjiga", "Film"], ["Sončno", "Deževno"], 
+        const personalityQuestions = [
+            ["Morje", "Gore"], ["Dan", "Noč"], ["Kava", "Čaj"], ["Mesto", "Vas"],
+            ["Mačka", "Pes"], ["Zima", "Poletje"], ["Knjiga", "Film"], ["Sončno", "Deževno"],
             ["Sladko", "Slano"], ["Aktivnost", "Počitek"], ["Glasba", "Tišina"], ["Sanje", "Resničnost"],
             ["Sončni vzhod", "Sončni zahod"], ["Avto", "Kolo"], ["Sam", "Družba"], ["Vino", "Pivo"],
             ["Pustolovščina", "Rutina"], ["Sneg", "Dež"], ["Rdeča", "Modra"], ["Šport", "Umetnost"],
@@ -149,11 +163,19 @@
             ["Zvezde", "Luna"], ["Narava", "Tehnologija"]
         ];
 
-        const personalityTypes = {
-            "Avanturist": 0, "Analitik": 0, "Družaben": 0, "Udobje": 0
-        };
+        const loveQuestions = [
+            ["Romantičen večer doma", "Pustolovščina v dvoje"], ["Nežni poljub", "Strasten poljub"],
+            ["Skrivni opisi", "Jasna čustva"], ["Pogovor o prihodnosti", "Uživanje v trenutkih"],
+            ["Sprejemanje napak", "Iskanje popolnosti"], ["Izražanje ljubezni", "Tihi dotiki"],
+            ["Skupni hobiji", "Različni interesi"], ["Skrbnost", "Pustite, da partner izbira"],
+            ["Skrivnosti", "Transparentnost"], ["Skrb za detajle", "Nekaj spontanosti"], 
+            ["Preteklost", "Prihodnost"], ["Pogovarjanje o čustvih", "Zabava brez obveznosti"],
+            ["Komunikacija", "Tišina"], ["Podpora v težkih trenutkih", "Skrb za partnerja"],
+            ["Sprejemanje osebnih prostorov", "Deljenje vsega"], ["Iskanje popolne skladnosti", "Spoštovanje razlik"],
+            ["Pustolovščina v ljubezni", "Mirni trenutki doma"], ["Čustvena povezanost", "Fizična privlačnost"]
+        ];
 
-        const mappings = [
+        const personalityMappings = [
             ["Avanturist", "Analitik"], ["Družaben", "Analitik"], ["Avanturist", "Udobje"], ["Družaben", "Udobje"],
             ["Analitik", "Družaben"], ["Analitik", "Avanturist"], ["Analitik", "Družaben"], ["Avanturist", "Analitik"],
             ["Družaben", "Udobje"], ["Avanturist", "Udobje"], ["Družaben", "Analitik"], ["Avanturist", "Udobje"],
@@ -164,37 +186,83 @@
         ];
 
         let currentQuestion = 0;
+        let selectedTest = '';
 
-        function startTest() {
-            document.querySelector("button").style.display = "none";
+        const personalityTypes = {
+            "Avanturist": 0, "Analitik": 0, "Družaben": 0, "Udobje": 0
+        };
+
+        const loveTypes = {
+            "Romantični": 0, "Strastni": 0, "Racionalni": 0, "Neodvisni": 0, "Pustolovski": 0, "Čustveni": 0
+        };
+
+        function startTest(testType) {
+            selectedTest = testType;
+            document.getElementById("test-selection").style.display = "none";
             document.getElementById("question-container").style.display = "block";
             nextQuestion();
         }
 
         function nextQuestion() {
-            if (currentQuestion < questions.length) {
-                document.getElementById("question").textContent = `Izberi eno:`;
-                document.getElementById("option1").textContent = questions[currentQuestion][0];
-                document.getElementById("option2").textContent = questions[currentQuestion][1];
-            } else {
-                showResult();
+            if (selectedTest === 'personality') {
+                if (currentQuestion < personalityQuestions.length) {
+                    document.getElementById("question").textContent = `Izberi eno:`;
+                    document.getElementById("option1").textContent = personalityQuestions[currentQuestion][0];
+                    document.getElementById("option2").textContent = personalityQuestions[currentQuestion][1];
+                } else {
+                    showResult();
+                }
+        } else if (selectedTest === 'love') {
+                if (currentQuestion < loveQuestions.length) {
+                    document.getElementById("question").textContent = `Izberi eno:`;
+                    document.getElementById("option1").textContent = loveQuestions[currentQuestion][0];
+                    document.getElementById("option2").textContent = loveQuestions[currentQuestion][1];
+                } else {
+                    showResult();
+                }
             }
         }
 
-        function selectOption(choice) {
-            const selectedCategory = mappings[currentQuestion][choice];
-            personalityTypes[selectedCategory]++;
+        function selectOption(selected) {
+            if (selectedTest === 'personality') {
+                if (selected === 0) {
+                    personalityTypes["Avanturist"]++;
+                } else {
+                    personalityTypes["Analitik"]++;
+                }
+            } else if (selectedTest === 'love') {
+                if (selected === 0) {
+                    loveTypes["Romantični"]++;
+                } else {
+                    loveTypes["Strastni"]++;
+                }
+            }
             currentQuestion++;
             nextQuestion();
         }
 
         function showResult() {
             document.getElementById("question-container").style.display = "none";
-            let highestCategory = Object.keys(personalityTypes).reduce((a, b) => personalityTypes[a] > personalityTypes[b] ? a : b);
-            document.getElementById("result").textContent = `Tvoja osebnost: ${highestCategory}`;
+            document.getElementById("home-button").style.display = "block";
+
+            let resultText = '';
+            if (selectedTest === 'personality') {
+                const highestScore = Math.max(...Object.values(personalityTypes));
+                const personalityResult = Object.keys(personalityTypes).find(key => personalityTypes[key] === highestScore);
+                resultText = `Vaša osebnostna vrsta je: ${personalityResult}`;
+            } else if (selectedTest === 'love') {
+                const highestScore = Math.max(...Object.values(loveTypes));
+                const loveResult = Object.keys(loveTypes).find(key => loveTypes[key] === highestScore);
+                resultText = `Vaša ljubezenska usmeritev je: ${loveResult}`;
+            }
+
+            document.getElementById("result").textContent = resultText;
             document.getElementById("result").style.display = "block";
         }
-    </script>
 
+        function goHome() {
+            window.location.reload();
+        }
+    </script>
 </body>
 </html>
