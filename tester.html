@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test osebnosti</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.5s ease-in-out;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        button {
+            background: #ffffff;
+            color: #6e8efb;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            transform: scale(1);
+        }
+
+        button:hover {
+            background: #dfe9fd;
+            transform: scale(1.1);
+        }
+
+        #question-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+            width: 80%;
+            max-width: 400px;
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .option {
+            display: block;
+            background: rgba(255, 255, 255, 0.85);
+            color: #333;
+            padding: 15px;
+            margin: 10px auto;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 80%;
+            max-width: 300px;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            transform: scale(1);
+        }
+
+        .option:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .option:active {
+            transform: scale(0.95);
+        }
+
+        #result {
+            display: none;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #444;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes buttonPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Hitri test osebnosti</h1>
+    <button onclick="startTest()">Začni test</button>
+
+    <div id="question-container">
+        <h2 id="question"></h2>
+        <div class="option" onclick="selectOption(0)" id="option1"></div>
+        <div class="option" onclick="selectOption(1)" id="option2"></div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        const questions = [
+            ["Morje", "Gore"], ["Dan", "Noč"], ["Kava", "Čaj"], ["Mesto", "Vas"], 
+            ["Mačka", "Pes"], ["Zima", "Poletje"], ["Knjiga", "Film"], ["Sončno", "Deževno"], 
+            ["Sladko", "Slano"], ["Aktivnost", "Počitek"], ["Glasba", "Tišina"], ["Sanje", "Resničnost"],
+            ["Sončni vzhod", "Sončni zahod"], ["Avto", "Kolo"], ["Sam", "Družba"], ["Vino", "Pivo"],
+            ["Pustolovščina", "Rutina"], ["Sneg", "Dež"], ["Rdeča", "Modra"], ["Šport", "Umetnost"],
+            ["Letalo", "Vlak"], ["Delo", "Zabava"], ["Pisanje", "Govorjenje"], ["Zaupanje", "Skrivnostnost"],
+            ["Zvezde", "Luna"], ["Narava", "Tehnologija"]
+        ];
+
+        const personalityTypes = {
+            "Avanturist": 0, "Analitik": 0, "Družaben": 0, "Udobje": 0
+        };
+
+        const mappings = [
+            ["Avanturist", "Analitik"], ["Družaben", "Analitik"], ["Avanturist", "Udobje"], ["Družaben", "Udobje"],
+            ["Analitik", "Družaben"], ["Analitik", "Avanturist"], ["Analitik", "Družaben"], ["Avanturist", "Analitik"],
+            ["Družaben", "Udobje"], ["Avanturist", "Udobje"], ["Družaben", "Analitik"], ["Avanturist", "Udobje"],
+            ["Avanturist", "Družaben"], ["Avanturist", "Analitik"], ["Analitik", "Družaben"], ["Družaben", "Udobje"],
+            ["Avanturist", "Udobje"], ["Analitik", "Udobje"], ["Avanturist", "Analitik"], ["Družaben", "Analitik"],
+            ["Avanturist", "Analitik"], ["Analitik", "Udobje"], ["Analitik", "Družaben"], ["Družaben", "Udobje"],
+            ["Avanturist", "Analitik"], ["Družaben", "Udobje"]
+        ];
+
+        let currentQuestion = 0;
+
+        function startTest() {
+            document.querySelector("button").style.display = "none";
+            document.getElementById("question-container").style.display = "block";
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length) {
+                document.getElementById("question").textContent = `Izberi eno:`;
+                document.getElementById("option1").textContent = questions[currentQuestion][0];
+                document.getElementById("option2").textContent = questions[currentQuestion][1];
+            } else {
+                showResult();
+            }
+        }
+
+        function selectOption(choice) {
+            const selectedCategory = mappings[currentQuestion][choice];
+            personalityTypes[selectedCategory]++;
+            currentQuestion++;
+            nextQuestion();
+        }
+
+        function showResult() {
+            document.getElementById("question-container").style.display = "none";
+            let highestCategory = Object.keys(personalityTypes).reduce((a, b) => personalityTypes[a] > personalityTypes[b] ? a : b);
+            document.getElementById("result").textContent = `Tvoja osebnost: ${highestCategory}`;
+            document.getElementById("result").style.display = "block";
+        }
+    </script>
+
+</body>
+</html>
