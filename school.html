@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="sl"> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>Izbira Razreda in Predmeta z Nalaganjem Slike</title> 
+  <style>
+        button { margin: 5px; padding: 10px; font-size: 16px; }
+        img { width: 100px; height: auto; margin: 5px; display: none; }
+        input { padding: 8px; margin: 10px; font-size: 16px; }
+    </style> <!-- Firebase Config --> 
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script> 
+ </head> 
+ <body> <!-- Vnos Razreda in Predmeta --> 
+  <div> 
+   <h2>Vnesi Razred in Predmet</h2> <label for="classInput">Razred: </label> 
+   <input type="text" id="classInput" placeholder="Vnesi razred (npr. 1.a)"> <label for="subjectInput">Predmet: </label> 
+   <input type="text" id="subjectInput" placeholder="Vnesi predmet (npr. POS1p)"> <button onclick="checkAndUploadImage()">Naloži Sliko</button> 
+  </div> <!-- Predogled slike --> 
+  <div> 
+   <h3>Predogled slike:</h3> 
+   <img id="uploadedImage"> 
+  </div> <!-- Input za izbiro slike --> 
+  <input type="file" id="imageUpload" style="display:none"> 
+  <script>
+        // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBQaD0MGnuMa45hm_99VvOwNsTdCoFPgNI",
+  authDomain: "school-12a1f.firebaseapp.com",
+  projectId: "school-12a1f",
+  storageBucket: "school-12a1f.firebasestorage.app",
+  messagingSenderId: "539327102547",
+  appId: "1:539327102547:web:bd2571f5d327faafaed0a6",
+  measurementId: "G-GBG9YCLE12"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+        // Inicializacija Firebase
+        firebase.initializeApp(firebaseConfig);
+        const storage = firebase.storage();
+
+        // Predmeti za razrede (ključni podatki)
+        const validKeys = {
+            "1.a": ["POS1p", "SSO", "ŠVZ", "SPL", "SLO", "NAR", "MAT", "STR", "DRU", "ANG", "UME"],
+            "1.b": ["SLO", "MAT", "DRU", "NAR", "ŠVZ"],
+            "1.c": ["POS1p", "SLO", "MAT", "ANG"],
+            // Dodajte še ostale razrede in predmete po potrebi
+        };
+
+        // Funkcija za preverjanje in nalaganje slike
+        function checkAndUploadImage() {
+            const classInput = document.getElementById('classInput').value;
+            const subjectInput = document.getElementById('subjectInput').value;
+            const imageInput = document.getElementById('imageUpload');
+
+            // Preverjanje, če sta razred in predmet veljavna
+            if (validKeys[classInput] && validKeys[classInput].includes(subjectInput)) {
+                alert("Ključi so pravilni! Lahko naložite sliko.");
+
+                // Omogočimo nalaganje slike
+                imageInput.click();
+
+                // Ko uporabnik izbere sliko, jo naložimo
+                imageInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        uploadImage(file, classInput, subjectInput);
+                    }
+                };
+            } else {
+                alert("Napačni ključi! Preverite razred in predmet.");
+            }
+        }
+
+        // Funkcija za nalaganje slike v Firebase Storage
+        function uploadImage(file, className, subject) {
+            const storageRef = storage.ref().child(`${className}/${subject}/${file.name}`);
+            const uploadTask = storageRef.put(file);
+
+            uploadTask.on('state_changed', 
+                function(snapshot) {
+                    // Napredek nalaganja (opcionalno)
+                }, 
+                function(error) {
+                    alert("Napaka pri nalaganju slike.");
+                }, 
+                function() {
+                    uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+                        displayImage(downloadURL);
+                    });
+                }
+            );
+        }
+
+        // Funkcija za prikaz slike na strani
+        function displayImage(imageUrl) {
+            const imgElement = document.getElementById('uploadedImage');
+            imgElement.src = imageUrl;
+            imgElement.style.display = "block";  // Prikaz slike
+        }
+    </script> 
+ 
+</body></html>
