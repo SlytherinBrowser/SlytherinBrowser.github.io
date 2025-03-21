@@ -1,76 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8">
-  <title>Firebase Igra</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    .user-info {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .coin-display {
-      font-size: 1.5em;
-      font-weight: bold;
-      text-align: center;
-      margin: 10px 0;
-      color: #006600;
-    }
-    form {
-      margin: 20px 0;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    input[type="text"],
-    input[type="number"],
-    input[type="email"] {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-  </style>
-  <script type="module">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piramidna Igra</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script type="module">
   // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
@@ -89,196 +26,118 @@
     measurementId: "G-LNEVCP2VLB"
   };
 
-  const analytics = getAnalytics(app)
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-
-    // DOM elementi
-    const signInBtn = document.getElementById("signInBtn");
-    const userInfo = document.getElementById("userInfo");
-    const coinDisplay = document.getElementById("coinDisplay");
-    const sendCoinForm = document.getElementById("sendCoinForm");
-    const generatorBtn = document.getElementById("generatorBtn");
-    const upgradeBtn = document.getElementById("upgradeBtn");
-    const leaderboardList = document.getElementById("leaderboardList");
-
-    let currentUser = null;
-    let generatorInterval = null;
-
-    // Prijava z Google računom
-    signInBtn.addEventListener("click", async () => {
-      try {
-        const result = await signInWithPopup(auth, provider);
-        currentUser = result.user;
-        userInfo.innerText = `Prijavljeni kot: ${currentUser.displayName}`;
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            coins: 1000,
-            generatorBought: false,
-            generatorSpeed: 1,
-            upgradeCost: 500,
-            displayName: currentUser.displayName
-          });
-        }
-        listenUserCoins();
-        listenLeaderboard();
-        startGenerator();
-      } catch (error) {
-        console.error("Napaka pri prijavi:", error);
-      }
-    });
-
-    // Poslušanje sprememb kovancev
-    async function listenUserCoins() {
-      const userRef = doc(db, "users", currentUser.uid);
-      onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          coinDisplay.innerText = `Imaš ${docSnap.data().coins} kovancev`;
-        }
-      });
-    }
-
-    // Prenos kovancev med igralci
-    sendCoinForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const recipientId = document.getElementById("recipientId").value;
-      const amount = parseInt(document.getElementById("amount").value);
-      if (isNaN(amount) || amount <= 0) {
-        alert("Vnesi veljaven znesek.");
-        return;
-      }
-      try {
-        await runTransaction(db, async (transaction) => {
-          const senderRef = doc(db, "users", currentUser.uid);
-          const recipientRef = doc(db, "users", recipientId);
-          const senderDoc = await transaction.get(senderRef);
-          const recipientDoc = await transaction.get(recipientRef);
-          if (!recipientDoc.exists()) {
-            throw "Prejemnik ne obstaja.";
-          }
-          const senderCoins = senderDoc.data().coins;
-          if (senderCoins < amount) {
-            throw "Premalo kovancev.";
-          }
-          transaction.update(senderRef, { coins: senderCoins - amount });
-          const recipientCoins = recipientDoc.data().coins;
-          transaction.update(recipientRef, { coins: recipientCoins + amount });
-        });
-        alert("Prenos uspešen!");
-      } catch (error) {
-        alert("Napaka pri prenosu: " + error);
-      }
-    });
-
-    // Nakup generatorja
-    generatorBtn.addEventListener("click", async () => {
-      const userRef = doc(db, "users", currentUser.uid);
-      try {
-        await runTransaction(db, async (transaction) => {
-          const userDoc = await transaction.get(userRef);
-          const data = userDoc.data();
-          if (data.generatorBought) {
-            throw "Generator je že kupljen.";
-          }
-          if (data.coins < 700) {
-            throw "Premalo kovancev za nakup generatorja.";
-          }
-          transaction.update(userRef, {
-            coins: data.coins - 700,
-            generatorBought: true
-          });
-        });
-        alert("Generator kupljen!");
-        startGenerator();
-      } catch (error) {
-        alert("Napaka: " + error);
-      }
-    });
-
-    // Nadgradnja generatorja – cena se povečuje za 500 po vsaki nadgradnji
-    upgradeBtn.addEventListener("click", async () => {
-      const userRef = doc(db, "users", currentUser.uid);
-      try {
-        await runTransaction(db, async (transaction) => {
-          const userDoc = await transaction.get(userRef);
-          const data = userDoc.data();
-          if (!data.generatorBought) {
-            throw "Najprej moraš kupiti generator.";
-          }
-          if (data.coins < data.upgradeCost) {
-            throw `Za nadgradnjo potrebuješ ${data.upgradeCost} kovancev.`;
-          }
-          transaction.update(userRef, {
-            coins: data.coins - data.upgradeCost,
-            generatorSpeed: data.generatorSpeed + 1,
-            upgradeCost: data.upgradeCost + 500
-          });
-        });
-        alert("Nadgradnja uspešna!");
-        startGenerator();
-      } catch (error) {
-        alert("Napaka pri nadgradnji: " + error);
-      }
-    });
-
-    // Generator kovancev – periodično doda kovance glede na hitrost generatorja
-    function startGenerator() {
-      if (generatorInterval) clearInterval(generatorInterval);
-      const userRef = doc(db, "users", currentUser.uid);
-      generatorInterval = setInterval(async () => {
-        const userSnap = await getDoc(userRef);
-        const data = userSnap.data();
-        if (data.generatorBought) {
-          const addAmount = 10 * data.generatorSpeed;
-          await updateDoc(userRef, { coins: data.coins + addAmount });
-        }
-      }, 5000);
-    }
-
-    // Leaderboard – prikaz igralcev urejenih po številu kovancev
-    function listenLeaderboard() {
-      const q = query(collection(db, "users"), orderBy("coins", "desc"));
-      onSnapshot(q, (snapshot) => {
-        leaderboardList.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const li = document.createElement("li");
-          li.innerText = `${data.displayName || "Anonymous"} - ${data.coins} kovancev`;
-          leaderboardList.appendChild(li);
-        });
-      });
-    }
-  </script>
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </head>
 <body>
-  <div class="container">
-    <h1>Firebase Igra</h1>
-    <div class="user-info">
-      <button id="signInBtn">Prijavi se z Google računom</button>
-      <p id="userInfo"></p>
-      <p id="coinDisplay" class="coin-display"></p>
+    <h1>Piramidna Igra</h1>
+    <button onclick="googleSignIn()">Prijavi se z Google računom</button>
+    <div id="user-info" style="display:none;">
+        <h2>Dobrodošel, <span id="user-email"></span></h2>
+        <p>Točke: <span id="user-points"></span></p>
+        <input type="email" id="invite-email" placeholder="Vnesite e-poštni naslov prijatelja">
+        <button onclick="sendInvitation()">Povabi prijatelja</button>
+        <p id="invitation-status"></p>
     </div>
 
-    <h2>Pošlji kovance</h2>
-    <form id="sendCoinForm">
-      <label for="recipientId">ID prejemnika:</label>
-      <input type="text" id="recipientId" required>
-      <label for="amount">Znesek:</label>
-      <input type="number" id="amount" required>
-      <button type="submit">Pošlji</button>
-    </form>
+    <script>
+      // Prijava uporabnika z Google
+      function googleSignIn() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+          .then(result => {
+            const user = result.user;
+            document.getElementById('user-email').textContent = user.email;
+            document.getElementById('user-info').style.display = 'block';
 
-    <h2>Generator</h2>
-    <button id="generatorBtn">Kupi generator (700 kovancev)</button>
-    <button id="upgradeBtn">Nadgradi generator</button>
-    <p>Trenutna cena nadgradnje bo prikazana ob kliku na gumb.</p>
+            // Shranjevanje uporabniških podatkov v Firebase
+            const userRef = database.ref('users/' + user.uid);
+            userRef.once('value', snapshot => {
+              if (!snapshot.exists()) {
+                userRef.set({
+                  email: user.email,
+                  points: 10,  // Začetne točke
+                  invitedBy: null,  // Noben uporabnik ga ni povabil
+                  invitations: [],
+                  status: 'active'
+                });
+              }
+              document.getElementById('user-points').textContent = snapshot.val().points;
+            });
+          })
+          .catch(error => {
+            console.error("Napaka pri prijavi: ", error.message);
+          });
+      }
 
-    <h2>Leaderboard</h2>
-    <ul id="leaderboardList"></ul>
-  </div>
+      // Funkcija za pošiljanje povabila
+      function sendInvitation() {
+        const user = auth.currentUser;
+        const inviteEmail = document.getElementById('invite-email').value;
+        const userRef = database.ref('users/' + user.uid);
+        const inviterEmail = user.email;
 
-</body></html>
+        // Shranjevanje povabljenega uporabnika
+        userRef.child('invitations').push(inviteEmail);
+
+        // Poslano povabilo
+        const inviteStatus = document.getElementById('invitation-status');
+        inviteStatus.textContent = `Povabilo poslano na ${inviteEmail}. Čakaj na potrditev.`;
+
+        // Posodobi podatke (odštejemo 10 točk za vstopnino)
+        userRef.update({
+          points: user.points - 10
+        });
+
+        // Dodaj povabilo za prijatelja (pošiljanje povabila prijatelju)
+        sendInviteEmail(inviteEmail, inviterEmail);
+      }
+
+      // Funkcija za pošiljanje povabila prijatelju
+      function sendInviteEmail(inviteEmail, inviterEmail) {
+        const inviteRef = database.ref('users');
+        inviteRef.orderByChild('email').equalTo(inviteEmail).once('value', snapshot => {
+          if (snapshot.exists()) {
+            const inviteUserID = Object.keys(snapshot.val())[0];
+            const inviteUserRef = database.ref('users/' + inviteUserID);
+            
+            inviteUserRef.once('value', userSnapshot => {
+              // Ko se uporabnik prijavi in potrdi povabilo
+              if (userSnapshot.exists()) {
+                // Za povabljenega uporabnika odštejemo 10 točk kot vstopnino
+                const newPoints = userSnapshot.val().points - 10;
+                const inviterRef = database.ref('users/' + inviterEmail);
+
+                // Za povabitelja dodamo 10 točk
+                const inviterPoints = inviterRef.val().points + 10;
+
+                // Prenos točk
+                inviteUserRef.update({ points: newPoints });
+                inviterRef.update({ points: inviterPoints });
+
+                // 10% bonus za začetnika (tisti, ki je povabil)
+                const inviterUserRef = database.ref('users/' + inviterEmail);
+                inviterUserRef.once('value', snapshot => {
+                  const inviterBonus = snapshot.val().points + 1; // 10% od 10 točk = 1 točka
+                  inviterUserRef.update({ points: inviterBonus });
+                });
+              }
+            });
+          }
+        });
+      }
+
+      // Sledenje prijavi uporabnika in podatkom
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          const userRef = database.ref('users/' + user.uid);
+          userRef.once('value', snapshot => {
+            document.getElementById('user-points').textContent = snapshot.val().points;
+          });
+        }
+      });
+    </script>
+</body>
+</html>
