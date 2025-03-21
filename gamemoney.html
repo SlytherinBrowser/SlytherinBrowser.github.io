@@ -8,30 +8,120 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+        // Import Firebase funkcije
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, update, get, child, push, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_JUf26P7PoKmaZSs9Q0n6wDM4aYe2xQo",
-    authDomain: "money-dbb15.firebaseapp.com",
-    projectId: "money-dbb15",
-    storageBucket: "money-dbb15.firebasestorage.app",
-    messagingSenderId: "92296430851",
-    appId: "1:92296430851:web:24ed23b75abd81453a1536",
-    measurementId: "G-LNEVCP2VLB"
-  };
+        // Firebase nastavitve
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_JUf26P7PoKmaZSs9Q0n6wDM4aYe2xQo",
+            authDomain: "money-dbb15.firebaseapp.com",
+            projectId: "money-dbb15",
+            storageBucket: "money-dbb15.firebasestorage.app",
+            messagingSenderId: "92296430851",
+            appId: "1:92296430851:web:24ed23b75abd81453a1536",
+            measurementId: "G-LNEVCP2VLB"
+        };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-const user = firebase.auth().currentUser;
-const userID = user.uid;  // to je unikatni ID uporabnika
-</script>
+        // Inicializacija Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // Prijava uporabnika z Google
+        function googleSignIn() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then(result => {
+                    const user = result.user;
+                    document.getElementById('user-email').textContent = user.email;
+                    document.getElementById('user-info').style.display = 'block';
+
+                    // Shranjevanje uporabniških podatkov v Firebase
+                    const userRef = ref(database, 'users/' + user.uid);
+                    get(userRef).then(snapshot => {
+                        if (!snapshot.exists()) {
+                            set(userRef, {
+                                email: user.email,
+                                points: 10,  // Začetne točke
+                                invitedBy: null,  // Noben uporabnik ga ni povabil
+                                invitations: [],
+                                status: 'active'
+                            });
+                        }
+                        document.getElementById('user-points').textContent = snapshot.val().points;
+                    });
+                })
+                .catch(error => {
+                    console.error("Napaka pri prijavi: ", error.message);
+                });
+        }
+
+        // Funkcija za pošiljanje povabila
+        function sendInvitation() {
+            const user = auth.currentUser;
+            const inviteEmail = document.getElementById('invite-email').value;
+            const userRef = ref(database, 'users/' + user.uid);
+
+            // Shranjevanje povabljenega uporabnika
+            push(ref(database, 'users/' + user.uid + '/invitations'), inviteEmail);
+
+            // Poslano povabilo
+            const inviteStatus = document.getElementById('invitation-status');
+            inviteStatus.textContent = `Povabilo poslano na ${inviteEmail}. Čakaj na potrditev.`;
+
+            // Posodobi podatke (odštejemo 10 točk za vstopnino)
+            update(userRef, {
+                points: (user.points - 10)
+            });
+
+            // Dodaj povabilo za prijatelja (pošiljanje povabila prijatelju)
+            sendInviteEmail(inviteEmail, user.email);
+        }
+
+        // Funkcija za pošiljanje povabila prijatelju
+        function sendInviteEmail(inviteEmail, inviterEmail) {
+            const usersRef = ref(database, 'users');
+            get(query(usersRef, orderByChild('email'), equalTo(inviteEmail)))
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const inviteUserID = Object.keys(snapshot.val())[0];
+                        const inviteUserRef = ref(database, 'users/' + inviteUserID);
+
+                        // Posodobi podatke povabljenega uporabnika
+                        get(inviteUserRef).then(userSnapshot => {
+                            if (userSnapshot.exists()) {
+                                // Za povabljenega uporabnika odštejemo 10 točk kot vstopnino
+                                const newPoints = userSnapshot.val().points - 10;
+                                update(inviteUserRef, { points: newPoints });
+
+                                // Za povabitelja dodamo 10 točk
+                                const inviterRef = ref(database, 'users/' + inviterEmail);
+                                update(inviterRef, { points: inviterRef.val().points + 10 });
+
+                                // 10% bonus za začetnika (tisti, ki je povabil)
+                                const inviterUserRef = ref(database, 'users/' + inviterEmail);
+                                get(inviterUserRef).then(snapshot => {
+                                    const inviterBonus = snapshot.val().points + 1; // 10% od 10 točk = 1 točka
+                                    update(inviterUserRef, { points: inviterBonus });
+                                });
+                            }
+                        });
+                    }
+                });
+        }
+
+        // Sledenje prijavi uporabnika in podatkom
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                const userRef = ref(database, 'users/' + user.uid);
+                get(userRef).then(snapshot => {
+                    document.getElementById('user-points').textContent = snapshot.val().points;
+                });
+            }
+        });
+    </script>
 </head>
 <body>
     <h1>Piramidna Igra</h1>
@@ -43,103 +133,5 @@ const userID = user.uid;  // to je unikatni ID uporabnika
         <button onclick="sendInvitation()">Povabi prijatelja</button>
         <p id="invitation-status"></p>
     </div>
-
-    <script>
-      // Prijava uporabnika z Google
-      function googleSignIn() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-          .then(result => {
-            const user = result.user;
-            document.getElementById('user-email').textContent = user.email;
-            document.getElementById('user-info').style.display = 'block';
-
-            // Shranjevanje uporabniških podatkov v Firebase
-            const userRef = database.ref('users/' + user.uid);
-            userRef.once('value', snapshot => {
-              if (!snapshot.exists()) {
-                userRef.set({
-                  email: user.email,
-                  points: 10,  // Začetne točke
-                  invitedBy: null,  // Noben uporabnik ga ni povabil
-                  invitations: [],
-                  status: 'active'
-                });
-              }
-              document.getElementById('user-points').textContent = snapshot.val().points;
-            });
-          })
-          .catch(error => {
-            console.error("Napaka pri prijavi: ", error.message);
-          });
-      }
-
-      // Funkcija za pošiljanje povabila
-      function sendInvitation() {
-        const user = auth.currentUser;
-        const inviteEmail = document.getElementById('invite-email').value;
-        const userRef = database.ref('users/' + user.uid);
-        const inviterEmail = user.email;
-
-        // Shranjevanje povabljenega uporabnika
-        userRef.child('invitations').push(inviteEmail);
-
-        // Poslano povabilo
-        const inviteStatus = document.getElementById('invitation-status');
-        inviteStatus.textContent = `Povabilo poslano na ${inviteEmail}. Čakaj na potrditev.`;
-
-        // Posodobi podatke (odštejemo 10 točk za vstopnino)
-        userRef.update({
-          points: user.points - 10
-        });
-
-        // Dodaj povabilo za prijatelja (pošiljanje povabila prijatelju)
-        sendInviteEmail(inviteEmail, inviterEmail);
-      }
-
-      // Funkcija za pošiljanje povabila prijatelju
-      function sendInviteEmail(inviteEmail, inviterEmail) {
-        const inviteRef = database.ref('users');
-        inviteRef.orderByChild('email').equalTo(inviteEmail).once('value', snapshot => {
-          if (snapshot.exists()) {
-            const inviteUserID = Object.keys(snapshot.val())[0];
-            const inviteUserRef = database.ref('users/' + inviteUserID);
-            
-            inviteUserRef.once('value', userSnapshot => {
-              // Ko se uporabnik prijavi in potrdi povabilo
-              if (userSnapshot.exists()) {
-                // Za povabljenega uporabnika odštejemo 10 točk kot vstopnino
-                const newPoints = userSnapshot.val().points - 10;
-                const inviterRef = database.ref('users/' + inviterEmail);
-
-                // Za povabitelja dodamo 10 točk
-                const inviterPoints = inviterRef.val().points + 10;
-
-                // Prenos točk
-                inviteUserRef.update({ points: newPoints });
-                inviterRef.update({ points: inviterPoints });
-
-                // 10% bonus za začetnika (tisti, ki je povabil)
-                const inviterUserRef = database.ref('users/' + inviterEmail);
-                inviterUserRef.once('value', snapshot => {
-                  const inviterBonus = snapshot.val().points + 1; // 10% od 10 točk = 1 točka
-                  inviterUserRef.update({ points: inviterBonus });
-                });
-              }
-            });
-          }
-        });
-      }
-
-      // Sledenje prijavi uporabnika in podatkom
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          const userRef = database.ref('users/' + user.uid);
-          userRef.once('value', snapshot => {
-            document.getElementById('user-points').textContent = snapshot.val().points;
-          });
-        }
-      });
-    </script>
 </body>
 </html>
