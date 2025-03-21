@@ -29,6 +29,8 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+const user = firebase.auth().currentUser;
+const userID = user.uid;  // to je unikatni ID uporabnika
 </script>
 </head>
 <body>
