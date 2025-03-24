@@ -120,7 +120,8 @@
             transition: background 0.3s, transform 0.2s ease-in-out;
             margin-top: 10px;
         }
- #toggleButton {
+    
+ #toggleButton, #lastPlayedButton {
             background-color: #3fa9ff;
             color: #fff;
             padding: 12px 25px;
@@ -131,7 +132,7 @@
             margin-top: 10px;
         }
 
-        #popupButton:hover, #toggleButton:hover {
+        #popupButton:hover, #toggleButton:hover, #lastPlayedButton:hover {
             background-color: #2473b2;
             transform: scale(1.05);
         }
@@ -182,6 +183,7 @@
     <div class="button-container">
         <button id="popupButton">Pokaži seznam iger</button>
         <button id="toggleButton" disabled>Povečaj / Pomanjšaj</button>
+        <button id="lastPlayedButton">Odpni zadnjo igro</button>
     </div>
 
 
@@ -192,6 +194,7 @@
         const popupButton = document.getElementById('popupButton');
         const popup = document.getElementById('popup');
         const toggleButton = document.getElementById('toggleButton');
+        const lastPlayedButton = document.getElementById('lastPlayedButton');
 
         const links = {
             "cat": "https://slytherinbrowser.github.io/cat.html",
@@ -212,16 +215,33 @@
             "flyordie": "https://flyordie.io",
             "typeracer": "https://play.typeracer.com"
         };
+ let lastPlayedGame = localStorage.getItem('lastPlayedGame');
 
+        // Poveži iskalnik z iframe
         searchInput.addEventListener('input', () => {
             const value = searchInput.value.toLowerCase();
             if (links[value]) {
                 resultFrame.src = links[value];
-                resultFrame.style.display = 'block'; // Show iframe when there is a match
-                toggleButton.disabled = false; // Enable the toggle button once iframe is active
+                resultFrame.style.display = 'block';
+                toggleButton.disabled = false;
+                lastPlayedGame = value;
+                localStorage.setItem('lastPlayedGame', value);
+                lastPlayedButton.disabled = false;
             } else {
-                resultFrame.style.display = 'none'; // Hide iframe when no match
-                toggleButton.disabled = true; // Disable the toggle button if iframe is not active
+                resultFrame.style.display = 'none';
+                toggleButton.disabled = true;
+                lastPlayedButton.disabled = true;
+            }
+        });
+
+        // Gumb za odpiranje zadnje igre ob kliku
+        lastPlayedButton.addEventListener('click', () => {
+            if (lastPlayedGame && links[lastPlayedGame]) {
+                resultFrame.src = links[lastPlayedGame];
+                resultFrame.style.display = 'block';
+                toggleButton.disabled = false;
+            } else {
+                alert("Ni nobene nedavne igre za odpreti.");
             }
         });
 
