@@ -109,7 +109,18 @@
             color: #333;
         }
 
-        #popupButton, #toggleButton {
+#popupButton {
+    display: none;
+            background-color: #3fa9ff;
+            color: #fff;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s ease-in-out;
+            margin-top: 10px;
+        }
+ #toggleButton {
             background-color: #3fa9ff;
             color: #fff;
             padding: 12px 25px;
@@ -146,36 +157,33 @@
 <body>
     <form id="searchForm">
         <label for="search">Vnesi igro:</label>
-        <input type="text" id="search" placeholder="Napiši ključne besede...">
+        <input list="games" type="text" id="search" placeholder="Napiši ključne besede...">
+        <datalist id="games">
+            <option value="cat">
+            <option value="among">
+            <option value="archer hero">
+            <option value="warstrike">
+            <option value="drift">
+            <option value="bob">
+            <option value="diep">
+            <option value="wormate">
+            <option value="littlebigsnake">
+            <option value="wormszoneio">
+            <option value="slithercraft">
+            <option value="moomoo">
+            <option value="zombsroyale">
+            <option value="krunker">
+            <option value="lordz.io">
+            <option value="flyordie">
+            <option value="typeracer">
+        </datalist>
     </form>
     <iframe id="resultFrame" style="display:none;"></iframe>
     <div class="button-container">
         <button id="popupButton">Pokaži seznam iger</button>
         <button id="toggleButton" disabled>Povečaj / Pomanjšaj</button>
     </div>
-    <div id="popup">
-        <h3>Seznam iger:</h3>
-        <ul>
-            <li>cat</li>
-            <li>among</li>
-            <li>archer hero</li>
-            <li>warstrike</li>
-            <li>drift</li>
-            <li>bob</li>
-            <li>diep</li>
-            <li>wormate</li>
-            <li>littlebigsnake</li>
-            <li>wormszoneio</li>
-            <li>slithercraft</li>
-            <li>moomoo</li>
-            <li>zombsroyale</li>
-            <li>krunker</li>
-            <li>lordz.io</li>
-            <li>flyordie</li>
-            <li>typeracer</li>
-        </ul>
-        <button onclick="closePopup()">Zapri</button>
-    </div>
+
 
     <script>
         const searchInput = document.getElementById('search');
@@ -208,16 +216,11 @@
         searchInput.addEventListener('input', () => {
             const value = searchInput.value.toLowerCase();
             if (links[value]) {
-                searchForm.classList.add('active');
                 resultFrame.src = links[value];
                 resultFrame.style.display = 'block'; // Show iframe when there is a match
-                resultFrame.classList.add('active');
                 toggleButton.disabled = false; // Enable the toggle button once iframe is active
             } else {
-                searchForm.classList.remove('active');
-                resultFrame.src = '';
                 resultFrame.style.display = 'none'; // Hide iframe when no match
-                resultFrame.classList.remove('active');
                 toggleButton.disabled = true; // Disable the toggle button if iframe is not active
             }
         });
@@ -232,7 +235,7 @@
 
         let isExpanded = false;
 
-toggleButton.addEventListener('click', () => {
+        toggleButton.addEventListener('click', () => {
     if (!isExpanded) {
         resultFrame.style.height = '100vh';
         resultFrame.style.width = '100%';
@@ -244,8 +247,6 @@ toggleButton.addEventListener('click', () => {
     }
     isExpanded = !isExpanded;
 });
-
-
          function getTimePlayedToday() {
             const today = new Date().toISOString().split('T')[0];
             const data = JSON.parse(localStorage.getItem('playTime')) || {};
@@ -283,7 +284,6 @@ toggleButton.addEventListener('click', () => {
                 toggleButton.disabled = true;
             }
         });
-
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 const command = searchInput.value.toLowerCase();
@@ -300,8 +300,7 @@ toggleButton.addEventListener('click', () => {
                 }
             }
         });
-
-        setInterval(() => {
+         setInterval(() => {
             if (startTime) {
                 const now = Date.now();
                 const elapsed = now - startTime;
