@@ -17,18 +17,7 @@ body {
 
 
 
- #addIconButton {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
 
-        #addIconButton:hover {
-            background-color: #45a049;
-        }
 
             /* Stil za modalno okno (pop-up) */
         .modal {
@@ -371,7 +360,7 @@ label {
     height: auto;
 }
 
-.icon {
+.icon, #addIconButton {
     width: 50px;
     height: 50px;
     border-radius: 15px; /* Srednje zaobljene ikone */
@@ -380,7 +369,7 @@ label {
     transition: transform 0.3s;
 }
 
-.icon:hover {
+.icon:hover,#addIconButton:hover {
     transform: scale(1.2); /* Večje povečanje pri hoverju */
 }
 
@@ -729,18 +718,7 @@ body {
 
 
 
-#addIconButton {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
 
-        #addIconButton:hover {
-            background-color: #45a049;
-        }
 
             /* Stil za modalno okno (pop-up) */
         .modal {
@@ -1089,7 +1067,7 @@ label {
     transition: background-color 0.3s, transform 0.3s;
 }
 
-.icon {
+.icon, #addIconButton {
     width: 55px; /* Malenkost večje ikone */
     height: 55px;
     border-radius: 30%; /* Srednja zaobljenost ikone */
@@ -1098,7 +1076,7 @@ label {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.icon:hover {
+.icon:hover, #addIconButton:hover {
     transform: translateY(-4px) scale(1.15); /* Rahlo premikanje in povečanje */
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); /* Večja senca za večji učinek */
 }
