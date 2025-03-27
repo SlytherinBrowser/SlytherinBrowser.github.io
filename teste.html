@@ -20,12 +20,12 @@
             z-index: 9999;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s, transform 0.3s;
+            transition: opacity 0.5s, bottom 0.5s, transform 0.3s ease;
             cursor: pointer;
             width: 300px;
         }
 
-        /* Slog za prikaži animacijo obvestila */
+        /* Animacija za prikaži obvestila */
         #notification.show {
             opacity: 1;
             bottom: 20px; /* Pokaže se na 20px od spodaj */
@@ -100,34 +100,42 @@
             const touchStart = e.touches[0].clientX;
             let touchMove;
 
+            const notification = document.getElementById('notification');
+
+            // Dogodek za gibanje prsta po zaslonu
             window.addEventListener('touchmove', function(e) {
                 touchMove = e.touches[0].clientX;
                 const diff = touchMove - touchStart;
 
-                // Prepreči osvežitev strani, ko vlečemo levo ali desno
+                // Prepreči osvežitev strani
                 if (window.scrollY === 0) {
                     e.preventDefault();
                 }
 
-                // Če potegnemo več kot 100px levo ali desno, se obvestilo skrije
-                const notification = document.getElementById('notification');
-                if (Math.abs(diff) > 100) {
+                // Če potegnemo več kot 50px levo/desno, se obvestilo premakne
+                if (Math.abs(diff) > 50) {
                     notification.style.transform = `translateX(${diff}px)`;
                 }
             });
 
+            // Dogodek za zaključek poteze (spuščanje prsta)
             window.addEventListener('touchend', function() {
-                const notification = document.getElementById('notification');
                 const diff = touchMove - touchStart;
 
-                // Če smo potegnili dovolj daleč (več kot 100px), skrijemo obvestilo
+                // Če je premik dovolj velik (več kot 100px), obvestilo izgine
                 if (Math.abs(diff) > 100) {
+                    notification.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
                     notification.style.opacity = 0;
+                    notification.style.transform = 'translateX(100%)'; // Skrije obvestilo
+
+                    // Po animaciji ga povrnemo na začetni položaj
                     setTimeout(() => {
+                        notification.style.transition = 'none';
                         notification.style.transform = 'translateX(-50%)';
-                        notification.style.opacity = 1;
                     }, 300);
                 } else {
+                    // Če ni bilo dovolj velikega premika, obvestilo vrnemo na svoje mesto
+                    notification.style.transition = 'transform 0.3s ease';
                     notification.style.transform = 'translateX(-50%)';
                 }
             });
