@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="sl">
 <head>
     <meta charset="UTF-8">
@@ -15,8 +15,12 @@
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
                     console.log('Dovoljenje za obvestila je bilo podeljeno');
+                } else {
+                    console.log('Uporabnik ni dovolil obvestil');
                 }
             });
+        } else {
+            console.log('Obvestila niso podprta v tem brskalniku');
         }
 
         // Funkcija za prikaz obvestila
@@ -24,8 +28,8 @@
             if (Notification.permission === 'granted') {
                 new Notification(title, {
                     body: message,
-                    icon: 'your-icon.png', // Ikona obvestila
-                    badge: 'your-badge.png', // Majhna ikona obvestila
+                    icon: '', // Lahko dodaš svojo ikono
+                    badge: '', // Lahko dodaš majhno ikono
                 });
             } else {
                 console.log('Obvestila niso omogočena');
@@ -37,5 +41,5 @@
             showNotification('Novo obvestilo', 'To je testno obvestilo.');
         });
     </script>
-
-</body></html>
+</body>
+</html>
