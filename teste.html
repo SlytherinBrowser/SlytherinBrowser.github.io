@@ -116,7 +116,11 @@
 
                 // Premik obvestila glede na potezo
                 if (Math.abs(diff) > 50) {
-                    notification.style.transform = `translateX(${diff}px)`;
+                    if (direction === 'right') {
+                        notification.style.transform = `translateX(${diff}px)`; // Premik desno
+                    } else if (direction === 'left') {
+                        notification.style.transform = `translateX(${diff}px)`; // Premik levo (takoj začne levo)
+                    }
                 }
             });
 
