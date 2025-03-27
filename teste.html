@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random obvestila</title>
+    <title>Dinamična obvestila</title>
     <style>
-        /* Slog za obvestilo */
+        /* Osnovni slog za obvestilo */
         #notification {
             position: fixed;
-            bottom: 20px;  /* Začne na spodnjem robu */
+            bottom: -100px; /* Začne izven zaslona spodaj */
             left: 50%;
             transform: translateX(-50%);
             background-color: #333;
@@ -16,15 +16,16 @@
             padding: 15px;
             border-radius: 5px;
             font-size: 16px;
-            opacity: 0;
-            transition: opacity 0.5s;
             z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
             cursor: pointer;
         }
 
-        /* Animacija za pojav obvestila */
+        /* Slog za prikaži animacijo obvestila */
         #notification.show {
             opacity: 1;
+            bottom: 20px; /* Prikaže se na 20px od spodaj */
         }
 
         /* Slog za gumb */
@@ -87,7 +88,36 @@
             }, 3000);
         }
 
-        // Dodaj dogodek za klik na gumb
+        // Premikanje obvestila
+        let isDragging = false;
+        let startY = 0;
+        let initialBottom = 0;
+
+        const notification = document.getElementById('notification');
+
+        notification.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            initialBottom = parseInt(window.getComputedStyle(notification).bottom, 10);
+            isDragging = true;
+        });
+
+        notification.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const currentY = e.touches[0].clientY;
+            const diff = currentY - startY;
+            notification.style.bottom = `${initialBottom - diff}px`;  // Premakni obvestilo
+        });
+
+        notification.addEventListener('touchend', () => {
+            if (parseInt(notification.style.bottom, 10) > 100) {
+                notification.classList.remove('show'); // Če je pomaknjeno dovolj navzdol, skrij
+            } else {
+                notification.style.bottom = '20px';  // Pojdi nazaj na začetno pozicijo
+            }
+            isDragging = false;
+        });
+
+        // Dogodek za klik na gumb
         document.getElementById('notifyButton').addEventListener('click', showNotification);
     </script>
 
