@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Obvestila</title>
+</head>
+<body>
+    <button id="notifyButton">Pošlji obvestilo</button>
+
+    <script>
+        // Preveri, ali podpora za obvestila obstaja
+        if ('Notification' in window) {
+            // Prosi uporabnika za dovoljenje za pošiljanje obvestil
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Dovoljenje za obvestila je bilo podeljeno');
+                }
+            });
+        }
+
+        // Funkcija za prikaz obvestila
+        function showNotification(title, message) {
+            if (Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: 'your-icon.png', // Ikona obvestila
+                    badge: 'your-badge.png', // Majhna ikona obvestila
+                });
+            } else {
+                console.log('Obvestila niso omogočena');
+            }
+        }
+
+        // Dodaj dogodek za klik na gumb
+        document.getElementById('notifyButton').addEventListener('click', () => {
+            showNotification('Novo obvestilo', 'To je testno obvestilo.');
+        });
+    </script>
+
+</body></html>
