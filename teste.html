@@ -48,6 +48,33 @@
         #notifyButton:hover {
             background-color: #45a049;
         }
+
+        /* Slog za tiho obvestilo (ikona na levem robu) */
+        #silentMode {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            background-color: #323232;
+            color: white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+        }
+
+        #silentMode.active {
+            background-color: #e53935; /* Rdeča za aktivni tiho način */
+        }
+
+        #silentMode i {
+            font-size: 24px;
+        }
     </style>
 </head>
 <body>
@@ -56,6 +83,10 @@
 
     <div id="notification">
         To je testno obvestilo!
+    </div>
+
+    <div id="silentMode">
+        <i class="fa fa-volume-off"></i> <!-- Ikona za tih način -->
     </div>
 
     <script>
@@ -88,6 +119,47 @@
 
         // Dogodek za klik na gumb
         document.getElementById('notifyButton').addEventListener('click', showNotification);
+
+        // Tiho obvestilo - preveri ali je tiho način omogočen
+        let silentMode = JSON.parse(localStorage.getItem('silentMode')) || false;
+
+        // Funkcija za preklop tihega načina
+        function toggleSilentMode() {
+            silentMode = !silentMode;
+            localStorage.setItem('silentMode', JSON.stringify(silentMode));
+
+            const silentModeButton = document.getElementById('silentMode');
+            if (silentMode) {
+                silentModeButton.classList.add('active');
+            } else {
+                silentModeButton.classList.remove('active');
+            }
+        }
+
+        // Ko uporabnik dolgo pritisne na obvestilo, preklopi v tiho obvestilo
+        const notification = document.getElementById('notification');
+        let pressTimer;
+
+        notification.addEventListener('mousedown', () => {
+            pressTimer = setTimeout(() => {
+                toggleSilentMode();  // Preklopi tiho obvestilo
+            }, 1000);  // Dolg pritisk (1 sekunda)
+        });
+
+        notification.addEventListener('mouseup', () => {
+            clearTimeout(pressTimer);  // Prekliči dolg pritisk, če ni trajal 1 sekundo
+        });
+
+        // Funkcija za spremljanje položaja ikone za tiho obvestilo
+        const silentModeButton = document.getElementById('silentMode');
+        silentModeButton.addEventListener('click', toggleSilentMode);
+
+        // Če je tiho obvestilo omogočeno, prikaži ikono na levem robu
+        if (silentMode) {
+            silentModeButton.classList.add('active');
+        } else {
+            silentModeButton.classList.remove('active');
+        }
 
         // Onemogoči "Pull-to-refresh" na mobilnih napravah
         document.addEventListener('touchstart', (e) => {
