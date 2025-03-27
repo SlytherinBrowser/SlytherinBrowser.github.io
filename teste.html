@@ -23,6 +23,8 @@
             transition: opacity 0.5s, bottom 0.5s, transform 0.3s ease;
             cursor: pointer;
             width: 300px;
+            max-height: 60px;
+            overflow: hidden;
         }
 
         /* Animacija za prikaži obvestila */
@@ -48,6 +50,22 @@
         #notifyButton:hover {
             background-color: #45a049;
         }
+
+        /* Podrobnosti, ki se prikažejo ob povečanju */
+        .details {
+            display: none;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Obvestilo, ki je povečano */
+        #notification.expanded {
+            max-height: 300px;
+        }
+
+        #notification.expanded .details {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -56,6 +74,9 @@
 
     <div id="notification">
         To je testno obvestilo!
+        <div class="details">
+            Tukaj so podrobnosti obvestila. Lahko vsebujejo dodatne informacije ali navodila.
+        </div>
     </div>
 
     <script>
@@ -82,13 +103,8 @@
             const notification = document.getElementById('notification');
             notification.textContent = getRandomNotification();  // Nastavi naključno obvestilo
 
-            // Pokaži obvestilo
+            // Prikaz obvestila
             notification.classList.add('show');
-
-            // Po 3 sekundah skrij obvestilo
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
         }
 
         // Dogodek za klik na gumb
@@ -97,14 +113,14 @@
         // Onemogoči "Pull-to-refresh" na mobilnih napravah
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Preprečimo več dotikov
-            const touchStart = e.touches[0].clientX;
+            const touchStart = e.touches[0].clientY;
             let touchMove;
-
             const notification = document.getElementById('notification');
+            let direction = null;
 
             // Dogodek za gibanje prsta po zaslonu
             window.addEventListener('touchmove', function(e) {
-                touchMove = e.touches[0].clientX;
+                touchMove = e.touches[0].clientY;
                 const diff = touchMove - touchStart;
 
                 // Prepreči osvežitev strani
@@ -112,9 +128,16 @@
                     e.preventDefault();
                 }
 
-                // Če potegnemo več kot 50px levo/desno, se obvestilo premakne
+                // Zaznavanje smeri poteze
+                if (diff > 0) {
+                    direction = 'down'; // Poteza dol
+                } else if (diff < 0) {
+                    direction = 'up'; // Poteza gor
+                }
+
+                // Premik obvestila glede na potezo
                 if (Math.abs(diff) > 50) {
-                    notification.style.transform = `translateX(${diff}px)`;
+                    notification.style.transform = `translateY(${diff}px)`;
                 }
             });
 
@@ -122,21 +145,23 @@
             window.addEventListener('touchend', function() {
                 const diff = touchMove - touchStart;
 
-                // Če je premik dovolj velik (več kot 100px), obvestilo izgine
-                if (Math.abs(diff) > 100) {
+                // Poteza dol za skritje
+                if (Math.abs(diff) > 100 && direction === 'down') {
                     notification.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                    notification.style.opacity = 0;
-                    notification.style.transform = 'translateX(100%)'; // Skrije obvestilo
-
-                    // Po animaciji ga povrnemo na začetni položaj
+                    notification.style.transform = 'translateY(100%)'; // Skrije obvestilo dol
                     setTimeout(() => {
                         notification.style.transition = 'none';
-                        notification.style.transform = 'translateX(-50%)';
+                        notification.style.opacity = 0;
                     }, 300);
+                } 
+                // Poteza gor za povečanje in prikaz podrobnosti
+                else if (direction === 'up') {
+                    notification.classList.add('expanded');
+                    notification.style.transform = 'translateY(0)';
                 } else {
                     // Če ni bilo dovolj velikega premika, obvestilo vrnemo na svoje mesto
                     notification.style.transition = 'transform 0.3s ease';
-                    notification.style.transform = 'translateX(-50%)';
+                    notification.style.transform = 'translateY(0)';
                 }
             });
         });
