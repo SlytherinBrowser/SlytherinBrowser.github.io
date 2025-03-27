@@ -11,15 +11,18 @@
             bottom: -100px; /* Začne izven zaslona spodaj */
             left: 50%;
             transform: translateX(-50%);
-            background-color: #333;
+            background-color: #323232;
             color: white;
-            padding: 15px;
-            border-radius: 5px;
+            padding: 15px 20px;
+            border-radius: 16px;
             font-size: 16px;
+            font-family: 'Arial', sans-serif;
             z-index: 9999;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             opacity: 0;
             transition: opacity 0.5s, bottom 0.5s;
             cursor: pointer;
+            width: 300px;
         }
 
         /* Slog za prikaži animacijo obvestila */
@@ -88,37 +91,21 @@
             }, 3000);
         }
 
-        // Premikanje obvestila
-        let isDragging = false;
-        let startY = 0;
-        let initialBottom = 0;
-
-        const notification = document.getElementById('notification');
-
-        notification.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-            initialBottom = parseInt(window.getComputedStyle(notification).bottom, 10);
-            isDragging = true;
-        });
-
-        notification.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const currentY = e.touches[0].clientY;
-            const diff = currentY - startY;
-            notification.style.bottom = `${initialBottom - diff}px`;  // Premakni obvestilo
-        });
-
-        notification.addEventListener('touchend', () => {
-            if (parseInt(notification.style.bottom, 10) > 100) {
-                notification.classList.remove('show'); // Če je pomaknjeno dovolj navzdol, skrij
-            } else {
-                notification.style.bottom = '20px';  // Pojdi nazaj na začetno pozicijo
-            }
-            isDragging = false;
-        });
-
         // Dogodek za klik na gumb
         document.getElementById('notifyButton').addEventListener('click', showNotification);
+
+        // Onemogoči "Pull-to-refresh" na mobilnih napravah
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return; // Preprečimo več dotikov
+            const touchStart = e.touches[0].clientY;
+            
+            window.addEventListener('touchmove', function(e) {
+                const touchMove = e.touches[0].clientY;
+                if (touchMove > touchStart && window.scrollY === 0) {
+                    e.preventDefault(); // Preprečimo osvežitev strani
+                }
+            });
+        });
     </script>
 
 </body>
