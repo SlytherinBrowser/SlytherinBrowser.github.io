@@ -8,7 +8,7 @@
         /* Osnovni slog za obvestilo */
         #notification {
             position: fixed;
-            bottom: 20px; /* Prikaže se 20px od spodaj */
+            bottom: -100px; /* Začnemo zunaj zaslona */
             left: 50%;
             transform: translateX(-50%);
             background-color: #323232;
@@ -20,12 +20,12 @@
             z-index: 9999;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s, transform 0.3s ease;
+            transition: opacity 0.4s ease, bottom 0.4s ease, transform 0.3s ease;
             cursor: pointer;
             width: 300px;
         }
 
-        /* Animacija za prikaži obvestila */
+        /* Animacija za prikaz obvestila */
         #notification.show {
             opacity: 1;
             bottom: 20px; /* Pokaže se na 20px od spodaj */
@@ -115,11 +115,12 @@
                 }
 
                 // Premik obvestila glede na potezo
-                if (Math.abs(diff) > 50) {
+                if (Math.abs(diff) > 20) {
+                    notification.style.transition = 'transform 0s'; // Brez animacije med premikom
                     if (direction === 'right') {
                         notification.style.transform = `translateX(${diff}px)`; // Premik desno
                     } else if (direction === 'left') {
-                        notification.style.transform = `translateX(${diff}px)`; // Premik levo (takoj začne levo)
+                        notification.style.transform = `translateX(${diff}px)`; // Premik levo
                     }
                 }
             });
