@@ -8,7 +8,7 @@
         /* Osnovni slog za obvestilo */
         #notification {
             position: fixed;
-            bottom: -100px; /* Začne izven zaslona spodaj */
+            bottom: 20px; /* Prikaže se 20px od spodaj */
             left: 50%;
             transform: translateX(-50%);
             background-color: #323232;
@@ -20,7 +20,7 @@
             z-index: 9999;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s;
+            transition: opacity 0.5s, bottom 0.5s, transform 0.3s;
             cursor: pointer;
             width: 300px;
         }
@@ -28,7 +28,7 @@
         /* Slog za prikaži animacijo obvestila */
         #notification.show {
             opacity: 1;
-            bottom: 20px; /* Prikaže se na 20px od spodaj */
+            bottom: 20px; /* Pokaže se na 20px od spodaj */
         }
 
         /* Slog za gumb */
@@ -97,12 +97,38 @@
         // Onemogoči "Pull-to-refresh" na mobilnih napravah
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Preprečimo več dotikov
-            const touchStart = e.touches[0].clientY;
-            
+            const touchStart = e.touches[0].clientX;
+            let touchMove;
+
             window.addEventListener('touchmove', function(e) {
-                const touchMove = e.touches[0].clientY;
-                if (touchMove > touchStart && window.scrollY === 0) {
-                    e.preventDefault(); // Preprečimo osvežitev strani
+                touchMove = e.touches[0].clientX;
+                const diff = touchMove - touchStart;
+
+                // Prepreči osvežitev strani, ko vlečemo levo ali desno
+                if (window.scrollY === 0) {
+                    e.preventDefault();
+                }
+
+                // Če potegnemo več kot 100px levo ali desno, se obvestilo skrije
+                const notification = document.getElementById('notification');
+                if (Math.abs(diff) > 100) {
+                    notification.style.transform = `translateX(${diff}px)`;
+                }
+            });
+
+            window.addEventListener('touchend', function() {
+                const notification = document.getElementById('notification');
+                const diff = touchMove - touchStart;
+
+                // Če smo potegnili dovolj daleč (več kot 100px), skrijemo obvestilo
+                if (Math.abs(diff) > 100) {
+                    notification.style.opacity = 0;
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(-50%)';
+                        notification.style.opacity = 1;
+                    }, 300);
+                } else {
+                    notification.style.transform = 'translateX(-50%)';
                 }
             });
         });
