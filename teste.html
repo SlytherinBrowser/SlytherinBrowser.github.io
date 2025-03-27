@@ -3,43 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Obvestila</title>
-</head>
-<body>
-    <button id="notifyButton">Pošlji obvestilo</button>
-
-    <script>
-        // Preveri, ali podpora za obvestila obstaja
-        if ('Notification' in window) {
-            // Prosi uporabnika za dovoljenje za pošiljanje obvestil
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    console.log('Dovoljenje za obvestila je bilo podeljeno');
-                } else {
-                    console.log('Uporabnik ni dovolil obvestil');
-                }
-            });
-        } else {
-            console.log('Obvestila niso podprta v tem brskalniku');
+    <title>Random obvestila</title>
+    <style>
+        /* Slog za obvestilo */
+        #notification {
+            position: fixed;
+            bottom: 20px;  /* Začne na spodnjem robu */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 9999;
+            cursor: pointer;
         }
 
-        // Funkcija za prikaz obvestila
-        function showNotification(title, message) {
-            if (Notification.permission === 'granted') {
-                new Notification(title, {
-                    body: message,
-                    icon: '', // Lahko dodaš svojo ikono
-                    badge: '', // Lahko dodaš majhno ikono
-                });
-            } else {
-                console.log('Obvestila niso omogočena');
-            }
+        /* Animacija za pojav obvestila */
+        #notification.show {
+            opacity: 1;
+        }
+
+        /* Slog za gumb */
+        #notifyButton {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #notifyButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="notifyButton">Prikaži random obvestilo</button>
+
+    <div id="notification">
+        To je testno obvestilo!
+    </div>
+
+    <script>
+        // Seznam naključnih obvestil
+        const notifications = [
+            "Nova posodobitev je na voljo!",
+            "Imate nove naloge v sistemu.",
+            "Ne pozabite na prihajajoči sestanek.",
+            "Prejeli ste novo sporočilo.",
+            "Vaša seja je bila uspešno zaključena.",
+            "Pozdravljeni, dobrodošli nazaj!",
+            "Na voljo so nove funkcionalnosti!",
+            "Obvestilo o vzdrževanju sistema."
+        ];
+
+        // Funkcija za naključno izbiro obvestila iz seznama
+        function getRandomNotification() {
+            const randomIndex = Math.floor(Math.random() * notifications.length);
+            return notifications[randomIndex];
+        }
+
+        // Funkcija za prikaz obvestila z animacijo
+        function showNotification() {
+            const notification = document.getElementById('notification');
+            notification.textContent = getRandomNotification();  // Nastavi naključno obvestilo
+
+            // Pokaži obvestilo
+            notification.classList.add('show');
+
+            // Po 3 sekundah skrij obvestilo
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
 
         // Dodaj dogodek za klik na gumb
-        document.getElementById('notifyButton').addEventListener('click', () => {
-            showNotification('Novo obvestilo', 'To je testno obvestilo.');
-        });
+        document.getElementById('notifyButton').addEventListener('click', showNotification);
     </script>
+
 </body>
 </html>
