@@ -180,33 +180,31 @@
             <div class="app-grid" id="searchGrid"></div>
         </div>
 
-        <!-- Obvestila o aplikacijah -->
-<div class="container" id="notifications">
-    <div class="notifications">
-        <h1>Obvestila</h1>
-        <ul id="notificationsList">
-            <li><h3>Objavljen izbirnik menija</h3></li>
-            <li><h3>Objavljen novi Menu:</h3></li>
-            <li>Drugačen razpored aplikacij</li>
-            <li>Dodan iskalnik aplikacij</li>
-            <li>Dodana obvestila o celotni strani</li>
-        </ul>
-        <ul id="updateList" style="display: none;">
-            <li><h2>Posodobitev 2.0 je v izdelavi.</h2></li>
-            <li>Kaj bo novega:</li>
-            <li>100 dodatkov ali sprememb na strani:</li>
-            <li>Nove funkcije ali izboljšane funkcije</li>
-            <li>novi uporabniški načini in prilagoditve</li>
-            <li><h3>Datum posodobitve bo določen v času zaključnih preizkusov in popravkov</h3></li>
-        </ul>
-    </div>
-</div>
+       <!-- Obvestila o aplikacijah -->  
+    <div class="container" id="notifications">  
+        <div class="notifications">  
+            <p><h1>Obvestila</h1></p>  
+            <ul>
 
-<!-- Navigacija -->
-<nav class="nav-bar">
-    <div class="nav-item active" onclick="changeTab(0)" id="homeNavItem">Aplikacije</div>
-    <div class="nav-item" onclick="changeTab(1)">Iskanje</div>
-    <div class="nav-item" onclick="toggleNotifications()">Obvestila</div>
+<li><h3>Objavljen izbirnik menija</h3></li>  
+<li><h3>Objavljen novi Menu:</h3></li>  
+<li>Drugačen razpored aplikacij</li>  
+<li>Dodan iskalnik aplikacij</li>  
+<li>Dodana obvestila o celotni strani</li>  
+<li><h2>Posodobitev 2.0 je v izdelavi.</h2></li>  
+<li>Kaj bo novega:</li>  
+<li>100 dodatkov ali sprememb na strani:</li>  
+<li>Nove funkcije ali izboljšane funkcije</li>  
+<li>novi uporabniški načini in prilagoditve</li>  
+<li><h3>Datum posodobitve bo določen v času zaključnih preizkusov in popravkov</h3></li>  
+</ul>  
+            </div>  
+        </div>  
+    </div>  <!-- Navigacija -->  
+<nav class="nav-bar">  
+    <div class="nav-item active" onclick="changeTab(0)" id="homeNavItem">Aplikacije</div>  
+    <div class="nav-item" onclick="changeTab(1)">Iskanje</div>  
+    <div class="nav-item" onclick="changeTab(2)">Obvestila</div>  
 </nav>
 
     <div class="category-dropdown" id="categoryDropdown">
@@ -380,21 +378,7 @@ function selectCategory(category) {
 
 
 
-let showNotifications = true;
 
-    function toggleNotifications() {
-        const notificationsList = document.getElementById('notificationsList');
-        const updateList = document.getElementById('updateList');
-
-        if (showNotifications) {
-            notificationsList.style.display = 'none';
-            updateList.style.display = 'block';
-        } else {
-            notificationsList.style.display = 'block';
-            updateList.style.display = 'none';
-        }
-        showNotifications = !showNotifications;
-    }
     </script>
 </body>
 </html>
