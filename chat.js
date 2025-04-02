@@ -12,15 +12,6 @@ const firebaseConfig = {
   appId: "1:134982403709:web:aea347d62b313668e79314",
   measurementId: "G-1C0H5L72J1"
 };
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
 // Inicializacija Firebase
 let app, db;
 try {
