@@ -1,27 +1,26 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDoc, doc, query, orderBy, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAWX0bC74nQM4K5zkgnN1u9mfZtt62UAMg",
-  authDomain: "slychat-d75a2.firebaseapp.com",
-  databaseURL: "https://slychat-d75a2-default-rtdb.firebaseio.com",
-  projectId: "slychat-d75a2",
-  storageBucket: "slychat-d75a2.firebasestorage.app",
-  messagingSenderId: "134982403709",
-  appId: "1:134982403709:web:aea347d62b313668e79314",
-  measurementId: "G-1C0H5L72J1"
-};
-// Inicializacija Firebase
-let app, db;
-try {
-  app = initializeApp(firebaseConfig);
-  console.log("Firebase initialized:", app);
-  db = getFirestore(app);
-  console.log("Firestore initialized:", db);
-} catch (error) {
-  console.error("Error initializing Firebase:", error);
-}
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAhA1s2iiJDMMeqoOrp1asJO1eha_R0ivg",
+    authDomain: "slychat1-b76db.firebaseapp.com",
+    projectId: "slychat1-b76db",
+    storageBucket: "slychat1-b76db.firebasestorage.app",
+    messagingSenderId: "508879069664",
+    appId: "1:508879069664:web:ce963d111297cd3480cb85",
+    measurementId: "G-D34XJNNGNQ"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
 
 let mutedUsers = [];
 let bannedUsers = [];
