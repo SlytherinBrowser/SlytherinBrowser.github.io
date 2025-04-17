@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Klepetalnik</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f2f2f2; }
+    #chat { border: 1px solid #ccc; padding: 10px; background: white; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+    .msg { margin: 10px 0; }
+    .user { color: blue; }
+    .ai { color: green; }
+    input[type="text"] { width: 75%; padding: 10px; }
+    button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+  </style>
+</head>
+<body>
+
+<h2>AI Klepetalnik</h2>
+<div id="chat"></div>
+
+<input type="text" id="input" placeholder="Vpiši sporočilo..." autocomplete="off">
+<button onclick="sendMessage()">Pošlji</button>
+
+<script>
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('input');
+
+  async function sendMessage() {
+    const userText = input.value;
+    if (!userText) return;
+    appendMessage('Ti', userText, 'user');
+    input.value = '';
+
+    // Pošlji zahtevo na OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer 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'  // Tukaj zamenjaj s svojim OpenAI ključem
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'user', content: userText }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    const aiText = data.choices[0].message.content;
+    appendMessage('AI', aiText, 'ai');
+  }
+
+  function appendMessage(sender, text, cls) {
+    const msg = document.createElement('div');
+    msg.classList.add('msg', cls);
+    msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Omogoči, da se ob pritisku tipke Enter pošlje sporočilo
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
