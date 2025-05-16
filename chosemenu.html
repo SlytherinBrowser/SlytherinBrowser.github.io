@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Izbira Menija</title>
-    <link id="favicon" rel="icon" href="Slytherin.ico">
+    <link id="favicon" rel="icon" href="Slytherin.ico" />
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -17,58 +19,145 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #121212;
-            color: white;
-            font-family: Arial, sans-serif;
+            background: #0f0f1a;
+            color: #00fff7;
+            font-family: 'Orbitron', monospace, monospace;
             text-align: center;
+            overflow: hidden;
         }
 
         .izbira {
             display: none;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
+            background: rgba(0, 255, 247, 0.1);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow:
+                0 0 20px #00fff7,
+                0 0 40px #00b8f4,
+                0 0 60px #0077b6;
+            border: 2px solid #00fff7;
+        }
+
+        .izbira h2 {
+            font-weight: 900;
+            font-size: 2.8rem;
+            letter-spacing: 3px;
+            color: #00fff7;
+            text-shadow:
+                0 0 5px #00fff7,
+                0 0 10px #00b8f4,
+                0 0 15px #0077b6;
+            margin-bottom: 30px;
         }
 
         .izbira button {
-            padding: 15px;
+            padding: 18px;
             border: none;
             cursor: pointer;
-            font-size: 18px;
-            width: 200px;
-            border-radius: 8px;
+            font-size: 20px;
+            width: 220px;
+            border-radius: 15px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            box-shadow:
+                0 0 8px #00fff7,
+                0 0 15px #0077b6;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .staro { background: #007bff; color: white; }
-        .novo { background: #28a745; color: white; }
+        .staro {
+            background: linear-gradient(90deg, #0077b6, #00fff7);
+            color: #021124;
+        }
+
+        .staro:hover {
+            background: linear-gradient(90deg, #00fff7, #0077b6);
+            color: #e0f7fa;
+            box-shadow:
+                0 0 15px #00fff7,
+                0 0 30px #00b8f4;
+        }
+
+        .novo {
+            background: linear-gradient(90deg, #28a745, #70db70);
+            color: #021124;
+            box-shadow:
+                0 0 8px #70db70,
+                0 0 15px #28a745;
+        }
+
+        .novo:hover {
+            background: linear-gradient(90deg, #70db70, #28a745);
+            color: #e0f7ea;
+            box-shadow:
+                0 0 15px #70db70,
+                0 0 30px #28a745;
+        }
+
+        .drugo {
+            background: linear-gradient(90deg, #ff4081, #f48fb1);
+            color: #021124;
+            box-shadow:
+                0 0 8px #f48fb1,
+                0 0 15px #ff4081;
+        }
+
+        .drugo:hover {
+            background: linear-gradient(90deg, #f48fb1, #ff4081);
+            color: #fff0f6;
+            box-shadow:
+                0 0 15px #f48fb1,
+                0 0 30px #ff4081;
+        }
 
         .nalaganje {
             display: none;
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.2);
-            border-top: 5px solid white;
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(0, 255, 247, 0.3);
+            border-top: 6px solid #00fff7;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             cursor: pointer;
+            box-shadow:
+                0 0 10px #00fff7,
+                0 0 20px #00b8f4;
+            margin: auto;
+        }
+
+        .nalaganje:hover {
+            box-shadow:
+                0 0 20px #00fff7,
+                0 0 40px #00b8f4,
+                0 0 60px #0077b6;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 <body>
-
     <div class="izbira">
         <h2>Izberi meni:</h2>
         <button class="staro" onclick="izberi('menu.html')">Stari Meni</button>
         <button class="novo" onclick="izberi('menu2.html')">Novi Meni</button>
+        <button class="drugo" onclick="izberi('menu3.html')">Drugačen Meni</button>
     </div>
 
-    <div class="nalaganje" onclick="ponovnoIzberi()"></div>
+    <div class="nalaganje" onclick="prekiniNalaganje()" title="Klikni za preklic nalaganja"></div>
 
     <script>
+        let nalaganjeTimeout;
+
         function izberi(meni) {
             localStorage.setItem('izbraniMeni', meni);
             prikaziNalaganje(meni);
@@ -79,7 +168,8 @@
             let loader = document.querySelector('.nalaganje');
             loader.style.display = 'block';
 
-            setTimeout(() => {
+            // Zaženi timer za preusmeritev
+            nalaganjeTimeout = setTimeout(() => {
                 window.location.href = meni;
             }, 1500);
         }
@@ -99,8 +189,12 @@
             document.querySelector('.izbira').style.display = 'flex';
         }
 
+        function prekiniNalaganje() {
+            clearTimeout(nalaganjeTimeout);
+            ponovnoIzberi();
+        }
+
         preveriIzbiro();
     </script>
-
 </body>
 </html>
