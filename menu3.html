@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iskanje aplikacij</title>
+    <link id="favicon" rel="icon" href="Slytherin.ico">
+    <style type="text/css">
+      body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f9;
+}
+
+
+#appContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+.category {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.category h3 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.appWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.arrow {
+    font-size: 24px;
+    color: #0078d4;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.arrow:hover {
+    transform: scale(1.2);
+}
+
+.appContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+}
+
+.appItem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.appItem:hover {
+    background-color: #f0f0f0;
+}
+
+.appItem img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+#changeColorBtn {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  left: 0;  
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #changeColorBtn:active {
+            background-color: #45a049;
+        }
+
+        #colorPicker {
+          width: 30%;
+          left: 0;
+          width: 100%;
+          position: fixed;
+          bottom: 30px;
+            margin-top: 20px;
+            display: none; /* Skrije izbiro barve na začetku */
+        }
+    </style>
+</head>
+<body>
+  
+    
+    <div id="appContainer">
+        <div class="category" id="applications">
+            <h3>Aplicacije</h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('applications', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('applications', 1)">&#8594;</button>
+            </div>
+        </div>
+         <div class="category" id="raz">
+            <h3> Razvijanje </h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('raz', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('raz', 1)">&#8594;</button>
+            </div>
+        </div>
+         <div class="category" id="shop">
+            <h3>Trgovine</h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('shop', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('shop', 1)">&#8594;</button>
+            </div>
+        </div>
+        <div class="category" id="games">
+            <h3> Igre </h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('games', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('games', 1)">&#8594;</button>
+            </div>
+        </div>
+        <div class="category" id="my">
+            <h3> Moji </h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('my', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('my', 1)">&#8594;</button>
+            </div>
+        </div>
+        <div class="category" id="hor">
+            <h3> Horoskop </h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('hor', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('hor', 1)">&#8594;</button>
+            </div>
+        </div>
+        <div class="category" id="other">
+            <h3> Drugo </h3>
+            <div class="appWrapper">
+                <button class="arrow left" onclick="changeApp('other', -1)">&#8592;</button>
+                <div class="appContent"></div>
+                <button class="arrow right" onclick="changeApp('other', 1)">&#8594;</button>
+            </div>
+        </div>
+    </div>
+ <button id="changeColorBtn">Drži me za spreminjanje barve</button>
+    <input type="color" id="colorPicker" />
+    <script>
+      
+        const appData = {
+            applications: [
+                { name: "Microsoft Word", link: "https://www.microsoft.com/en-us/microsoft-365/word", img: "word.png" },
+                { name: "Google Translate", link: "https://translate.google.com/", img: "prevajalnik.png" },
+                { name: "Remove.bg", link: "https://www.remove.bg/", img: "remove4.png" },
+                { name: "Adobe Premiere Pro", link: "https://www.adobe.com/products/premiere.html", img: "adobe.png" },
+                { name: "W3schools", link: "https://www.w3schools.com/", img: "w3school.png" },
+                { name: "Spotify", link: "https://www.spotify.com/", img: "spotify.png" }
+            ],
+            raz: [
+                { name: "Canva", link: "https://www.canva.com/", img: "canva.png" },
+                { name: "Github", link: "https://github.com/", img: "github.png" },
+                { name: "VSDC", link: "https://www.videosoftdev.com/", img: "vsdc.png" },
+                { name: "Audacity", link: "http://audacityteam.org/", img: "auda.png" },
+                { name: "Visual studio code", link: "https://code.visualstudio.com/", img: "visual.png" },
+                { name: "Unity", link: "https://unity.com/", img: "unity.png" }
+            ],
+            shop: [
+                { name: "Goblin", link: "https://goblin.si/", img: "goblin.png" },
+                { name: "Mimovrste", link: "https://www.mimovrste.com/", img: "mimovrste.png" },
+                { name: "Temu", link: "https://www.temu.com/", img: "temu.png" },
+                { name: "Shein", link: "https://eur.shein.com/?ref=www&rep=dir&ret=eur", img: "shein.png" },
+                { name: "Aliexpress", link: "https://www.aliexpress.com/", img: "ali.png" },
+                { name: "Bolha", link: "https://www.bolha.com/", img: "bolha.png" }
+            ],
+            games: [
+                { name: "Guesses", link: "ugibanje.html", img: "guess.png" },
+                { name: "Spomin", link: "shortgame.html", img: "memory.png" },
+                { name: "Kocka", link: "kocka.html", img: "cube.png" },
+                { name: "Angry Birds", link: "angry.html", img: "angrybirds.png" },
+                { name: "Clicker", link: "clicker.html", img: "clicker.png" },
+                { name: "Gameportal", link: "game.html", img: "gameportal.png" }
+            ],
+            my: [
+                { name: "Spletni dnevnik", link: "2.html", img: "blog.png" },
+                { name: "Belezke", link: "bl.html", img: "notes.png" },
+                { name: "Seznam", link: "shoplist.html", img: "list.png" },
+{ name: "Test", link: "tester.html", img: "tester.png" }
+            ],
+            hor: [
+                { name: "Oven", link: "https://siol.net/horoskop/dnevni/oven", img: "oven.png" },
+                { name: "Bik", link: "https://siol.net/horoskop/dnevni/bik", img: "bik.png" },
+                { name: "Dvojčka", link: "https://siol.net/horoskop/dnevni/dvojcka", img: "dvojcka.png" },
+                { name: "Rak", link: "https://siol.net/horoskop/dnevni/rak", img: "rak.png" },
+                { name: "Lev", link: "https://siol.net/horoskop/dnevni/lev", img: "lev.png" },
+                { name: "Devica", link: "https://siol.net/horoskop/dnevni/devica", img: "devica.png" },
+                { name: "Tehtnica", link: "https://siol.net/horoskop/dnevni/tehtnica", img: "tehtnica.png" },
+                { name: "Škorpijon", link: "https://siol.net/horoskop/dnevni/skorpijon", img: "skorpijon.png" },
+                { name: "Strelec", link: "https://siol.net/horoskop/dnevni/strelec", img: "strelec.png" },
+                { name: "Kozorog", link: "https://siol.net/horoskop/dnevni/kozorog", img: "kozorog.png" },
+                { name: "Vodnar", link: "https://siol.net/horoskop/dnevni/vodnar", img: "vodnar.png" },
+                { name: "Ribi", link: "https://siol.net/horoskop/dnevni/ribi", img: "ribi.png" }
+            ],
+            other: [
+                { name: "Razredni časopis", link: "https://razrednicasopis.github.io", img: "news.png" },
+                { name: "Klepet", link: "https://razrednicasopis.github.io/Resources/utills/klepet.html", img: "chat.png" },
+                { name: "Code Editor", link: "code.html", img: "code.png" },
+                { name: "ChipsChat", link: "https://ko22441111.github.io/spletna/chat.html", img: "chatt.png" },
+                { name: "Slytherin Converter", link: "decode.html", img: "decode.webp" }
+            ]
+        };
+
+const categories = ["applications", "raz", "shop", "games", "my", "hor", "other"];
+let appIndex = {
+    applications: 0,
+    raz: 0,
+    shop: 0,
+    games: 0,
+    my: 0,
+    hor: 0,
+    other: 0
+};
+
+function displayApp(category) {
+    const app = appData[category][appIndex[category]];
+    const appContent = document.getElementById(category).querySelector(".appContent");
+    appContent.innerHTML = `
+        <div class="appItem">
+            <img src="${app.img}" alt="${app.name}">
+            <span>${app.name}</span>
+            <a href="${app.link}" target="_blank" class="arrow">&#8594;</a>
+        </div>
+    `;
+}
+
+function changeApp(category, direction) {
+    appIndex[category] = (appIndex[category] + direction + appData[category].length) % appData[category].length;
+    displayApp(category);
+}
+
+function searchApps() {
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    
+    categories.forEach(category => {
+        appData[category] = appData[category].filter(app => app.name.toLowerCase().includes(searchValue));
+        displayApp(category);
+    });
+}
+
+// Initialize the app display
+categories.forEach(category => displayApp(category));
+
+
+
+
+
+
+ const changeColorBtn = document.getElementById('changeColorBtn');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorBoxes = document.querySelectorAll('.category');
+
+        let isColorChangeActive = false;  // Spreminjanje barve je onemogočeno na začetku
+        let selectedColor = '#000000';    // Privzeta barva (črna)
+
+        // Preveri, če so barve že shranjene v localStorage
+        if (localStorage.getItem('color1')) {
+            document.getElementById('games').style.backgroundColor = localStorage.getItem('color1');
+        }
+        if (localStorage.getItem('color2')) {
+            document.getElementById('applications').style.backgroundColor = localStorage.getItem('color2');
+        }
+        if (localStorage.getItem('color6')) {
+            document.getElementById('raz').style.backgroundColor = localStorage.getItem('color6');
+        }
+        if (localStorage.getItem('color3')) {
+            document.getElementById('my').style.backgroundColor = localStorage.getItem('color3');
+        }
+ if (localStorage.getItem('color4')) {
+            document.getElementById('hor').style.backgroundColor = localStorage.getItem('color4');
+        } 
+        if (localStorage.getItem('color5')) {
+            document.getElementById('other').style.backgroundColor = localStorage.getItem('color5');
+        }
+         if (localStorage.getItem('color7')) {
+            document.getElementById('shop').style.backgroundColor = localStorage.getItem('color7');
+        }
+        // Aktivacija za spreminjanje barve ob dolgotrajnem pritisku
+        changeColorBtn.addEventListener('mousedown', () => {
+            isColorChangeActive = true;
+            colorPicker.style.display = 'inline';  // Pokaže izbiro barve
+        });
+
+        // Ko sprostiš gumb, zaklene funkcionalnost
+        changeColorBtn.addEventListener('mouseup', () => {
+            if (isColorChangeActive) {
+                // Shrani barve v localStorage
+                localStorage.setItem('color1', document.getElementById('games').style.backgroundColor);
+                 localStorage.setItem('color6', document.getElementById('raz').style.backgroundColor);
+                 localStorage.setItem('color7', document.getElementById('shop').style.backgroundColor);
+                localStorage.setItem('color2', document.getElementById('applications').style.backgroundColor);
+                localStorage.setItem('color3', document.getElementById('my').style.backgroundColor);
+                 localStorage.setItem('color4', document.getElementById('hor').style.backgroundColor);
+                  localStorage.setItem('color5', document.getElementById('other').style.backgroundColor);
+
+                // Zaklepanje funkcionalnosti
+                isColorChangeActive = false;
+                console.log('Funkcionalnost zaklenjena');
+            }
+            colorPicker.style.display = 'none';  // Skrij izbiro barve
+        });
+
+        // Ko izbereš barvo, nastavi izbrano barvo
+        colorPicker.addEventListener('input', (e) => {
+            selectedColor = e.target.value;
+            console.log('Izbrana barva:', selectedColor);
+        });
+
+        // Klik na element za spreminjanje barve
+        colorBoxes.forEach(box => {
+            box.addEventListener('click', () => {
+                if (isColorChangeActive) {
+                    box.style.backgroundColor = selectedColor;
+                }
+            });
+        });
+
+</script>
+</body>
+</html>
