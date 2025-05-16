@@ -106,6 +106,11 @@
     .actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #userSearch {
+      display: none;
     }
 
     @media (max-width: 480px) {
@@ -123,6 +128,17 @@
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
       <button class="btn" onclick="logout()">Odjava</button>
+      <button class="btn" onclick="toggleSearch()">Iskanje uporabnikov</button>
+    </div>
+
+    <div id="userSearch" style="flex-direction: column; gap: 10px; margin-top: 10px;">
+      <input type="text" id="searchInput" placeholder="Vnesi email uporabnika..." />
+      <button class="btn" onclick="sendFriendRequest()">Dodaj prijatelja</button>
+    </div>
+
+    <div id="chatOptions" style="margin-top: 20px;">
+      <button class="btn" onclick="setChatMode('public')">Public chat</button>
+      <button class="btn" onclick="showChatList()">Seznam pogovorov</button>
     </div>
   </div>
 
@@ -131,7 +147,7 @@
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
       projectId: "chater-cf682",
-      storageBucket: "chater-cf682.firebasestorage.app",
+      storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
       measurementId: "G-32E3BYYLKS",
@@ -144,29 +160,54 @@
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
 
+    let currentChatUser = null;
+    let chatMode = "public";
+
     auth.onAuthStateChanged((user) => {
       if (!user) {
         window.location.href = "auth.html";
       } else {
-        db.ref("messages").on("child_added", (snapshot) => {
-          const msg = snapshot.val();
-          const div = document.createElement("div");
+        setChatMode("public");
 
-          const senderSpan = document.createElement("span");
-          senderSpan.classList.add("sender");
-          senderSpan.textContent = msg.email + ": ";
+        const userKey = user.email.replace(/\./g, "_");
+        db.ref(`friendRequests/${userKey}`).on("child_added", (snapshot) => {
+          const requesterEmail = snapshot.key.replace(/_/g, ".");
+          const confirm = window.confirm(`${requesterEmail} te želi dodati. Potrdi?`);
 
-          const messageText = document.createElement("span");
-          messageText.textContent = msg.text;
-
-          div.appendChild(senderSpan);
-          div.appendChild(messageText);
-
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
+          if (confirm) {
+            db.ref(`friends/${userKey}/${snapshot.key}`).set(true);
+            db.ref(`friends/${snapshot.key}/${userKey}`).set(true);
+          }
+          snapshot.ref.remove();
         });
       }
     });
+
+    function setChatMode(mode) {
+      chatMode = mode;
+      currentChatUser = null;
+      chatBox.innerHTML = "";
+
+      if (mode === "public") {
+        db.ref("messages").off();
+        db.ref("messages").on("child_added", (snapshot) => {
+          const msg = snapshot.val();
+          addMessageToChat(msg.email, msg.text);
+        });
+      }
+    }
+
+    function loadPrivateChat() {
+      chatBox.innerHTML = "";
+      const user = auth.currentUser;
+      const chatId = [user.email, currentChatUser].sort().join("_").replace(/\./g, "_");
+
+      db.ref(`privateMessages/${chatId}`).off();
+      db.ref(`privateMessages/${chatId}`).on("child_added", (snapshot) => {
+        const msg = snapshot.val();
+        addMessageToChat(msg.email, msg.text);
+      });
+    }
 
     function sendMessage() {
       const user = auth.currentUser;
@@ -174,21 +215,85 @@
       if (!text) return;
 
       if (text === "/clearchat") {
-        db.ref("messages")
-          .remove()
-          .then(() => {
-            chatBox.innerHTML = "";
-            alert("Klepetalnica je bila pobrisana.");
-          })
-          .catch((error) => alert("Napaka pri brisanju: " + error.message));
+        if (chatMode === "public") {
+          db.ref("messages").remove().then(() => chatBox.innerHTML = "");
+        } else {
+          const chatId = [user.email, currentChatUser].sort().join("_").replace(/\./g, "_");
+          db.ref(`privateMessages/${chatId}`).remove().then(() => chatBox.innerHTML = "");
+        }
       } else {
-        db.ref("messages").push({ email: user.email, text });
+        if (chatMode === "public") {
+          db.ref("messages").push({ email: user.email, text });
+        } else {
+          const chatId = [user.email, currentChatUser].sort().join("_").replace(/\./g, "_");
+          db.ref(`privateMessages/${chatId}`).push({ email: user.email, text });
+        }
       }
+
       messageInput.value = "";
     }
 
     function logout() {
       auth.signOut().then(() => (window.location.href = "auth.html"));
+    }
+
+    function toggleSearch() {
+      const box = document.getElementById("userSearch");
+      box.style.display = box.style.display === "none" ? "flex" : "none";
+    }
+
+    function sendFriendRequest() {
+      const user = auth.currentUser;
+      const targetEmail = document.getElementById("searchInput").value.trim();
+
+      if (!targetEmail || targetEmail === user.email) {
+        alert("Vnesi veljaven email drugega uporabnika.");
+        return;
+      }
+
+      const requestKey = targetEmail.replace(/\./g, "_");
+      db.ref(`friendRequests/${requestKey}/${user.email.replace(/\./g, "_")}`).set(true)
+        .then(() => alert("Zahteva poslana!"))
+        .catch(err => alert("Napaka: " + err.message));
+    }
+
+    function showChatList() {
+      const user = auth.currentUser;
+      const userKey = user.email.replace(/\./g, "_");
+
+      db.ref(`friends/${userKey}`).once("value", (snapshot) => {
+        const list = snapshot.val();
+        if (!list) return alert("Nimaš nobenih prijateljev.");
+
+        let selection = "Izberi uporabnika:\n";
+        const emails = Object.keys(list).map(k => k.replace(/_/g, "."));
+        emails.forEach((email, i) => selection += `${i + 1}. ${email}\n`);
+
+        const choice = prompt(selection);
+        const index = parseInt(choice) - 1;
+        if (emails[index]) {
+          currentChatUser = emails[index];
+          chatMode = 'private';
+          loadPrivateChat();
+        }
+      });
+    }
+
+    function addMessageToChat(email, text) {
+      const div = document.createElement("div");
+
+      const senderSpan = document.createElement("span");
+      senderSpan.classList.add("sender");
+      senderSpan.textContent = email + ": ";
+
+      const messageText = document.createElement("span");
+      messageText.textContent = text;
+
+      div.appendChild(senderSpan);
+      div.appendChild(messageText);
+
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
   </script>
 </body>
