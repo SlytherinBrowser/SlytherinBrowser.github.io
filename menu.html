@@ -253,6 +253,119 @@
 
 </ul>
 
+<ul class="app-list grid" id="raz">
+
+    <li class="app-item">
+        <a href="https://www.canva.com/" target="load.html">
+            <img src="canva.png" alt="Canva" class="image">
+            <div class="overlay">
+                <div class="text">Canva</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://github.com/" target="load.html">
+            <img src="github.png" alt="Github" class="image">
+            <div class="overlay">
+                <div class="text">Github</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://www.videosoftdev.com/" target="load.html">
+            <img src="vsdc.png" alt="VSDC" class="image">
+            <div class="overlay">
+                <div class="text">VSDC</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="http://audacityteam.org/" target="load.html">
+            <img src="auda.png" alt="Audacity" class="image">
+            <div class="overlay">
+                <div class="text">Audacity</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://code.visualstudio.com/" target="load.html">
+            <img src="visual.png" alt="Visual Studio Code" class="image">
+            <div class="overlay">
+                <div class="text">Visual Studio Code</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://unity.com/" target="load.html">
+            <img src="unity.png" alt="Unity" class="image">
+            <div class="overlay">
+                <div class="text">Unity</div>
+            </div>
+        </a>
+    </li>
+
+</ul>
+<ul class="app-list grid" id="shop">
+ <li class="app-item">
+        <a href="https://goblin.si/" target="load.html">
+            <img src="goblin.png" alt="Goblin" class="image">
+            <div class="overlay">
+                <div class="text">Goblin</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://www.mimovrste.com/" target="load.html">
+            <img src="mimovrste.png" alt="Mimovrste" class="image">
+            <div class="overlay">
+                <div class="text">Mimovrste</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://www.temu.com/" target="load.html">
+            <img src="temu.png" alt="Temu" class="image">
+            <div class="overlay">
+                <div class="text">Temu</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://eur.shein.com/?ref=www&rep=dir&ret=eur" target="load.html">
+            <img src="shein.png" alt="Shein" class="image">
+            <div class="overlay">
+                <div class="text">Shein</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://www.aliexpress.com/" target="load.html">
+            <img src="ali.png" alt="Aliexpress" class="image">
+            <div class="overlay">
+                <div class="text">Aliexpress</div>
+            </div>
+        </a>
+    </li>
+
+    <li class="app-item">
+        <a href="https://www.bolha.com/" target="load.html">
+            <img src="bolha.png" alt="Bolha" class="image">
+            <div class="overlay">
+                <div class="text">Bolha</div>
+            </div>
+        </a>
+    </li>
+
+</ul>
 
 
 <!-- Game List -->
@@ -555,6 +668,14 @@
         <span>📱</span>
         <p>Aplikacije</p>
       </a>
+      <a onclick="showCategory('raz')">
+        <span>🪄</span>
+        <p>Razvijanje</p>
+      </a>
+      <a onclick="showCategory('shop')">
+        <span>💵</span>
+        <p>Trgovine</p>
+      </a>
       <a onclick="showCategory('games')">
         <span>🎮</span>
         <p>Igre</p>
@@ -732,6 +853,8 @@
 
       let categories = [
         { name: 'Aplikacije', icon: '📱', id: 'applications' },
+        { name: 'Razvijanje', icon: '🪄', id: 'raz' },
+        { name: 'Trgovine', icon: '💵', id: 'shop' },
         { name: 'Igre', icon: '🎮', id: 'games' },
         { name: 'Osebno', icon: '👤', id: 'my' },
         { name: 'Horoskop', icon: '🔮', id: 'hor' },
