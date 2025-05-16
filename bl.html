@@ -5,96 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beležke in opravila</title>
     <style>
-        body {
-            background-color: #000;
-            color: #0f0;
-            font-family: monospace;
-            padding: 20px;
-        }
+       @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #000;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px 5px #0f0;
-            border: 2px solid #0f0;
-        }
+body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    color: #e0f7fa;
+    font-family: 'Orbitron', monospace, monospace;
+    padding: 40px 30px;
+    margin: 0;
+    overflow-x: hidden;
+}
 
-        h1, h2 {
-            text-align: center;
-        }
+.container {
+    max-width: 650px;
+    margin: 0 auto;
+    background: rgba(14, 27, 44, 0.85);
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow:
+        0 0 10px #00fff7,
+        0 0 20px #00fff7,
+        0 0 30px #00b8f4,
+        0 0 40px #0096c7;
+    border: 2px solid #00fff7;
+}
 
-        textarea, input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            background-color: #000;
-            color: #0f0;
-            border: 1px solid #0f0;
-            border-radius: 5px;
-            box-sizing: border-box;
-            font-family: monospace;
-        }
+h1, h2 {
+    text-align: center;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #00fff7;
+    text-shadow:
+        0 0 5px #00fff7,
+        0 0 10px #00b8f4,
+        0 0 20px #0077b6;
+    margin-bottom: 25px;
+}
 
-        textarea:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: #0a0;
-            box-shadow: 0 0 10px #0a0;
-        }
+textarea, input[type="text"] {
+    width: 100%;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    background: rgba(0, 255, 247, 0.1);
+    color: #00fff7;
+    border: 2px solid #00fff7;
+    border-radius: 12px;
+    font-size: 18px;
+    box-sizing: border-box;
+    font-family: 'Orbitron', monospace;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
 
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #00f;
-            color: #0f0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: monospace;
-        }
+textarea:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #00b8f4;
+    box-shadow: 0 0 15px #00b8f4;
+    background: rgba(0, 255, 247, 0.2);
+}
 
-        button:hover {
-            background-color: #009;
-        }
+button {
+    display: block;
+    width: 100%;
+    padding: 18px 0;
+    background: linear-gradient(90deg, #00fff7 0%, #0077b6 100%);
+    color: #021124;
+    font-weight: 900;
+    font-size: 20px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow:
+        0 0 8px #00fff7,
+        0 0 15px #0077b6;
+    transition: background 0.3s ease;
+}
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
+button:hover {
+    background: linear-gradient(90deg, #0077b6 0%, #00fff7 100%);
+    color: #e0f7fa;
+    box-shadow:
+        0 0 12px #00fff7,
+        0 0 25px #00b8f4;
+}
 
-        li {
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #000;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #0f0;
-        }
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+}
 
-        li input[type="checkbox"] {
-            margin-right: 10px;
-        }
+li {
+    margin-bottom: 18px;
+    padding: 16px 20px;
+    background: rgba(0, 255, 247, 0.05);
+    border-left: 5px solid #00fff7;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    color: #b2fefa;
+    text-shadow: 0 0 2px #00b8f4;
+}
 
-        .delete-btn {
-            height: 30px;
-            width: 60px;
-            background-color: #f00;
-            color: #000;
-            border: none;
-            padding: 5px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: monospace;
-        }
+li input[type="checkbox"] {
+    margin-right: 15px;
+    transform: scale(1.4);
+    cursor: pointer;
+    accent-color: #00fff7;
+}
 
-        .delete-btn:hover {
-            background-color: #c00;
-        }
+.delete-btn {
+    background: #ff1744;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 0 6px #ff1744;
+    transition: background 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: #b2102f;
+    box-shadow: 0 0 12px #ff1744;
+}
+
     </style>
 </head>
 <body>
