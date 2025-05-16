@@ -11,9 +11,15 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #111;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e1e2f, #121220);
       color: white;
       display: flex;
       justify-content: center;
@@ -22,9 +28,11 @@
     }
 
     .auth-container {
-      background: #222;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(6px);
       padding: 30px;
-      border-radius: 10px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
       width: 90%;
       max-width: 400px;
       display: flex;
@@ -32,26 +40,37 @@
       gap: 15px;
     }
 
+    h2 {
+      text-align: center;
+      font-weight: 500;
+    }
+
     input {
       padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background-color: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
-      border: none;
-      background: #333;
       color: white;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
     }
 
     button {
       padding: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
       border: none;
       border-radius: 8px;
-      background: #555;
       color: white;
-      cursor: pointer;
       font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
     }
 
     button:hover {
-      background: #777;
+      background-color: rgba(255, 255, 255, 0.25);
     }
   </style>
 </head>
@@ -91,7 +110,6 @@
           const user = userCredential.user;
           const userKey = email.replace(/\./g, "_");
 
-          // Zapis v Realtime Database
           db.ref(`users/${userKey}`).set({
             email: user.email,
             uid: user.uid
