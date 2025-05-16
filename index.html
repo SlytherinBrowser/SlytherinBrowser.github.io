@@ -9,52 +9,97 @@
 <link id="modernStylesheet" rel="stylesheet" href="indexcss1.css" disabled>
 <link id="winterStylesheet" rel="stylesheet" href="indexcss2.css" disabled>
     <script defer src="indexjs.js"></script>
-</head>
-<style type="text/css">
-      .eye-container {
-                position: fixed;
-                top: 0px;
+    <style>
+    .eye-container {
+        position: fixed;
+        top: 0;
             display: flex;
-            gap: 30px;
+            justify-content: center;
+            align-items: center;
         }
-     .eye {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background-color: white;
-    position: relative;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-}
 
-.pupil {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: black;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    transition: transform 0.2s ease-in-out;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* Dodana senca zenici */
-}
+        .eye {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            position: relative;
+            margin: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
 
-.eye:hover .pupil {
-    transform: translate(-50%, -50%) scale(1.2); /* Dinamična velikost zenice */
-}
-</style>
+        .pupil {
+            width: 40px;
+            height: 40px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+.popupBackup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+     @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -55%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        
+        .popupBackup button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .popupBackup button:first-of-type {
+            background: #4CAF50;
+            color: white;
+        }
+        .popupBackup button:first-of-type:hover {
+            background: #45a049;
+        }
+        
+        .popupBackup button:last-of-type {
+            background: #f44336;
+            color: white;
+        }
+        .popupBackup button:last-of-type:hover {
+            background: #d32f2f;
+        }
+        
+        #fileInput {
+            margin-top: 10px;
+        }
+    </style>
+</head>
 <body>
-
+<div class="eye-container">
+        <div class="eye">
+            <div class="pupil"></div>
+        </div>
+        <div class="eye">
+            <div class="pupil"></div>
+        </div>
+    </div>
     <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
-    <div class="eye-container">
-   <div class="eye eye-left">
-    <div class="pupil"></div>
-</div>
-<div class="eye eye-right">
-    <div class="pupil"></div>
-</div>
-</div>
     <img id="logo" src="Slytherin.png"></img>
 
     <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
@@ -66,7 +111,7 @@
 
     <img id="logo" src="Slytherin.png" class="lamp"></img>
 
-<button id="chatButton">Prikaži chatbot</button>
+<button id="chatButton" style="display: none">Prikaži chatbot</button>
 
 <div id="chatPopup" style="display:none;">
     <div id="chatArea"></div>
@@ -75,20 +120,25 @@
         <button id="sendButton">Pošlji</button>
     </div>
 </div>
-<button id="clickButton" onclick="window.location.href='newbrowser.html'">Nightmode</button>
+<button id="clickButton" onclick="window.location.href='newbrowser.html'"style="display: none">Nightmode</button>
+ <!-- Gumb za preklop -->
+    <button class="preklop" onclick="toggleElement()"style="display: none">CPS</button>
+<div id="container">
+        Domov
+    </div>
 
-
-<div id="dock">  
-    <!-- Ikone so že tukaj -->  
-    <a href="slychat.html" target="load.html" class="icon" style="background-image: url('slychat.png');"></a>  
-    <a href="https://chat.openai.com/" target="load.html" class="icon" style="background-image: url('chatgpt.png');"></a>  
-    <a href="https://drive.google.com/" class="icon" target="load.html" style="background-image: url('drive.png');"></a>  
-    <a href="https://login.microsoftonline.com" target="load.html" class="icon" style="background-image: url('teams.png');"></a>  
-    <a href="https://mail.google.com/" class="icon" target="load.html" style="background-image: url('gmail.png');"></a>  
-    <a href="https://www.youtube.com/" class="icon" target="load.html" style="background-image: url('yt.png');"></a>  <!-- Gumb za dodajanje novih ikon -->  
-<button id="addIconButton">  +  </button>
-
-</div>
+    <div id="addIconForm">
+        <select id="categorySelect">
+            <option value="0">Domov</option>
+            <option value="1">Osnovno</option>
+            <option value="2">Zabava</option>
+            <option value="3">Chatbot</option>
+            <option value="4">Moje Ikone</option>
+        </select>
+        <input type="text" id="iconName" placeholder="Ime ikone">
+        <input type="text" id="iconLink" placeholder="URL povezave">
+        <button id="addIconBtn">Dodaj Ikono</button>
+    </div>
 <!-- Modalno okno -->
 <div id="myModal" class="modal">
     <div class="modal-content">
@@ -99,28 +149,27 @@
     </div>
 </div>
 <div>
-    <div class="button-container">
-        
+    
+<button id="backupButton" style="display: none">Save</button>
 
-<div class="taskbar-icon" onclick="toggleCalendar()">
+<div class="taskbar-icon" onclick="toggleCalendar()" style="display: none">
     <!-- SVG ikona (npr. ikona koledarja) -->
     <svg viewBox="0 0 24 24">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-7h3v3h-3v-3zm1-9c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l1.59 1.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l3.59 3.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4z"/>
     </svg>
 </div>
 <div class="calendar-container" id="calendar">
-    <div class="calendar-header">
-        <button onclick="toggleCalendar()">&#10005;</button>
-        <h2 id="month-year"></h2>
-        <button onclick="previousMonth()">&#8249;</button>
-        <button onclick="nextMonth()">&#8250;</button>
+        <div class="calendar-header">
+            <button id="prev-month">&lt;</button>
+            <div id="month-year"></div>
+            <button id="next-month">&gt;</button>
+        </div>
+        <div class="calendar-body" id="calendar-body"></div>
     </div>
-    <div class="calendar-body" id="calendar-body"></div>
 </div>
-</div>
-<button id="buttonkng">SWITCH</button>
- <button id="menu"onclick="menuking()">MENU</button>
-  <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()">Calc</div>
+<button id="buttonkng" style="display: none">SWITCH</button>
+ <button id="menu"onclick="menuking()"style="display: none">MENU</button>
+  <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()" style="display: none">Calc</div>
    <div class="calculator-container" id="calculator-container" style="display:none;">
     <button id="al">?</button>
     <input type="text" id="display" readonly>
@@ -166,6 +215,18 @@
 
 
 <script>
+
+
+
+
+
+
+
+
+
+
+
+
     function checkTime() {
         let now = new Date();
         let hour = now.getHours();
@@ -247,75 +308,452 @@ closePopupButton.addEventListener('click', () => {
 
 
 
-
- const pupils = document.querySelectorAll('.pupil');
-    let isBlinking = false;
-    let lastPositions = [{x: 0, y: 0}, {x: 0, y: 0}];
-
-    function moveEyes(event) {
-        if (isBlinking) return; // Če oči mežikajo, ne premikaj pupil
-
-        const mouseX = event.clientX || event.touches[0].clientX;
-        const mouseY = event.clientY || event.touches[0].clientY;
-
-        const eyes = document.querySelectorAll('.eye');
-        eyes.forEach((eye, index) => {
-            const eyeRect = eye.getBoundingClientRect();
-            const eyeCenterX = eyeRect.left + eyeRect.width / 2;
-            const eyeCenterY = eyeRect.top + eyeRect.height / 2;
-
-            const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
-            const distance = Math.min(eyeRect.width / 4, eyeRect.height / 4);
-
-            const pupil = pupils[index];
-            const newX = Math.cos(angle) * distance;
-            const newY = Math.sin(angle) * distance;
-
-            pupil.style.transform = `translate(-50%, -50%) translate(${newX}px, ${newY}px)`;
-
-            lastPositions[index] = {x: newX, y: newY};
-        });
-    }
-
-    function blink() {
-        if (isBlinking) return;
-
-        isBlinking = true;
-        pupils.forEach(pupil => {
-            pupil.style.transform = 'translate(-50%, -50%) scale(0)';
-        });
-
-        setTimeout(() => {
-            pupils.forEach((pupil, index) => {
-                pupil.style.transform = `translate(-50%, -50%) translate(${lastPositions[index].x}px, ${lastPositions[index].y}px) scale(1)`;
-            });
-            isBlinking = false;
-        }, 200);
-    }
-
-    // Zavijanje z očmi vsakih 5 sekund
-    setInterval(() => {
-        blink();
-    }, 5000);
-
-    // Dogodki za premikanje miške ali dotik
-    document.addEventListener('mousemove', moveEyes);
-    document.addEventListener('touchmove', (event) => {
-        event.preventDefault();
-        moveEyes(event);
-    });
-
-    // Dodajanje dogodkov za klik na oči
-document.querySelector('.eye-left').addEventListener('click', () => {
-    window.open('pogodba.html', '_blank'); // Stran za levo oko
-});
-
-document.querySelector('.eye-right').addEventListener('click', () => {
-    window.open('m.html', '_blank'); // Stran za desno oko
-});
-
     </script>
 
+<script>
+        const eyes = document.querySelectorAll('.eye');
+        const pupils = document.querySelectorAll('.pupil');
 
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            eyes.forEach((eye, index) => {
+                const rect = eye.getBoundingClientRect();
+                const eyeX = rect.left + rect.width / 2;
+                const eyeY = rect.top + rect.height / 2;
+
+                const angle = Math.atan2(mouseY - eyeY, mouseX - eyeX);
+                const distance = Math.min(eye.offsetWidth / 4, eye.offsetHeight / 4);
+
+                const pupil = pupils[index];
+                pupil.style.transform = `translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+            });
+        });
+    </script>
+   <script>
+        // Funkcija za prikaz backup popup okna
+function showBackupPopup() {
+    const popupBackup = document.createElement("div");
+    popupBackup.classList.add("popupBackup");
+    popupBackup.innerHTML = `
+        <h2>LocalStorage Backup & Restore</h2>
+        <button onclick="exportLocalStorage()">Izvozi LocalStorage</button>
+        <input type="file" id="fileInput" onchange="importLocalStorage(event)">
+        <button onclick="this.parentElement.remove()">Zapri</button>
+    `;
+    document.body.appendChild(popupBackup);
+    popupBackup.style.display = "block";
+}
+
+// Povezava dogodka s funkcijo
+document.getElementById("backupButton").addEventListener("click", showBackupPopup);
+
+        function exportLocalStorage() {
+            const data = JSON.stringify(localStorage);
+            const blob = new Blob([data], { type: "application/json" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "localStorageBackup.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        function importLocalStorage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    for (const key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    alert("LocalStorage uspešno obnovljen!");
+                } catch (error) {
+                    alert("Napaka pri uvozu datoteke.");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+    <script>
+        const container = document.getElementById("container");
+        const addIconForm = document.getElementById("addIconForm");
+        const addIconBtn = document.getElementById("addIconBtn");
+        const iconNameInput = document.getElementById("iconName");
+        const iconLinkInput = document.getElementById("iconLink");
+        const categorySelect = document.getElementById("categorySelect");
+
+        const categories = [{
+            name: "Domov",
+            icons: [{
+                name: "📂",
+                link: "chosemenu.html",
+            },
+                {
+                    name: "🌙",
+                    link: "newbrowser.html",
+                },
+                {
+                    name: "🔄",
+                    link: "javascript:void(0)",
+                    action: "handleButtonClick"
+                },
+                {
+                    name: "💾",
+                    link: "javascript:void(0)",
+                    action: "showBackupPopup"
+                },
+
+                {
+                    name: "⚙️",
+                    link: "javascript:void(0)",
+                    action: "toggleElement"
+                }],
+            color: "#9b59b6"
+        },
+            {
+                name: "Osnovno",
+                icons: [{
+                    name: "📫",
+                    link: "https://mail.google.com"
+                },
+                    {
+                        name: "🗂",
+                        link: "https://drive.google.com"
+                    },
+                    {
+                        name: "🔗",
+                        link: "https://drive.google.com/file/d/1zIql62wdwNXUULM82-FBXsqAdJ27fDtB/view?usp=drive_link"
+                    },
+                    {
+                        name: "📅",
+                        link: "https://calendar.google.com"
+                    }],
+                color: "#e67e22"
+            },
+            {
+                name: "Zabava",
+                icons: [{
+                    name: "▶",
+                    link: "https://www.youtube.com"
+                },
+                    {
+                        name: "N",
+                        link: "https://www.netflix.com"
+                    },
+                    {
+                        name: "V",
+                        link: "https://www.voyo.si"
+                    }],
+                color: "#e74c3c"
+            },
+            {
+                name: "Chatbot",
+                icons: [{
+                    name: "💬",
+                    link: "https://chat.openai.com"
+                },
+                    {
+                        name: "🐍",
+                        link: "auth.html"
+                    },
+                    {
+                        name: "👾",
+                        link: "https://slytherin.ai"
+                    }],
+                color: "#2ecc71"
+            },
+            {
+                name: "Moje Ikone",
+                icons: [{
+                    name: "🤖",
+                    link: "javascript:void(0)",
+                    action: "toggleChatPopup"
+                },
+                {
+                    name: "🗓️",
+                    link: "javascript:void(0)",
+                    action: "toggleCalendar"
+                },
+                {
+                    name: "🧮",
+                    link: "javascript:void(0)",
+                    action: "toggleCalculator"
+                },
+            ],
+                color: "#3498db"
+            }];
+
+        let currentCategory = 0;
+        let isDock = false;
+        let startX = 0, startY = 0;
+
+        function showDockIcons() {
+            container.innerHTML = "";
+            categories[currentCategory].icons.forEach(icon => {
+                const el = document.createElement("div");
+                el.className = "icon";
+                el.textContent = icon.name;
+                el.onclick = () => {
+                    if (icon.action) {
+                        window[icon.action]();
+                    } else {
+                        window.open(icon.link, "_blank");
+                    }
+                };
+                container.appendChild(el);
+            });
+        }
+
+        function showCategoryText() {
+            container.innerHTML = categories[currentCategory].name;
+        }
+
+        function changeCategory(direction) {
+            if (direction === "up") {
+                currentCategory = (currentCategory - 1 + categories.length) % categories.length;
+            } else {
+                currentCategory = (currentCategory + 1) % categories.length;
+            }
+            container.style.background = categories[currentCategory].color;
+            if (isDock) {
+                showDockIcons();
+            } else {
+                showCategoryText();
+            }
+        }
+
+        function addIcon() {
+            const name = iconNameInput.value;
+            const link = iconLinkInput.value;
+            const categoryIndex = categorySelect.value;
+
+            if (name && link) {
+                categories[categoryIndex].icons.push({
+                    name, link
+                });
+                iconNameInput.value = '';
+                iconLinkInput.value = '';
+                addIconForm.style.display = 'none';
+                showDockIcons();
+            } else {
+                alert("Prosim, vnesite ime in URL ikone!");
+            }
+        }
+
+        addIconBtn.addEventListener("click", addIcon);
+
+        container.addEventListener("touchstart", e => {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+        });
+
+        container.addEventListener("touchend", e => {
+            const touch = e.changedTouches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+
+            if (Math.max(absX, absY) < 30) return;
+
+            if (absX > absY) {
+                if (dx > 0 && !isDock) {
+                    isDock = true;
+                    container.classList.add("dock");
+                    container.style.background = categories[currentCategory].color;
+                    showDockIcons();
+                } else if (dx < 0 && isDock) {
+                    isDock = false;
+                    container.classList.remove("dock");
+                    showCategoryText();
+                }
+            } else {
+                if (dy < 0) changeCategory("up");
+                else changeCategory("down");
+            }
+        });
+
+        container.addEventListener("swiped-left", () => {
+            if (currentCategory === 4) {
+                addIconForm.style.display = 'block';
+            }
+        });
+
+        // inicializacija
+        showCategoryText();
+        container.style.background = categories[currentCategory].color;
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Ko se naloži stran, nastavimo gumb za premikanje med kategorijami
+            document.addEventListener("swiped-left", () => {
+                if (currentCategory === 4) {
+                    // Prikaz obrazca za dodajanje novih ikon
+                    addIconForm.style.display = 'block';
+                }
+            });
+
+            // Funkcija za preklapljanje med kategorijami, ki ne bo vplivala na gumb ali krog
+            container.addEventListener("click",
+                (e) => {
+                    // Preverimo, če je gumb kliknjen, vendar ne spreminjamo kategorije
+                    if (e.target === container || e.target.closest('.dock') || e.target.closest('.circle')) {
+                        e.stopPropagation(); // Preprečimo, da bi se kategorija spreminjala ob kliku na gumb
+                    }
+                });
+
+            // Funkcija za preklop med kategorijami, vendar ob kliku na gumb ne bo prišlo do spremembe
+            function changeCategory(direction) {
+                if (isDock) {
+                    // Ne naredi ničesar, če je v docku
+                    return;
+                }
+
+                if (direction === "up") {
+                    // Spreminjamo kategorijo navzgor
+                    currentCategory = (currentCategory + 1) % categories.length;
+                    showCategoryText();
+                }
+            }
+
+            // Funkcija za prikazovanje kategorij
+            function showCategoryText() {
+                // Posodobimo prikaz kategorije, vendar ne preklapljamo med dockom in gumbom
+                const currentCategoryElement = categories[currentCategory];
+                categoryDisplay.innerHTML = currentCategoryElement.name;
+                updateIconsDisplay();
+            }
+        });
+        // Določanje nalog za določene ikone
+        function toggleNightMode() {
+            document.body.classList.toggle("night-mode");
+        }
+
+        function toggleStyle() {
+            document.body.classList.toggle("alternate-style");
+        }
+
+
+        // Dodajanje novih ikon
+        function addCustomIcon(name, link, categoryIndex) {
+            categories[categoryIndex].icons.push({
+                name,
+                link
+            });
+        }
+
+        // Funkcija za prikazovanje in skrivanje obrazca za dodajanje novih ikon
+        function showAddIconForm() {
+            addIconForm.style.display = 'block';
+        }
+
+        // Dodajanje ikone ob prejemu novih podatkov
+        addIconBtn.addEventListener("click", () => {
+            const name = iconNameInput.value;
+            const link = iconLinkInput.value;
+            const categoryIndex = categorySelect.value;
+
+            if (name && link) {
+                addCustomIcon(name, link, categoryIndex);
+                iconNameInput.value = '';
+                iconLinkInput.value = '';
+                addIconForm.style.display = 'none';
+                showDockIcons();
+            } else {
+                alert("Prosim, vnesite ime in URL ikone!");
+            }
+        });
+        function showDockIcons() {
+    // Prepreči prikaz ikon, če je širina premajhna
+    if (window.innerWidth < 900) return;
+
+    container.innerHTML = "";
+
+    // Dodaj ikone iz trenutne kategorije
+    categories[currentCategory].icons.forEach(icon => {
+        const el = document.createElement("div");
+        el.className = "icon";
+        el.textContent = icon.name;
+        el.onclick = (e) => {
+            e.stopPropagation(); // prepreči ponovno odpiranje
+            if (icon.action) {
+                window[icon.action]();
+            } else {
+                window.open(icon.link, "_blank");
+            }
+        };
+        container.appendChild(el);
+    });
+
+    // Gumb za zaprtje docka
+    const closeIcon = document.createElement("div");
+    closeIcon.className = "icon";
+    closeIcon.textContent = "❌";
+    closeIcon.onclick = (e) => {
+        e.stopPropagation();
+        isDock = false;
+        container.classList.remove("dock");
+        container.style.background = ""; // Po želji očisti ozadje
+        showCategoryText();
+    };
+    container.appendChild(closeIcon);
+}
+
+// Glavni event listener za klik in wheel (samo na širini 900+)
+function enableDockEvents() {
+    container.addEventListener("click", onContainerClick);
+    container.addEventListener("wheel", onContainerWheel, { passive: false });
+}
+
+function disableDockEvents() {
+    container.removeEventListener("click", onContainerClick);
+    container.removeEventListener("wheel", onContainerWheel);
+}
+
+function onContainerClick(e) {
+    if (window.innerWidth < 900) return;
+    if (!isDock && !e.target.classList.contains("icon")) {
+        isDock = true;
+        container.classList.add("dock");
+        container.style.background = categories[currentCategory].color;
+        showDockIcons();
+    }
+}
+
+function onContainerWheel(e) {
+    if (window.innerWidth < 900) return;
+    e.preventDefault();
+    if (e.deltaY < 0) {
+        changeCategory("up");
+    } else {
+        changeCategory("down");
+    }
+}
+
+// Prilagodi evente glede na širino zaslona
+function handleResize() {
+    if (window.innerWidth >= 900) {
+        enableDockEvents();
+    } else {
+        disableDockEvents();
+        if (isDock) {
+            isDock = false;
+            container.classList.remove("dock");
+            container.style.background = "";
+            showCategoryText();
+        }
+    }
+}
+
+// Inicializacija
+handleResize(); // ob zagonu
+window.addEventListener("resize", handleResize);
+
+    </script>
 </body>
 </html>
