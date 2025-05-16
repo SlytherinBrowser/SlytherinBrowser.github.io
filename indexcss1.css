@@ -15,9 +15,19 @@ body {
         }
 
 
-
-
-
+textarea {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient background */
+    border: 2px solid #fff; /* White border */
+    padding: 20px;
+    font-size: 18px;
+    width: 100%;
+    height: 74px;
+    border-radius: 10px;
+    color: #fff; /* White text color */
+    outline: none;
+    transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+    resize: none; /* Disable resizing */
+}
 
             /* Stil za modalno okno (pop-up) */
         .modal {
@@ -100,11 +110,11 @@ body {
             background-color: #e53935;
         }
 
-    
+
 
          #clickButton {
             left: 0;
-            width: 100%;
+            width: 50%;
             position: fixed;
             bottom: 16%; /* Gumb je postavljen na 12% od spodnjega roba */
             padding: 15px 30px;
@@ -124,6 +134,30 @@ body {
             background-color: #2980b9;
         }
 
+#backupButton {
+            right: 0;
+            width: 50%;
+            position: fixed;
+            bottom: 16%; /* Gumb je postavljen na 12% od spodnjega roba */
+            padding: 15px 30px;
+            background-color: #ff6f61;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        #backupButton:hover {
+            background-color: #2980b9;
+        }
+
+
+
         img.lamp {
             width: 60px;
             height: 60px;
@@ -140,11 +174,23 @@ body {
 
 
 
-
+.preklop {
+    right: 0;
+    width: 50%;
+    position: fixed;
+    bottom: 12%; /* Gumb je postavljen na 15% od spodaj */
+    padding: 15px 30px;
+    background-color: #ff6f61;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
 
  #chatButton {
     left: 0;
-    width: 100%;
+    width: 50%;
     position: fixed;
     bottom: 12%; /* Gumb je postavljen na 15% od spodaj */
     padding: 15px 30px;
@@ -343,53 +389,76 @@ label {
 }
 
 
-#dock {
-    position: fixed;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(44, 62, 80, 0.9); /* Temno modro ozadje z večjo neprosojnostjo */
-    backdrop-filter: blur(15px); /* Močnejša zameglitev */
-    border-radius: 25px; /* Večja zaobljenost robov za moderen izgled */
-    padding: 10px 20px; /* Dodano večje polnjenje */
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 999;
-    width: 100%;
-    height: auto;
-}
+ #container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, background 0.3s;
+            width: 100px;
+            height: 100px;
+            background: #3498db;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
 
-.icon, #addIconButton {
-    width: 50px;
-    height: 50px;
-    border-radius: 15px; /* Srednje zaobljene ikone */
-    background-size: cover;
-    cursor: pointer;
-    transition: transform 0.3s;
-}
+        .dock {
+            width: 300px !important;
+            height: 80px !important;
+            border-radius: 40px !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            padding: 0 10px;
+        }
 
-.icon:hover,#addIconButton:hover {
-    transform: scale(1.2); /* Večje povečanje pri hoverju */
-}
+        .dock .icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
 
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .dock .icon:hover {
+            background: rgba(255,255,255,0.4);
+        }
 
-.set-link:hover {
-    transform: scale(1.1);
-}
+        .hidden {
+            display: none;
+        }
+
+        #addIconForm {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: none;
+            width: 250px;
+        }
+
+        #addIconForm select,
+        #addIconForm input,
+        #addIconForm button {
+            width: 100%;
+            margin: 5px 0;
+        }
+
 
 /* Pop-up styling */
 .popup {
@@ -474,8 +543,7 @@ label {
 
 #topBar {
     position: fixed;
-    top: 0;
-    right: 0;
+    top: 110px;
     width: 50px;
     height: 50px;
     background-color: #ff6f61;
@@ -490,6 +558,12 @@ label {
 }
 
 #topBar:hover {
+    width: 200px;
+    height: 50px;
+    border-radius: 25px;
+}
+
+#topBar.hover {
     width: 200px;
     height: 50px;
     border-radius: 25px;
@@ -720,6 +794,21 @@ body {
 
 
 
+textarea {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient background */
+    border: 2px solid #fff; /* White border */
+    padding: 20px;
+    font-size: 18px;
+    width: 100%;
+    height: 74px;
+    border-radius: 10px;
+    color: #fff; /* White text color */
+    outline: none;
+    transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+    resize: none; /* Disable resizing */
+}
+
+
             /* Stil za modalno okno (pop-up) */
         .modal {
             display: none;
@@ -804,8 +893,6 @@ body {
 
 
 
-    
-    
 
              #clickButton {
             right: 20px;
@@ -843,6 +930,36 @@ body {
 
 
 
+     .preklop {
+    left: 100px;
+    position: fixed;
+    width: 80px;
+    height: 50px;
+    bottom: 80px;  /* Gumb je 80px nad dnom zaslona */
+    background-color: #ff6f61;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+  #backupButton {
+    right: 100px;
+    position: fixed;
+    width: 80px;
+    height: 50px;
+    bottom: 80px;  /* Gumb je 80px nad dnom zaslona */
+    background-color: #ff6f61;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
     
 
 #chatButton {
@@ -1048,56 +1165,76 @@ label {
     transition: transform 0.1s ease; /* Faster transition for click */
 }
 
-#dock {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(34, 49, 63, 0.85); /* Temno sivo-modro ozadje */
-    backdrop-filter: blur(20px); /* Močna zameglitev za eleganten videz */
-    border-radius: 40px; /* Večja zaobljenost robov */
-    padding: 12px 25px; /* Srednje polnjenje za uravnoteženo velikost */
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    z-index: 999;
-    width: auto;
-    max-width: calc(100% - 40px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); /* Globlja senca za večji učinek */
-    transition: background-color 0.3s, transform 0.3s;
-}
+ #container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, background 0.3s;
+            width: 100px;
+            height: 100px;
+            background: #3498db;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
 
-.icon, #addIconButton {
-    width: 55px; /* Malenkost večje ikone */
-    height: 55px;
-    border-radius: 30%; /* Srednja zaobljenost ikone */
-    background-size: cover;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+        .dock {
+            width: 300px !important;
+            height: 80px !important;
+            border-radius: 40px !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            padding: 0 10px;
+        }
 
-.icon:hover, #addIconButton:hover {
-    transform: translateY(-4px) scale(1.15); /* Rahlo premikanje in povečanje */
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3); /* Večja senca za večji učinek */
-}
+        .dock .icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
 
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .dock .icon:hover {
+            background: rgba(255,255,255,0.4);
+        }
 
-.set-link:hover {
-    transform: scale(1.1);
-}
+        .hidden {
+            display: none;
+        }
+
+        #addIconForm {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: none;
+            width: 250px;
+        }
+
+        #addIconForm select,
+        #addIconForm input,
+        #addIconForm button {
+            width: 100%;
+            margin: 5px 0;
+        }
+
 
 /* Pop-up styling */
 .popup {
@@ -1173,8 +1310,7 @@ label {
 
 #topBar {
     position: fixed;
-    top: 0;
-    right: 0;
+    top: 110px;
     width: 50px;
     height: 50px;
     background-color: #ff6f61;
@@ -1193,6 +1329,13 @@ label {
     height: 50px;
     border-radius: 25px;
 }
+
+#topBar.hover {
+    width: 200px;
+    height: 50px;
+    border-radius: 25px;
+}
+
 
 .taskbar-icon {
     position: fixed;
@@ -1223,92 +1366,93 @@ label {
     height: 60%;
     fill: #ffffff;
 }
-
-/* Bold and Modern Calendar Styling */
+/* Kontejner koledarja */
 .calendar-container {
-    position: fixed;
-    bottom: 80px;
-    right: 0;
-    width: 320px;
-    background-color: #121212; /* Very dark background for modern feel */
-    border-radius: 12px; /* Slightly rounded corners */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* Strong shadow for depth */
+    left: 80px;
+    position: absolute;
+    width: 360px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    padding: 15px;
     display: none;
-    transition: box-shadow 0.3s, transform 0.3s; /* Smooth transitions */
+    max-height: 500px;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
 }
 
-.calendar-container:hover {
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); /* Enhanced shadow on hover */
-    transform: translateY(-4px); /* Lift effect on hover */
-}
-
+/* Slogi za naslov koledarja */
 .calendar-header {
-    background: #1a73e8; /* Bright blue for an eye-catching header */
-    color: #ffffff; /* White text for clarity */
-    padding: 15px 20px; /* Ample padding for comfort */
-    border-top-left-radius: 12px; /* Consistent rounded corners */
-    border-top-right-radius: 12px;
+    background: linear-gradient(to right, #6200ea, #7c4dff);
+    color: white;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Roboto', sans-serif; /* Modern sans-serif font */
-    font-size: 18px; /* Medium font size for balance */
+    font-size: 18px;
 }
 
+/* Gumbi za prejšnji/naslednji mesec */
 .calendar-header button {
     background: none;
     border: none;
-    color: #ffffff; /* White for visibility */
-    font-size: 26px; /* Larger for emphasis */
+    color: white;
+    font-size: 20px;
     cursor: pointer;
-    transition: color 0.3s, transform 0.3s; /* Smooth transitions */
+    transition: color 0.3s;
 }
 
 .calendar-header button:hover {
-    color: #ffcc00; /* Gold color on hover for attention */
-    transform: scale(1.1); /* Subtle scale effect */
+    color: #ffab40;
 }
 
+/* Slogi za telo koledarja (dnevi) */
 .calendar-body {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* Seven columns for the days */
-    border-top: 1px solid #333; /* Darker top border for separation */
-    background: #121212; /* Consistent dark background */
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 5px;
+    margin-top: 10px;
 }
 
+/* Dnevi v koledarju */
 .day {
-    padding: 20px; /* Adequate padding for easy interaction */
+    padding: 15px;
     text-align: center;
-    border-right: 1px solid #222; /* Darker right border */
-    border-bottom: 1px solid #222; /* Darker bottom border */
-    font-size: 16px; /* Standard font size */
-    color: #eeeeee; /* Light grey for better readability */
+    font-size: 16px;
+    color: #333;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .day:hover {
-    background-color: rgba(255, 255, 255, 0.15); /* Light background on hover */
-    transform: translateY(-2px); /* Lift effect on hover */
+    background-color: rgba(98, 0, 238, 0.1);
+    transform: scale(1.05);
 }
 
+/* Današnji dan */
 .today {
-    background: #ff4081; /* Bright pink for today's date */
-    color: #ffffff; /* White text for contrast */
-    font-weight: bold; /* Bold font for emphasis */
-    border-radius: 50%; /* Circular shape */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Consistent shadow */
-    transform: scale(1.15); /* Slight enlargement */
+    background-color: #03dac5;
+    color: #000;
+    font-weight: bold;
+    border-radius: 50%;
+    transform: scale(1.1);
 }
 
+/* Nedelja in sobota */
 .day:nth-child(7n+1) {
-    color: #ff5252; /* Red color for Sundays */
+    color: #d32f2f; /* Nedelja rdeča */
 }
 
 .day:nth-child(7n) {
-    color: #448aff; /* Blue color for Saturdays */
+    color: #1976d2; /* Sobota modra */
 }
 
+/* Prazni dnevi za začetek meseca */
+.disabled {
+    background-color: #f0f0f0;
+    color: #ccc;
+}
 /* Modernized styling for the calculator */
 .calculator-container {
     display: none;
