@@ -5,7 +5,7 @@
                 justify-content: center;
                 height: 100vh;
                 margin: 0;
-                background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+                background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
 }
@@ -15,6 +15,19 @@
             display: none; /* Skrije predvajalnik glasbe */
         }
 
+textarea {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient background */
+    border: 2px solid #fff; /* White border */
+    padding: 20px;
+    font-size: 18px;
+    width: 100%;
+    height: 74px;
+    border-radius: 10px;
+    color: #fff; /* White text color */
+    outline: none;
+    transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+    resize: none; /* Disable resizing */
+}
 
 
 
@@ -102,10 +115,8 @@
 
     
 
-    
-   
 
- #clickButton {
+#clickButton {
             text-align: center;
             justify-content: right;
             left: 0;
@@ -113,7 +124,7 @@
             width: 100%;
             bottom: 16%;
             padding: 10px 20px;
-            background-color: #3498db;
+            background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
             color: #fff;
             border: none;
             cursor: pointer;
@@ -125,6 +136,28 @@
         }
 
         #clickButton:hover {
+            background-color: #2980b9;
+        }
+        #backupButton{
+            text-align: center;
+            justify-content: right;
+            left: 0;
+            position: fixed;
+            width: 100%;
+            bottom: 16%;
+            padding: 10px 20px;
+            background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        #backupButton:hover {
             background-color: #2980b9;
         }
 
@@ -146,19 +179,37 @@
 
 
 
-                #chatButton {
-    text-align: center;
+   #chatButton {
+    text-align: right;
     justify-content: right;
     left: 0;
     position: fixed;
-    width: 100%;
+    width: 50%;
     bottom: 12%;
     padding: 10px 20px;
-    background-color: #3498db;
+    background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
     color: #fff;
     border: none;
     cursor: pointer;
+    z-index: -1;
 }
+
+ .preklop {
+    text-align: left; 
+    justify-content: left;
+    right: 0;
+    position: fixed;
+    width: 50%;
+    bottom: 12%;
+    padding: 10px 20px;
+    background: linear-gradient(215deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    z-index: -1;
+}
+
+
 
 #chatPopup {
     display: none;
@@ -184,7 +235,7 @@ color: black;
             display: flex;
             align-items: stretch;
             position: relative;
-            background: linear-gradient(to right, red, blue);
+            background: linear-gradient(to right, red, blue, green, yellow);
             border-radius: 15px 15px 0 0;
         }
 
@@ -258,7 +309,7 @@ color: black;
 
               #searchForm {
                 width: 100%;
-                background: radial-gradient(circle, #3498db, #2980b9); /* Radial gradient container background */
+                background: radial-gradient(circle, #2211aa, #11aa22, #aa2211); /* Radial gradient container background */
                 border: 2px solid #fff; /* White border */
                 border-radius: 20px;
                 padding: 40px;
@@ -272,7 +323,7 @@ color: black;
             }
 
             #search {
-                background: linear-gradient(to right, #3498db, #2980b9); /* Gradient input background */
+               background: linear-gradient(to right, #2211aa, #11aa22, #aa2211); /* Gradient background */
                 border: 2px solid #fff; /* White border */
                 padding: 20px;
                 font-size: 18px;
@@ -286,12 +337,12 @@ color: black;
 
             #search:focus {
                 border-color: #007bff;
-                background: linear-gradient(to right, #e74c3c, #2980b9);
+                background: linear-gradient(to right, #2211aa, #11aa22, #aa2211); /* Gradient background */
             }
             #submitBtn{
         bottom: 44%;
         padding: 10px 20px;
-        background-color: #3498db;
+        background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */;
         color: #fff;
         border: none;
         border-top-right-radius: 5px;
@@ -306,7 +357,7 @@ color: black;
         width: 50%;
         bottom: 8%;
         padding: 10px 20px;
-        background-color: #3498db;
+        background: linear-gradient(320deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         color: #fff;
         border: none;
         cursor: pointer;
@@ -320,7 +371,7 @@ color: black;
         width: 50%;
         bottom: 8%;
         padding: 10px 20px;
-        background-color: #3498db;
+         background: linear-gradient(40deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         color: #fff;
         border: none;
         cursor: pointer;
@@ -329,52 +380,76 @@ color: black;
         background-color: #2980b9;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Dodajanje senčenja ob hoverju */
     }
-         #dock {
-    position: fixed;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.2); /* Transparentno belo ozadje */
-    backdrop-filter: blur(10px); /* Srednje močna zameglitev */
-    border-radius: 5px; /* Majhna zaobljenost robov */
-    padding: 10px; /* Srednje veliko polnjenje */
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 999;
-    width: 100%;
-    height: auto;
-}
+         #container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, background 0.3s;
+            width: 100px;
+            height: 100px;
+            background: #3498db;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
 
-.icon, #addIconButton {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%; /* Okrogle ikone */
-    background-size: cover;
-    cursor: pointer;
-}
+        .dock {
+            width: 300px !important;
+            height: 80px !important;
+            border-radius: 40px !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            padding: 0 10px;
+        }
 
-.icon:hover, #addIconButton:hover {
-    transform: scale(1.1); /* Rahlo povečanje pri hoverju */
-}
+        .dock .icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
 
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .dock .icon:hover {
+            background: rgba(255,255,255,0.4);
+        }
 
-.set-link:hover {
-    transform: scale(1.1);
-}
+        .hidden {
+            display: none;
+        }
+
+        #addIconForm {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: none;
+            width: 250px;
+        }
+
+        #addIconForm select,
+        #addIconForm input,
+        #addIconForm button {
+            width: 100%;
+            margin: 5px 0;
+        }
+
 
 /* Pop-up styling */
 .popup {
@@ -406,8 +481,7 @@ color: black;
     }
             #topBar {
                 position: fixed;
-                top: 105px;     
-                right: -2;
+                top: 110px;     
                 width: 5cm;
                 height: 1cm;
                 background-color: black;
@@ -420,12 +494,20 @@ color: black;
                 cursor: pointer;
                 transition: width 0.5s 0.5s, height 0.5s 0s;
             }
-             #topBar:hover{
+             #topBar:hover {
               width: 100%;
               height: 3cm;
               border-radius: 0,01;
               transition: width 0.5s 0s, height 0.5s 0.5s;
              }
+
+#topBar.hover {
+              width: 100%;
+              height: 3cm;
+              border-radius: 0,01;
+              transition: width 0.5s 0s, height 0.5s 0.5s;
+             }
+
 
               .taskbar-icon {
         position: fixed;
@@ -433,7 +515,7 @@ color: black;
         height: 50px;
         bottom: 20px;
         right: 20px; 
-        background-color: #0078d7;
+         background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border-radius: 10px;
         display: none;
         justify-content: center;
@@ -591,7 +673,7 @@ color: black;
         width: 50px;
         height: 50px;
         color: #000000;
-        background-color: #0078d7;
+         background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border-radius: 10px;
         display: none;
         justify-content: center;
@@ -607,7 +689,7 @@ color: black;
                 justify-content: center;
                 height: 100vh;
                 margin: 0;
-                background: linear-gradient(135deg, #2C3E50, #3498db); /* Gradient background */
+                background: linear-gradient(145deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
                 font-family: 'Arial', sans-serif;
                 color: #fff; /* White text color */
             }
@@ -619,7 +701,70 @@ color: black;
 
 
 
-     
+ 
+
+textarea {
+            background: linear-gradient(to right, #3498db, #2980b9); /* Gradient background */
+    border: 2px solid #fff; /* White border */
+    padding: 20px;
+    font-size: 18px;
+    width: 100%;
+    height: 74px;
+    border-radius: 10px;
+    color: #fff; /* White text color */
+    outline: none;
+    transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s;
+    resize: none; /* Disable resizing */
+}
+        /* Stil za gumb, ki preklopi med input in textarea */
+.preklop {
+    position: fixed;
+    bottom: 200px;
+    left: 20px;
+    padding: 10px 20px;
+     background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
+     width: 80px;
+        height: 50px;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.preklop:hover {
+    background-color: #2980b9; /* Temnejši odtenek modre pri hoverju */
+    transform: scale(1.05); /* Rahlo povečanje pri hoverju */
+}
+
+
+#backupButton {
+    position: fixed;
+    bottom: 200px;
+    right: 20px;
+    padding: 10px 20px;
+     background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
+     width: 80px;
+        height: 50px;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
+        transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#backupButton:hover {
+    background-color: #2980b9; /* Temnejši odtenek modre pri hoverju */
+    transform: scale(1.05); /* Rahlo povečanje pri hoverju */
+}
+
+
+
+
 
             /* Stil za modalno okno (pop-up) */
         .modal {
@@ -704,8 +849,6 @@ color: black;
 
 
 
-
-
         
 #clickButton {
               position: fixed;
@@ -714,7 +857,7 @@ color: black;
             bottom: 80px; /* Gumb je postavljen 80px od spodnjega roba */
             right: 20px;
             border: none;
-            background-color: #0078d7;
+            background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
             transition: box-shadow 0.3s; /* Prehod za senčenje */
@@ -751,7 +894,7 @@ color: black;
     bottom: 80px; /* Gumb je postavljen 80px od spodaj */
     left: 20px;
     border: none;
-    background-color: #0078d7;
+    background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
     transition: box-shadow 0.3s; /* Prehod za senčenje */
@@ -761,7 +904,7 @@ color: black;
     display: none;
     position: fixed;
     bottom: 140px; /* Pomik popup-a nad gumb (80px + višina gumba 50px) */
-    right: 20px;
+    right: 110px;
     width: 300px;
     background: white;
     border-radius: 15px;
@@ -781,7 +924,7 @@ color: black;
             display: flex;
             align-items: stretch;
             position: relative;
-            background: linear-gradient(to right, red, blue);
+            background: linear-gradient(to right, red, blue, green, yellow);
             border-radius: 15px 15px 0 0;
         }
 
@@ -845,14 +988,14 @@ color: black;
             }
 
             #logo {
-                width: 100px;
-                height: 100px;
+                width: 120px;
+                height: 120px;
                 margin-bottom: 20px;
 
             }
 
             #searchForm {
-                background: radial-gradient(circle, #2980b9, #1c5985); /* Darker gradient for more depth */
+                background: radial-gradient(circle, #2211aa, #11aa22, #aa2211); /* Darker gradient for more depth */
                 border: 2px solid #fff; /* White border */
                 border-radius: 20px;
                 padding: 40px;
@@ -872,7 +1015,7 @@ color: black;
             }
 
             #search {
-                background: linear-gradient(to right, #2980b9, #2ecc71); /* Gradient input background */
+                 background: linear-gradient(to right, #2211aa, #11aa22, #aa2211); /* Gradient background */
                 border: 2px solid #fff; /* White border */
                 padding: 15px; /* Reduced padding for a sleeker look */
                 font-size: 18px;
@@ -885,13 +1028,13 @@ color: black;
 
             #search:focus {
                 border-color: #2ecc71; /* Change border color to match the focus gradient */
-                background: linear-gradient(to right, #e74c3c, #3498db); /* Updated gradient on focus */
+                background: linear-gradient(to right #2211aa, #11aa22, #aa2211); /* Updated gradient on focus */
                 transform: scale(1.05); /* Slightly scale up the input on focus */
             }
 
             #submitBtn {
                 padding: 10px 20px;
-                background-color: #2980b9; /* A slightly darker blue for better contrast */
+                background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
                 color: #fff;
                 border: none;
                 border-radius: 5px;
@@ -909,56 +1052,76 @@ color: black;
             #submitBtn:active {
                 transform: translateY(1px); /* Slight press down effect on click */
             }
-#dock {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    border-radius: 20px;
-    padding: 12px;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    z-index: 999;
-    width: auto;
-    max-width: 90%;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    transition: background-color 0.3s;
-}
+#container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: width 0.4s ease, height 0.4s ease, border-radius 0.4s ease, background 0.3s;
+            width: 100px;
+            height: 100px;
+            background: #3498db;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
 
-.icon, #addIconButton {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-size: cover;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+        .dock {
+            width: 300px !important;
+            height: 80px !important;
+            border-radius: 40px !important;
+            justify-content: space-around !important;
+            align-items: center !important;
+            padding: 0 10px;
+        }
 
-.icon:hover, #addIconButton:hover {
-    transform: translateY(-5px) scale(1.1);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
+        .dock .icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
 
-.set-link {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 25px;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.2s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .dock .icon:hover {
+            background: rgba(255,255,255,0.4);
+        }
 
-.set-link:hover {
-    transform: scale(1.1);
-}
+        .hidden {
+            display: none;
+        }
+
+        #addIconForm {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            padding: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: none;
+            width: 250px;
+        }
+
+        #addIconForm select,
+        #addIconForm input,
+        #addIconForm button {
+            width: 100%;
+            margin: 5px 0;
+        }
+
 
 /* Pop-up styling */
 .popup {
@@ -993,13 +1156,14 @@ color: black;
         position: fixed;
         width: 80px;
         height: 50px;
-        bottom: 20px;
-        right: 100px;
+        bottom: 140px;
+        right: 20px;
         border: none;
-        background-color: #0078d7;
+        background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
         transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
+        z-index: 0;
     }
            #menu {
         position: fixed;
@@ -1008,15 +1172,14 @@ color: black;
         bottom: 20px;
         left: 20px;
         border: none;
-        background-color: #0078d7;
+        background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Senčenje */
         transition: box-shadow 0.3s; /* Dodajanje prehoda za senčenje */
     }
         #topBar {
                 position: fixed;
-                top: 105px;     
-                right: -2;
+                top: 110px;     
                 width: 2cm;
                 height: 0.5cm;
                 background-color: black;
@@ -1029,12 +1192,20 @@ color: black;
                 cursor: pointer;
                 transition: width 0.5s 0.5s, height 0.5s 0s;
             }
-             #topBar:hover{
+             #topBar:hover {
               width: 7cm;
               height: 1.5cm;
               border-radius: 0.25;
               transition: width 0.5s 0s, height 0.5s 0.5s;
              }
+
+#topBar.hover {
+              width: 7cm;
+              height: 1.5cm;
+              border-radius: 0.25;
+              transition: width 0.5s 0s, height 0.5s 0.5s;
+             }
+
 
               .taskbar-icon {
         position: fixed;
@@ -1042,7 +1213,7 @@ color: black;
         height: 50px;
         bottom: 20px;
         right: 20px; 
-        background-color: #0078d7;
+        background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border: none;
         border-radius: 10px;
         display: flex;
@@ -1071,89 +1242,92 @@ color: black;
         transform: scale(1.1); /* Scale up the icon on hover for emphasis */
     }
 
-/* Streamlined Modern Calendar Styling */
+/* Kontejner koledarja */
 .calendar-container {
-    position: fixed;
-    bottom: 80px;
-    right: 0;
-    width: 320px;
-    background-color: #ffffff; /* Crisp white for contrast */
-    border-radius: 15px; /* Modern rounded corners */
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* Soft shadow */
+    left: 80px;
+    position: absolute;
+    width: 360px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    padding: 15px;
     display: none;
-    transition: box-shadow 0.3s ease, transform 0.3s ease; /* Smooth transitions */
-    overflow: hidden; /* Prevent overflow */
+    max-height: 500px;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
 }
 
-.calendar-container:hover {
-    transform: translateY(-4px); /* Lift effect on hover */
-}
-
+/* Slogi za naslov koledarja */
 .calendar-header {
-    background: #6200ea; /* Deep purple for a bold header */
+    background: linear-gradient(to right, #6200ea, #7c4dff);
     color: white;
-    padding: 15px 20px; /* Ample padding */
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Roboto', sans-serif; /* Modern sans-serif font */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    font-size: 18px;
 }
 
+/* Gumbi za prejšnji/naslednji mesec */
 .calendar-header button {
     background: none;
     border: none;
     color: white;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
-    transition: transform 0.2s ease, color 0.2s ease;
+    transition: color 0.3s;
 }
 
 .calendar-header button:hover {
-    transform: scale(1.1); /* Slight enlargement */
-    color: #ffab40; /* Accent color on hover */
+    color: #ffab40;
 }
 
+/* Slogi za telo koledarja (dnevi) */
 .calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    border-top: 1px solid #e0e0e0; /* Soft top border */
-    background: #f9f9f9; /* Very light background */
+    grid-gap: 5px;
+    margin-top: 10px;
 }
 
+/* Dnevi v koledarju */
 .day {
-    padding: 15px; /* Padding for better clickability */
+    padding: 15px;
     text-align: center;
-    border-right: 1px solid #e0e0e0; /* Subtle right border */
-    border-bottom: 1px solid #e0e0e0; /* Subtle bottom border */
     font-size: 16px;
-    color: #555; /* Darker text for better readability */
+    color: #333;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease; /* Transition effects */
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .day:hover {
-    background-color: rgba(98, 0, 238, 0.1); /* Light purple on hover */
-    transform: translateY(-2px); /* Slight lift effect */
+    background-color: rgba(98, 0, 238, 0.1);
+    transform: scale(1.05);
 }
 
+/* Današnji dan */
 .today {
-    background: #03dac5; /* Teal for today's date */
-    color: #000; /* Dark text for visibility */
+    background-color: #03dac5;
+    color: #000;
     font-weight: bold;
     border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Consistent shadow */
-    transform: scale(1.1); /* Slightly larger for emphasis */
+    transform: scale(1.1);
 }
 
+/* Nedelja in sobota */
 .day:nth-child(7n+1) {
-    color: #d32f2f; /* Sunday color */
+    color: #d32f2f; /* Nedelja rdeča */
 }
 
 .day:nth-child(7n) {
-    color: #1976d2; /* Saturday color */
+    color: #1976d2; /* Sobota modra */
+}
+
+/* Prazni dnevi za začetek meseca */
+.disabled {
+    background-color: #f0f0f0;
+    color: #ccc;
 }
 
    /* Modernized styling for the calculator */
@@ -1226,12 +1400,12 @@ color: black;
 
     .trigger-button {
         position: fixed;
-        bottom: 20px;
-        left: 100px;
+        bottom: 140px;
+        left: 20px;
         width: 80px;
         height: 50px;
         color: #000000;
-        background-color: #0078d7;
+        background: linear-gradient(135deg, #2211aa, #11aa22, #aa2211); /* Gradient background */
         border: none;
         border-radius: 10px;
         display: flex;
