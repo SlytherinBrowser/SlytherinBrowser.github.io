@@ -668,10 +668,7 @@ document.getElementById("backupButton").addEventListener("click", showBackupPopu
                 alert("Prosim, vnesite ime in URL ikone!");
             }
         });
-        function showDockIcons() {
-    // Prepreči prikaz ikon, če je širina premajhna
-    if (window.innerWidth < 900) return;
-
+       function showDockIcons() {
     container.innerHTML = "";
 
     // Dodaj ikone iz trenutne kategorije
@@ -680,7 +677,7 @@ document.getElementById("backupButton").addEventListener("click", showBackupPopu
         el.className = "icon";
         el.textContent = icon.name;
         el.onclick = (e) => {
-            e.stopPropagation(); // prepreči ponovno odpiranje
+            e.stopPropagation();
             if (icon.action) {
                 window[icon.action]();
             } else {
@@ -698,11 +695,12 @@ document.getElementById("backupButton").addEventListener("click", showBackupPopu
         e.stopPropagation();
         isDock = false;
         container.classList.remove("dock");
-        container.style.background = ""; // Po želji očisti ozadje
+        container.style.background = "";
         showCategoryText();
     };
     container.appendChild(closeIcon);
 }
+
 
 // Glavni event listener za klik in wheel (samo na širini 900+)
 function enableDockEvents() {
