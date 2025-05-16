@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Slychat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Prijava / Registracija</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
     * {
@@ -25,7 +24,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      color: white;
     }
 
     .container {
@@ -36,93 +34,85 @@
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
       width: 90%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      max-width: 380px;
+      color: white;
     }
 
     h2 {
       text-align: center;
+      margin-bottom: 20px;
       font-weight: 500;
     }
 
-    #chatBox {
-      height: 300px;
-      overflow-y: auto;
+    input {
+      width: 100%;
       padding: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #chatBox div {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 12px;
-      padding: 10px 15px;
-      color: #fff;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-      word-wrap: break-word;
-      font-size: 0.95em;
-    }
-
-    #chatBox .sender {
-      font-weight: 600;
-      color: #ffd700;
-      margin-right: 6px;
-    }
-
-    input[type='text'] {
-      padding: 10px;
+      margin: 8px 0;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      background-color: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
       color: white;
       outline: none;
+      transition: border 0.3s;
     }
 
     input::placeholder {
       color: rgba(255, 255, 255, 0.6);
     }
 
-    .btn {
+    input:focus {
+      border-color: white;
+    }
+
+    button {
+      width: 100%;
       padding: 10px;
+      margin-top: 10px;
       background-color: rgba(255, 255, 255, 0.15);
       border: none;
       border-radius: 8px;
       color: white;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       transition: background 0.3s;
     }
 
-    .btn:hover {
+    button:hover {
       background-color: rgba(255, 255, 255, 0.25);
     }
 
-    .actions {
-      display: flex;
-      gap: 10px;
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #dddddd;
+      font-size: 0.9em;
+      text-decoration: underline;
     }
 
-    @media (max-width: 480px) {
-      .actions {
-        flex-direction: column;
-      }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Slychat</h2>
-    <div id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
-    <div class="actions">
-      <button class="btn" onclick="sendMessage()">Pošlji</button>
-      <button class="btn" onclick="logout()">Odjava</button>
+    <!-- PRIJAVA -->
+    <div id="loginForm">
+      <h2>Prijava</h2>
+      <input type="email" id="logEmail" placeholder="Email">
+      <input type="password" id="logPass" placeholder="Geslo">
+      <button onclick="login()">Prijavi se</button>
+      <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
+    </div>
+
+    <!-- REGISTRACIJA -->
+    <div id="registerForm" class="hidden">
+      <h2>Registracija</h2>
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPass" placeholder="Geslo">
+      <button onclick="register()">Registriraj</button>
+      <div class="toggle" onclick="toggleForms()">Že imaš račun? Prijavi se</div>
     </div>
   </div>
 
@@ -134,62 +124,33 @@
       storageBucket: "chater-cf682.firebasestorage.app",
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-      measurementId: "G-32E3BYYLKS",
+      measurementId: "G-32E3BYYLKS"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
 
-    const chatBox = document.getElementById("chatBox");
-    const messageInput = document.getElementById("messageInput");
-
-    auth.onAuthStateChanged((user) => {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        db.ref("messages").on("child_added", (snapshot) => {
-          const msg = snapshot.val();
-          const div = document.createElement("div");
-
-          const senderSpan = document.createElement("span");
-          senderSpan.classList.add("sender");
-          senderSpan.textContent = msg.email + ": ";
-
-          const messageText = document.createElement("span");
-          messageText.textContent = msg.text;
-
-          div.appendChild(senderSpan);
-          div.appendChild(messageText);
-
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
-        });
-      }
-    });
-
-    function sendMessage() {
-      const user = auth.currentUser;
-      const text = messageInput.value.trim();
-      if (!text) return;
-
-      if (text === "/clearchat") {
-        db.ref("messages")
-          .remove()
-          .then(() => {
-            chatBox.innerHTML = "";
-            alert("Klepetalnica je bila pobrisana.");
-          })
-          .catch((error) => alert("Napaka pri brisanju: " + error.message));
-      } else {
-        db.ref("messages").push({ email: user.email, text });
-      }
-      messageInput.value = "";
+    function register() {
+      const email = document.getElementById("regEmail").value;
+      const pass = document.getElementById("regPass").value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(() => alert("Registracija uspešna"))
+        .catch(error => alert(error.message));
     }
 
-    function logout() {
-      auth.signOut().then(() => (window.location.href = "auth.html"));
+    function login() {
+      const email = document.getElementById("logEmail").value;
+      const pass = document.getElementById("logPass").value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = "slychat.html")
+        .catch(error => alert(error.message));
     }
+
+    function toggleForms() {
+      document.getElementById("loginForm").classList.toggle("hidden");
+      document.getElementById("registerForm").classList.toggle("hidden");
+    }
+    
   </script>
 </body>
 </html>
