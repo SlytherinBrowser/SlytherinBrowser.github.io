@@ -8,8 +8,10 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
+    /* Tvoj CSS ostane enak, ni ga spreminjam */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -121,7 +123,7 @@
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
       projectId: "chater-cf682",
-      storageBucket: "chater-cf682.firebasestorage.app",
+      storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
       measurementId: "G-32E3BYYLKS"
@@ -129,20 +131,45 @@
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
     function register() {
-      const email = document.getElementById("regEmail").value;
-      const pass = document.getElementById("regPass").value;
+      const email = document.getElementById("regEmail").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+
+      if (!email || !pass) {
+        alert("Prosim vnesi email in geslo.");
+        return;
+      }
+
       auth.createUserWithEmailAndPassword(email, pass)
-        .then(() => alert("Registracija uspešna"))
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Shrani uporabnika v bazo
+          const userKey = user.email.replace(/\./g, "_");
+          db.ref(`users/${userKey}`).set({
+            email: user.email,
+            uid: user.uid,
+          });
+          alert("Registracija uspešna!");
+          window.location.href = "slychat.html";
+        })
         .catch(error => alert(error.message));
     }
 
     function login() {
-      const email = document.getElementById("logEmail").value;
-      const pass = document.getElementById("logPass").value;
+      const email = document.getElementById("logEmail").value.trim();
+      const pass = document.getElementById("logPass").value.trim();
+
+      if (!email || !pass) {
+        alert("Prosim vnesi email in geslo.");
+        return;
+      }
+
       auth.signInWithEmailAndPassword(email, pass)
-        .then(() => window.location.href = "slychat.html")
+        .then(() => {
+          window.location.href = "slychat.html";
+        })
         .catch(error => alert(error.message));
     }
 
@@ -150,7 +177,6 @@
       document.getElementById("loginForm").classList.toggle("hidden");
       document.getElementById("registerForm").classList.toggle("hidden");
     }
-    
   </script>
 </body>
 </html>
