@@ -180,35 +180,32 @@
             <div class="app-grid" id="searchGrid"></div>
         </div>
 
-       <!-- Obvestila o aplikacijah -->  
-    <div class="container" id="notifications">  
-        <div class="notifications">  
-            <p><h1>Obvestila</h1></p>  
-            <ul>
+        <!-- Obvestila o aplikacijah -->
+        <div class="container" id="notifications">
+            <div class="notifications">
+                <p><h1>Obvestila</h1></p>
+                <ul>
+<li><h3>Objavljen izbirnik menija</h3></li>
+<li><h3>Objavljen novi Menu:</h1></li>
+<li>Drugačen razpored aplikacij</li>
+<li>Dodan iskalnik aplikacij</li>
+<li>Dodana obvestila o celotni strani</li>
+</ul>
+            </div>
+        </div>
+    </div>
 
-<li><h3>Objavljen izbirnik menija</h3></li>  
-<li><h3>Objavljen novi Menu:</h3></li>  
-<li>Drugačen razpored aplikacij</li>  
-<li>Dodan iskalnik aplikacij</li>  
-<li>Dodana obvestila o celotni strani</li>  
-<li><h2>Posodobitev 2.0 je v izdelavi.</h2></li>  
-<li>Kaj bo novega:</li>  
-<li>100 dodatkov ali sprememb na strani:</li>  
-<li>Nove funkcije ali izboljšane funkcije</li>  
-<li>novi uporabniški načini in prilagoditve</li>  
-<li><h3>Datum posodobitve: 16.5.2025 ob 10:40.</h3></li> 
-</ul>  
-            </div>  
-        </div>  
-    </div>  <!-- Navigacija -->  
-<nav class="nav-bar">  
-    <div class="nav-item active" onclick="changeTab(0)" id="homeNavItem">Aplikacije</div>  
-    <div class="nav-item" onclick="changeTab(1)">Iskanje</div>  
-    <div class="nav-item" onclick="changeTab(2)">Obvestila</div>  
-</nav>
+    <!-- Navigacija -->
+    <nav class="nav-bar">
+        <div class="nav-item active" onclick="changeTab(0)" id="homeNavItem">Aplikacije</div>
+        <div class="nav-item" onclick="changeTab(1)">Iskanje</div>
+        <div class="nav-item" onclick="changeTab(2)">Obvestila</div>
+    </nav>
 
     <div class="category-dropdown" id="categoryDropdown">
         <div onclick="selectCategory('applications')">Aplikacije</div>
+        <div onclick="selectCategory('raz')">Razvijanje</div>
+        <div onclick="selectCategory('shop')">Trgovine</div>
         <div onclick="selectCategory('games')">Igre</div>
         <div onclick="selectCategory('my')">Moje</div>
         <div onclick="selectCategory('hor')">Horoskop</div>
@@ -227,6 +224,22 @@
                 { name: "Adobe Premiere Pro", link: "https://www.adobe.com/products/premiere.html", img: "adobe.png" },
                 { name: "W3schools", link: "https://www.w3schools.com/", img: "w3school.png" },
                 { name: "Spotify", link: "https://www.spotify.com/", img: "spotify.png" }
+            ],
+            raz: [
+                { name: "Canva", link: "https://www.canva.com/", img: "canva.png" },
+                { name: "Github", link: "https://github.com/", img: "github.png" },
+                { name: "VSDC", link: "https://www.videosoftdev.com/", img: "vsdc.png" },
+                { name: "Audacity", link: "http://audacityteam.org/", img: "auda.png" },
+                { name: "Visual studio code", link: "https://code.visualstudio.com/", img: "visual.png" },
+                { name: "Unity", link: "https://unity.com/", img: "unity.png" }
+            ],
+            shop: [
+                { name: "Goblin", link: "https://goblin.si/", img: "goblin.png" },
+                { name: "Mimovrste", link: "https://www.mimovrste.com/", img: "mimovrste.png" },
+                { name: "Temu", link: "https://www.temu.com/", img: "temu.png" },
+                { name: "Shein", link: "https://eur.shein.com/?ref=www&rep=dir&ret=eur", img: "shein.png" },
+                { name: "Aliexpress", link: "https://www.aliexpress.com/", img: "ali.png" },
+                { name: "Bolha", link: "https://www.bolha.com/", img: "bolha.png" }
             ],
             games: [
                 { name: "Guesses", link: "ugibanje.html", img: "guess.png" },
@@ -263,7 +276,7 @@
                 { name: "ChipsChat", link: "https://ko22441111.github.io/spletna/chat.html", img: "chatt.png" },
                 { name: "Slytherin Converter", link: "decode.html", img: "decode.webp" }
             ]
-        };
+        }; 
 
         function changeTab(index) {
             if (index === currentIndex) return;
@@ -375,10 +388,6 @@ function selectCategory(category) {
     loadCategory(category);
     document.getElementById('categoryDropdown').style.display = 'none'; // Skrij dropdown
 }
-
-
-
-
     </script>
 </body>
 </html>
