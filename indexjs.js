@@ -25,6 +25,118 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 
 
+ function toggleElement() {
+            const searchElement = document.getElementById("search");
+            const submitBtn = document.getElementById("submitBtn");
+
+            // Preveri, če je trenutno prikazan input tipa search ali textarea
+            if (searchElement.tagName === "INPUT") {
+                // Ustvari textarea z ID-jem 'codeInput' in jo zamenjaj za input
+                const textarea = document.createElement("textarea");
+                textarea.id = "codeInput"; // Dodeli ID
+                textarea.value = searchElement.value; // Prekopiraj vrednost iz inputa
+                textarea.setAttribute("placeholder", searchElement.placeholder); // Dodaj placeholder
+                textarea.setAttribute("oninput", "checkForRotation(); checkForReminder();"); // Dodaj oninput funkcijo
+                searchElement.replaceWith(textarea); // Zamenjaj input z textarea
+
+                // Zamenjaj submit gumb z novim gumbom, ki ima enak stil in funkcijo onclick
+                const newSubmitBtn = document.createElement("button");
+                newSubmitBtn.id = "submitBtn";
+                newSubmitBtn.innerText = "Pošlji";
+                newSubmitBtn.style.padding = "10px 20px";
+                newSubmitBtn.style.backgroundColor = "#3498db";
+                newSubmitBtn.style.color = "#fff";
+                newSubmitBtn.style.border = "none";
+                newSubmitBtn.style.borderTopRightRadius = "5px";
+                newSubmitBtn.style.borderTopLeftRadius = "5px";
+                newSubmitBtn.style.cursor = "pointer";
+                newSubmitBtn.onclick = updateAndSave; // Dodeli funkcijo klikom
+
+                submitBtn.replaceWith(newSubmitBtn); // Zamenjaj submit gumb z novim
+            } else {
+                // Če je prikazan textarea, ga zamenjaj nazaj z inputom
+                const input = document.createElement("input");
+                input.type = "search";
+                input.id = "search";
+                input.name = "search";
+                input.placeholder = searchElement.placeholder; // Prekopiraj placeholder
+                input.value = searchElement.value; // Prekopiraj vrednost iz textarea
+                input.setAttribute("oninput", "checkForRotation(); checkForReminder();"); // Dodaj oninput funkcijo
+                searchElement.replaceWith(input); // Zamenjaj textarea z input
+
+                // Zamenjaj submit gumb z novim gumbom, ki ima enak stil in funkcijo onclick
+                const newSubmitBtn = document.createElement("input");
+                newSubmitBtn.type = "submit";
+                newSubmitBtn.id = "submitBtn";
+                newSubmitBtn.value = "Pošlji";
+                newSubmitBtn.onclick = updateAndSave; // Dodeli funkcijo klikom
+
+                submitBtn.replaceWith(newSubmitBtn); // Zamenjaj submit gumb z novim
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+function updateAndSave() {
+            let newCode = document.getElementById("codeInput").value;
+
+            // Ustvari edinstven ključ za shranjevanje funkcije
+            let functionId = "function_" + new Date().getTime(); // Edinstven ključ na podlagi časa
+            localStorage.setItem(functionId, newCode);
+
+            try {
+                // Izvede kodo iz textarea
+                eval(newCode);
+
+                alert("Funkcija je shranjena in posodobljena!");
+
+            } catch (error) {
+                alert("Napaka v kodi: " + error.message);
+            }
+        }
+
+        // Ob zagonu strani preveri vse shranjene funkcije in jih izvede
+        window.onload = function () {
+            for (let i = 0; i < localStorage.length; i++) {
+                let key = localStorage.key(i);
+                let savedCode = localStorage.getItem(key);
+
+                // Preveri, če je koda veljavna, in jo izvede
+                try {
+                    eval(savedCode); // Izvede kodo iz localStorage
+                } catch (error) {
+                    console.error("Napaka pri nalaganju funkcij z IDjem " + key + ": " + error.message);
+                }
+            }
+        };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
          const botResponses = {
     "pozdrav": [
         "Hej! Kako si danes?",
@@ -436,10 +548,14 @@ function setBotName(inputName) {
 }
 
 // Funkcija za prikaz ali skrivanje popup okna
-document.getElementById("chatButton").addEventListener("click", function() {
+function toggleChatPopup() {
     const chatPopup = document.getElementById("chatPopup");
     chatPopup.style.display = chatPopup.style.display === "none" || !chatPopup.style.display ? "block" : "none";
-});
+}
+
+// Dodajanje poslušalca dogodkov na gumb
+document.getElementById("chatButton").addEventListener("click", toggleChatPopup);
+
 
 // Poslušalec za gumb pošiljanja
 document.getElementById("sendButton").addEventListener("click", handleMessage);
@@ -505,61 +621,118 @@ function lock() {
         window.location.href = "lock1.html";
     }
 
-let intervalId; // globalna spremenljivka za shranjevanje ID-ja intervala
+let intervalId;
+let hoverTimeout;
+let displayState = 0; // 0 - čas, 1 - datum, 2 - baterija, 3 - hitrost interneta
 
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("search").focus();
-
     const topBar = document.getElementById("topBar");
 
-    // Dodajamo poslušalca dogodkov za hover na zgornji trak
     topBar.addEventListener("mouseenter", function() {
-        const lastSearch = localStorage.getItem("lastSearch");
-        if (lastSearch) {
-            topBar.innerText = lastSearch;
-        }
-
-        // Ustavi interval za osveževanje ure, če je aktiven
+        hoverTimeout = setTimeout(function() {
+            const lastSearch = localStorage.getItem("lastSearch");
+            if (lastSearch) {
+                topBar.innerText = lastSearch;
+            }
+        }, 1000);
         clearInterval(intervalId);
     });
 
-
-    // Dodajamo poslušalca dogodkov za izhod iz hoverja na zgornji trak
     topBar.addEventListener("mouseleave", function() {
-        showCurrentTime(); // Prikaz trenutnega časa
-
-        // Ponovno zaženi interval za osveževanje ure
-        intervalId = setInterval(showCurrentTime, 60000); // Osveži uro vsako minuto
+        clearTimeout(hoverTimeout);
+        showCurrentTime();
+        intervalId = setInterval(toggleDisplay, 3000);
     });
 
-    // Dodajamo poslušalca dogodkov za klik na zgornji trak
     topBar.addEventListener("click", function() {
         openLastSearch();
     });
 
-    // Začetno zagon osveževanja ure
-    intervalId = setInterval(showCurrentTime, 1); // Osveži uro vsako minuto
+    intervalId = setInterval(toggleDisplay, 3000);
+
+    // Spremljanje stanja baterije
+    if (navigator.getBattery) {
+        navigator.getBattery().then(function(battery) {
+            function checkBatteryLevel() {
+                if (battery.level <= 0.2) {
+                    triggerHoverMessage("Prazna baterija");
+                }
+            }
+            checkBatteryLevel();
+            battery.addEventListener("levelchange", checkBatteryLevel);
+        });
+    }
 });
 
 function showCurrentTime() {
     const currentTime = new Date();
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
-    const formattedTime = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+    document.getElementById("topBar").innerText = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+}
 
-    document.getElementById("topBar").innerText = formattedTime;
+function showCurrentDate() {
+    const currentDate = new Date();
+    const days = currentDate.getDate();
+    const months = currentDate.getMonth() + 1;
+    document.getElementById("topBar").innerText = `${days}.${months < 10 ? '0' + months : months}`;
+}
+
+function showBatteryStatus() {
+    navigator.getBattery().then(function(battery) {
+        const level = Math.round(battery.level * 100);
+        const charging = battery.charging ? "+" : "";
+        document.getElementById("topBar").innerText = `${charging}${level}%`;
+    });
+}
+
+function showInternetSpeed() {
+    if (navigator.connection) {
+        const downlink = navigator.connection.downlink;
+        document.getElementById("topBar").innerText = `${downlink.toFixed(2)}`;
+    } else {
+        document.getElementById("topBar").innerText = "🌐❌";
+    }
+}
+
+function toggleDisplay() {
+    if (displayState === 0) {
+        showCurrentTime();
+    } else if (displayState === 1) {
+        showCurrentDate();
+    } else if (displayState === 2) {
+        showBatteryStatus();
+    } else {
+        showInternetSpeed();
+    }
+    displayState = (displayState + 1) % 4;
 }
 
 function openLastSearch() {
     const lastSearch = localStorage.getItem("lastSearch");
-
     if (lastSearch) {
         const searchUrl = "https://www.google.com/search?q=" + encodeURIComponent(lastSearch);
         window.open(searchUrl, 'load.html');
     } else {
-        alert("Ni zadnjega iskanja.");
+        triggerHoverMessage("Ni zadnjega iskanja.");
     }
 }
+
+function triggerHoverMessage(message) {
+    const topBar = document.getElementById("topBar");
+    topBar.classList.add("hover");
+
+    setTimeout(() => {
+        topBar.innerText = message;
+    }, 1000); // prikaz po 1 sekundi
+
+    setTimeout(() => {
+        topBar.classList.remove("hover");
+        showCurrentTime();
+    }, 3000); // traja 10 sekund
+}
+
 
 function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
@@ -614,120 +787,159 @@ function handleShortcut(searchTerm) {
 }
 
 
- let currentDate = new Date();
+let currentDate = new Date();
 
-    function renderCalendar(month, year) {
-        const monthNames = [
-            'Januar', 'Februar', 'Marec', 'April', 'Maj', 'Junij',
-            'Julij', 'Avgust', 'September', 'Oktober', 'November', 'December'
-        ];
+function renderCalendar(month, year) {
+    const monthNames = [
+        'Januar', 'Februar', 'Marec', 'April', 'Maj', 'Junij',
+        'Julij', 'Avgust', 'September', 'Oktober', 'November', 'December'
+    ];
 
-        const daysOfWeek = ['Po', 'To', 'Sr', 'Če', 'Pe', 'So', 'Ne'];
+    const daysOfWeek = ['Po', 'To', 'Sr', 'Če', 'Pe', 'So', 'Ne'];
 
-        const firstDayOfMonth = new Date(year, month, 1);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstWeekday = firstDayOfMonth.getDay() === 0 ? 7 : firstDayOfMonth.getDay();
 
+    const calendarBody = document.getElementById('calendar-body');
+    const monthYear = document.getElementById('month-year');
+    calendarBody.innerHTML = '';
 
-let isDragging = false;
-let offsetX, offsetY;
+    // Heading (months and years)
+    monthYear.textContent = `${monthNames[month]} ${year}`;
 
-const calendar = document.querySelector('.calendar-container');
+    // Add weekday labels (Po, To, Sr, ...)
+    daysOfWeek.forEach(day => {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'day';
+        dayEl.style.fontWeight = 'bold';
+        dayEl.textContent = day;
+        calendarBody.appendChild(dayEl);
+    });
 
-calendar.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - calendar.getBoundingClientRect().left;
-    offsetY = e.clientY - calendar.getBoundingClientRect().top;
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        const x = e.clientX - offsetX;
-        const y = e.clientY - offsetY;
-        calendar.style.left = `${x}px`;
-        calendar.style.top = `${y}px`;
-    }
-});
-
-document.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-        document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
-
-        const calendarBody = document.getElementById('calendar-body');
-        calendarBody.innerHTML = '';
-
-        // Dodajanje dnevov prejšnjega meseca, če je potrebno
-        for (let i = 0; i < firstDayOfMonth.getDay(); i++) {
-            const dayElement = document.createElement('div');
-            dayElement.classList.add('day', 'disabled');
-            calendarBody.appendChild(dayElement);
-        }
-
-        // Dodajanje dnevov za trenutni mesec
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayElement = document.createElement('div');
-            dayElement.textContent = day;
-            dayElement.classList.add('day');
-            if (year === currentDate.getFullYear() && month === currentDate.getMonth() && day === currentDate.getDate()) {
-                dayElement.classList.add('today');
-            }
-            calendarBody.appendChild(dayElement);
-        }
-
-        // Prikaz modala s koledarjem
-        document.getElementById('calendar').style.display = 'block';
+    // Add empty days before the start of the month
+    for (let i = 1; i < firstWeekday; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'day disabled';
+        calendarBody.appendChild(emptyCell);
     }
 
-    function toggleCalendar() {
-        const calendar = document.getElementById('calendar');
-        if (calendar.style.display === 'block') {
-            calendar.style.display = 'none';
-        } else {
-            calendar.style.display = 'block';
-            renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+    // Add actual days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'day';
+        dayEl.textContent = day;
+
+        // Highlight today's date
+        if (year === currentDate.getFullYear() && month === currentDate.getMonth() && day === currentDate.getDate()) {
+            dayEl.classList.add('today');
         }
+
+        calendarBody.appendChild(dayEl);
     }
+}
+
+// Funkcija za postavitev koledarja na določeni poziciji (left, top)
+function positionCalendar() {
+    const calendar = document.getElementById('calendar');
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    const calendarWidth = calendar.offsetWidth;
+    const calendarHeight = calendar.offsetHeight;
+
+    // Nastavi pozicijo koledarja na 20px od levega roba
+    const leftPosition = 20;  // Tukaj nastavimo koledar bolj levo
+    const bottomPosition = Math.min(20, screenHeight - calendarHeight - 20); // Poskrbi, da ne prekriva vrha
+
+    calendar.style.left = `${leftPosition}px`;
+    calendar.style.bottom = `${bottomPosition}px`;
+}
+
+// Funkcija za prikaz koledarja
+function toggleCalendar() {
+    const calendar = document.getElementById('calendar');
+    if (calendar.style.display === 'block') {
+        calendar.style.display = 'none';
+    } else {
+        calendar.style.display = 'block';
+        renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+        positionCalendar(); // Pozicioniraj koledar ob prikazu
+    }
+}
+
+// Gumbi za preklapljanje mesecev
 function nextMonth() {
-    const currentDate = new Date(); // Get current date
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-
-    // Move to the next month
-    const nextMonth = (currentMonth + 1) % 12;
-    const nextYear = currentYear + (currentMonth + 1 > 11 ? 1 : 0);
-
-    renderCalendar(nextMonth, nextYear);
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+    positionCalendar(); // Pozicioniraj koledar ob preklopu
 }
-   function previousMonth() {
-    const currentDate = new Date(); // Get current date
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
 
-    // Move to the previous month
-    const prevMonth = (currentMonth - 1 + 12) % 12;
-    const prevYear = currentYear - (currentMonth - 1 < 0 ? 1 : 0);
-
-    renderCalendar(prevMonth, prevYear);
-
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+    positionCalendar(); // Pozicioniraj koledar ob preklopu
 }
+
+// Event listeners za gumbi za prejšnji/naslednji mesec
+document.getElementById('next-month').addEventListener('click', nextMonth);
+document.getElementById('prev-month').addEventListener('click', previousMonth);
+
+// Inicializiraj koledar ob nalaganju strani
+renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+positionCalendar(); // Pozicioniraj koledar takoj ob začetku
+
+// Funkcija za prikaz koledarja
+function toggleCalendar() {
+    const calendar = document.getElementById('calendar');
+    if (calendar.style.display === 'block') {
+        calendar.style.display = 'none';
+    } else {
+        calendar.style.display = 'block';
+        renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+        positionCalendar(); // Pozicioniraj koledar ob prikazu
+    }
+}
+
+// Gumbi za preklapljanje mesecev
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+    positionCalendar(); // Pozicioniraj koledar ob preklopu
+}
+
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+    positionCalendar(); // Pozicioniraj koledar ob preklopu
+}
+
+// Event listeners za gumbi za prejšnji/naslednji mesec
+document.getElementById('next-month').addEventListener('click', nextMonth);
+document.getElementById('prev-month').addEventListener('click', previousMonth);
+
+// Inicializiraj koledar ob nalaganju strani
+renderCalendar(currentDate.getMonth(), currentDate.getFullYear());
+positionCalendar(); // Pozicioniraj koledar takoj ob začetku
+
 let display = document.getElementById('display');
 let calculatorContainer = document.getElementById('calculator-container');
 
 function toggleCalculator() {
-    if (calculatorContainer.style.display === 'none') {
+    if (calculatorContainer.style.display === 'none' || calculatorContainer.style.display === '') {
         // Prikaz kalkulatorja
         calculatorContainer.style.display = 'block';
 
-        // Položaj kalkulatorja glede na gumb
-        let triggerButton = document.getElementById('trigger-button');
-        let triggerButtonRect = triggerButton.getBoundingClientRect();
-        calculatorContainer.style.top = `${triggerButtonRect.top - (calculatorContainer.offsetHeight / 0.9) + (triggerButton.offsetHeight / 2)}px`;
-        calculatorContainer.style.left = `${triggerButtonRect.right / 1.7}px`;
+        // Fiksna pozicija (npr. spodaj desno)
+        calculatorContainer.style.position = 'fixed';
+        calculatorContainer.style.bottom = '20px';
+        calculatorContainer.style.right = '20px';
     } else {
         // Skritje kalkulatorja
         calculatorContainer.style.display = 'none';
     }
 }
+
 
 document.getElementById("al").onclick = function() {
     alert("Vnesite številko in izberite sestav iz katerega pretvarjate in v katerega želite pretvoriti. če želite potence vpišite število potem vpišite ** nato pa število in enter.");
@@ -889,42 +1101,69 @@ document.addEventListener("keydown", function(event) {
     }
 });
 
-// Add event listener for the button click
-document.getElementById("buttonkng").addEventListener("click", function() {
+// Funkcija, ki se sproži ob kliku na gumb
+function handleButtonClick() {
     toggleMode();
-});
-
-function toggleMode() {
-    const currentMode = localStorage.getItem("mode") || "normal";
-    const availableModes = getAvailableModes();
-
-    const modeIndex = availableModes.indexOf(currentMode);
-    const nextMode = availableModes[(modeIndex + 1) % availableModes.length];
-
-    applyMode(nextMode);
-    location.reload(); // Reload strani po preklopu
 }
 
-function getAvailableModes() {
-    const today = new Date();
-    const startDate = new Date(today.getFullYear(), 10, 20); // 20. november
-    const endDate = new Date(today.getFullYear(), 1, 27); // 27. februar
+// Dodajanje poslušalca dogodka klika
+document.getElementById("buttonkng").addEventListener("click", handleButtonClick);
 
-    if (today >= startDate || today <= endDate) {
-        return ["normal", "modern", "winterstyle"];
-    }
-    return ["normal", "modern"];
+
+function toggleMode() {
+    const availableModes = ["normal", "modern", "winterstyle"];
+    const currentMode = localStorage.getItem("mode") || "normal";
+
+    // Ustvari pop-up
+    const popup = document.createElement("div");
+    popup.id = "modePopup";
+    popup.style.position = "fixed";
+    popup.style.top = "50%";
+    popup.style.left = "50%";
+    popup.style.transform = "translate(-50%, -50%)";
+    popup.style.background = "white";
+    popup.style.padding = "20px";
+    popup.style.border = "2px solid black";
+    popup.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.2)";
+    popup.style.zIndex = "1000";
+    popup.style.borderRadius = "10px";
+
+    // Dodaj možnosti
+    availableModes.forEach(mode => {
+        const button = document.createElement("button");
+        button.innerText = mode.charAt(0).toUpperCase() + mode.slice(1);
+        button.style.margin = "5px";
+        button.style.padding = "10px";
+        button.style.cursor = "pointer";
+        button.onclick = () => {
+            applyMode(mode);
+            document.body.removeChild(popup);
+            location.reload();
+        };
+        popup.appendChild(button);
+    });
+
+    // Dodaj gumb za zapiranje
+    const closeButton = document.createElement("button");
+    closeButton.innerText = "Prekliči";
+    closeButton.style.marginTop = "10px";
+    closeButton.style.display = "block";
+    closeButton.style.padding = "10px";
+    closeButton.style.cursor = "pointer";
+    closeButton.onclick = () => document.body.removeChild(popup);
+    popup.appendChild(closeButton);
+
+    // Dodaj pop-up na stran
+    document.body.appendChild(popup);
 }
 
 function applyMode(mode) {
     document.getElementById("normalStylesheet").disabled = mode !== "normal";
     document.getElementById("modernStylesheet").disabled = mode !== "modern";
     document.getElementById("winterStylesheet").disabled = mode !== "winterstyle";
-
     localStorage.setItem("mode", mode);
 }
 
-// Ob nalaganju strani uporabi shranjen način
 document.addEventListener("DOMContentLoaded", () => {
     applyMode(localStorage.getItem("mode") || "normal");
 });
