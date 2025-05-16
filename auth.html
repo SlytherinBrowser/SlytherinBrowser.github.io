@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <title>Prijava / Registracija</title>
+  <title>Slychat - Prijava / Registracija</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Firebase -->
@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
+  <!-- Stil -->
   <style>
     * {
       box-sizing: border-box;
@@ -19,52 +20,61 @@
     }
 
     body {
-      background: linear-gradient(135deg, #1e1e2f, #121220);
-      color: white;
+      background: url('slika.png') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
     }
 
-    .auth-container {
-      background: rgba(255, 255, 255, 0.05);
+    .container {
+      background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       padding: 30px;
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
       width: 90%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      max-width: 380px;
+      color: white;
     }
 
     h2 {
       text-align: center;
+      margin-bottom: 20px;
       font-weight: 500;
     }
 
     input {
+      width: 100%;
       padding: 10px;
+      margin: 8px 0;
       border: 1px solid rgba(255, 255, 255, 0.3);
-      background-color: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
       color: white;
       outline: none;
+      transition: border 0.3s;
     }
 
     input::placeholder {
       color: rgba(255, 255, 255, 0.6);
     }
 
+    input:focus {
+      border-color: white;
+    }
+
     button {
+      width: 100%;
       padding: 10px;
+      margin-top: 10px;
       background-color: rgba(255, 255, 255, 0.15);
       border: none;
       border-radius: 8px;
       color: white;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
       transition: background 0.3s;
     }
@@ -72,15 +82,28 @@
     button:hover {
       background-color: rgba(255, 255, 255, 0.25);
     }
+
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #dddddd;
+      font-size: 0.9em;
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <h2>Dobrodošel v Slychat</h2>
+  <div class="container">
+    <h2 id="formTitle">Prijava</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Geslo" />
-    <button onclick="register()">Registracija</button>
-    <button onclick="login()">Prijava</button>
+    <button id="actionBtn" onclick="login()">Prijava</button>
+    <div class="toggle" onclick="toggleForm()">Nimaš računa? Registriraj se</div>
   </div>
 
   <script>
@@ -98,6 +121,18 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+
+    let isRegister = false;
+
+    function toggleForm() {
+      isRegister = !isRegister;
+      document.getElementById("formTitle").textContent = isRegister ? "Registracija" : "Prijava";
+      document.getElementById("actionBtn").textContent = isRegister ? "Registracija" : "Prijava";
+      document.querySelector(".toggle").textContent = isRegister
+        ? "Imaš račun? Prijavi se"
+        : "Nimaš računa? Registriraj se";
+      document.getElementById("actionBtn").setAttribute("onclick", isRegister ? "register()" : "login()");
+    }
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -118,9 +153,7 @@
             window.location.href = "slychat.html";
           });
         })
-        .catch((error) => {
-          alert(error.message);
-        });
+        .catch((error) => alert(error.message));
     }
 
     function login() {
@@ -130,12 +163,8 @@
       if (!email || !pass) return alert("Vnesi email in geslo.");
 
       auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          window.location.href = "slychat.html";
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+        .then(() => window.location.href = "slychat.html")
+        .catch((error) => alert(error.message));
     }
   </script>
 </body>
