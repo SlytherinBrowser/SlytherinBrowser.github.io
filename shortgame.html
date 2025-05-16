@@ -1,95 +1,107 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Spomin</title>
     <style>
+        /* Reset */
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #e0e0e0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
         }
-
         header {
-            background-color: #4CAF50;
-            color: white;
+            background-color: #1f4068;
+            padding: 1.2rem 0;
             text-align: center;
-            padding: 1em 0;
-            width: 100%;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-
         main {
+            flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-grow: 1;
+            padding: 2rem;
         }
-
         #memory-game {
             display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 10px;
-            margin: 20px;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 15px;
         }
-
         .memory-card {
-            width: 80px;
-            height: 80px;
-            background-color: #ddd;
+            width: 100px;
+            height: 100px;
+            background-color: #34495e;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, background-color 0.3s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            user-select: none;
+            font-weight: 700;
+            font-size: 0; /* skrijemo tekst, če bo */
         }
-
         .memory-card.flipped {
             background-color: var(--card-color);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 1.5rem;
+            box-shadow: 0 6px 15px var(--card-color);
+            transform: scale(1.05);
         }
-
         .memory-card:hover {
-            background-color: #ccc;
+            filter: brightness(1.1);
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Spomin</h1>
+        Spomin
     </header>
     <main>
-        <div id="memory-game">
-            <!-- Kartice za igro spomina bodo dodane tukaj -->
-        </div>
+        <div id="memory-game"></div>
     </main>
 
     <script>
-        const colorsArray = [
-            '#FF5733', '#33FF57', '#3357FF', '#FF33A8', '#FFC733', '#33FFF7', '#8D33FF', '#FF8333',
-            '#C70039', '#581845', '#900C3F', '#DAF7A6', '#FFC300', '#FF5733', '#C70039', '#581845',
-            '#900C3F', '#DAF7A6', '#FFC300', '#33FF57', '#3357FF', '#FF33A8', '#FFC733', '#33FFF7'
+        // Imamo 8 različnih barv (točno 8 parov)
+        const colors = [
+            '#e74c3c', // rdeča
+            '#3498db', // modra
+            '#2ecc71', // zelena
+            '#f1c40f', // rumena
+            '#9b59b6', // vijolična
+            '#e67e22', // oranžna
+            '#1abc9c', // turkizna
+            '#34495e'  // temno modra
         ];
 
-        const gameGrid = colorsArray.concat(colorsArray).sort(() => 0.5 - Math.random());
+        // Podvoji barve in premešaj
+        const colorPairs = [...colors, ...colors]
+            .sort(() => Math.random() - 0.5);
 
-        const game = document.getElementById('memory-game');
+        const gameBoard = document.getElementById('memory-game');
 
-        gameGrid.forEach((color, index) => {
+        // Ustvarimo kartice
+        colorPairs.forEach(color => {
             const card = document.createElement('div');
             card.classList.add('memory-card');
             card.dataset.color = color;
             card.style.setProperty('--card-color', color);
             card.addEventListener('click', flipCard);
-            game.appendChild(card);
+            gameBoard.appendChild(card);
         });
 
         let firstCard = null;
@@ -97,24 +109,28 @@
         let lockBoard = false;
 
         function flipCard() {
-            if (lockBoard) return;
-            if (this === firstCard) return;
+            if(lockBoard) return;
+            if(this === firstCard) return;
 
             this.classList.add('flipped');
-            this.style.backgroundColor = this.dataset.color;
 
-            if (!firstCard) {
+            if(!firstCard) {
                 firstCard = this;
                 return;
             }
 
             secondCard = this;
-            checkForMatch();
+            checkMatch();
         }
 
-        function checkForMatch() {
-            let isMatch = firstCard.dataset.color === secondCard.dataset.color;
-            isMatch ? disableCards() : unflipCards();
+        function checkMatch() {
+            const isMatch = firstCard.dataset.color === secondCard.dataset.color;
+
+            if(isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
         }
 
         function disableCards() {
@@ -130,8 +146,6 @@
             setTimeout(() => {
                 firstCard.classList.remove('flipped');
                 secondCard.classList.remove('flipped');
-                firstCard.style.backgroundColor = '#ddd';
-                secondCard.style.backgroundColor = '#ddd';
 
                 resetBoard();
             }, 1000);
