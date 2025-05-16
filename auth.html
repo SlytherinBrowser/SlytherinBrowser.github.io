@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Slychat - Prijava / Registracija</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Prijava / Registracija</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- Stil -->
   <style>
     * {
       box-sizing: border-box;
@@ -99,11 +97,23 @@
 </head>
 <body>
   <div class="container">
-    <h2 id="formTitle">Prijava</h2>
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Geslo" />
-    <button id="actionBtn" onclick="login()">Prijava</button>
-    <div class="toggle" onclick="toggleForm()">Nimaš računa? Registriraj se</div>
+    <!-- PRIJAVA -->
+    <div id="loginForm">
+      <h2>Prijava</h2>
+      <input type="email" id="logEmail" placeholder="Email">
+      <input type="password" id="logPass" placeholder="Geslo">
+      <button onclick="login()">Prijavi se</button>
+      <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
+    </div>
+
+    <!-- REGISTRACIJA -->
+    <div id="registerForm" class="hidden">
+      <h2>Registracija</h2>
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPass" placeholder="Geslo">
+      <button onclick="register()">Registriraj</button>
+      <div class="toggle" onclick="toggleForms()">Že imaš račun? Prijavi se</div>
+    </div>
   </div>
 
   <script>
@@ -111,61 +121,36 @@
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
       projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
+      storageBucket: "chater-cf682.firebasestorage.app",
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-      measurementId: "G-32E3BYYLKS",
-      databaseURL: "https://chater-cf682-default-rtdb.europe-west1.firebasedatabase.app/"
+      measurementId: "G-32E3BYYLKS"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
-
-    let isRegister = false;
-
-    function toggleForm() {
-      isRegister = !isRegister;
-      document.getElementById("formTitle").textContent = isRegister ? "Registracija" : "Prijava";
-      document.getElementById("actionBtn").textContent = isRegister ? "Registracija" : "Prijava";
-      document.querySelector(".toggle").textContent = isRegister
-        ? "Imaš račun? Prijavi se"
-        : "Nimaš računa? Registriraj se";
-      document.getElementById("actionBtn").setAttribute("onclick", isRegister ? "register()" : "login()");
-    }
 
     function register() {
-      const email = document.getElementById("email").value.trim();
-      const pass = document.getElementById("password").value.trim();
-
-      if (!email || !pass) return alert("Vnesi email in geslo.");
-
+      const email = document.getElementById("regEmail").value;
+      const pass = document.getElementById("regPass").value;
       auth.createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          const userKey = email.replace(/\./g, "_");
-
-          db.ref(`users/${userKey}`).set({
-            email: user.email,
-            uid: user.uid
-          }).then(() => {
-            alert("Registracija uspešna!");
-            window.location.href = "slychat.html";
-          });
-        })
-        .catch((error) => alert(error.message));
+        .then(() => alert("Registracija uspešna"))
+        .catch(error => alert(error.message));
     }
 
     function login() {
-      const email = document.getElementById("email").value.trim();
-      const pass = document.getElementById("password").value.trim();
-
-      if (!email || !pass) return alert("Vnesi email in geslo.");
-
+      const email = document.getElementById("logEmail").value;
+      const pass = document.getElementById("logPass").value;
       auth.signInWithEmailAndPassword(email, pass)
         .then(() => window.location.href = "slychat.html")
-        .catch((error) => alert(error.message));
+        .catch(error => alert(error.message));
     }
+
+    function toggleForms() {
+      document.getElementById("loginForm").classList.toggle("hidden");
+      document.getElementById("registerForm").classList.toggle("hidden");
+    }
+    
   </script>
 </body>
 </html>
