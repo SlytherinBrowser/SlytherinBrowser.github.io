@@ -67,32 +67,23 @@
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
       word-wrap: break-word;
       font-size: 0.95em;
+      position: relative;
+      transition: color 0.3s ease;
+    }
+
+    #chatBox div.hidden-message {
+      color: transparent;
+      cursor: default;
+    }
+    #chatBox div.hidden-message:hover {
+      color: #fff;
+      background-color: rgba(0,0,0,0.8);
     }
 
     #chatBox .sender {
       font-weight: 600;
       color: #ffd700;
       margin-right: 6px;
-    }
-
-    /* Skrita sporočila - prozorna, vidna ob hover */
-    #chatBox div.hidden-message {
-      color: transparent;
-      background-color: rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      transition: color 0.3s ease;
-      user-select: none;
-    }
-
-    #chatBox div.hidden-message:hover {
-      color: #fff;
-      user-select: text;
-    }
-
-    /* Zasebna sporočila drugačna barva (le za primer) */
-    #chatBox div.private-message {
-      background-color: rgba(100, 0, 100, 0.7);
-      font-style: italic;
     }
 
     input[type='text'] {
@@ -139,7 +130,7 @@
   <div class="container">
     <h2>Slychat</h2>
     <div id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." autocomplete="off" />
+    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
       <button class="btn" onclick="logout()">Odjava</button>
@@ -165,31 +156,12 @@
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
 
-    // Cache za uporabniška imena in UID-je
     const userNamesCache = {};
-    const userIdsByName = {};
 
-    async function refreshUsersCache() {
-      try {
-        const snapshot = await db.ref('users').once('value');
-        const users = snapshot.val() || {};
-        Object.entries(users).forEach(([uid, data]) => {
-          if (data.displayName) {
-            userNamesCache[uid] = data.displayName;
-            userIdsByName[data.displayName.toLowerCase()] = uid;
-          }
-        });
-      } catch {
-        // ignore errors
-      }
-    }
-
-    auth.onAuthStateChanged(async user => {
+    auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "auth.html";
       } else {
-        await refreshUsersCache();
-
         db.ref("messages").on("child_added", async snapshot => {
           const msg = snapshot.val();
           const senderUid = msg.uid;
@@ -201,30 +173,23 @@
               const userData = userSnap.val();
               displayName = userData && userData.displayName ? userData.displayName : "Anonimen";
               userNamesCache[senderUid] = displayName;
-              userIdsByName[displayName.toLowerCase()] = senderUid;
             } catch {
               displayName = "Anonimen";
             }
           }
 
-          // Če je sporočilo zasebno, pokaži samo pošiljatelju in prejemniku
-          if (msg.privateTo) {
-            const currentUser = auth.currentUser;
-            if (
-              currentUser.uid !== senderUid &&
-              currentUser.uid !== msg.privateTo
-            ) {
-              return; // ne prikaži sporočila
-            }
+          // Skrivanje @omen sporočil: če je msg.to določen in ni naš user, skrijemo
+          const currentUser = auth.currentUser;
+          if (msg.to && msg.to !== currentUser.uid) {
+            // Sporočila za druge uporabnike ne prikažemo
+            return;
           }
 
           const div = document.createElement("div");
 
+          // Če je skrito sporočilo (hidden=true), dodamo razred za CSS
           if (msg.hidden) {
             div.classList.add("hidden-message");
-          }
-          if (msg.privateTo) {
-            div.classList.add("private-message");
           }
 
           const senderSpan = document.createElement("span");
@@ -232,6 +197,7 @@
           senderSpan.textContent = displayName + ": ";
 
           const messageText = document.createElement("span");
+          // Prikažemo sporočilo brez začetne @ime in brez začetne zvezdice *
           messageText.textContent = msg.text;
 
           div.appendChild(senderSpan);
@@ -243,10 +209,65 @@
       }
     });
 
-    messageInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        if (event.ctrlKey) {
+    // Funkcija pošiljanja sporočila
+    function sendMessage(isHidden = false) {
+      const user = auth.currentUser;
+      let text = messageInput.value.trim();
+      if (!text) return;
+
+      // Če začne z zvezdico, označi hidden in odstrani zvezdico iz besedila
+      if (text.startsWith("*")) {
+        isHidden = true;
+        text = text.substring(1).trim();
+      }
+
+      // Če je zasebno sporočilo (omemba @imeuporabnika)
+      let toUserUid = null;
+      if (text.startsWith("@")) {
+        // Poišči ime uporabnika do prve presledka
+        const spaceIndex = text.indexOf(" ");
+        if (spaceIndex !== -1) {
+          const mentionedName = text.substring(1, spaceIndex).trim().toLowerCase();
+
+          // Poišči uporabnika po imenu v bazi (async je problem, zato uporabimo callback spodaj)
+          db.ref("users").orderByChild("displayNameLower").equalTo(mentionedName).limitToFirst(1).once("value", snapshot => {
+            const val = snapshot.val();
+            if (val) {
+              const keys = Object.keys(val);
+              if (keys.length > 0) {
+                toUserUid = keys[0];
+                const msgText = text.substring(spaceIndex + 1).trim();
+                if (!msgText) return; // brez besedila ne pošljemo
+
+                db.ref("messages").push({
+                  uid: user.uid,
+                  text: msgText,
+                  to: toUserUid,
+                  hidden: isHidden
+                });
+              }
+            }
+          });
+          messageInput.value = "";
+          return; // zaključimo tukaj, ker async poizvedba
+        }
+      }
+
+      // Za navadno sporočilo (ali skrito z zvezdico, če ni @)
+      db.ref("messages").push({
+        uid: user.uid,
+        text: text,
+        hidden: isHidden
+      });
+
+      messageInput.value = "";
+    }
+
+    // Enter za pošiljanje, Ctrl+Enter za skrito
+    messageInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
           sendMessage(true);
         } else {
           sendMessage(false);
@@ -254,62 +275,8 @@
       }
     });
 
-    async function sendMessage(isHidden = false) {
-      const user = auth.currentUser;
-      let text = messageInput.value.trim();
-      if (!text) return;
-
-      if (text === "/clearchat") {
-        db.ref("messages")
-          .remove()
-          .then(() => {
-            chatBox.innerHTML = "";
-            alert("Klepetalnica je bila pobrisana.");
-          })
-          .catch(error => alert("Napaka pri brisanju: " + error.message));
-        messageInput.value = "";
-        return;
-      }
-
-      // Če je sporočilo v obliki @ime nekaj, pošlji zasebno sporočilo brez @ime v prikazu
-      let privateTo = null;
-      if (text.startsWith("@")) {
-        const spaceIndex = text.indexOf(" ");
-        if (spaceIndex !== -1) {
-          const mentionedName = text.slice(1, spaceIndex).toLowerCase();
-          privateTo = userIdsByName[mentionedName];
-          if (!privateTo) {
-            alert("Uporabnik s tem imenom ne obstaja.");
-            return;
-          }
-          text = text.slice(spaceIndex + 1).trim(); // Odstrani @ime iz prikaza sporočila
-          if (!text) {
-            alert("Prosim vpiši sporočilo za poslati.");
-            return;
-          }
-        }
-      }
-
-      const messageData = {
-        uid: user.uid,
-        text: text,
-        timestamp: Date.now(),
-        hidden: isHidden,
-        privateTo: privateTo,
-      };
-
-      try {
-        await db.ref("messages").push(messageData);
-        messageInput.value = "";
-      } catch (error) {
-        alert("Napaka pri pošiljanju: " + error.message);
-      }
-    }
-
     function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "auth.html";
-      });
+      auth.signOut().then(() => (window.location.href = "auth.html"));
     }
   </script>
 </body>
