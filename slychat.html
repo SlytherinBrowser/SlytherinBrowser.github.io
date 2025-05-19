@@ -31,7 +31,6 @@
     .container {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
       padding: 30px;
       border-radius: 16px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
@@ -64,16 +63,32 @@
       border-radius: 12px;
       padding: 10px 15px;
       color: #fff;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
       word-wrap: break-word;
       font-size: 0.95em;
       position: relative;
     }
 
-    #chatBox .sender {
+    .sender {
       font-weight: 600;
       color: #ffd700;
       margin-right: 6px;
+    }
+
+    .hiddenMessage .realText {
+      display: none;
+    }
+
+    .hiddenMessage:hover .realText {
+      display: inline;
+    }
+
+    .hiddenMessage:hover .hiddenText {
+      display: none;
+    }
+
+    .hiddenText {
+      font-style: italic;
+      color: #ccc;
     }
 
     input[type='text'] {
@@ -109,17 +124,6 @@
       gap: 10px;
     }
 
-    .delete-btn {
-      position: absolute;
-      top: 4px;
-      right: 8px;
-      background: transparent;
-      border: none;
-      color: red;
-      cursor: pointer;
-      font-size: 1em;
-    }
-
     @media (max-width: 480px) {
       .actions {
         flex-direction: column;
@@ -131,7 +135,7 @@
   <div class="container">
     <h2>Slychat</h2>
     <div id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." onkeydown="handleKeyDown(event)" />
+    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
       <button class="btn" onclick="logout()">Odjava</button>
@@ -146,8 +150,7 @@
       projectId: "chater-cf682",
       storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-      measurementId: "G-32E3BYYLKS"
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -156,120 +159,129 @@
 
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
+
     const userNamesCache = {};
 
-    function handleKeyDown(event) {
-      if (event.key === "Enter") {
-        if (event.ctrlKey) sendMessage(true);
-        else sendMessage();
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "auth.html";
+      } else {
+        db.ref("messages").on("child_added", async snapshot => {
+          const msg = snapshot.val();
+          const senderUid = msg.uid;
+
+          let displayName = userNamesCache[senderUid];
+          if (!displayName) {
+            try {
+              const userSnap = await db.ref('users/' + senderUid).once('value');
+              const userData = userSnap.val();
+              displayName = userData?.displayName || "Anonimen";
+              userNamesCache[senderUid] = displayName;
+            } catch {
+              displayName = "Anonimen";
+            }
+          }
+
+          // Filtriraj omembe
+          if (msg.mention && msg.mention !== user.uid && msg.uid !== user.uid) return;
+
+          const div = document.createElement("div");
+
+          const senderSpan = document.createElement("span");
+          senderSpan.classList.add("sender");
+          senderSpan.textContent = displayName + ": ";
+
+          const hiddenText = document.createElement("span");
+          hiddenText.classList.add("hiddenText");
+          hiddenText.textContent = "Zasebno sporočilo";
+
+          const realText = document.createElement("span");
+          realText.classList.add("realText");
+          realText.textContent = msg.text;
+
+          if (msg.hidden) {
+            div.classList.add("hiddenMessage");
+            div.appendChild(senderSpan);
+            div.appendChild(hiddenText);
+            div.appendChild(realText);
+          } else {
+            div.appendChild(senderSpan);
+            div.appendChild(realText);
+          }
+
+          chatBox.appendChild(div);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
       }
-    }
+    });
 
-    function sendMessage(forceHidden = false) {
+    function sendMessage(isHidden = false) {
       const user = auth.currentUser;
-      if (!user) return;
-      const raw = messageInput.value.trim();
-      if (!raw) return;
+      const text = messageInput.value.trim();
+      if (!text) return;
 
-      if (raw === "/clearchat") {
+      if (text === "/clearchat") {
         db.ref("messages").remove().then(() => {
           chatBox.innerHTML = "";
           alert("Klepetalnica je bila pobrisana.");
-        });
-        messageInput.value = "";
+        }).catch(error => alert("Napaka pri brisanju: " + error.message));
         return;
       }
 
-      const hidden = forceHidden || raw.startsWith("*");
-      const cleanedText = raw.replace(/^\*/, "").trim();
+      let hidden = false;
+      let cleanText = text;
 
-      const mentionMatch = cleanedText.match(/^@(\w+)\s+/);
+      if (text.startsWith("*") || isHidden) {
+        hidden = true;
+        cleanText = text.startsWith("*") ? text.slice(1).trim() : text;
+      }
+
+      let mentionedUid = null;
+      const mentionMatch = cleanText.match(/^@(\w+)/);
       if (mentionMatch) {
-        const mentionedName = mentionMatch[1];
-        const messageBody = cleanedText.replace(/^@\w+\s+/, "");
-
-        db.ref("users").once("value", snap => {
-          const users = snap.val();
-          let foundUid = null;
+        const mentionedName = mentionMatch[1].toLowerCase();
+        db.ref("users").once("value").then(snapshot => {
+          const users = snapshot.val();
           for (const uid in users) {
-            if (users[uid].displayName === mentionedName) {
-              foundUid = uid;
+            if (users[uid].displayName.toLowerCase() === mentionedName) {
+              mentionedUid = uid;
+              cleanText = cleanText.replace(/^@\w+/, '').trim();
               break;
             }
           }
+
           db.ref("messages").push({
             uid: user.uid,
-            text: messageBody,
-            hidden: false,
-            mentionUid: foundUid || null
+            text: cleanText,
+            hidden,
+            mention: mentionedUid || null
           });
+          messageInput.value = "";
         });
-
       } else {
         db.ref("messages").push({
           uid: user.uid,
-          text: cleanedText,
-          hidden: hidden,
-          mentionUid: null
+          text: cleanText,
+          hidden,
+          mention: null
         });
+        messageInput.value = "";
       }
-
-      messageInput.value = "";
     }
-
-    auth.onAuthStateChanged(user => {
-      if (!user) return window.location.href = "auth.html";
-
-      db.ref("messages").on("child_added", async snapshot => {
-        const msg = snapshot.val();
-        const key = snapshot.key;
-
-        const isMentioned = msg.mentionUid === user.uid;
-        const isSender = msg.uid === user.uid;
-        const isVisible = !msg.hidden || isSender || isMentioned;
-
-        if (!isVisible) return;
-
-        let name = userNamesCache[msg.uid];
-        if (!name) {
-          const uSnap = await db.ref("users/" + msg.uid).once("value");
-          name = uSnap.val()?.displayName || "Anonimen";
-          userNamesCache[msg.uid] = name;
-        }
-
-        const div = document.createElement("div");
-        if (msg.hidden && !isSender) {
-          div.style.opacity = "0.2";
-          div.onmouseover = () => div.style.opacity = "1";
-          div.onmouseout = () => div.style.opacity = "0.2";
-        }
-
-        const sender = document.createElement("span");
-        sender.className = "sender";
-        sender.textContent = name + ": ";
-
-        const msgText = document.createElement("span");
-        msgText.textContent = msg.text;
-
-        div.appendChild(sender);
-        div.appendChild(msgText);
-
-        if (isSender) {
-          const delBtn = document.createElement("button");
-          delBtn.className = "delete-btn";
-          delBtn.textContent = "🗑️";
-          delBtn.onclick = () => db.ref("messages/" + key).remove().then(() => div.remove());
-          div.appendChild(delBtn);
-        }
-
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-    });
 
     function logout() {
       auth.signOut().then(() => (window.location.href = "auth.html"));
     }
+
+    messageInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        if (e.ctrlKey) {
+          sendMessage(true);
+        } else {
+          sendMessage();
+        }
+      }
+    });
   </script>
 </body>
 </html>
