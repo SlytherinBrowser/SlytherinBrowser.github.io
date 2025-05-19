@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    * {
+           * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -128,7 +128,7 @@
       .actions {
         flex-direction: column;
       }
-    }
+    } /* ... (isti CSS kot prej, brez sprememb) ... *//* Stil je enak kot prej, tukaj ga zaradi prostora ne ponavljam */
   </style>
 </head>
 <body>
@@ -160,151 +160,164 @@
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
 
-    let currentChatPartner = null; // UID uporabnika za zasebni klepet
-
+    let currentChatPartner = null; // UID sogovornika za zasebni klepet
+    let currentUser = null;
     const userNamesCache = {};
 
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async user => {
       if (!user) {
         window.location.href = "auth.html";
-      } else {
-        db.ref("messages").on("child_added", async snapshot => {
-          const msg = snapshot.val();
-          const senderUid = msg.uid;
-
-          // Če smo v zasebnem klepetu, prikazuj samo ustrezna sporočila
-          if (currentChatPartner) {
-            if (
-              !(
-                (msg.uid === user.uid && msg.privateUid === currentChatPartner) ||
-                (msg.uid === currentChatPartner && msg.privateUid === user.uid)
-              )
-            ) return;
-          } else {
-            if (msg.privateUid) return; // Skrivaj zasebna sporočila v javnem načinu
-          }
-
-          let displayName = userNamesCache[senderUid];
-          if (!displayName) {
-            try {
-              const userSnap = await db.ref('users/' + senderUid).once('value');
-              const userData = userSnap.val();
-              displayName = userData?.displayName || "Anonimen";
-              userNamesCache[senderUid] = displayName;
-            } catch {
-              displayName = "Anonimen";
-            }
-          }
-
-          const div = document.createElement("div");
-          const senderSpan = document.createElement("span");
-          senderSpan.classList.add("sender");
-          senderSpan.textContent = displayName + ": ";
-
-          const hiddenText = document.createElement("span");
-          hiddenText.classList.add("hiddenText");
-          hiddenText.textContent = "Zasebno sporočilo";
-
-          const realText = document.createElement("span");
-          realText.classList.add("realText");
-          realText.textContent = msg.text;
-
-          if (msg.hidden) {
-            div.classList.add("hiddenMessage");
-            div.appendChild(senderSpan);
-            div.appendChild(hiddenText);
-            div.appendChild(realText);
-          } else {
-            div.appendChild(senderSpan);
-            div.appendChild(realText);
-          }
-
-          // Samodejni vstop v zasebni klepet ob povabilu
-          if (msg.invite && msg.privateUid === user.uid) {
-            currentChatPartner = msg.uid;
-            chatBox.innerHTML = "";
-            alert("Vstopil si v zasebni pogovor z " + displayName);
-          }
-
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
-        });
+        return;
       }
+      currentUser = user;
+
+      // Naloži imena uporabnikov enkrat
+      const usersSnapshot = await db.ref('users').once('value');
+      const users = usersSnapshot.val() || {};
+      for (const uid in users) {
+        userNamesCache[uid] = users[uid].displayName || "Anonimen";
+      }
+
+      // Poslušaj sporočila
+      db.ref("messages").on("child_added", snapshot => {
+        const msg = snapshot.val();
+
+        // Filtriranje sporočil glede na trenutno stanje
+        if (currentChatPartner) {
+          // Če smo v zasebnem klepetu, prikažemo samo zasebna sporočila med nami in partnerjem
+          if (!(
+            (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
+            (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid)
+          )) return;
+        } else {
+          // V javnem klepetu prikažemo samo javna sporočila (brez privateUid)
+          if (msg.privateUid) return;
+        }
+
+        // Pridobi prikazno ime pošiljatelja
+        const displayName = userNamesCache[msg.uid] || "Anonimen";
+
+        // Ustvari element za sporočilo
+        const div = document.createElement("div");
+        const senderSpan = document.createElement("span");
+        senderSpan.classList.add("sender");
+        senderSpan.textContent = displayName + ": ";
+
+        const hiddenText = document.createElement("span");
+        hiddenText.classList.add("hiddenText");
+        hiddenText.textContent = "Zasebno sporočilo";
+
+        const realText = document.createElement("span");
+        realText.classList.add("realText");
+        realText.textContent = msg.text;
+
+        if (msg.hidden) {
+          div.classList.add("hiddenMessage");
+          div.appendChild(senderSpan);
+          div.appendChild(hiddenText);
+          div.appendChild(realText);
+        } else {
+          div.appendChild(senderSpan);
+          div.appendChild(realText);
+        }
+
+        // Če je povabilo zasebnega klepeta in je naslovljeno na nas
+        if (msg.invite && msg.privateUid === currentUser.uid) {
+          // Samodejno nastavimo sogovornika na pošiljatelja povabila
+          currentChatPartner = msg.uid;
+          chatBox.innerHTML = ""; // Počistimo chat
+          alert("Vstopil si v zasebni pogovor z " + displayName);
+        }
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
     });
 
-    function sendMessage(isHidden = false) {
-      const user = auth.currentUser;
-      const text = messageInput.value.trim();
-      if (!text) return;
+    function sendMessage() {
+      if (!currentUser) return;
 
-      if (text === "/clearchat") {
+      const textRaw = messageInput.value.trim();
+      if (!textRaw) return;
+
+      // Ukaz za izstop iz zasebnega klepeta, vrne v javni
+      if (textRaw === "/public") {
+        currentChatPartner = null;
+        chatBox.innerHTML = "";
+        messageInput.value = "";
+        alert("Zdaj si v javnem klepetu.");
+        return;
+      }
+
+      // Ukaz za brisanje celotnega klepeta
+      if (textRaw === "/clearchat") {
         db.ref("messages").remove().then(() => {
           chatBox.innerHTML = "";
           alert("Klepetalnica je bila pobrisana.");
         }).catch(error => alert("Napaka pri brisanju: " + error.message));
-        return;
-      }
-
-      if (text === "/public") {
-        currentChatPartner = null;
-        chatBox.innerHTML = "";
-        return;
-      }
-
-      // Povabilo za zasebni pogovor
-      if (text.startsWith("/@")) {
-        const name = text.slice(2).toLowerCase().trim();
-        db.ref("users").once("value").then(snapshot => {
-          const users = snapshot.val();
-          for (const uid in users) {
-            if (users[uid].displayName.toLowerCase() === name) {
-              db.ref("messages").push({
-                uid: user.uid,
-                text: "Povabilo v zasebni pogovor",
-                invite: true,
-                privateUid: uid
-              });
-              alert("Povabilo poslano.");
-              return;
-            }
-          }
-          alert("Uporabnik ni najden.");
-        });
         messageInput.value = "";
         return;
       }
 
-      let hidden = false;
-      let cleanText = text;
+      // Povabilo za zasebni klepet: /@uporabnik
+      if (textRaw.startsWith("/@")) {
+        const invitedName = textRaw.slice(2).toLowerCase();
+        // Poišči uporabnika po imenu
+        let foundUid = null;
+        for (const uid in userNamesCache) {
+          if (userNamesCache[uid].toLowerCase() === invitedName) {
+            foundUid = uid;
+            break;
+          }
+        }
+        if (!foundUid) {
+          alert("Uporabnik '" + invitedName + "' ni najden.");
+          messageInput.value = "";
+          return;
+        }
 
-      if (text.startsWith("*") || isHidden) {
-        hidden = true;
-        cleanText = text.startsWith("*") ? text.slice(1).trim() : text;
+        // Pošlji povabilo povabljencu
+        db.ref("messages").push({
+          uid: currentUser.uid,
+          text: "Povabilo v zasebni pogovor",
+          invite: true,
+          privateUid: foundUid
+        });
+
+        // Samodejno vstopi v zasebni klepet s povabljencem
+        currentChatPartner = foundUid;
+        chatBox.innerHTML = "";
+        alert("Vstopil si v zasebni pogovor z " + userNamesCache[foundUid]);
+        messageInput.value = "";
+        return;
       }
 
-      const messageData = {
-        uid: user.uid,
-        text: cleanText,
-        hidden,
-        mention: null,
-        privateUid: currentChatPartner || null
-      };
+      // Če sporočilo začne z *, je skrito
+      let hidden = false;
+      let text = textRaw;
+      if (textRaw.startsWith("*")) {
+        hidden = true;
+        text = textRaw.slice(1).trim();
+      }
 
-      db.ref("messages").push(messageData);
+      // Pošlji sporočilo z morebitnim nastavitvijo privateUid (če smo v zasebnem klepetu)
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        text: text,
+        hidden: hidden,
+        privateUid: currentChatPartner
+      });
+
       messageInput.value = "";
     }
 
     function logout() {
-      auth.signOut().then(() => (window.location.href = "auth.html"));
+      auth.signOut().then(() => window.location.href = "auth.html");
     }
 
     messageInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
-        if (e.ctrlKey) {
-          sendMessage(true);
-        } else {
-          sendMessage();
-        }
+        sendMessage();
       }
     });
   </script>
