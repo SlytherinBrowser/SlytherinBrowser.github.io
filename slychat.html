@@ -11,7 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    * {
+       * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -128,7 +128,7 @@
       .actions {
         flex-direction: column;
       }
-    }
+    } /* ... (isti CSS kot prej, brez sprememb) ... */
   </style>
 </head>
 <body>
@@ -160,6 +160,8 @@
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
 
+    let currentChatPartner = null; // UID uporabnika v zasebnem klepetu
+
     const userNamesCache = {};
 
     auth.onAuthStateChanged(user => {
@@ -169,6 +171,18 @@
         db.ref("messages").on("child_added", async snapshot => {
           const msg = snapshot.val();
           const senderUid = msg.uid;
+
+          // Če smo v zasebnem klepetu, prikazuj samo ustrezna sporočila
+          if (currentChatPartner) {
+            if (
+              !(
+                (msg.uid === user.uid && msg.privateUid === currentChatPartner) ||
+                (msg.uid === currentChatPartner && msg.privateUid === user.uid)
+              )
+            ) return;
+          } else {
+            if (msg.privateUid) return; // Skrivaj zasebna sporočila v javnem načinu
+          }
 
           let displayName = userNamesCache[senderUid];
           if (!displayName) {
@@ -182,11 +196,7 @@
             }
           }
 
-          // Filtriraj omembe
-          if (msg.mention && msg.mention !== user.uid && msg.uid !== user.uid) return;
-
           const div = document.createElement("div");
-
           const senderSpan = document.createElement("span");
           senderSpan.classList.add("sender");
           senderSpan.textContent = displayName + ": ";
@@ -209,6 +219,20 @@
             div.appendChild(realText);
           }
 
+          // Povabilo za zasebni pogovor
+          if (msg.invite && msg.privateUid === user.uid) {
+            const btn = document.createElement("button");
+            btn.textContent = "Zasebni pogovor";
+            btn.classList.add("btn");
+            btn.onclick = () => {
+              currentChatPartner = msg.uid;
+              chatBox.innerHTML = "";
+              alert("Vstopil si v zasebni pogovor z " + displayName);
+            };
+            div.appendChild(document.createElement("br"));
+            div.appendChild(btn);
+          }
+
           chatBox.appendChild(div);
           chatBox.scrollTop = chatBox.scrollHeight;
         });
@@ -228,6 +252,35 @@
         return;
       }
 
+      if (text === "/public") {
+        currentChatPartner = null;
+        chatBox.innerHTML = "";
+        return;
+      }
+
+      // Povabilo za zasebni pogovor
+      if (text.startsWith("/@")) {
+        const name = text.slice(2).toLowerCase().trim();
+        db.ref("users").once("value").then(snapshot => {
+          const users = snapshot.val();
+          for (const uid in users) {
+            if (users[uid].displayName.toLowerCase() === name) {
+              db.ref("messages").push({
+                uid: user.uid,
+                text: "Povabilo v zasebni pogovor",
+                invite: true,
+                privateUid: uid
+              });
+              alert("Povabilo poslano.");
+              return;
+            }
+          }
+          alert("Uporabnik ni najden.");
+        });
+        messageInput.value = "";
+        return;
+      }
+
       let hidden = false;
       let cleanText = text;
 
@@ -236,37 +289,16 @@
         cleanText = text.startsWith("*") ? text.slice(1).trim() : text;
       }
 
-      let mentionedUid = null;
-      const mentionMatch = cleanText.match(/^@(\w+)/);
-      if (mentionMatch) {
-        const mentionedName = mentionMatch[1].toLowerCase();
-        db.ref("users").once("value").then(snapshot => {
-          const users = snapshot.val();
-          for (const uid in users) {
-            if (users[uid].displayName.toLowerCase() === mentionedName) {
-              mentionedUid = uid;
-              cleanText = cleanText.replace(/^@\w+/, '').trim();
-              break;
-            }
-          }
+      const messageData = {
+        uid: user.uid,
+        text: cleanText,
+        hidden,
+        mention: null,
+        privateUid: currentChatPartner || null
+      };
 
-          db.ref("messages").push({
-            uid: user.uid,
-            text: cleanText,
-            hidden,
-            mention: mentionedUid || null
-          });
-          messageInput.value = "";
-        });
-      } else {
-        db.ref("messages").push({
-          uid: user.uid,
-          text: cleanText,
-          hidden,
-          mention: null
-        });
-        messageInput.value = "";
-      }
+      db.ref("messages").push(messageData);
+      messageInput.value = "";
     }
 
     function logout() {
