@@ -72,6 +72,7 @@
       font-weight: 600;
       color: #ffd700;
       margin-right: 6px;
+      cursor: pointer; /* dodano za vizualni znak */
     }
 
     .hiddenMessage .realText {
@@ -128,7 +129,7 @@
       .actions {
         flex-direction: column;
       }
-    } /* ... (isti CSS kot prej, brez sprememb) ... */
+    }
   </style>
 </head>
 <body>
@@ -197,9 +198,19 @@
           }
 
           const div = document.createElement("div");
+
+          // **SPREMEMBA: klikabilno ime za začetek zasebnega klepeta**
           const senderSpan = document.createElement("span");
           senderSpan.classList.add("sender");
           senderSpan.textContent = displayName + ": ";
+          senderSpan.style.cursor = "pointer";
+          senderSpan.title = "Klikni za zasebni pogovor";
+          senderSpan.onclick = () => {
+            if (user.uid === senderUid) return; // ne dovoli zasebnega klepeta sam s sabo
+            currentChatPartner = senderUid;
+            chatBox.innerHTML = "";
+            alert("Vstopil si v zasebni pogovor z " + displayName);
+          };
 
           const hiddenText = document.createElement("span");
           hiddenText.classList.add("hiddenText");
@@ -258,7 +269,7 @@
         return;
       }
 
-      // Povabilo za zasebni pogovor
+      // Povabilo za zasebni pogovor z ukazom /@imeuporabnika
       if (text.startsWith("/@")) {
         const name = text.slice(2).toLowerCase().trim();
         db.ref("users").once("value").then(snapshot => {
