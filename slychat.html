@@ -68,16 +68,6 @@
       word-wrap: break-word;
       font-size: 0.95em;
       position: relative;
-      transition: color 0.3s ease;
-    }
-
-    #chatBox div.hidden-message {
-      color: transparent;
-      cursor: default;
-    }
-    #chatBox div.hidden-message:hover {
-      color: #fff;
-      background-color: rgba(0,0,0,0.8);
     }
 
     #chatBox .sender {
@@ -119,6 +109,17 @@
       gap: 10px;
     }
 
+    .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: red;
+      cursor: pointer;
+      font-size: 1em;
+    }
+
     @media (max-width: 480px) {
       .actions {
         flex-direction: column;
@@ -130,7 +131,7 @@
   <div class="container">
     <h2>Slychat</h2>
     <div id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
+    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." onkeydown="handleKeyDown(event)" />
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
       <button class="btn" onclick="logout()">Odjava</button>
@@ -143,7 +144,7 @@
       authDomain: "chater-cf682.firebaseapp.com",
       databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
       projectId: "chater-cf682",
-      storageBucket: "chater-cf682.firebasestorage.app",
+      storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
       measurementId: "G-32E3BYYLKS"
@@ -155,124 +156,115 @@
 
     const chatBox = document.getElementById("chatBox");
     const messageInput = document.getElementById("messageInput");
-
     const userNamesCache = {};
 
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        db.ref("messages").on("child_added", async snapshot => {
-          const msg = snapshot.val();
-          const senderUid = msg.uid;
+    function handleKeyDown(event) {
+      if (event.key === "Enter") {
+        if (event.ctrlKey) sendMessage(true);
+        else sendMessage();
+      }
+    }
 
-          let displayName = userNamesCache[senderUid];
-          if (!displayName) {
-            try {
-              const userSnap = await db.ref('users/' + senderUid).once('value');
-              const userData = userSnap.val();
-              displayName = userData && userData.displayName ? userData.displayName : "Anonimen";
-              userNamesCache[senderUid] = displayName;
-            } catch {
-              displayName = "Anonimen";
+    function sendMessage(forceHidden = false) {
+      const user = auth.currentUser;
+      if (!user) return;
+      const raw = messageInput.value.trim();
+      if (!raw) return;
+
+      if (raw === "/clearchat") {
+        db.ref("messages").remove().then(() => {
+          chatBox.innerHTML = "";
+          alert("Klepetalnica je bila pobrisana.");
+        });
+        messageInput.value = "";
+        return;
+      }
+
+      const hidden = forceHidden || raw.startsWith("*");
+      const cleanedText = raw.replace(/^\*/, "").trim();
+
+      const mentionMatch = cleanedText.match(/^@(\w+)\s+/);
+      if (mentionMatch) {
+        const mentionedName = mentionMatch[1];
+        const messageBody = cleanedText.replace(/^@\w+\s+/, "");
+
+        db.ref("users").once("value", snap => {
+          const users = snap.val();
+          let foundUid = null;
+          for (const uid in users) {
+            if (users[uid].displayName === mentionedName) {
+              foundUid = uid;
+              break;
             }
           }
+          db.ref("messages").push({
+            uid: user.uid,
+            text: messageBody,
+            hidden: false,
+            mentionUid: foundUid || null
+          });
+        });
 
-          // Skrivanje @omen sporočil: če je msg.to določen in ni naš user, skrijemo
-          const currentUser = auth.currentUser;
-          if (msg.to && msg.to !== currentUser.uid) {
-            // Sporočila za druge uporabnike ne prikažemo
-            return;
-          }
-
-          const div = document.createElement("div");
-
-          // Če je skrito sporočilo (hidden=true), dodamo razred za CSS
-          if (msg.hidden) {
-            div.classList.add("hidden-message");
-          }
-
-          const senderSpan = document.createElement("span");
-          senderSpan.classList.add("sender");
-          senderSpan.textContent = displayName + ": ";
-
-          const messageText = document.createElement("span");
-          // Prikažemo sporočilo brez začetne @ime in brez začetne zvezdice *
-          messageText.textContent = msg.text;
-
-          div.appendChild(senderSpan);
-          div.appendChild(messageText);
-
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
+      } else {
+        db.ref("messages").push({
+          uid: user.uid,
+          text: cleanedText,
+          hidden: hidden,
+          mentionUid: null
         });
       }
-    });
-
-    // Funkcija pošiljanja sporočila
-    function sendMessage(isHidden = false) {
-      const user = auth.currentUser;
-      let text = messageInput.value.trim();
-      if (!text) return;
-
-      // Če začne z zvezdico, označi hidden in odstrani zvezdico iz besedila
-      if (text.startsWith("*")) {
-        isHidden = true;
-        text = text.substring(1).trim();
-      }
-
-      // Če je zasebno sporočilo (omemba @imeuporabnika)
-      let toUserUid = null;
-      if (text.startsWith("@")) {
-        // Poišči ime uporabnika do prve presledka
-        const spaceIndex = text.indexOf(" ");
-        if (spaceIndex !== -1) {
-          const mentionedName = text.substring(1, spaceIndex).trim().toLowerCase();
-
-          // Poišči uporabnika po imenu v bazi (async je problem, zato uporabimo callback spodaj)
-          db.ref("users").orderByChild("displayNameLower").equalTo(mentionedName).limitToFirst(1).once("value", snapshot => {
-            const val = snapshot.val();
-            if (val) {
-              const keys = Object.keys(val);
-              if (keys.length > 0) {
-                toUserUid = keys[0];
-                const msgText = text.substring(spaceIndex + 1).trim();
-                if (!msgText) return; // brez besedila ne pošljemo
-
-                db.ref("messages").push({
-                  uid: user.uid,
-                  text: msgText,
-                  to: toUserUid,
-                  hidden: isHidden
-                });
-              }
-            }
-          });
-          messageInput.value = "";
-          return; // zaključimo tukaj, ker async poizvedba
-        }
-      }
-
-      // Za navadno sporočilo (ali skrito z zvezdico, če ni @)
-      db.ref("messages").push({
-        uid: user.uid,
-        text: text,
-        hidden: isHidden
-      });
 
       messageInput.value = "";
     }
 
-    // Enter za pošiljanje, Ctrl+Enter za skrito
-    messageInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (e.ctrlKey || e.metaKey) {
-          sendMessage(true);
-        } else {
-          sendMessage(false);
+    auth.onAuthStateChanged(user => {
+      if (!user) return window.location.href = "auth.html";
+
+      db.ref("messages").on("child_added", async snapshot => {
+        const msg = snapshot.val();
+        const key = snapshot.key;
+
+        const isMentioned = msg.mentionUid === user.uid;
+        const isSender = msg.uid === user.uid;
+        const isVisible = !msg.hidden || isSender || isMentioned;
+
+        if (!isVisible) return;
+
+        let name = userNamesCache[msg.uid];
+        if (!name) {
+          const uSnap = await db.ref("users/" + msg.uid).once("value");
+          name = uSnap.val()?.displayName || "Anonimen";
+          userNamesCache[msg.uid] = name;
         }
-      }
+
+        const div = document.createElement("div");
+        if (msg.hidden && !isSender) {
+          div.style.opacity = "0.2";
+          div.onmouseover = () => div.style.opacity = "1";
+          div.onmouseout = () => div.style.opacity = "0.2";
+        }
+
+        const sender = document.createElement("span");
+        sender.className = "sender";
+        sender.textContent = name + ": ";
+
+        const msgText = document.createElement("span");
+        msgText.textContent = msg.text;
+
+        div.appendChild(sender);
+        div.appendChild(msgText);
+
+        if (isSender) {
+          const delBtn = document.createElement("button");
+          delBtn.className = "delete-btn";
+          delBtn.textContent = "🗑️";
+          delBtn.onclick = () => db.ref("messages/" + key).remove().then(() => div.remove());
+          div.appendChild(delBtn);
+        }
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
     });
 
     function logout() {
