@@ -159,16 +159,16 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// Naloži in poslušaj sporočila
+// Funkcija za nalaganje sporočil z ustreznim filtriranjem
 function loadMessages() {
   db.ref("messages").off(); // odstranimo stare poslušalce
+  const currentUser = auth.currentUser;
 
   db.ref("messages").on("child_added", async snapshot => {
     const msg = snapshot.val();
     const senderUid = msg.uid;
-    const currentUser = auth.currentUser;
 
-    // Pridobi uporabniško ime pošiljatelja, shrani v cache
+    // Pridobi uporabniško ime pošiljatelja iz cache ali iz baze
     let displayName = userNamesCache[senderUid];
     if (!displayName) {
       try {
@@ -197,27 +197,28 @@ function loadMessages() {
 
     // Filtriranje sporočil glede na trenutno stanje klepeta
 
+    // Če imamo aktivni zasebni klepet, prikazujemo samo sporočila med nama
     if (privateChatWith) {
-      // V zasebnem klepetu pokaži samo sporočila med mano in sogovornikom
       const isBetween = (msg.uid === currentUser.uid && msg.to === privateChatWith)
         || (msg.uid === privateChatWith && msg.to === currentUser.uid);
-      if (!isBetween) return;
+      if (!isBetween) return; // preskoči ostala sporočila
+
+      // Prikaži samo zasebna sporočila med nama (type: "private")
+      if (msg.type !== "private") return;
     } else {
-      // Javni klepet - prikaži:
-      // - vsa javna sporočila (msg.to ni nastavljeno)
-      // - omembe (@ime) so vidne samo pošiljatelju ali prejemniku
+      // Javni klepet - prikazujemo samo javna sporočila (brez 'to' ali z 'type' ne "private" in ne "mention")
       if (msg.to) {
-        // Če je omemba
+        // Če je omemba, prikažemo samo pošiljatelju in prejemniku
         if (msg.type === "mention") {
           if (msg.uid !== currentUser.uid && msg.to !== currentUser.uid) return;
         } else {
-          // ostala zasebna sporočila ne pokaži v javnem
+          // Ostala zasebna sporočila ne prikazujemo v javnem klepetu
           return;
         }
       }
     }
 
-    // Pripravi prikaz sporočila
+    // Priprava prikaza sporočila
     const div = document.createElement("div");
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
@@ -257,29 +258,23 @@ function sendMessage() {
     const name = text.slice(2).toLowerCase();
     db.ref("users").once("value").then(snapshot => {
       const users = snapshot.val();
-      let foundUser = null;
       for (const uid in users) {
         if (users[uid].displayName.toLowerCase() === name) {
-          foundUser = { uid, displayName: users[uid].displayName };
+          // pošlji povabilo naslovniku
+          db.ref("messages").push({
+            uid: user.uid,
+            to: uid,
+            type: "invite",
+            text: "Vabilo v zasebni klepet"
+          }).then(() => {
+            // Pošlji povabilo in samodejno preklopi v zasebni klepet
+            privateChatWith = uid;
+            chatTitle.textContent = "Zasebno s: " + users[uid].displayName;
+            chatBox.innerHTML = "";
+            loadMessages();
+          });
           break;
         }
-      }
-      if (foundUser) {
-        // Pošlji povabilo naslovniku
-        db.ref("messages").push({
-          uid: user.uid,
-          to: foundUser.uid,
-          type: "invite",
-          text: "Vabilo v zasebni klepet"
-        }).then(() => {
-          // Pošlji povabilo in samodejno preklopi v zasebni klepet
-          privateChatWith = foundUser.uid;
-          chatTitle.textContent = "Zasebno s: " + foundUser.displayName;
-          chatBox.innerHTML = "";
-          loadMessages();
-        });
-      } else {
-        alert("Uporabnik s tem imenom ne obstaja.");
       }
     });
     messageInput.value = "";
@@ -293,22 +288,16 @@ function sendMessage() {
     const content = text.slice(spaceIndex + 1);
     db.ref("users").once("value").then(snapshot => {
       const users = snapshot.val();
-      let foundUser = null;
       for (const uid in users) {
         if (users[uid].displayName.toLowerCase() === name) {
-          foundUser = uid;
+          db.ref("messages").push({
+            uid: user.uid,
+            text: content,
+            to: uid,
+            type: "mention"
+          });
           break;
         }
-      }
-      if (foundUser) {
-        db.ref("messages").push({
-          uid: user.uid,
-          text: content,
-          to: foundUser,
-          type: "mention"
-        });
-      } else {
-        alert("Uporabnik za omembo ne obstaja.");
       }
     });
     messageInput.value = "";
@@ -362,12 +351,14 @@ function sendMessage() {
     .catch(err => alert("Napaka pri pošiljanju: " + err.message));
 }
 
+// Odjava
 function logout() {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
   });
 }
 
+// Po pritisku Enter pošlji sporočilo
 messageInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
     sendMessage();
