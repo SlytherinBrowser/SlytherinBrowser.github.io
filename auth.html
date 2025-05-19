@@ -118,14 +118,15 @@
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.firebasestorage.app",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-      measurementId: "G-32E3BYYLKS"
-    };
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.firebasestorage.app",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    measurementId: "G-32E3BYYLKS"
+  };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
