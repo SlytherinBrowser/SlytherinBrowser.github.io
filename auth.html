@@ -8,9 +8,10 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    * {
+   * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
@@ -92,7 +93,7 @@
 
     .hidden {
       display: none;
-    }
+    } /* ...tvoja obstoječa CSS koda ostane enaka... */
   </style>
 </head>
 <body>
@@ -109,6 +110,7 @@
     <!-- REGISTRACIJA -->
     <div id="registerForm" class="hidden">
       <h2>Registracija</h2>
+      <input type="text" id="regName" placeholder="Ime"> <!-- NOVO polje za ime -->
       <input type="email" id="regEmail" placeholder="Email">
       <input type="password" id="regPass" placeholder="Geslo">
       <button onclick="register()">Registriraj</button>
@@ -118,29 +120,56 @@
 
   <script>
     const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.firebasestorage.app",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-    measurementId: "G-32E3BYYLKS"
-  };
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.firebasestorage.app",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+      measurementId: "G-32E3BYYLKS"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
     function register() {
-      const email = document.getElementById("regEmail").value;
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
       const pass = document.getElementById("regPass").value;
+
+      if (!name) {
+        alert("Prosim, vnesi svoje ime.");
+        return;
+      }
+      if (!email) {
+        alert("Prosim, vnesi email.");
+        return;
+      }
+      if (!pass) {
+        alert("Prosim, vnesi geslo.");
+        return;
+      }
+
       auth.createUserWithEmailAndPassword(email, pass)
-        .then(() => alert("Registracija uspešna"))
+        .then(userCredential => {
+          const user = userCredential.user;
+          // Shrani ime v bazo pod 'users/{uid}'
+          return db.ref('users/' + user.uid).set({
+            displayName: name,
+            email: email
+          });
+        })
+        .then(() => {
+          alert("Registracija uspešna!");
+          window.location.href = "slychat.html";
+        })
         .catch(error => alert(error.message));
     }
 
     function login() {
-      const email = document.getElementById("logEmail").value;
+      const email = document.getElementById("logEmail").value.trim();
       const pass = document.getElementById("logPass").value;
       auth.signInWithEmailAndPassword(email, pass)
         .then(() => window.location.href = "slychat.html")
@@ -151,7 +180,6 @@
       document.getElementById("loginForm").classList.toggle("hidden");
       document.getElementById("registerForm").classList.toggle("hidden");
     }
-    
   </script>
 </body>
 </html>
