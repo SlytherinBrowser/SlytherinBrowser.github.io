@@ -138,6 +138,7 @@
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
@@ -153,188 +154,224 @@
       if (!user) {
         window.location.href = "auth.html";
       } else {
-        loadMessages();
+        loadUserNames().then(() => loadMessages());
       }
     });
 
+    async function loadUserNames() {
+      const snapshot = await db.ref('users').once('value');
+      const users = snapshot.val() || {};
+      for (const uid in users) {
+        userNamesCache[uid] = users[uid].displayName || "Anonimen";
+      }
+    }
+
     function loadMessages() {
+      chatBox.innerHTML = "";
       db.ref("messages").off();
-      db.ref("messages").on("child_added", async snapshot => {
+      db.ref("messages").on("child_added", snapshot => {
         const msg = snapshot.val();
-        const senderUid = msg.uid;
         const currentUser = auth.currentUser;
 
-        // Povabila za zasebni klepet - samo prejemnik jih vidi
-        if (msg.type === "invite" && msg.to === currentUser.uid) {
-          const div = document.createElement("div");
-          div.innerHTML = `<span class='private-invite'>[Klikni za zasebni klepet s ${userNamesCache[msg.uid] || "uporabnikom"}]</span>`;
-          div.querySelector(".private-invite").addEventListener("click", () => {
-            privateChatWith = msg.uid;
-            chatTitle.textContent = "Zasebno s: " + (userNamesCache[msg.uid] || "Anonimen");
-            chatBox.innerHTML = "";
-            loadMessages();
-          });
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
-          return;
-        }
-
-        // Pridobi ime pošiljatelja, če še ni v cacheu
-        let displayName = userNamesCache[senderUid];
-        if (!displayName) {
-          try {
-            const userSnap = await db.ref('users/' + senderUid).once('value');
-            displayName = userSnap.val()?.displayName || "Anonimen";
-            userNamesCache[senderUid] = displayName;
-          } catch {
-            displayName = "Anonimen";
+        // Filter prikaza glede na tip sporočila in klepet
+        if (msg.type === "invite") {
+          // Povabilo za zasebni klepet, če si ti prejemnik
+          if (msg.to === currentUser.uid) {
+            const div = document.createElement("div");
+            div.innerHTML = `<span class='private-invite'>[Klikni za zasebni klepet s ${userNamesCache[msg.uid] || "Anonimen"}]</span>`;
+            div.querySelector(".private-invite").addEventListener("click", () => {
+              privateChatWith = msg.uid;
+              chatTitle.textContent = "Zasebno s: " + (userNamesCache[msg.uid] || "Anonimen");
+              chatBox.innerHTML = "";
+              loadMessages();
+            });
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return;
+          } else {
+            return; // Povabila ne prikazujemo ostalim
           }
         }
 
-        // Filtriranje sporočil glede na zasebni klepet ali javni
+        // Filtriranje sporočil za zasebni klepet
         if (privateChatWith) {
-          // V zasebnem klepetu prikaži samo sporočila med uporabnikoma
-          const isRelevant = 
+          // Prikaži samo sporočila med nama dvema
+          if (
             (msg.uid === currentUser.uid && msg.to === privateChatWith) ||
-            (msg.uid === privateChatWith && msg.to === currentUser.uid);
-          if (!isRelevant) return;
-        } else {
-          // V javnem klepetu ne prikaži zasebnih sporočil ali povabil
-          if (msg.to && msg.type !== "mention") return;
-        }
-
-        // Priprava elementov za prikaz sporočila
-        const div = document.createElement("div");
-        const senderSpan = document.createElement("span");
-        senderSpan.classList.add("sender");
-        senderSpan.textContent = displayName + ": ";
-
-        const realText = document.createElement("span");
-        realText.classList.add("realText");
-        realText.textContent = msg.text;
-
-        // Skrito sporočilo
-        if (msg.hidden) {
-          const hiddenText = document.createElement("span");
-          hiddenText.classList.add("hiddenText");
-          hiddenText.textContent = "Skrito sporočilo";
-
-          div.classList.add("hiddenMessage");
-          div.appendChild(senderSpan);
-          div.appendChild(hiddenText);
-          div.appendChild(realText);
-        } else {
-          div.appendChild(senderSpan);
-          div.appendChild(realText);
-        }
-
-        // Če je zasebno sporočilo (tip "mention" ali ima polje to), prikaži samo pošiljatelju in prejemniku v javnem klepetu
-        if (!privateChatWith && msg.to) {
-          if (msg.uid !== currentUser.uid && msg.to !== currentUser.uid) {
-            return; // ne prikaži drugim
+            (msg.uid === privateChatWith && msg.to === currentUser.uid)
+          ) {
+            displayMessage(msg);
           }
+          // druga sporočila ne prikaži
+          return;
+        } else {
+          // Javni klepet: prikaži samo sporočila, ki niso zasebna ali omemba
+          if (msg.to) return;         // sporočila z določ. prejemnikom (zasebna) ne pokaži
+          if (msg.type === "mention") return;  // omembe v javnem klepetu niso vidne
+          displayMessage(msg);
         }
-
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
       });
     }
 
-    function sendMessage(isHidden = false) {
+    function displayMessage(msg) {
+      const div = document.createElement("div");
+      const senderName = userNamesCache[msg.uid] || "Anonimen";
+      const senderSpan = document.createElement("span");
+      senderSpan.classList.add("sender");
+      senderSpan.textContent = senderName + ": ";
+
+      const realText = document.createElement("span");
+      realText.classList.add("realText");
+      realText.textContent = msg.text;
+
+      if (msg.hidden) {
+        const hiddenText = document.createElement("span");
+        hiddenText.classList.add("hiddenText");
+        hiddenText.textContent = "Skrito sporočilo";
+
+        div.classList.add("hiddenMessage");
+        div.appendChild(senderSpan);
+        div.appendChild(hiddenText);
+        div.appendChild(realText);
+      } else {
+        div.appendChild(senderSpan);
+        div.appendChild(realText);
+      }
+
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
       const user = auth.currentUser;
       let text = messageInput.value.trim();
       if (!text) return;
 
-      // Povabilo za zasebni klepet: /@uporabnik
+      // Povabilo v zasebni klepet - ukaz: /@uporabnik
       if (text.startsWith("/@")) {
         const name = text.slice(2).toLowerCase();
         db.ref("users").once("value").then(snapshot => {
-          const users = snapshot.val();
+          const users = snapshot.val() || {};
+          let found = false;
           for (const uid in users) {
             if (users[uid].displayName.toLowerCase() === name) {
-              // Pošlji povabilo za zasebni klepet prejemniku (uid)
-              const currentUser = auth.currentUser;
-              // Pošlji povabilo v bazo
+              found = true;
+              // Pošlji povabilo
               db.ref("messages").push({
-                uid: currentUser.uid,
+                uid: user.uid,
                 to: uid,
-                text: `${userNamesCache[currentUser.uid] || 'Jaz'} te vabi v zasebni klepet.`,
                 type: "invite",
+                text: `${userNamesCache[user.uid] || 'Jaz'} te vabi v zasebni klepet.`,
                 timestamp: Date.now()
               });
-
               // Pošiljatelj samodejno odpre zasebni klepet
               privateChatWith = uid;
               chatTitle.textContent = "Zasebno s: " + users[uid].displayName;
               chatBox.innerHTML = "";
               loadMessages();
               messageInput.value = "";
-              return;
+              break;
             }
           }
-          alert("Uporabnik s tem imenom ne obstaja.");
+          if (!found) alert("Uporabnik s tem imenom ne obstaja.");
         });
         return;
       }
 
-      // Ukazi
+      // Omemba @uporabnik sporočilo
+      if (text.startsWith("@")) {
+        const spaceIndex = text.indexOf(" ");
+        if (spaceIndex === -1) {
+          alert("Prosim, vpiši sporočilo za omembo.");
+          return;
+        }
+        const name = text.slice(1, spaceIndex).toLowerCase();
+        const content = text.slice(spaceIndex + 1);
+        db.ref("users").once("value").then(snapshot => {
+          const users = snapshot.val() || {};
+          let found = false;
+          for (const uid in users) {
+            if (users[uid].displayName.toLowerCase() === name) {
+              found = true;
+              db.ref("messages").push({
+                uid: user.uid,
+                text: content,
+                to: uid,
+                type: "mention",
+                timestamp: Date.now()
+              });
+              break;
+            }
+          }
+          if (!found) alert("Uporabnik s tem imenom ne obstaja.");
+        });
+        messageInput.value = "";
+        return;
+      }
+
+      // Ukaz za preklop nazaj na javni klepet
       if (text === "/public") {
         privateChatWith = null;
-        chatTitle.textContent = "Javni klepet";
+        chatTitle.textContent = "Slychat";
         chatBox.innerHTML = "";
         loadMessages();
         messageInput.value = "";
         return;
       }
 
+      // Ukaz za čiščenje javnega klepeta
       if (text === "/clearchat") {
-        if (!privateChatWith) {
-          // Brisanje javnega klepeta
-          db.ref("messages").remove();
-          chatBox.innerHTML = "";
-          messageInput.value = "";
-          return;
-        } else {
-          alert("Brisanje zasebnega klepeta ni podprto.");
+        if (privateChatWith) {
+          alert("Brisanje klepeta je dovoljeno samo v javnem klepetu.");
           return;
         }
+        db.ref("messages").remove()
+          .then(() => {
+            chatBox.innerHTML = "";
+            alert("Klepet je bil pobrisan.");
+          })
+          .catch(error => alert("Napaka pri brisanju: " + error.message));
+        messageInput.value = "";
+        return;
       }
 
-      // Skrito sporočilo - začne se z zvezdico *
+    // Skrito sporočilo - začne z *
       if (text.startsWith("*")) {
-        isHidden = true;
-        text = text.slice(1).trim();
+        const realText = text.slice(1).trim();
+        if (!realText) {
+          alert("Prosim, vpiši sporočilo za skrito sporočilo.");
+          return;
+        }
+        db.ref("messages").push({
+          uid: user.uid,
+          text: realText,
+          hidden: true,
+          timestamp: Date.now()
+        });
+        messageInput.value = "";
+        return;
       }
 
-      // Pripravi objekt sporočila
-      const messageObj = {
-        uid: auth.currentUser.uid,
+      // Navadno sporočilo - če smo v zasebnem klepetu, pošljemo s prejemnikom
+      const messageData = {
+        uid: user.uid,
         text: text,
-        timestamp: Date.now(),
-        hidden: isHidden
+        timestamp: Date.now()
       };
-
-      // Če je zasebni klepet, dodaj prejemnika (to)
       if (privateChatWith) {
-        messageObj.to = privateChatWith;
+        messageData.to = privateChatWith;
+        messageData.type = "private";
+      } else {
+        messageData.type = "public";
       }
 
-      db.ref("messages").push(messageObj);
+      db.ref("messages").push(messageData);
       messageInput.value = "";
     }
 
     function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "auth.html";
-      });
+      auth.signOut();
     }
-
-    // Ob pritisku na Enter pošlji sporočilo
-    messageInput.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        sendMessage();
-      }
-    });
   </script>
 </body>
 </html>
