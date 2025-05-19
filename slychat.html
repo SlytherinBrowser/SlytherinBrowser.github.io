@@ -1,364 +1,341 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Slychat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    body {
-      background: url('slika.png') no-repeat center center fixed;
-      background-size: cover;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-    }
-    .container {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-      width: 90%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    h2 {
-      text-align: center;
-      font-weight: 500;
-    }
-    #chatBox {
-      height: 300px;
-      overflow-y: auto;
-      padding: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    #chatBox div {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 12px;
-      padding: 10px 15px;
-      color: #fff;
-      word-wrap: break-word;
-      font-size: 0.95em;
-      position: relative;
-    }
-    .sender {
-      font-weight: 600;
-      color: #ffd700;
-      margin-right: 6px;
-    }
-    .hiddenMessage .realText {
-      display: none;
-    }
-    .hiddenMessage:hover .realText {
-      display: inline;
-    }
-    .hiddenMessage:hover .hiddenText {
-      display: none;
-    }
-    .hiddenText {
-      font-style: italic;
-      color: #ccc;
-    }
-    input[type='text'] {
-      padding: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      color: white;
-      outline: none;
-    }
-    input::placeholder {
-      color: rgba(255, 255, 255, 0.6);
-    }
-    .btn {
-      padding: 10px;
-      background-color: rgba(255, 255, 255, 0.15);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .btn:hover {
-      background-color: rgba(255, 255, 255, 0.25);
-    }
-    .actions {
-      display: flex;
-      gap: 10px;
-    }
-    @media (max-width: 480px) {
-      .actions {
-        flex-direction: column;
-      }
-    }
-    .private-invite {
-      color: #90ee90;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Slychat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+  body {
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex; justify-content: center; align-items: center; height: 100vh;
+  }
+  .container {
+    background: rgba(0,0,0,0.7);
+    padding: 20px;
+    border-radius: 12px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  #chatTitle {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  #chatBox {
+    background: #333;
+    height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #chatBox div {
+    padding: 6px 10px;
+    border-radius: 10px;
+    word-wrap: break-word;
+  }
+  .msg-sender {
+    font-weight: bold;
+    margin-right: 6px;
+    color: #ffd700;
+  }
+  .hidden-message {
+    font-style: italic;
+    color: #888;
+    cursor: pointer;
+  }
+  .hidden-message:hover .real-text {
+    display: inline;
+  }
+  .real-text {
+    display: none;
+  }
+  .input-row {
+    display: flex;
+    gap: 6px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    font-size: 1em;
+  }
+  button {
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #4caf50;
+    color: white;
+    font-weight: bold;
+  }
+  .private-invite {
+    color: #90ee90;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2 id="chatTitle">Slychat</h2>
-    <div id="chatBox"></div>
-    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." autocomplete="off" />
-    <div class="actions">
-      <button class="btn" onclick="sendMessage()">Pošlji</button>
-      <button class="btn" onclick="logout()">Odjava</button>
-    </div>
+<div class="container">
+  <h2 id="chatTitle">Javni klepet</h2>
+  <div id="chatBox"></div>
+  <div class="input-row">
+    <input id="messageInput" type="text" placeholder="Vpiši sporočilo..." autocomplete="off" />
+    <button onclick="sendMessage()">Pošlji</button>
   </div>
+  <button onclick="logout()" style="margin-top:10px;">Odjava</button>
+</div>
 
-  <script>
-    // Firebase konfiguracija
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
-    firebase.initializeApp(firebaseConfig);
+<script>
+  // Firebase config (prilagodi za svoj projekt)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
 
-    const auth = firebase.auth();
-    const db = firebase.database();
+  const chatBox = document.getElementById("chatBox");
+  const messageInput = document.getElementById("messageInput");
+  const chatTitle = document.getElementById("chatTitle");
 
-    const chatBox = document.getElementById("chatBox");
-    const messageInput = document.getElementById("messageInput");
-    const chatTitle = document.getElementById("chatTitle");
+  let privateChatWith = null;  // UID sogovornika za zasebni klepet
+  let currentUser = null;
+  let usersCache = {};
 
-    let privateChatWith = null; // trenutno izbran sogovornik za zasebni klepet
-    const userNamesCache = {};
-
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        loadMessages();
-      }
-    });
-
-    // Naloži in poslušaj sporočila
-    function loadMessages() {
-      db.ref("messages").off(); // odstranimo stare poslušalce
-
-      db.ref("messages").on("child_added", async snapshot => {
-        const msg = snapshot.val();
-        const senderUid = msg.uid;
-        const currentUser = auth.currentUser;
-
-        // Pridobi uporabniško ime pošiljatelja, shrani v cache
-        let displayName = userNamesCache[senderUid];
-        if (!displayName) {
-          try {
-            const userSnap = await db.ref('users/' + senderUid).once('value');
-            displayName = userSnap.val()?.displayName || "Anonimen";
-            userNamesCache[senderUid] = displayName;
-          } catch {
-            displayName = "Anonimen";
-          }
-        }
-
-        // Če je povabilo za zasebni klepet in naslovnik sem jaz
-        if (msg.type === "invite" && msg.to === currentUser.uid) {
-          const div = document.createElement("div");
-          div.innerHTML = `<span class='private-invite'>[Vabilo za zasebni klepet od ${displayName} - klikni za odprtje]</span>`;
-          div.querySelector(".private-invite").addEventListener("click", () => {
-            privateChatWith = senderUid;
-            chatTitle.textContent = "Zasebno s: " + displayName;
-            chatBox.innerHTML = "";
-            loadMessages();
-          });
-          chatBox.appendChild(div);
-          chatBox.scrollTop = chatBox.scrollHeight;
-          return;
-        }
-
-        // Filtriranje sporočil glede na trenutno stanje klepeta
-
-        // Zasebni klepet: prikaži samo med pošiljateljem in izbranim prejemnikom
-        if (privateChatWith) {
-          const isBetween = (msg.uid === currentUser.uid && msg.to === privateChatWith)
-            || (msg.uid === privateChatWith && msg.to === currentUser.uid);
-          if (!isBetween) return; // preskoči ostala sporočila
-        } else {
-          // Javni klepet: prikaži samo sporočila, ki niso zasebna in niso omembe zasebnih
-          if (msg.to) {
-            if (msg.type === "mention") {
-              // Omemba naj bo vidna samo pošiljatelju in prejemniku
-              if (msg.uid !== currentUser.uid && msg.to !== currentUser.uid) return;
-            } else {
-              // Ostala zasebna sporočila preskoči
-              return;
-            }
-          }
-        }
-
-        // Pripravi prikaz sporočila
-        const div = document.createElement("div");
-        const senderSpan = document.createElement("span");
-        senderSpan.classList.add("sender");
-        senderSpan.textContent = displayName + ": ";
-
-        const realText = document.createElement("span");
-        realText.classList.add("realText");
-        realText.textContent = msg.text;
-
-        if (msg.hidden) {
-          const hiddenText = document.createElement("span");
-          hiddenText.classList.add("hiddenText");
-          hiddenText.textContent = "Skrito sporočilo";
-
-          div.classList.add("hiddenMessage");
-          div.appendChild(senderSpan);
-          div.appendChild(hiddenText);
-          div.appendChild(realText);
-        } else {
-          div.appendChild(senderSpan);
-          div.appendChild(realText);
-        }
-
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
+  // Preveri avtentikacijo
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "auth.html";
+    } else {
+      currentUser = user;
+      loadUsers();
+      listenMessages();
     }
+  });
 
-    // Pošlji sporočilo
-    function sendMessage() {
-      const user = auth.currentUser;
-      let text = messageInput.value.trim();
-      if (!text) return;
+  // Naloži uporabnike v cache
+  function loadUsers() {
+    db.ref("users").once("value").then(snap => {
+      usersCache = snap.val() || {};
+    });
+  }
 
-      // Ukaz za povabilo v zasebni klepet: /@ime
-      if (text.startsWith("/@")) {
-        const name = text.slice(2).toLowerCase();
-        db.ref("users").once("value").then(snapshot => {
-          const users = snapshot.val();
-          for (const uid in users) {
-            if (users[uid].displayName.toLowerCase() === name) {
-              // pošlji povabilo naslovniku
-              db.ref("messages").push({
-                uid: user.uid,
-                to: uid,
-                type: "invite",
-                text: "Vabilo v zasebni klepet"
-              }).then(() => {
-                // Pošlji povabilo in samodejno preklopi v zasebni klepet
-                privateChatWith = uid;
-                chatTitle.textContent = "Zasebno s: " + users[uid].displayName;
-                chatBox.innerHTML = "";
-                loadMessages();
-              });
-              break;
-            }
-          }
-        });
-        messageInput.value = "";
-        return;
-      }
+  // Pridobi ime uporabnika glede na UID
+  function getUserName(uid) {
+    return (usersCache[uid] && usersCache[uid].displayName) || "Anonimno";
+  }
 
-      // Omemba: @ime sporočilo (vidno samo pošiljatelju in prejemniku)
-      if (text.startsWith("@") && text.indexOf(" ") > 1) {
-        const spaceIndex = text.indexOf(" ");
-        const name = text.slice(1, spaceIndex).toLowerCase();
-        const content = text.slice(spaceIndex + 1);
-        db.ref("users").once("value").then(snapshot => {
-          const users = snapshot.val();
-          for (const uid in users) {
-            if (users[uid].displayName.toLowerCase() === name) {
-              db.ref("messages").push({
-                uid: user.uid,
-                text: content,
-                to: uid,
-                type: "mention"
-              });
-              break;
-            }
-          }
-        });
-        messageInput.value = "";
-        return;
-      }
+  // Poslušaj sporočila
+  function listenMessages() {
+    db.ref("messages").off();
+    chatBox.innerHTML = "";
 
-      // Ukaz za javni klepet: /public
-      if (text === "/public") {
-        privateChatWith = null;
-        chatTitle.textContent = "Slychat";
-        chatBox.innerHTML = "";
-        loadMessages();
-        messageInput.value = "";
-        return;
-      }
+    db.ref("messages").on("child_added", snap => {
+      const msg = snap.val();
+      if (!msg) return;
 
-      // Ukaz za brisanje javnega klepeta: /clearchat (samo v javnem)
-      if (text === "/clearchat") {
-        if (privateChatWith) {
-          alert("Brisanje klepeta je dovoljeno samo v javnem klepetu.");
-          return;
-        }
-        db.ref("messages").remove().then(() => {
+      // Odgovor na povabilo za zasebni klepet
+      if (msg.type === "invite" && msg.to === currentUser.uid) {
+        const fromName = getUserName(msg.uid);
+        const inviteDiv = document.createElement("div");
+        inviteDiv.classList.add("private-invite");
+        inviteDiv.textContent = `Vabilo za zasebni klepet od ${fromName} (klikni tukaj)`;
+        inviteDiv.onclick = () => {
+          privateChatWith = msg.uid;
+          chatTitle.textContent = `Zasebno s: ${fromName}`;
           chatBox.innerHTML = "";
-          alert("Klepet je bil pobrisan.");
-        }).catch(error => alert("Napaka pri brisanju: " + error.message));
-        messageInput.value = "";
+          listenMessages();
+        };
+        chatBox.appendChild(inviteDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
         return;
       }
 
-      // Skrito sporočilo, začne se z *
-      let isHidden = false;
-      if (text.startsWith("*")) {
-        text = text.slice(1);
-        isHidden = true;
+      // Filtriranje sporočil glede na trenutno klepet
+      if (privateChatWith) {
+        // Prikažemo samo sporočila med nami in sogovornikom
+        if (!((msg.uid === currentUser.uid && msg.to === privateChatWith) || (msg.uid === privateChatWith && msg.to === currentUser.uid))) {
+          return;
+        }
+      } else {
+        // V javnem klepetu prikažemo samo javna sporočila ali omembe, ki so namenjene nam ali ki jih pošljemo mi
+        if (msg.to) {
+          if (msg.type === "mention") {
+            if (msg.uid !== currentUser.uid && msg.to !== currentUser.uid) return;
+          } else {
+            return; // Preskoči ostale zasebne
+          }
+        }
       }
 
-      // Priprava podatkov sporočila
-      const messageData = {
-        uid: user.uid,
-        text,
-        hidden: isHidden,
-        to: privateChatWith || null,
-        type: privateChatWith ? "private" : null
-      };
+      // Pripravi element sporočila
+      const div = document.createElement("div");
+      const senderSpan = document.createElement("span");
+      senderSpan.classList.add("msg-sender");
+      senderSpan.textContent = getUserName(msg.uid) + ": ";
 
-      db.ref("messages").push(messageData)
-        .then(() => {
-          messageInput.value = "";
-        })
-        .catch(err => alert("Napaka pri pošiljanju: " + err.message));
-    }
-
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "auth.html";
-      });
-    }
-
-    messageInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        sendMessage();
+      // Skrito sporočilo
+      if (msg.hidden) {
+        div.classList.add("hidden-message");
+        div.appendChild(senderSpan);
+        const hiddenSpan = document.createElement("span");
+        hiddenSpan.textContent = "Skrito sporočilo (pomiči za prikaz)";
+        const realTextSpan = document.createElement("span");
+        realTextSpan.classList.add("real-text");
+        realTextSpan.textContent = msg.text;
+        div.appendChild(hiddenSpan);
+        div.appendChild(realTextSpan);
+      } else {
+        div.appendChild(senderSpan);
+        div.appendChild(document.createTextNode(msg.text));
       }
+
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
     });
-  </script>
+  }
+
+  // Pošlji sporočilo
+  function sendMessage() {
+    if (!currentUser) return;
+
+    let text = messageInput.value.trim();
+    if (!text) return;
+
+    // Ukaz za zasebni klepet: /@ime
+    if (text.startsWith("/@")) {
+      const name = text.slice(2).toLowerCase();
+      let foundUid = null;
+      for (const uid in usersCache) {
+        if (usersCache[uid].displayName.toLowerCase() === name) {
+          foundUid = uid;
+          break;
+        }
+      }
+      if (!foundUid) {
+        alert("Uporabnik ne obstaja.");
+        messageInput.value = "";
+        return;
+      }
+      // Pošlji povabilo
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        to: foundUid,
+        type: "invite",
+        text: "Vabilo za zasebni klepet"
+      }).then(() => {
+        privateChatWith = foundUid;
+        chatTitle.textContent = "Zasebno s: " + usersCache[foundUid].displayName;
+        chatBox.innerHTML = "";
+        listenMessages();
+      });
+      messageInput.value = "";
+      return;
+    }
+
+    // Ukaz za javni klepet
+    if (text === "/public") {
+      privateChatWith = null;
+      chatTitle.textContent = "Javni klepet";
+      chatBox.innerHTML = "";
+      listenMessages();
+      messageInput.value = "";
+      return;
+    }
+
+    // Ukaz za brisanje javnega klepeta
+    if (text === "/clearchat") {
+      if (privateChatWith) {
+        alert("Brisanje je možno samo v javnem klepetu.");
+        messageInput.value = "";
+        return;
+      }
+      db.ref("messages").remove().then(() => {
+        chatBox.innerHTML = "";
+        alert("Javni klepet pobrisan.");
+      }).catch(err => alert("Napaka: " + err.message));
+      messageInput.value = "";
+      return;
+    }
+
+    // Omemba @ime sporočilo (vidno samo tebi in omenjenemu)
+    if (text.startsWith("@") && text.indexOf(" ") > 1) {
+      const spaceIdx = text.indexOf(" ");
+      const name = text.slice(1, spaceIdx).toLowerCase();
+      const msgText = text.slice(spaceIdx + 1);
+      let mentionUid = null;
+      for (const uid in usersCache) {
+        if (usersCache[uid].displayName.toLowerCase() === name) {
+          mentionUid = uid;
+          break;
+        }
+      }
+      if (!mentionUid) {
+        alert("Uporabnik za omembo ne obstaja.");
+        messageInput.value = "";
+        return;
+      }
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        to: mentionUid,
+        type: "mention",
+        text: msgText
+      });
+      messageInput.value = "";
+      return;
+    }
+
+    // Skrito sporočilo *sporočilo
+    let hidden = false;
+    if (text.startsWith("*")) {
+      hidden = true;
+      text = text.slice(1);
+    }
+
+    // Sestavi sporočilo (če smo v zasebnem klepetu, dodaj 'to')
+    const msgData = {
+      uid: currentUser.uid,
+      text,
+      hidden,
+      to: privateChatWith || null,
+      type: privateChatWith ? "private" : null
+    };
+
+    db.ref("messages").push(msgData).then(() => {
+      messageInput.value = "";
+    }).catch(err => alert("Napaka pri pošiljanju: " + err.message));
+  }
+
+  // Odjava
+  function logout() {
+    auth.signOut().then(() => {
+      window.location.href = "auth.html";
+    });
+  }
+
+  // Enter za pošiljanje
+  messageInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+</script>
 </body>
 </html>
