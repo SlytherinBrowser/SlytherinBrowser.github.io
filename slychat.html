@@ -326,8 +326,10 @@
   }
 
   function logout() {
-    auth.signOut().then(() => window.location.href = "auth.html");
-  }
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  });
+}
 
   messageInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
