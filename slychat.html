@@ -125,6 +125,10 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
+#hiddenToggleBtn.active {
+  background-color: rgba(255, 255, 255, 0.6);
+  color: black;
+}
 
     .btn {
       padding: 10px;
@@ -195,12 +199,17 @@
     let isHiddenMode = false;
 
     function toggleHidden() {
-      isHiddenMode = !isHiddenMode;
-      const btn = document.getElementById("hiddenToggleBtn");
-      btn.style.backgroundColor = isHiddenMode
-        ? "rgba(255,255,255,0.4)"
-        : "rgba(255,255,255,0.2)";
-    }
+  isHiddenMode = !isHiddenMode;
+  const btn = document.getElementById("hiddenToggleBtn");
+  
+  if (isHiddenMode) {
+    btn.classList.add("active");
+    btn.title = "Skrito vklopljeno";
+  } else {
+    btn.classList.remove("active");
+    btn.title = "Skrito izklopljeno";
+  }
+}
 
     auth.onAuthStateChanged(async user => {
       if (!user) {
