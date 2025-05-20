@@ -245,12 +245,16 @@
     if (!textRaw) return;
 
     if (textRaw === "/public") {
-      currentChatPartner = null;
-      chatBox.innerHTML = "";
-      messageInput.value = "";
-      alert("Zdaj si v javnem klepetu.");
-      return;
-    }
+  currentChatPartner = null;
+  chatBox.innerHTML = "";
+  messageInput.value = "";
+  alert("Zdaj si v javnem klepetu.");
+  setTimeout(() => {
+    location.reload();
+  }, 100); // 100ms po alertu
+  return;
+}
+
 
     if (textRaw === "/clearchat") {
       db.ref("messages").remove().then(() => {
