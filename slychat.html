@@ -142,7 +142,7 @@
     </div>
   </div>
 
-  <script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
     authDomain: "chater-cf682.firebaseapp.com",
@@ -169,18 +169,26 @@
       window.location.href = "auth.html";
       return;
     }
+
     currentUser = user;
 
+    // Nastavi status na online in ga odstrani ob odjavi/disconnect
+    const userStatusRef = db.ref('status/' + currentUser.uid);
+    userStatusRef.set({ online: true });
+    userStatusRef.onDisconnect().set({ online: false });
+
+    // Naloži imena vseh uporabnikov
     const usersSnapshot = await db.ref('users').once('value');
     const users = usersSnapshot.val() || {};
     for (const uid in users) {
       userNamesCache[uid] = users[uid].displayName || "Anonimen";
     }
 
-    db.ref("messages").on("child_added", snapshot => {
+    // Poslušaj nova sporočila
+    db.ref("messages").on("child_added", async snapshot => {
       const msg = snapshot.val();
 
-      // ✅ Sistem: obvestilo o sprejetju povabila
+      // Sistem: sprejeto povabilo
       if (msg.system && msg.privateUid === currentUser.uid) {
         const systemDiv = document.createElement("div");
         systemDiv.style.fontStyle = "italic";
@@ -192,7 +200,7 @@
         return;
       }
 
-      // Povabilo
+      // Povabilo v zasebni klepet
       if (msg.invite && msg.privateUid === currentUser.uid) {
         const inviterName = userNamesCache[msg.uid] || "Anonimen";
         const inviteDiv = document.createElement("div");
@@ -203,7 +211,7 @@
         return;
       }
 
-      // Zasebni klepet: prikazuj samo, če si udeležen
+      // Zasebni klepet – prikazuj samo, če si udeležen
       if (currentChatPartner) {
         const isPrivateMatch =
           (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -213,11 +221,20 @@
         if (msg.privateUid) return;
       }
 
+      // Pridobi status pošiljatelja
+      const statusSnapshot = await db.ref('status/' + msg.uid).once('value');
+      const isOnline = statusSnapshot.val() && statusSnapshot.val().online;
       const displayName = userNamesCache[msg.uid] || "Anonimen";
+
       const div = document.createElement("div");
       const senderSpan = document.createElement("span");
       senderSpan.classList.add("sender");
-      senderSpan.textContent = displayName + ": ";
+
+      if (isOnline) {
+        senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
+      } else {
+        senderSpan.textContent = displayName + ": ";
+      }
 
       const realText = document.createElement("span");
       realText.classList.add("realText");
@@ -241,13 +258,11 @@
     });
   });
 
-  // ✅ Ko uporabnik sprejme povabilo
   function acceptInvite(inviterUid) {
     currentChatPartner = inviterUid;
     chatBox.innerHTML = "";
     alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");
 
-    // Pošlji obvestilo pošiljatelju
     db.ref("messages").push({
       uid: currentUser.uid,
       text: "sprejel je tvoje povabilo v zasebni klepet.",
@@ -261,6 +276,7 @@
     const textRaw = messageInput.value.trim();
     if (!textRaw) return;
 
+    // Vrni se v javni klepet
     if (textRaw === "/public") {
       currentChatPartner = null;
       chatBox.innerHTML = "";
@@ -270,6 +286,7 @@
       return;
     }
 
+    // Pobriši vsa sporočila
     if (textRaw === "/clearchat") {
       db.ref("messages").remove().then(() => {
         alert("Klepetalnica je bila pobrisana.");
@@ -279,6 +296,7 @@
       return;
     }
 
+    // Povabilo v zasebni klepet
     if (textRaw.startsWith("/@")) {
       const invitedName = textRaw.slice(2).toLowerCase();
       let foundUid = null;
@@ -326,10 +344,10 @@
   }
 
   function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  });
-}
+    auth.signOut().then(() => {
+      window.location.href = "auth.html";
+    });
+  }
 
   messageInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
