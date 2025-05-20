@@ -139,6 +139,7 @@
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
       <button class="btn" onclick="logout()">Odjava</button>
+<button onclick="toggleActiveUsers()">Aktivni uporabniki</button>
     </div>
   </div>
 
@@ -354,6 +355,30 @@
       sendMessage();
     }
   });
+let showingActiveUsers = false;
+
+function toggleActiveUsers() {
+  showingActiveUsers = !showingActiveUsers;
+  chatBox.innerHTML = "";
+
+  if (showingActiveUsers) {
+    const activeUsers = Object.entries(userStatusCache)
+      .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+    if (activeUsers.length === 0) {
+      chatBox.innerHTML = "<i>Ni drugih aktivnih uporabnikov.</i>";
+    } else {
+      activeUsers.forEach(([uid]) => {
+        const name = userNamesCache[uid] || "Anonimen";
+        const div = document.createElement("div");
+        div.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${name}`;
+        chatBox.appendChild(div);
+      });
+    }
+  } else {
+    location.reload(); // vrni nazaj v klepet
+  }
+}
 </script>
 
 </body>
