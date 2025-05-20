@@ -380,10 +380,23 @@
     }
 
     function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "auth.html";
-      });
-    }
+  const userStatusRef = db.ref(`/status/${currentUser.uid}`);
+  const isOfflineForDatabase = {
+    online: false,
+    last_changed: firebase.database.ServerValue.TIMESTAMP,
+  };
+
+  userStatusRef.set(isOfflineForDatabase).then(() => {
+    auth.signOut().then(() => {
+      window.location.href = "auth.html";
+    });
+  }).catch(error => {
+    console.error("Napaka pri nastavljanju offline statusa:", error);
+    auth.signOut().then(() => {
+      window.location.href = "auth.html";
+    });
+  });
+}
 
     messageInput.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
