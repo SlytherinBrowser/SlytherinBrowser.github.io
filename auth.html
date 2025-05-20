@@ -141,29 +141,32 @@
   });
 
   function register() {
-    const name = document.getElementById("regName").value.trim();
-    const email = document.getElementById("regEmail").value.trim();
-    const pass = document.getElementById("regPass").value;
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const pass = document.getElementById("regPass").value;
 
-    if (!name || !email || !pass) {
-      alert("Prosim, izpolni vsa polja.");
-      return;
-    }
-
-    auth.createUserWithEmailAndPassword(email, pass)
-      .then(userCredential => {
-        const user = userCredential.user;
-        return db.ref('users/' + user.uid).set({
-          displayName: name,
-          email: email
-        });
-      })
-      .then(() => {
-        alert("Registracija uspešna!");
-        window.location.href = "slychat.html";
-      })
-      .catch(error => alert(error.message));
+  if (!name || !email || !pass) {
+    alert("Prosim, izpolni vsa polja.");
+    return;
   }
+
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(userCredential => {
+      const user = userCredential.user;
+      console.log("Registriran uporabnik:", user.uid, name); // preveri tukaj
+
+      // Shrani displayName in email v bazo pod 'users'
+      return db.ref('users/' + user.uid).set({
+        displayName: name,
+        email: email
+      });
+    })
+    .then(() => {
+      alert("Registracija uspešna!");
+      window.location.href = "slychat.html";
+    })
+    .catch(error => alert(error.message));
+}
 
   function login() {
     const email = document.getElementById("logEmail").value.trim();
