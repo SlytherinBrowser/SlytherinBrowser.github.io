@@ -194,7 +194,6 @@ const messageInput = document.getElementById("messageInput");
 let currentChatPartner = null;
 let currentUser = null;
 const userNamesCache = {};
-let userStatusCache = {};
 let isHiddenMode = false;
 
 function toggleHidden() {
@@ -218,22 +217,12 @@ auth.onAuthStateChanged(async user => {
 
   currentUser = user;
 
-  // Nastavi online status za trenutnega uporabnika
-  const userStatusRef = db.ref("status/" + user.uid);
-  userStatusRef.set({ online: true });
-  userStatusRef.onDisconnect().set({ online: false });
-
   // Naloži uporabnike in shrani displayName v cache
   const usersSnapshot = await db.ref('users').once('value');
   const users = usersSnapshot.val() || {};
   for (const uid in users) {
     userNamesCache[uid] = users[uid].displayName || "Anonimen";
   }
-
-  // Poslušaj spremembe statusov
-  db.ref("status").on("value", snapshot => {
-    userStatusCache = snapshot.val() || {};
-  });
 
   // Poslušaj sporočila
   db.ref("messages").on("child_added", snapshot => {
@@ -273,17 +262,13 @@ auth.onAuthStateChanged(async user => {
     }
 
     const displayName = userNamesCache[msg.uid] || "Anonimen";
-    const isOnline = userStatusCache[msg.uid]?.online;
 
     const div = document.createElement("div");
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
 
-    if (isOnline) {
-      senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
-    } else {
-      senderSpan.textContent = displayName + ": ";
-    }
+    // Brez ikone za online status
+    senderSpan.textContent = displayName + ": ";
 
     const realText = document.createElement("span");
     realText.classList.add("realText");
@@ -386,21 +371,8 @@ function sendMessage() {
 }
 
 function logout() {
-  const userStatusRef = db.ref(`/status/${currentUser.uid}`);
-  const isOfflineForDatabase = {
-    online: false,
-    last_changed: firebase.database.ServerValue.TIMESTAMP,
-  };
-
-  userStatusRef.set(isOfflineForDatabase).then(() => {
-    auth.signOut().then(() => {
-      window.location.href = "auth.html";
-    });
-  }).catch(error => {
-    console.error("Napaka pri nastavljanju offline statusa:", error);
-    auth.signOut().then(() => {
-      window.location.href = "auth.html";
-    });
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
   });
 }
 
