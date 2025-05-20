@@ -153,12 +153,16 @@
   auth.createUserWithEmailAndPassword(email, pass)
     .then(userCredential => {
       const user = userCredential.user;
-      console.log("Registriran uporabnik:", user.uid, name); // preveri tukaj
-
-      // Shrani displayName in email v bazo pod 'users'
-      return db.ref('users/' + user.uid).set({
-        displayName: name,
-        email: email
+      
+      // Nastavi displayName v Firebase auth profilu
+      return user.updateProfile({
+        displayName: name
+      }).then(() => {
+        // Shrani v bazo
+        return db.ref('users/' + user.uid).set({
+          displayName: name,
+          email: email
+        });
       });
     })
     .then(() => {
