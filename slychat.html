@@ -217,6 +217,46 @@
         return;
       }
 
+
+db.ref("calls/" + user.uid).on("value", async snapshot => {
+  const data = snapshot.val();
+  if (!data || !data.sdp) return;
+
+  const fromUid = data.from;
+  const confirmed = confirm(userNamesCache[fromUid] + " te kliče. Sprejmem?");
+  if (!confirmed) return;
+
+  peerConnection = new RTCPeerConnection(config);
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => {
+      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+    });
+
+  peerConnection.onicecandidate = e => {
+    if (e.candidate) {
+      db.ref("calls/" + fromUid + "/ice").push(e.candidate.toJSON());
+    }
+  };
+
+  peerConnection.ontrack = e => {
+    const video = document.createElement("video");
+    video.srcObject = e.streams[0];
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "100%";
+    chatBox.innerHTML = ""; chatBox.appendChild(video);
+  };
+
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  db.ref("calls/" + fromUid + "/answer").set(answer);
+});
+
+
+
+
       currentUser = user;
 
       const userStatusRef = db.ref("status/" + user.uid);
@@ -327,6 +367,31 @@
         setTimeout(() => location.reload(), 10);
         return;
       }
+
+
+if (textRaw.startsWith("/*")) {
+  const callName = textRaw.slice(2).toLowerCase();
+  let foundUid = null;
+  for (const uid in userNamesCache) {
+    if (userNamesCache[uid].toLowerCase() === callName) {
+      foundUid = uid;
+      break;
+    }
+  }
+  if (!foundUid) {
+    alert("Uporabnik '" + callName + "' ni najden.");
+    messageInput.value = "";
+    return;
+  }
+
+  startCall(foundUid);
+  messageInput.value = "";
+  return;
+}
+
+
+
+
 
       if (textRaw === "/clearchat") {
         db.ref("messages").remove().then(() => {
@@ -440,6 +505,46 @@ function toggleActiveUsers() {
     }
     location.reload(); // osveži za prikaz klepeta
   }
+}
+
+
+
+
+
+
+let peerConnection;
+const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+function startCall(targetUid) {
+  peerConnection = new RTCPeerConnection(config);
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => {
+      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+      return peerConnection.createOffer();
+    })
+    .then(offer => {
+      return peerConnection.setLocalDescription(offer).then(() => {
+        return db.ref("calls/" + targetUid).set({
+          from: currentUser.uid,
+          sdp: offer
+        });
+      });
+    });
+
+  peerConnection.onicecandidate = e => {
+    if (e.candidate) {
+      db.ref("calls/" + targetUid + "/ice").push(e.candidate.toJSON());
+    }
+  };
+
+  peerConnection.ontrack = e => {
+    const video = document.createElement("video");
+    video.srcObject = e.streams[0];
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.width = "100%";
+    chatBox.innerHTML = ""; chatBox.appendChild(video);
+  };
 }
   </script>
 </body>
