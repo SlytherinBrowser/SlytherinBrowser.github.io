@@ -257,13 +257,14 @@
 
 
     if (textRaw === "/clearchat") {
-      db.ref("messages").remove().then(() => {
-        chatBox.innerHTML = "";
-        alert("Klepetalnica je bila pobrisana.");
-      }).catch(error => alert("Napaka pri brisanju: " + error.message));
-      messageInput.value = "";
-      return;
-    }
+  db.ref("messages").remove().then(() => {
+    alert("Klepetalnica je bila pobrisana.");
+    location.reload(); // Osveži stran
+  }).catch(error => alert("Napaka pri brisanju: " + error.message));
+  messageInput.value = "";
+  return;
+}
+
 
     if (textRaw.startsWith("/@")) {
       const invitedName = textRaw.slice(2).toLowerCase();
