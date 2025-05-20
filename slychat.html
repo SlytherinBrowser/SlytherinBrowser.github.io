@@ -462,10 +462,6 @@ function toggleActiveUsers() {
 
 
 
-
-
-// Spodaj dodaj to v svoj JS (po inicializaciji Firebase, auth, db, ipd.)
-
 let peerConnection = null;
 let localStream = null;
 let remoteAudio = null;
@@ -473,101 +469,36 @@ let currentCallPartner = null;
 
 const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-function startAudioCall(partnerName) {
-  if (!partnerName) {
-    alert("Nisi vnesel imena uporabnika za klic.");
-    return;
+// Predpostavka: currentUser, userNamesCache, messageInput, chatBox so že definirani
+
+// --- Funkcija za prikaz sporočila v chat boxu (prilagojeno za sistemska sporočila) ---
+function displayMessage(message) {
+  if (message.systemMessage) {
+    return `<div style="text-align:center; font-style: italic; color: gray; margin: 6px 0;">${message.text}</div>`;
+  } else {
+    return `<div><strong>${userNamesCache[message.uid] || "Uporabnik"}:</strong> ${message.text}</div>`;
   }
-
-  // Poišči partnerja po imenu
-  let partnerUid = null;
-  for (const uid in userNamesCache) {
-    if (userNamesCache[uid].toLowerCase() === partnerName.toLowerCase()) {
-      partnerUid = uid;
-      break;
-    }
-  }
-  if (!partnerUid) {
-    alert("Uporabnik '" + partnerName + "' ni najden.");
-    return;
-  }
-
-  if (partnerUid === currentUser.uid) {
-    alert("Ne moreš poklicati samega sebe.");
-    return;
-  }
-
-  currentCallPartner = partnerUid;
-
-  // Pridobi lokalni avdio stream (mikrofon)
-  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
-    localStream = stream;
-
-    // Ustvari RTCPeerConnection
-    peerConnection = new RTCPeerConnection(servers);
-
-    // Dodaj avdio track v povezavo
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-    // Pripravi remote audio element, če še ni
-    if (!remoteAudio) {
-      remoteAudio = document.createElement("audio");
-      remoteAudio.autoplay = true;
-      document.body.appendChild(remoteAudio);
-    }
-
-    // Ko dobimo remote track, nastavi v audio element
-    peerConnection.ontrack = event => {
-      remoteAudio.srcObject = event.streams[0];
-    };
-
-    // ICE kandidati -> shrani v Firebase signaling
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        db.ref(`calls/${currentUser.uid}/ice`).push(event.candidate.toJSON());
-      }
-    };
-
-    // Ustvari ponudbo in shrani v Firebase signaling
-    peerConnection.createOffer().then(offer => {
-      peerConnection.setLocalDescription(offer);
-
-      // Pošlji ponudbo partnerju v Firebase
-      db.ref(`calls/${partnerUid}/offer`).set({
-        from: currentUser.uid,
-        sdp: offer.sdp,
-        type: offer.type
-      });
-    });
-
-    showCallUI();
-
-    listenForAnswerAndCandidates();
-
-  }).catch(err => alert("Napaka pri dostopu do mikrofona: " + err.message));
 }
 
-function listenForAnswerAndCandidates() {
-  // Čakaj na answer iz partnerja
-  db.ref(`calls/${currentCallPartner}/answer`).on("value", snapshot => {
-    const answer = snapshot.val();
-    if (!answer || !peerConnection) return;
-    const remoteDesc = new RTCSessionDescription(answer);
-    peerConnection.setRemoteDescription(remoteDesc);
+// --- Funkcija za osvežitev chata (uporabi ob spremembah v bazi) ---
+function refreshChat() {
+  db.ref("messages").limitToLast(50).once("value", snapshot => {
+    const messages = snapshot.val();
+    chatBox.innerHTML = "";
+    if (!messages) return;
+    Object.values(messages).forEach(msg => {
+      chatBox.innerHTML += displayMessage(msg);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
+}
 
-  // Poslušaj ICE kandidate od partnerja
-  db.ref(`calls/${currentCallPartner}/ice`).on("child_added", snapshot => {
-    const candidate = snapshot.val();
-    if (!candidate || !peerConnection) return;
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-  });
-
-  // Poslušaj ponudbo (če smo mi tisti, ki sprejemamo klic)
+// --- Klic ob prijavi - poslušanje ponudb od drugih ---
+function initCallListener() {
   db.ref(`calls/${currentUser.uid}/offer`).on("value", async snapshot => {
     const offer = snapshot.val();
     if (!offer) return;
-    if (currentCallPartner) return; // Če smo že v klicu
+    if (currentCallPartner) return; // že v klicu
 
     currentCallPartner = offer.from;
 
@@ -603,6 +534,15 @@ function listenForAnswerAndCandidates() {
         type: answer.type
       });
 
+      // Pošlji sporočilo v chat, da se je uporabnik pridružil klicu
+      await db.ref("messages").push({
+        uid: currentUser.uid,
+        text: `${userNamesCache[currentUser.uid] || "Uporabnik"} se je pridružil klicu.`,
+        systemMessage: true,
+        timestamp: Date.now()
+      });
+      refreshChat();
+
       showCallUI();
 
       listenForAnswerAndCandidates();
@@ -614,11 +554,100 @@ function listenForAnswerAndCandidates() {
   });
 }
 
+function startAudioCall(partnerName) {
+  if (!partnerName) {
+    alert("Nisi vnesel imena uporabnika za klic.");
+    return;
+  }
+
+  // Poišči partnerja po imenu
+  let partnerUid = null;
+  for (const uid in userNamesCache) {
+    if (userNamesCache[uid].toLowerCase() === partnerName.toLowerCase()) {
+      partnerUid = uid;
+      break;
+    }
+  }
+  if (!partnerUid) {
+    alert("Uporabnik '" + partnerName + "' ni najden.");
+    return;
+  }
+
+  if (partnerUid === currentUser.uid) {
+    alert("Ne moreš poklicati samega sebe.");
+    return;
+  }
+
+  currentCallPartner = partnerUid;
+
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+    localStream = stream;
+
+    peerConnection = new RTCPeerConnection(servers);
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    if (!remoteAudio) {
+      remoteAudio = document.createElement("audio");
+      remoteAudio.autoplay = true;
+      document.body.appendChild(remoteAudio);
+    }
+
+    peerConnection.ontrack = event => {
+      remoteAudio.srcObject = event.streams[0];
+    };
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        db.ref(`calls/${currentUser.uid}/ice`).push(event.candidate.toJSON());
+      }
+    };
+
+    peerConnection.createOffer().then(offer => {
+      peerConnection.setLocalDescription(offer);
+
+      db.ref(`calls/${partnerUid}/offer`).set({
+        from: currentUser.uid,
+        sdp: offer.sdp,
+        type: offer.type
+      });
+
+      // Pošlji sporočilo v chat, da kličeš uporabnika
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        text: `Kličem uporabnika ${partnerName}...`,
+        systemMessage: true,
+        timestamp: Date.now()
+      });
+      refreshChat();
+
+    });
+
+    showCallUI();
+
+    listenForAnswerAndCandidates();
+
+  }).catch(err => alert("Napaka pri dostopu do mikrofona: " + err.message));
+}
+
+function listenForAnswerAndCandidates() {
+  db.ref(`calls/${currentCallPartner}/answer`).on("value", snapshot => {
+    const answer = snapshot.val();
+    if (!answer || !peerConnection) return;
+    const remoteDesc = new RTCSessionDescription(answer);
+    peerConnection.setRemoteDescription(remoteDesc);
+  });
+
+  db.ref(`calls/${currentCallPartner}/ice`).on("child_added", snapshot => {
+    const candidate = snapshot.val();
+    if (!candidate || !peerConnection) return;
+    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  });
+}
+
 function showCallUI() {
-  // skrij input za sporočila in pokaži gumbe za klic
   messageInput.style.display = "none";
 
-  // Preveri če že obstajajo, če ne, naredi
   if (!document.getElementById("btnToggleMute")) {
     const controlsDiv = document.createElement("div");
     controlsDiv.id = "callControls";
@@ -626,7 +655,6 @@ function showCallUI() {
     controlsDiv.style.display = "flex";
     controlsDiv.style.gap = "10px";
 
-    // Gumb za izklop/vklop mikrofona
     const btnMute = document.createElement("button");
     btnMute.id = "btnToggleMute";
     btnMute.textContent = "Izklopi mikrofon";
@@ -646,7 +674,6 @@ function showCallUI() {
       btnMute.style.backgroundColor = audioTrack.enabled ? "#007bff" : "#dc3545";
     };
 
-    // Gumb za prekinitev klica
     const btnEnd = document.createElement("button");
     btnEnd.id = "btnEndCall";
     btnEnd.textContent = "Prekini klic";
@@ -669,7 +696,6 @@ function showCallUI() {
     document.getElementById("callControls").style.display = "flex";
   }
 
-  // Prikaži v chatu s kom si povezan
   chatBox.innerHTML = `<div style="font-weight:bold; margin-bottom:8px;">
     Pogovor z: ${userNamesCache[currentCallPartner] || "Uporabnik"}
   </div>`;
@@ -684,21 +710,25 @@ function endCall() {
     localStream.getTracks().forEach(track => track.stop());
     localStream = null;
   }
+
+  // Očisti signaling Firebase (neobvezno)
+  if (currentCallPartner) {
+    db.ref(`calls/${currentUser.uid}`).remove();
+    db.ref(`calls/${currentCallPartner}`).remove();
+  }
+
   currentCallPartner = null;
 
-  // očisti signaling Firebase (neobvezno)
-  db.ref(`calls/${currentUser.uid}`).remove();
-  db.ref(`calls/${currentCallPartner}`).remove();
-
-  // skrij klic UI
   messageInput.style.display = "block";
   const controlsDiv = document.getElementById("callControls");
   if (controlsDiv) controlsDiv.style.display = "none";
 
   chatBox.innerHTML = "";
+
+  refreshChat();
 }
 
-// Preveri pri pošiljanju sporočila, če je ukaz /*imeuporabnika za začetek klica
+// --- Pošiljanje sporočila (ukaz za začetek klica /*imeuporabnika) ---
 function sendMessage() {
   if (!currentUser) return;
   const textRaw = messageInput.value.trim();
@@ -711,17 +741,25 @@ function sendMessage() {
     return;
   }
 
-  // ... tvoj obstoječi sendMessage koda ostane tukaj (pošlji normalno sporočilo) ...
-  
-  // Primer (da ne pozabiš):
+  // Pošlji običajno sporočilo
   db.ref("messages").push({
     uid: currentUser.uid,
     text: textRaw,
-    hidden: isHiddenMode,
-    privateUid: currentChatPartner
+    systemMessage: false,
+    timestamp: Date.now()
   });
   messageInput.value = "";
+  refreshChat();
 }
+
+// --- Ob prijavi uporabnika zaženi poslušanje ponudb ---
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    initCallListener();
+    refreshChat();
+  }
+});
 
   </script>
 </body>
