@@ -456,7 +456,151 @@ function toggleActiveUsers() {
 
 
 
+let callActive = false;
+let localStream = null;
+let currentCallPartnerUid = null;
 
+// Začni klic z uporabnikom
+async function startCallWith(targetName) {
+  if (callActive) {
+    alert("Klic že poteka.");
+    return;
+  }
+
+  // Najdi UID uporabnika po imenu (case insensitive)
+  let targetUid = null;
+  for (const uid in userNamesCache) {
+    if (userNamesCache[uid].toLowerCase() === targetName.toLowerCase()) {
+      targetUid = uid;
+      break;
+    }
+  }
+  if (!targetUid) {
+    alert("Uporabnik '" + targetName + "' ni najden.");
+    return;
+  }
+
+  currentCallPartnerUid = targetUid;
+  callActive = true;
+
+  // Počisti chat in input
+  chatBox.innerHTML = "";
+  messageInput.style.display = "none";
+
+  // Prikaži ime sogovornika
+  const nameDiv = document.createElement("div");
+  nameDiv.id = "callNameDisplay";
+  nameDiv.textContent = `Kličeš: ${userNamesCache[targetUid] || "Anonimen"}`;
+  nameDiv.style.fontSize = "1.5em";
+  nameDiv.style.marginBottom = "10px";
+  chatBox.appendChild(nameDiv);
+
+  // Pridobi video in zvok
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  } catch (err) {
+    alert("Napaka pri dostopu do kamere/mikrofona: " + err.message);
+    resetCallUI();
+    return;
+  }
+
+  // Prikaži video
+  const video = document.createElement("video");
+  video.id = "localVideo";
+  video.autoplay = true;
+  video.muted = true;
+  video.srcObject = localStream;
+  video.style.width = "100%";
+  video.style.maxHeight = "300px";
+  video.style.borderRadius = "8px";
+  chatBox.appendChild(video);
+
+  // Gumbi za upravljanje klica
+  const controlsDiv = document.createElement("div");
+  controlsDiv.id = "callControls";
+  controlsDiv.style.marginTop = "10px";
+
+  const micBtn = document.createElement("button");
+  micBtn.textContent = "Izklopi mikrofon";
+  micBtn.onclick = () => {
+    if (!localStream) return;
+    const audioTrack = localStream.getAudioTracks()[0];
+    audioTrack.enabled = !audioTrack.enabled;
+    micBtn.textContent = audioTrack.enabled ? "Izklopi mikrofon" : "Vklopi mikrofon";
+  };
+
+  const camBtn = document.createElement("button");
+  camBtn.textContent = "Izklopi kamero";
+  camBtn.style.marginLeft = "10px";
+  camBtn.onclick = () => {
+    if (!localStream) return;
+    const videoTrack = localStream.getVideoTracks()[0];
+    videoTrack.enabled = !videoTrack.enabled;
+    camBtn.textContent = videoTrack.enabled ? "Izklopi kamero" : "Vklopi kamero";
+    video.style.display = videoTrack.enabled ? "block" : "none";
+  };
+
+  const endCallBtn = document.createElement("button");
+  endCallBtn.textContent = "Prekini klic";
+  endCallBtn.style.marginLeft = "10px";
+  endCallBtn.onclick = () => {
+    endCall();
+  };
+
+  controlsDiv.appendChild(micBtn);
+  controlsDiv.appendChild(camBtn);
+  controlsDiv.appendChild(endCallBtn);
+  chatBox.appendChild(controlsDiv);
+
+  // Tu lahko dodaš WebRTC signalizacijo, če želiš pravi video klic z drugo osebo
+}
+
+// Prekini klic in resetiraj UI
+function endCall() {
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  callActive = false;
+  currentCallPartnerUid = null;
+  resetCallUI();
+}
+
+function resetCallUI() {
+  chatBox.innerHTML = "";
+  messageInput.style.display = "block";
+  messageInput.value = "";
+}
+
+// Spremeni sendMessage, da obdeluje ukaz /*uporabnik
+const originalSendMessage = sendMessage;
+sendMessage = function() {
+  if (!currentUser) return;
+  const textRaw = messageInput.value.trim();
+  if (!textRaw) return;
+
+  // Če sprožiš video klic s /*uporabnik
+  if (textRaw.startsWith("/*")) {
+    const targetName = textRaw.slice(2).trim();
+    if (!targetName) {
+      alert("Vpiši ime uporabnika za klic po ukazu /*");
+      return;
+    }
+    startCallWith(targetName);
+    messageInput.value = "";
+    return;
+  }
+
+  // Če teče klic, prepreči pošiljanje sporočil
+  if (callActive) {
+    alert("Med klicem ni možno pošiljati sporočil.");
+    messageInput.value = "";
+    return;
+  }
+
+  // Klic originalne funkcije za ostala sporočila
+  originalSendMessage();
+};
 
 
 
