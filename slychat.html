@@ -178,7 +178,6 @@
 
 
 
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
@@ -202,9 +201,8 @@
   const userNamesCache = {};
   let userStatusCache = {};
   let isHiddenMode = false;
-  let userColorsCache = {}; // Za shranjevanje barv uporabnikov
+  let userColorsCache = {};
 
-  // DODANO: animacija mavrične barve (rainbow)
   const style = document.createElement('style');
   style.textContent = `
     @keyframes rainbow {
@@ -247,6 +245,17 @@
     userStatusRef.set({ online: true });
     userStatusRef.onDisconnect().set({ online: false });
 
+    // AUTO SIGNOUT if status becomes false
+    db.ref("status/" + user.uid).on("value", snap => {
+      const status = snap.val();
+      if (status && status.online === false) {
+        alert("Bil si ponastavljen (status offline). Preusmeritev...");
+        auth.signOut().then(() => {
+          window.location.href = "auth.html";
+        });
+      }
+    });
+
     const usersSnapshot = await db.ref('users').once('value');
     const users = usersSnapshot.val() || {};
     for (const uid in users) {
@@ -258,7 +267,6 @@
       userStatusCache = snapshot.val() || {};
     });
 
-    // Potrditev imena
     const userData = users[currentUser.uid];
     if (!userData || !userData.displayName) {
       messageInput.placeholder = "Potrdi ime";
@@ -309,7 +317,6 @@
       const senderSpan = document.createElement("span");
       senderSpan.classList.add("sender");
 
-      // Nastavi barvo in mavrično animacijo
       if (color === "rainbow") {
         senderSpan.classList.add("rainbow");
       } else if (color) {
@@ -362,7 +369,6 @@
     const textRaw = messageInput.value.trim();
     if (!textRaw) return;
 
-    // Če še nima imena - potrdi
     if (messageInput.dataset.nameConfirm === "1") {
       await db.ref("users/" + currentUser.uid).update({
         displayName: textRaw
@@ -375,7 +381,22 @@
       return;
     }
 
-    // Ukaz za spremembo imena: *name*novoime
+    if (textRaw === "/logoutall") {
+      const statusRef = db.ref("status");
+      const statusSnapshot = await statusRef.once("value");
+      const statusData = statusSnapshot.val() || {};
+
+      for (const uid in statusData) {
+        if (statusData[uid].online === true) {
+          await db.ref("status/" + uid).set({ online: false });
+        }
+      }
+
+      alert("Vsi aktivni uporabniki so bili ponastavljeni (status = offline).");
+      messageInput.value = "";
+      return;
+    }
+
     if (textRaw.startsWith("*name*")) {
       const newName = textRaw.slice(6).trim();
       if (!newName) {
@@ -390,7 +411,6 @@
       return;
     }
 
-    // Ukaz za spremembo barve imena: *color*barva
     if (textRaw.startsWith("*color*")) {
       const colorVal = textRaw.slice(7).trim().toLowerCase();
       if (!colorVal) {
@@ -403,7 +423,6 @@
         userColorsCache[currentUser.uid] = "rainbow";
         alert("Barva imena nastavljena na mavrično (rainbow).");
       } else {
-        // Preverimo osnovno veljavnost barve (lahko še izboljšamo)
         const s = new Option().style;
         s.color = colorVal;
         if (s.color === "") {
