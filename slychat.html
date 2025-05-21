@@ -175,425 +175,263 @@
 
 
 
-<div id="callOverlay" style="display:none; padding: 20px;">
-  <div id="callStatus" style="font-weight: bold; margin-bottom: 10px;"></div>
-  <div id="callControls"></div>
-</div>
+
 
 
 
 
 
   <script>
-
-  // Firebase config in inicializacija
-  const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-
-  // HTML elementi
-  const chatBox = document.getElementById("chatBox");
-  const messageInput = document.getElementById("messageInput");
-  const hiddenToggleBtn = document.getElementById("hiddenToggleBtn");
-
-  let currentChatPartner = null;
-  let currentUser = null;
-  let userNamesCache = {};
-  let userStatusCache = {};
-  let isHiddenMode = false;
-
-  // WebRTC in signaling spremenljivke
-  let localStream = null;
-  let peerConnection = null;
-  let callId = null;
-  const servers = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" }
-    ]
-  };
-
-  // Funkcija za toggle hidden mode
-  function toggleHidden() {
-    isHiddenMode = !isHiddenMode;
-    if (isHiddenMode) {
-      hiddenToggleBtn.classList.add("active");
-      hiddenToggleBtn.title = "Skrito vklopljeno";
-    } else {
-      hiddenToggleBtn.classList.remove("active");
-      hiddenToggleBtn.title = "Skrito izklopljeno";
-    }
-  }
-
-  // Pridobi lokalni audio stream
-  async function getLocalStream() {
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (e) {
-      alert("Napaka pri dostopu do mikrofona: " + e.message);
-    }
-  }
-
-  // Ustvari PeerConnection in nastavi evente
-  function createPeerConnection(partnerUid) {
-    peerConnection = new RTCPeerConnection(servers);
-
-    // Dodaj lokalne sledi
-    localStream.getTracks().forEach(track => {
-      peerConnection.addTrack(track, localStream);
-    });
-
-    // Ko prejmemo nov ICE kandidat, ga pošljemo partnerju
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        db.ref(`calls/${callId}/iceCandidates/${currentUser.uid}`).push(event.candidate.toJSON());
-      }
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
     };
 
-    // Ko prejmemo oddaljene medijske sledi, jih predvajamo
-    peerConnection.ontrack = event => {
-      const remoteAudio = document.getElementById("remoteAudio");
-      if (!remoteAudio) {
-        const audio = document.createElement("audio");
-        audio.id = "remoteAudio";
-        audio.autoplay = true;
-        audio.srcObject = event.streams[0];
-        document.body.appendChild(audio);
-      } else {
-        remoteAudio.srcObject = event.streams[0];
-      }
-    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const chatBox = document.getElementById("chatBox");
+    const messageInput = document.getElementById("messageInput");
+
+    let currentChatPartner = null;
+    let currentUser = null;
+    const userNamesCache = {};
+    let userStatusCache = {};
+    let isHiddenMode = false;
+
+    function toggleHidden() {
+  isHiddenMode = !isHiddenMode;
+  const btn = document.getElementById("hiddenToggleBtn");
+
+  if (isHiddenMode) {
+    btn.classList.add("active");
+    btn.title = "Skrito vklopljeno";
+  } else {
+    btn.classList.remove("active");
+    btn.title = "Skrito izklopljeno";
   }
+}
 
-  // Pošlji povabilo za klic
-  async function callUser(partnerUid) {
-    if (!localStream) await getLocalStream();
-
-    currentChatPartner = partnerUid;
-    callId = [currentUser.uid, partnerUid].sort().join("_call_");
-
-    createPeerConnection(partnerUid);
-
-    // Nastavi signaling v Firebase
-    const callRef = db.ref(`calls/${callId}`);
-    await callRef.set({
-      offer: null,
-      answer: null,
-      caller: currentUser.uid,
-      callee: partnerUid,
-      status: "calling"
-    });
-
-    // Ustvari ponudbo (offer)
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    await callRef.child("offer").set(offer.toJSON());
-
-    // Poslušaj odgovor
-    callRef.child("answer").on("value", async snapshot => {
-      const answer = snapshot.val();
-      if (answer && peerConnection.signalingState !== "stable") {
-        const rtcAnswer = new RTCSessionDescription(answer);
-        await peerConnection.setRemoteDescription(rtcAnswer);
-        showCallUI(true);
-      }
-    });
-
-    // Poslušaj ICE kandidate partnerja
-    callRef.child(`iceCandidates/${partnerUid}`).on("child_added", async snap => {
-      const candidate = snap.val();
-      if (candidate) {
-        try {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error("Napaka pri dodajanju ICE kandidata:", e);
-        }
-      }
-    });
-
-    // Prikaži klicno UI za kličočega
-    showCallingUI();
-  }
-
-  // Sprejmi klic
-  async function answerCall(callData, partnerUid) {
-    if (!localStream) await getLocalStream();
-
-    currentChatPartner = partnerUid;
-    callId = [currentUser.uid, partnerUid].sort().join("_call_");
-
-    createPeerConnection(partnerUid);
-
-    const callRef = db.ref(`calls/${callId}`);
-
-    // Nastavi oddaljeno ponudbo (offer)
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
-
-    // Ustvari odgovor (answer)
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    await callRef.child("answer").set(answer.toJSON());
-    await callRef.child("status").set("in_call");
-
-    // Poslušaj ICE kandidate kličočega
-    callRef.child(`iceCandidates/${callData.caller}`).on("child_added", async snap => {
-      const candidate = snap.val();
-      if (candidate) {
-        try {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error("Napaka pri dodajanju ICE kandidata:", e);
-        }
-      }
-    });
-
-    // Poslušaj ICE kandidate partnerja
-    callRef.child(`iceCandidates/${currentUser.uid}`).on("child_added", async snap => {
-      const candidate = snap.val();
-      if (candidate) {
-        try {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error("Napaka pri dodajanju ICE kandidata:", e);
-        }
-      }
-    });
-
-    showCallUI(true);
-  }
-
-  // Končaj klic (obema)
-  async function endCall() {
-    if (peerConnection) {
-      peerConnection.close();
-      peerConnection = null;
-    }
-
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-      localStream = null;
-    }
-
-    // Počisti UI in podatke o klicu
-    currentChatPartner = null;
-
-    if (callId) {
-      await db.ref(`calls/${callId}`).remove();
-      callId = null;
-    }
-
-    document.getElementById("callControls").remove();
-    chatBox.innerHTML = "";
-  }
-
-  // Prikaži UI za klicanje (kličočemu)
-  function showCallingUI() {
-    chatBox.innerHTML = "";
-    const div = document.createElement("div");
-    div.id = "callControls";
-    div.innerHTML = `
-      <p>Kličem uporabnika <strong>${userNamesCache[currentChatPartner] || "Anonimen"}</strong>...</p>
-      <button onclick="endCall()">Prekliči klic</button>
-    `;
-    chatBox.appendChild(div);
-  }
-
-  // Prikaži UI za aktivni klic (obe strani)
-  function showCallUI(isInCall) {
-    chatBox.innerHTML = "";
-    const div = document.createElement("div");
-    div.id = "callControls";
-    div.innerHTML = `
-      <p>Klic z <strong>${userNamesCache[currentChatPartner] || "Anonimen"}</strong> je aktiven.</p>
-      <button onclick="endCall()">Končaj klic</button>
-    `;
-    chatBox.appendChild(div);
-  }
-
-  // Poslušaj Firebase za vhodne klice
-  function listenForIncomingCalls() {
-    const userCallsRef = db.ref("calls");
-    userCallsRef.on("value", snapshot => {
-      const calls = snapshot.val() || {};
-
-      for (const id in calls) {
-        const call = calls[id];
-
-        if (
-          call.callee === currentUser.uid &&
-          call.status === "calling" &&
-          id === [currentUser.uid, call.caller].sort().join("_call_")
-        ) {
-          // Prikaži UI za sprejem klica
-          if (!document.getElementById("incomingCallControls")) {
-            chatBox.innerHTML = "";
-            const div = document.createElement("div");
-            div.id = "incomingCallControls";
-            div.innerHTML = `
-              <p>Uporabnik <strong>${userNamesCache[call.caller] || "Anonimen"}</strong> te kliče.</p>
-              <button id="acceptCallBtn">Sprejmi</button>
-              <button id="rejectCallBtn">Zavrni</button>
-            `;
-            chatBox.appendChild(div);
-
-            document.getElementById("acceptCallBtn").onclick = () => {
-              answerCall(call, call.caller);
-              db.ref(`calls/${id}/status`).set("in_call");
-              div.remove();
-            };
-            document.getElementById("rejectCallBtn").onclick = () => {
-              db.ref(`calls/${id}`).remove();
-              div.remove();
-            };
-          }
-        }
-      }
-    });
-  }
-
-  // Pošiljanje sporočil, obravnava ukazov in klicev
-  function sendMessage() {
-    if (!currentUser) return;
-    const textRaw = messageInput.value.trim();
-    if (!textRaw) return;
-
-    // Ukaz za javni klepet
-    if (textRaw === "/public") {
-      currentChatPartner = null;
-      chatBox.innerHTML = "";
-      messageInput.value = "";
-      alert("Zdaj si v javnem klepetu.");
-      setTimeout(() => location.reload(), 10);
-      return;
-    }
-
-    // Ukaz za brisanje klepeta
-    if (textRaw === "/clearchat") {
-      db.ref("messages").remove().then(() => {
-        alert("Klepetalnica je bila pobrisana.");
-        location.reload();
-      }).catch(error => alert("Napaka pri brisanju: " + error.message));
-      messageInput.value = "";
-      return;
-    }
-
-    // Ukaz za povabilo v zasebni klepet /@ime
-    if (textRaw.startsWith("/@")) {
-      const invitedName = textRaw.slice(2).toLowerCase();
-      let foundUid = null;
-      for (const uid in userNamesCache) {
-        if (userNamesCache[uid].toLowerCase() === invitedName) {
-          foundUid = uid;
-          break;
-        }
-      }
-      if (!foundUid) {
-        alert("Uporabnik '" + invitedName + "' ni najden.");
-        messageInput.value = "";
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "auth.html";
         return;
       }
+
+      currentUser = user;
+
+      const userStatusRef = db.ref("status/" + user.uid);
+      userStatusRef.set({ online: true });
+      userStatusRef.onDisconnect().set({ online: false });
+
+      const usersSnapshot = await db.ref('users').once('value');
+      const users = usersSnapshot.val() || {};
+      for (const uid in users) {
+        userNamesCache[uid] = users[uid].displayName || "Anonimen";
+      }
+
+      db.ref("status").on("value", snapshot => {
+        userStatusCache = snapshot.val() || {};
+      });
+
+      db.ref("messages").on("child_added", snapshot => {
+        const msg = snapshot.val();
+
+        if (msg.system && msg.privateUid === currentUser.uid) {
+          const systemDiv = document.createElement("div");
+          systemDiv.style.fontStyle = "italic";
+          systemDiv.style.color = "#90ee90";
+          const senderName = userNamesCache[msg.uid] || "Uporabnik";
+          systemDiv.textContent = `${senderName} ${msg.text}`;
+          chatBox.appendChild(systemDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+          return;
+        }
+
+        if (msg.invite && msg.privateUid === currentUser.uid) {
+          const inviterName = userNamesCache[msg.uid] || "Anonimen";
+          const inviteDiv = document.createElement("div");
+          inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet. 
+            <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
+          chatBox.appendChild(inviteDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+          return;
+        }
+
+        if (currentChatPartner) {
+          const isPrivateMatch =
+            (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
+            (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
+          if (!isPrivateMatch) return;
+        } else {
+          if (msg.privateUid) return;
+        }
+
+        const displayName = userNamesCache[msg.uid] || "Anonimen";
+        const isOnline = userStatusCache[msg.uid]?.online;
+
+        const div = document.createElement("div");
+        const senderSpan = document.createElement("span");
+        senderSpan.classList.add("sender");
+
+        if (isOnline) {
+          senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
+        } else {
+          senderSpan.textContent = displayName + ": ";
+        }
+
+        const realText = document.createElement("span");
+        realText.classList.add("realText");
+        realText.textContent = msg.text;
+
+        if (msg.hidden) {
+          const hiddenText = document.createElement("span");
+          hiddenText.classList.add("hiddenText");
+          hiddenText.textContent = "Zasebno sporočilo";
+          div.classList.add("hiddenMessage");
+          div.appendChild(senderSpan);
+          div.appendChild(hiddenText);
+          div.appendChild(realText);
+        } else {
+          div.appendChild(senderSpan);
+          div.appendChild(realText);
+        }
+
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    });
+
+    function acceptInvite(inviterUid) {
+      currentChatPartner = inviterUid;
+      chatBox.innerHTML = "";
+      alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");
 
       db.ref("messages").push({
         uid: currentUser.uid,
-text: `/@${userNamesCache[foundUid]} te vabi v zasebni klepet.`,
-        timestamp: Date.now(),
-        private: true,
-        to: foundUid
+        text: "sprejel je tvoje povabilo v zasebni klepet.",
+        system: true,
+        privateUid: inviterUid
       });
-      messageInput.value = "";
-      alert(`Povabilo poslano uporabniku ${userNamesCache[foundUid]}.`);
-      return;
     }
 
-    // Ukaz za začetek zvočnega klica /*imeuporabnika
-    if (textRaw.startsWith("/*")) {
-      const calleeName = textRaw.slice(2).trim().toLowerCase();
-      let calleeUid = null;
-      for (const uid in userNamesCache) {
-        if (userNamesCache[uid].toLowerCase() === calleeName) {
-          calleeUid = uid;
-          break;
+    function sendMessage() {
+      if (!currentUser) return;
+      const textRaw = messageInput.value.trim();
+      if (!textRaw) return;
+
+      if (textRaw === "/public") {
+        currentChatPartner = null;
+        chatBox.innerHTML = "";
+        messageInput.value = "";
+        alert("Zdaj si v javnem klepetu.");
+        setTimeout(() => location.reload(), 10);
+        return;
+      }
+
+
+
+
+
+      if (textRaw === "/clearchat") {
+        db.ref("messages").remove().then(() => {
+          alert("Klepetalnica je bila pobrisana.");
+          location.reload();
+        }).catch(error => alert("Napaka pri brisanju: " + error.message));
+        messageInput.value = "";
+        return;
+      }
+
+      if (textRaw.startsWith("/@")) {
+        const invitedName = textRaw.slice(2).toLowerCase();
+        let foundUid = null;
+        for (const uid in userNamesCache) {
+          if (userNamesCache[uid].toLowerCase() === invitedName) {
+            foundUid = uid;
+            break;
+          }
         }
-      }
-      if (!calleeUid) {
-        alert("Uporabnik '" + calleeName + "' ni najden.");
-        messageInput.value = "";
-        return;
-      }
-      if (calleeUid === currentUser.uid) {
-        alert("Ne moreš poklicati samega sebe.");
+        if (!foundUid) {
+          alert("Uporabnik '" + invitedName + "' ni najden.");
+          messageInput.value = "";
+          return;
+        }
+
+        db.ref("messages").push({
+          uid: currentUser.uid,
+          text: "Povabilo v zasebni klepet",
+          invite: true,
+          privateUid: foundUid
+        });
+
+        currentChatPartner = foundUid;
+        chatBox.innerHTML = "";
+        alert("Vstopil si v zasebni pogovor z " + userNamesCache[foundUid]);
         messageInput.value = "";
         return;
       }
 
-      // Zaženi klic
-      callUser(calleeUid);
+      let hidden = isHiddenMode;
+      let text = textRaw;
+
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        text: text,
+        hidden: hidden,
+        privateUid: currentChatPartner
+      });
+
       messageInput.value = "";
-      return;
     }
 
-    // Pošiljanje običajnih sporočil (javni ali zasebni)
-    const msgData = {
-      uid: currentUser.uid,
-      text: textRaw,
-      timestamp: Date.now()
-    };
-    if (currentChatPartner) {
-      msgData.private = true;
-      msgData.to = currentChatPartner;
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "auth.html";
+      });
     }
 
-    db.ref("messages").push(msgData);
-    messageInput.value = "";
-  }
-
-  // Pridobi imena uporabnikov in shrani v cache
-  function loadUserNames() {
-    return db.ref("users").once("value").then(snapshot => {
-      const users = snapshot.val() || {};
-      for (const uid in users) {
-        userNamesCache[uid] = users[uid].name || "Anonimen";
+    messageInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        sendMessage();
       }
     });
-  }
 
-  // Pridobi trenutnega uporabnika (prijavo)
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      loadUserNames().then(() => {
-        listenForIncomingCalls();
-      });
-    } else {
-      // Če ni prijave, zahtevaj prijavo (ali anonimno)
-      auth.signInAnonymously().catch(console.error);
+    let showingActiveUsers = false;
+
+    function toggleActiveUsers() {
+      showingActiveUsers = !showingActiveUsers;
+      chatBox.innerHTML = "";
+
+      if (showingActiveUsers) {
+        const activeUsers = Object.entries(userStatusCache)
+          .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+        if (activeUsers.length === 0) {
+          chatBox.innerHTML = "<i>Ni drugih aktivnih uporabnikov.</i>";
+        } else {
+          activeUsers.forEach(([uid]) => {
+            const name = userNamesCache[uid] || "Anonimen";
+            const div = document.createElement("div");
+            div.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${name}`;
+            chatBox.appendChild(div);
+          });
+        }
+      } else {
+        location.reload();
+      }
     }
-  });
 
-  // Dogodek za pošiljanje sporočila ob pritisku tipke Enter
-  messageInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
 
-  // Funkcija za končanje klica mora biti globalna (ker jo klicajo gumbi)
-  window.endCall = endCall;
-  window.callUser = callUser;
-  window.answerCall = answerCall;
 
-</script>
+
+
+
+  </script>
 </body>
 </html>
