@@ -173,6 +173,17 @@
     </div>
   </div>
 
+
+
+<div id="callOverlay" style="display:none; padding: 20px;">
+  <div id="callStatus" style="font-weight: bold; margin-bottom: 10px;"></div>
+  <div id="callControls"></div>
+</div>
+
+
+
+
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
@@ -418,7 +429,138 @@
 
 
 
+const callOverlay = document.getElementById("callOverlay");
+const callStatus = document.getElementById("callStatus");
+const callControls = document.getElementById("callControls");
+let callRef = null;
+let isCaller = false;
 
+function showCallUI(text, buttons = []) {
+  chatBox.style.display = "none";
+  callOverlay.style.display = "block";
+  callStatus.textContent = text;
+  callControls.innerHTML = "";
+  buttons.forEach(btn => callControls.appendChild(btn));
+}
+
+function hideCallUI() {
+  chatBox.style.display = "block";
+  callOverlay.style.display = "none";
+  callControls.innerHTML = "";
+  callStatus.textContent = "";
+}
+
+function endCall(remoteUid) {
+  if (peerConnection) peerConnection.close();
+  peerConnection = null;
+  localStream?.getTracks().forEach(t => t.stop());
+  if (callRef) callRef.remove();
+  db.ref("calls/" + remoteUid).remove();
+  hideCallUI();
+}
+
+function startCall(targetUid) {
+  isCaller = true;
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+    localStream = stream;
+    peerConnection = new RTCPeerConnection(rtcConfig);
+    stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+    peerConnection.onicecandidate = e => {
+      if (e.candidate) {
+        db.ref("calls/" + targetUid + "/candidates").push({
+          from: currentUser.uid,
+          candidate: e.candidate.toJSON()
+        });
+      }
+    };
+
+    peerConnection.ontrack = event => {
+      const audio = new Audio();
+      audio.srcObject = event.streams[0];
+      audio.play();
+    };
+
+    peerConnection.createOffer().then(offer => {
+      peerConnection.setLocalDescription(offer);
+      callRef = db.ref("calls/" + targetUid);
+      callRef.set({
+        from: currentUser.uid,
+        offer: offer
+      });
+
+      const endBtn = document.createElement("button");
+      endBtn.textContent = "Končaj klic";
+      endBtn.onclick = () => endCall(targetUid);
+
+      showCallUI("Klic v teku z " + (userNamesCache[targetUid] || "Uporabnik"), [endBtn]);
+    });
+  });
+}
+
+// Sprejem klica:
+db.ref("calls").on("child_added", async snapshot => {
+  const targetUid = snapshot.key;
+  const callData = snapshot.val();
+
+  if (!callData.offer || callData.from === currentUser.uid || targetUid !== currentUser.uid) return;
+
+  const fromName = userNamesCache[callData.from] || "Uporabnik";
+
+  const acceptBtn = document.createElement("button");
+  acceptBtn.textContent = "Sprejmi klic";
+  acceptBtn.onclick = async () => {
+    callRef = db.ref("calls/" + currentUser.uid);
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+    peerConnection = new RTCPeerConnection(rtcConfig);
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = event => {
+      const audio = new Audio();
+      audio.srcObject = event.streams[0];
+      audio.play();
+    };
+
+    peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    db.ref("calls/" + callData.from + "/answer").set(answer);
+
+    const endBtn = document.createElement("button");
+    endBtn.textContent = "Končaj klic";
+    endBtn.onclick = () => endCall(callData.from);
+
+    showCallUI("Povezan s " + fromName, [endBtn]);
+
+    // ICE
+    db.ref("calls/" + currentUser.uid + "/candidates").on("child_added", s => {
+      const c = new RTCIceCandidate(s.val().candidate);
+      peerConnection.addIceCandidate(c);
+    });
+    db.ref("calls/" + callData.from + "/candidates").on("child_added", s => {
+      const c = new RTCIceCandidate(s.val().candidate);
+      peerConnection.addIceCandidate(c);
+    });
+  };
+
+  const declineBtn = document.createElement("button");
+  declineBtn.textContent = "Zavrni";
+  declineBtn.onclick = () => {
+    db.ref("calls/" + currentUser.uid).remove();
+    hideCallUI();
+  };
+
+  showCallUI(`${fromName} te kliče`, [acceptBtn, declineBtn]);
+});
+
+// Caller prejme odgovor:
+db.ref("calls").on("child_changed", snapshot => {
+  const callData = snapshot.val();
+  if (!callData.answer || !isCaller) return;
+  peerConnection.setRemoteDescription(new RTCSessionDescription(callData.answer));
+});
 
 
   </script>
