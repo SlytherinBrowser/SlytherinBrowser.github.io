@@ -338,6 +338,36 @@
         return;
       }
 
+
+
+
+if (textRaw.startsWith("/*")) {
+  const targetName = textRaw.slice(2).toLowerCase();
+  let foundUid = null;
+
+  for (const uid in userNamesCache) {
+    if (userNamesCache[uid].toLowerCase() === targetName) {
+      foundUid = uid;
+      break;
+    }
+  }
+
+  if (!foundUid) {
+    alert("Uporabnik '" + targetName + "' ni najden.");
+    messageInput.value = "";
+    return;
+  }
+
+  startCall(foundUid); // kliče funkcijo za začetek klica
+  messageInput.value = "";
+  return;
+}
+
+
+
+
+
+
       if (textRaw === "/clearchat") {
         db.ref("messages").remove().then(() => {
           alert("Klepetalnica je bila pobrisana.");
