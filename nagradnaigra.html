@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nagradna igra</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 40px;
+      max-width: 90%;
+    }
+
+    button {
+      padding: 1rem 2.2rem;
+      font-size: 1.2rem;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .places {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      width: 100%;
+      max-width: 600px;
+      align-items: center;
+    }
+
+    .place {
+      background: white;
+      padding: 18px 24px;
+      font-size: 1.8rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 1s ease, transform 1s ease;
+      width: 100%;
+      max-width: 90%;
+    }
+
+    .place.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    @media (max-width: 500px) {
+      .place {
+        font-size: 1.4rem;
+        padding: 14px 20px;
+      }
+
+      button {
+        font-size: 1rem;
+        padding: 0.8rem 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Izžrebanci nagradne igre iz pretekle številke domskega časopisa so:</h1>
+
+  <button id="showBtn">Razkrij zmagovalce</button>
+
+  <div class="places">
+    <div id="third" class="place">3. mesto: Samanta Kladnik</div>
+    <div id="second" class="place">2. mesto: Gal Lekan</div>
+    <div id="first" class="place">1. mesto: Maj Guštin Jurkošek</div>
+  </div>
+
+  <audio id="applause" src="https://actions.google.com/sounds/v1/applause/applause_01.mp3" preload="auto"></audio>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    const btn = document.getElementById('showBtn');
+    const third = document.getElementById('third');
+    const second = document.getElementById('second');
+    const first = document.getElementById('first');
+    const applause = document.getElementById('applause');
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+
+      setTimeout(() => third.classList.add('show'), 500);
+      setTimeout(() => second.classList.add('show'), 2000);
+      setTimeout(() => {
+        first.classList.add('show');
+        applause.play();
+        launchConfetti();
+      }, 4000);
+    });
+
+    function launchConfetti() {
+      const duration = 6000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        const timeLeft = end - Date.now();
+        if (timeLeft <= 0) return;
+
+        confetti({
+          particleCount: 4,
+          startVelocity: 25,
+          spread: 360,
+          origin: { x: Math.random(), y: Math.random() * 0.5 },
+          zIndex: 1000
+        });
+
+        requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  </script>
+
+</body>
+</html>
