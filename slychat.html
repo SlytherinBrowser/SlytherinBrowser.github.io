@@ -435,34 +435,60 @@
       return;  
     }  
   
-    if (textRaw.startsWith("/@")) {  
-      const invitedName = textRaw.slice(2).toLowerCase();  
-      let foundUid = null;  
-      for (const uid in userNamesCache) {  
-        if (userNamesCache[uid].toLowerCase() === invitedName) {  
-          foundUid = uid;  
-          break;  
-        }  
-      }  
-      if (!foundUid) {  
-        alert("Uporabnik '" + invitedName + "' ni najden.");  
-        messageInput.value = "";  
-        return;  
-      }  
-  
-      db.ref("messages").push({  
-        uid: currentUser.uid,  
-        text: "Povabilo v zasebni klepet",  
-        invite: true,  
-        privateUid: foundUid  
-      });  
-  
-      currentChatPartner = foundUid;  
-      chatBox.innerHTML = "";  
-      alert("Vstopil si v zasebni pogovor z " + userNamesCache[foundUid]);  
-      messageInput.value = "";  
-      return;  
-    }  
+    if (textRaw.startsWith("/@")) {
+  // Odstranimo začetni "/"
+  const invitesText = textRaw.slice(1).trim(); // "/@ime1 @ime2" -> "@ime1 @ime2"
+  // Razdelimo na posamezne uporabniške povabile (npr. "@ime1", "@ime2")
+  const inviteNames = invitesText.split(" ").filter(n => n.startsWith("@")).map(n => n.slice(1).toLowerCase());
+
+  if (inviteNames.length === 0) {
+    alert("Vpiši uporabniška imena za povabilo, npr. /@ime1 @ime2");
+    messageInput.value = "";
+    return;
+  }
+
+  let notFoundUsers = [];
+  let invitedUids = [];
+
+  // Poiščemo Uid za vsako ime
+  inviteNames.forEach(name => {
+    let foundUid = null;
+    for (const uid in userNamesCache) {
+      if (userNamesCache[uid].toLowerCase() === name) {
+        foundUid = uid;
+        break;
+      }
+    }
+    if (foundUid) {
+      invitedUids.push(foundUid);
+    } else {
+      notFoundUsers.push(name);
+    }
+  });
+
+  if (notFoundUsers.length > 0) {
+    alert("Uporabniki niso najdeni: " + notFoundUsers.join(", "));
+  }
+
+  // Pošljemo povabila v bazo za vse najdene uporabnike
+  invitedUids.forEach(uid => {
+    db.ref("messages").push({
+      uid: currentUser.uid,
+      text: "Povabilo v zasebni klepet",
+      invite: true,
+      privateUid: uid
+    });
+  });
+
+  if (invitedUids.length > 0) {
+    currentChatPartner = invitedUids[0]; // nastavimo prvega kot trenutnega partnerja
+    chatBox.innerHTML = "";
+    alert("Vstopil si v zasebni pogovor z: " + invitedUids.map(uid => userNamesCache[uid]).join(", "));
+  }
+
+  messageInput.value = "";
+  return;
+}
   
     let hidden = isHiddenMode;  
     let text = textRaw;  
