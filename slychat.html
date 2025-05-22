@@ -174,7 +174,8 @@
     </div>
   </div>
 
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>  
   
@@ -539,8 +540,24 @@
     const textRaw = messageInput.value.trim();  
   
     if (!textRaw) return;  
-  
-  
+ 
+
+ 
+  // Uporabi to v tvoji funkciji za pošiljanje sporočil
+if (textRaw === "/map") {
+  if (currentChatPartner) {
+    alert("Zemljevid deluje samo v javnem klepetu.");
+    messageInput.value = "";
+    return;
+  }
+
+  showLeafletUserMap();
+  messageInput.value = "";
+  return;
+}
+
+
+
   
     // Če še nima imena - potrdi  
   
@@ -899,6 +916,50 @@
     }  
   
   }   
+
+
+// PREDPOGOJ: Leaflet CSS in JS sta že vključena v HTML
+// Firebase je inicializiran
+
+let leafletMap;
+let leafletMarkers = [];
+
+const leafletMapDiv = document.createElement("div");
+leafletMapDiv.id = "leafletMap";
+leafletMapDiv.style.width = "100%";
+leafletMapDiv.style.height = "400px";
+leafletMapDiv.style.display = "none";
+document.body.appendChild(leafletMapDiv);
+
+// Funkcija za prikaz zemljevida z Leaflet
+function showLeafletUserMap() {
+  if (!leafletMap) {
+    leafletMap = L.map('leafletMap').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 18
+    }).addTo(leafletMap);
+  }
+
+  leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+  leafletMarkers = [];
+
+  const usersRef = firebase.database().ref("users");
+  usersRef.once("value", snapshot => {
+    snapshot.forEach(child => {
+      const user = child.val();
+      if (user.active && user.location?.lat && user.location?.lng) {
+        const marker = L.marker([user.location.lat, user.location.lng])
+          .addTo(leafletMap)
+          .bindPopup(user.name || "Uporabnik");
+        leafletMarkers.push(marker);
+      }
+    });
+  });
+
+  leafletMapDiv.style.display = "block";
+  leafletMap.invalidateSize(); // za pravilen prikaz, če se zemljevid prvič prikaže
+}
 </script>
 </body>
 </html>
