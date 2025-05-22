@@ -174,8 +174,6 @@
     </div>
   </div>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>  
   
@@ -543,18 +541,7 @@
  
 
  
-  // Uporabi to v tvoji funkciji za pošiljanje sporočil
-if (textRaw === "/map") {
-  if (currentChatPartner) {
-    alert("Zemljevid deluje samo v javnem klepetu.");
-    messageInput.value = "";
-    return;
-  }
-
-  showLeafletUserMap();
-  messageInput.value = "";
-  return;
-}
+  
 
 
 
@@ -917,72 +904,6 @@ if (textRaw === "/map") {
   
   }   
 
-
-
-let leafletMap;
-let leafletMarkers = [];
-let leafletMapContainer;
-
-function createLeafletMapContainer() {
-  leafletMapContainer = document.createElement("div");
-  leafletMapContainer.id = "leafletMapContainer";
-  leafletMapContainer.style.width = "100%";
-  leafletMapContainer.style.height = "100%";
-  leafletMapContainer.style.display = "none"; // skrito dokler ne prikličemo /map
-  document.getElementById("messages").appendChild(leafletMapContainer);
-}
-
-function showLeafletUserMap() {
-  const messagesDiv = document.getElementById("messages");
-  messagesDiv.innerHTML = ""; // počisti sporočila
-
-  if (!leafletMapContainer) {
-    createLeafletMapContainer();
-  }
-
-  leafletMapContainer.style.display = "block";
-
-  if (!leafletMap) {
-    leafletMap = L.map('leafletMapContainer').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 18
-    }).addTo(leafletMap);
-  } else {
-    leafletMap.invalidateSize();
-  }
-
-  // Počisti prejšnje markerje
-  leafletMarkers.forEach(marker => marker.remove());
-  leafletMarkers = [];
-
-  // Naloži aktivne uporabnike z lokacijo
-  const usersRef = firebase.database().ref("users");
-  usersRef.once("value", snapshot => {
-    snapshot.forEach(child => {
-      const user = child.val();
-      if (user.active && user.location?.lat && user.location?.lng) {
-        const marker = L.marker([user.location.lat, user.location.lng])
-          .addTo(leafletMap)
-          .bindPopup(user.name || "Uporabnik");
-        leafletMarkers.push(marker);
-      }
-    });
-  });
-}
-
-// V tvoji funkciji za obdelavo ukazov (npr. pri pošiljanju sporočila)
-if (textRaw === "/map") {
-  if (currentChatPartner) {
-    alert("Zemljevid deluje samo v javnem klepetu.");
-    messageInput.value = "";
-    return;
-  }
-
-  showLeafletUserMap();
-  messageInput.value = "";
-  return;
-}
 </script>
 </body>
 </html>
