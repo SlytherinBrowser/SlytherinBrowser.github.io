@@ -229,14 +229,20 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Popravljena funkcija typeEffect, ki vrne Promise in čaka da animacija konča
 function typeEffect(text, targetElement, delay = 50) {
-  targetElement.innerHTML = "";
-  [...text].forEach((char, i) => {
-    const span = document.createElement("span");
-    span.classList.add("typing-char");
-    span.textContent = char;
-    span.style.animationDelay = `${i * delay}ms`;
-    targetElement.appendChild(span);
+  return new Promise((resolve) => {
+    targetElement.innerHTML = "";
+    [...text].forEach((char, i) => {
+      const span = document.createElement("span");
+      span.classList.add("typing-char");
+      span.textContent = char;
+      span.style.animationDelay = `${i * delay}ms`;
+      targetElement.appendChild(span);
+    });
+    // Čakamo dokler ne mine animacija zadnjega znaka
+    const totalDuration = text.length * delay + 50; // +50ms da zaključimo
+    setTimeout(resolve, totalDuration);
   });
 }
 
@@ -278,7 +284,7 @@ auth.onAuthStateChanged(async user => {
     messageInput.placeholder = "Vnesi sporočilo...";
   }
 
-  db.ref("messages").on("child_added", snapshot => {
+  db.ref("messages").on("child_added", async snapshot => {
     const msg = snapshot.val();
 
     if (msg.system && msg.privateUid === currentUser.uid) {
@@ -322,40 +328,54 @@ auth.onAuthStateChanged(async user => {
     if (color === "rainbow") {
       senderSpan.classList.add("rainbow");
       senderSpan.innerHTML = isOnline ? `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: ` : `${displayName}: `;
+      div.appendChild(senderSpan);
+
+      const realText = document.createElement("span");
+      realText.classList.add("realText");
+      realText.textContent = msg.text;
+
+      div.appendChild(realText);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
     } else if (color === "hacker") {
-      const label = isOnline ? `● ${displayName}: ` : `${displayName}: `;
-      typeEffect(label, senderSpan);
+      // Čakamo da se tipkanje imena konča preden začnemo s tipkanjem besedila
+      await typeEffect(isOnline ? `● ${displayName}: ` : `${displayName}: `, senderSpan);
+      div.appendChild(senderSpan);
+
+      const realText = document.createElement("span");
+      realText.classList.add("realText");
+      await typeEffect(msg.text, realText);
+      div.appendChild(realText);
+
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
     } else if (color) {
       senderSpan.style.color = color;
       senderSpan.innerHTML = isOnline ? `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: ` : `${displayName}: `;
+      div.appendChild(senderSpan);
+
+      const realText = document.createElement("span");
+      realText.classList.add("realText");
+      realText.textContent = msg.text;
+
+      div.appendChild(realText);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
     } else {
       senderSpan.textContent = isOnline ? `● ${displayName}: ` : `${displayName}: `;
-    }
+      div.appendChild(senderSpan);
 
-    const realText = document.createElement("span");
-    realText.classList.add("realText");
-
-    if (color === "hacker") {
-      typeEffect(msg.text, realText);
-    } else {
+      const realText = document.createElement("span");
+      realText.classList.add("realText");
       realText.textContent = msg.text;
-    }
 
-    if (msg.hidden) {
-      const hiddenText = document.createElement("span");
-      hiddenText.classList.add("hiddenText");
-      hiddenText.textContent = "Zasebno sporočilo";
-      div.classList.add("hiddenMessage");
-      div.appendChild(senderSpan);
-      div.appendChild(hiddenText);
       div.appendChild(realText);
-    } else {
-      div.appendChild(senderSpan);
-      div.appendChild(realText);
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
     }
-
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
   });
 });
 
