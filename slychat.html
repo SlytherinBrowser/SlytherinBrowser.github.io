@@ -917,33 +917,49 @@ if (textRaw === "/map") {
   
   }   
 
-
-// PREDPOGOJ: Leaflet CSS in JS sta že vključena v HTML
-// Firebase je inicializiran
+// PREDPOGOJ: že imaš inicializiran Firebase in div z id="messages"
+// Spodaj dodaj Leaflet JS/CSS v HTML: (če še nimaš)
+// <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+// <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 let leafletMap;
 let leafletMarkers = [];
+let leafletMapContainer;
 
-const leafletMapDiv = document.createElement("div");
-leafletMapDiv.id = "leafletMap";
-leafletMapDiv.style.width = "100%";
-leafletMapDiv.style.height = "400px";
-leafletMapDiv.style.display = "none";
-document.body.appendChild(leafletMapDiv);
+function createLeafletMapContainer() {
+  leafletMapContainer = document.createElement("div");
+  leafletMapContainer.id = "leafletMapContainer";
+  leafletMapContainer.style.width = "100%";
+  leafletMapContainer.style.height = "100%";
+  leafletMapContainer.style.display = "none"; // skrito dokler ne prikličemo /map
+  document.getElementById("messages").appendChild(leafletMapContainer);
+}
 
-// Funkcija za prikaz zemljevida z Leaflet
 function showLeafletUserMap() {
+  const messagesDiv = document.getElementById("messages");
+  messagesDiv.innerHTML = ""; // počisti sporočila
+
+  if (!leafletMapContainer) {
+    createLeafletMapContainer();
+  }
+
+  leafletMapContainer.style.display = "block";
+
   if (!leafletMap) {
-    leafletMap = L.map('leafletMap').setView([20, 0], 2);
+    leafletMap = L.map('leafletMapContainer').setView([20, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap',
       maxZoom: 18
     }).addTo(leafletMap);
+  } else {
+    leafletMap.invalidateSize();
   }
 
-  leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+  // Počisti prejšnje markerje
+  leafletMarkers.forEach(marker => marker.remove());
   leafletMarkers = [];
 
+  // Naloži aktivne uporabnike z lokacijo
   const usersRef = firebase.database().ref("users");
   usersRef.once("value", snapshot => {
     snapshot.forEach(child => {
@@ -956,9 +972,19 @@ function showLeafletUserMap() {
       }
     });
   });
+}
 
-  leafletMapDiv.style.display = "block";
-  leafletMap.invalidateSize(); // za pravilen prikaz, če se zemljevid prvič prikaže
+// V tvoji funkciji za obdelavo ukazov (npr. pri pošiljanju sporočila)
+if (textRaw === "/map") {
+  if (currentChatPartner) {
+    alert("Zemljevid deluje samo v javnem klepetu.");
+    messageInput.value = "";
+    return;
+  }
+
+  showLeafletUserMap();
+  messageInput.value = "";
+  return;
 }
 </script>
 </body>
