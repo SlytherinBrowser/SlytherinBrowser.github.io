@@ -926,9 +926,9 @@
   }   
 
 
-
 // === GLAVNI ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
+
 
 // === NASTAVITVE ===
 let rotationDegree = 0;
@@ -994,7 +994,7 @@ function cancelSelfDestruct() {
 btnZ.addEventListener('wheel', function(event) {
   event.preventDefault();
 
-  // Rotacija omogočena vedno, tudi ko je selfDestruct aktiven
+  // Vedno omogoči rotacijo (vizualni efekt)
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
   if (moves.length > maxMoves) moves.shift();
@@ -1002,17 +1002,36 @@ btnZ.addEventListener('wheel', function(event) {
 
   const code = moves.join('');
 
+  // === Master control aktivacija ===
   if (code === 'LRLRLRLR') {
+    if (selfDestructActive) {
+      alert("Ne moreš aktivirati Master Control med Self Destruct.");
+      return;
+    }
     masterControlActive = true;
     alert("Master control odklenjen!");
-  } else if (code === 'RRLLRRRL') {
+    return;
+  }
+
+  // Če ni masterControl, nič drugega ne sme delovati
+  if (!masterControlActive) {
+    return;
+  }
+
+  // === Self destruct aktivacija ===
+  if (code === 'RRLLRRRL') {
     activateSelfDestruct();
-  } else if (code === 'LLRRLLLR') {
+    return;
+  }
+
+  // === Self destruct preklic ===
+  if (code === 'LLRRLLLR') {
     if (selfDestructActive) {
       cancelSelfDestruct();
     } else {
       alert("Self destruct ni aktiven – ni kaj preklicati.");
     }
+    return;
   }
 });
 
@@ -1024,11 +1043,13 @@ function displayMessage(sender, message) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// Obdelava prejete (incoming) sporočila
 function handleIncomingMessage(msg) {
   if (selfDestructActive) return;
   displayMessage(msg.sender, msg.text);
 }
 
+// Obdelava sporočila, ki ga uporabnik pošlje
 async function onUserSendMessage(sender, message) {
   if (selfDestructActive) return;
   displayMessage(sender, message);
@@ -1044,6 +1065,7 @@ async function onUserSendMessage(sender, message) {
   }
 }
 
+// === OB ZAGONU: preveri, če je še aktiven self destruct ===
 window.addEventListener('load', () => {
   const stored = localStorage.getItem('selfDestructEnd');
   if (!stored) return;
@@ -1057,6 +1079,7 @@ window.addEventListener('load', () => {
     localStorage.removeItem('selfDestructEnd');
   }
 });
+
 
 
 </script>
