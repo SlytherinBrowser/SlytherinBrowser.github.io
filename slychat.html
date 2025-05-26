@@ -1094,7 +1094,6 @@ window.addEventListener('load', () => {
 
 
 
-
 // === MOBILNA LOGIKA ZA Z-GUMB ===
 (function() {
   const isMobileWidth = () => window.innerWidth <= 800;
@@ -1113,7 +1112,16 @@ window.addEventListener('load', () => {
     setTimeout(() => {
       btnZ.style.transition = '';
     }, 300);
+  };
+
+  const activate = () => {
+    isActive = true;
+    if (btnH) btnH.style.display = 'none';
+  };
+
+  const deactivate = () => {
     isActive = false;
+    resetPosition();
     if (btnH) btnH.style.display = '';
   };
 
@@ -1137,8 +1145,7 @@ window.addEventListener('load', () => {
           activateSelfDestruct(60 * 60 * 1000);
         }
       }
-      isActive = true; // po swipe aktiviramo gumb
-      if (btnH) btnH.style.display = 'none';
+      activate(); // po swipe aktiviramo gumb in skrijemo btnH
     }
     resetPosition();
   };
@@ -1165,21 +1172,24 @@ window.addEventListener('load', () => {
       handleSwipe();
     });
 
-    // Dodamo klik na gumb
+    // Klik na gumb za toggle aktivacije
     btnZ.addEventListener('click', () => {
       if (isActive) {
-        resetPosition();
+        deactivate();
+      } else {
+        activate();
       }
     });
   };
 
   const applyMobileLayout = () => {
     if (isMobileWidth()) {
-      if (btnH) btnH.style.display = 'none';
+      if (btnH) btnH.style.display = '';
       container.appendChild(btnZ); // premakni v sredino
     } else {
       if (btnH) btnH.style.display = '';
-      // po potrebi lahko tukaj premakneš btnZ nazaj v originalni container
+      // če želiš premakniti btnZ nazaj v originalni container, tukaj dodaš
+      deactivate();
     }
   };
 
@@ -1189,7 +1199,6 @@ window.addEventListener('load', () => {
     addTouchEvents();
   });
 })();
-
 </script>
 </body>
 </html>
