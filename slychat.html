@@ -981,15 +981,19 @@ function startSelfDestructTimer() {
   }, 1000);
 }
 
-function cancelSelfDestruct() {
+function cancelSelfDestruct(fromConsole = false) {
+  if (!fromConsole && !masterControlActive) {
+    return alert("Samo master control lahko prekliče self destruct.");
+  }
   if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive) return alert("Samo master control lahko prekliče self destruct.");
+  
   selfDestructActive = false;
   selfDestructEndTimestamp = null;
   localStorage.removeItem('selfDestructEnd');
   enableChat();
   alert("Self destruct je bil preklican.");
 }
+
 
 // === ROTACIJA GUMBA ZA ODKLENITEV FUNKCIJ ===
 btnZ.addEventListener('wheel', function(event) {
