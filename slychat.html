@@ -1117,6 +1117,7 @@ function initMobileCommandButtonBehavior() {
     btn.style.left = '';
     btn.style.transform = '';
     btn.style.transition = '';
+    btn.style.zIndex = '';
     isMobileModeActive = false;
   };
 
@@ -1127,6 +1128,7 @@ function initMobileCommandButtonBehavior() {
     btn.style.left = '50%';
     btn.style.transform = 'translateX(-50%)';
     btn.style.transition = 'transform 0.2s ease';
+    btn.style.zIndex = '10';
     isMobileModeActive = true;
   };
 
@@ -1139,7 +1141,11 @@ function initMobileCommandButtonBehavior() {
     }
   });
 
-  // Touch drag
+  const getContainerBounds = () => {
+    const rect = container.getBoundingClientRect();
+    return { left: rect.left, right: rect.right };
+  };
+
   const onTouchStart = (e) => {
     if (!isMobileView() || !isMobileModeActive) return;
     dragged = false;
@@ -1149,23 +1155,35 @@ function initMobileCommandButtonBehavior() {
 
   const onTouchMove = (e) => {
     if (!isMobileView() || !isMobileModeActive) return;
+
     currentX = e.touches[0].clientX;
     const delta = currentX - startX;
     if (Math.abs(delta) > 10) dragged = true;
-    btn.style.transform = `translateX(calc(-50% + ${delta}px))`;
+
+    // Omejitev vlečenja znotraj containerja
+    const containerBounds = getContainerBounds();
+    const btnWidth = btn.offsetWidth;
+    const newLeft = btn.offsetLeft + delta;
+    const minLeft = 0;
+    const maxLeft = container.offsetWidth - btnWidth;
+
+    if (newLeft >= minLeft && newLeft <= maxLeft) {
+      btn.style.transform = `translateX(calc(-50% + ${delta}px))`;
+    }
   };
 
   const onTouchEnd = () => {
     if (!isMobileView() || !isMobileModeActive) return;
-    btn.style.transition = 'transform 0.2s ease';
+
     const delta = currentX - startX;
+    btn.style.transition = 'transform 0.2s ease';
+    btn.style.transform = 'translateX(-50%)';
 
     if (dragged) {
       moves.push(delta < 0 ? 'L' : 'R');
       if (moves.length > maxMoves) moves.shift();
-    }
 
-    btn.style.transform = 'translateX(-50%)';
+      
   };
 
   btn.addEventListener('touchstart', onTouchStart);
@@ -1174,7 +1192,6 @@ function initMobileCommandButtonBehavior() {
 }
 
 window.addEventListener('load', initMobileCommandButtonBehavior);
-
 </script>
 </body>
 </html>
