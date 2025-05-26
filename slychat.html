@@ -1105,9 +1105,7 @@ window.addEventListener('load', () => {
   let isDragging = false;
   let startX = 0;
   let currentX = 0;
-  let isActive = false; // ali je gumb aktiven (premaknjen)
-
-  const originalContainerWidth = container.offsetWidth;
+  let isActive = false; // ali je gumb "aktiven" (premaknjen)
 
   const resetPosition = () => {
     btnZ.style.transition = 'transform 0.3s ease';
@@ -1117,18 +1115,6 @@ window.addEventListener('load', () => {
     }, 300);
     isActive = false;
     if (btnH) btnH.style.display = '';
-    container.style.width = originalContainerWidth + 'px';
-  };
-
-  const activatePosition = (deltaX) => {
-    btnZ.style.transition = 'transform 0.3s ease';
-    btnZ.style.transform = `translateX(${deltaX}px)`;
-    setTimeout(() => {
-      btnZ.style.transition = '';
-    }, 300);
-    isActive = true;
-    if (btnH) btnH.style.display = 'none';
-    container.style.width = (originalContainerWidth + 50) + 'px';
   };
 
   const handleSwipe = () => {
@@ -1151,11 +1137,10 @@ window.addEventListener('load', () => {
           activateSelfDestruct(60 * 60 * 1000);
         }
       }
-
-      activatePosition(deltaX);
-    } else {
-      resetPosition();
+      isActive = true; // po swipe aktiviramo gumb
+      if (btnH) btnH.style.display = 'none';
     }
+    resetPosition();
   };
 
   const addTouchEvents = () => {
@@ -1179,29 +1164,22 @@ window.addEventListener('load', () => {
       isDragging = false;
       handleSwipe();
     });
-  };
 
-  btnZ.addEventListener('click', () => {
-    if (!isMobileWidth()) return;
-    if (isActive) {
-      // če je gumb premaknjen/aktiven, klik ga ponastavi in prikaže btnH
-      resetPosition();
-    } else {
-      // če ni aktiven, skrij btnH in razširi container (kot, da je aktiven brez premika)
-      if (btnH) btnH.style.display = 'none';
-      container.style.width = (originalContainerWidth + 50) + 'px';
-      isActive = true;
-    }
-  });
+    // Dodamo klik na gumb
+    btnZ.addEventListener('click', () => {
+      if (isActive) {
+        resetPosition();
+      }
+    });
+  };
 
   const applyMobileLayout = () => {
     if (isMobileWidth()) {
       if (btnH) btnH.style.display = 'none';
-      container.appendChild(btnZ); // premakni v container (na sredino)
+      container.appendChild(btnZ); // premakni v sredino
     } else {
       if (btnH) btnH.style.display = '';
-      container.style.width = originalContainerWidth + 'px';
-      resetPosition();
+      // po potrebi lahko tukaj premakneš btnZ nazaj v originalni container
     }
   };
 
@@ -1211,8 +1189,6 @@ window.addEventListener('load', () => {
     addTouchEvents();
   });
 })();
-
-
 
 </script>
 </body>
