@@ -937,48 +937,18 @@ const rotationStep = 12;
 let moves = [];
 const maxMoves = 8;
 
-let scanModeActive = false;
 let selfDestructActive = false;
 let selfDestructEndTimestamp = null;
-
-const badWords = [
-  'idiot', 'neumen', 'bedak', 'kreten', 'glup', 'debilen', 'fuj', 'sranje', 'pizda',
-  'kurba', 'jebemti', 'zmešan', 'tepec', 'pička', 'butec', 'gnoj', 'govno',
-  'kravja glava', 'cigan', 'rdečkapa', 'ljubimec'
-];
-
-function containsBadWord(text) {
-  const regex = new RegExp(`\\b(${badWords.join('|')})\\b`, 'i');
-  return regex.test(text);
-}
-
-// === SCAN MODE ===
-function activateScanMode() {
-  scanModeActive = true;
-  alert("Scan mode aktiviran. Sporočila z neprimerno vsebino bodo odstranjena.");
-  messageInput.placeholder = "Scan mode vklopljen - neprimerna sporočila se brišejo";
-  deleteOffensiveMessages();
-}
-
-function deactivateScanMode() {
-  scanModeActive = false;
-  alert("Scan mode izklopljen.");
-  messageInput.placeholder = "Vpiši sporočilo...";
-}
-
-function deleteOffensiveMessages() {
-  const children = Array.from(chatBox.children);
-  children.forEach(child => {
-    if (containsBadWord(child.textContent)) {
-      chatBox.removeChild(child);
-    }
-  });
-}
+let masterControlActive = false;  // flag za master control
 
 // === SELF DESTRUCT ===
 function activateSelfDestruct() {
+  if (!masterControlActive) {
+    alert("Self destruct lahko aktivira samo master control!");
+    return;
+  }
   if (selfDestructActive) return alert("Self destruct že aktiven!");
-  const endTime = Date.now() + 60 * 60 * 1000;
+  const endTime = Date.now() + 60 * 60 * 1000; // 1 ura
   selfDestructActive = true;
   selfDestructEndTimestamp = endTime;
   localStorage.setItem('selfDestructEnd', endTime);
@@ -996,9 +966,7 @@ function disableChat() {
 function enableChat() {
   messageInput.disabled = false;
   chatBox.style.opacity = '1';
-  messageInput.placeholder = scanModeActive ?
-    "Scan mode vklopljen - neprimerna sporočila se brišejo" :
-    "Vpiši sporočilo...";
+  messageInput.placeholder = "Vpiši sporočilo...";
 }
 
 function startSelfDestructTimer() {
@@ -1035,19 +1003,12 @@ btnZ.addEventListener('wheel', function(event) {
   btnZ.style.transform = `rotate(${rotationDegree}deg)`;
 
   const code = moves.join('');
-  const lastTwo = code.slice(-2);
-
-  if (scanModeActive && (lastTwo === 'LR' || lastTwo === 'RL')) {
-    deactivateScanMode();
-    return;
-  }
 
   if (code === 'LRLRLRLR') {
+    masterControlActive = true;
     alert("Master control odklenjen!");
   } else if (code === 'RRLLRRRL') {
     activateSelfDestruct();
-  } else if (code === 'LLRRLLRR') {
-    activateScanMode();
   }
 });
 
@@ -1059,15 +1020,26 @@ function displayMessage(sender, message) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// Obdelava prejete (incoming) sporočila
 function handleIncomingMessage(msg) {
   if (selfDestructActive) return;
-  if (scanModeActive && containsBadWord(msg.text)) return;
   displayMessage(msg.sender, msg.text);
 }
 
-function onUserSendMessage(sender, message) {
-  if (scanModeActive && containsBadWord(message)) return;
+// Obdelava sporočila, ki ga uporabnik pošlje
+async function onUserSendMessage(sender, message) {
+  if (selfDestructActive) return;
   displayMessage(sender, message);
+
+  try {
+    await firebase.firestore().collection('messages').add({
+      sender: sender,
+      text: message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Napaka pri shranjevanju sporočila v bazo:", error);
+  }
 }
 
 window.addEventListener('load', () => {
@@ -1083,6 +1055,7 @@ window.addEventListener('load', () => {
     localStorage.removeItem('selfDestructEnd');
   }
 });
+
 
 
 </script>
