@@ -930,6 +930,8 @@
 const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
 const container = document.querySelector('.message-input-btn-container');
+const messageInput = document.getElementById('messageInput'); // predpostavljam
+const chatBox = document.getElementById('chatBox'); // predpostavljam
 
 // === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
@@ -942,46 +944,46 @@ let selfDestructEndTimestamp = null;
 let selfDestructUnlimited = false;
 let masterControlActive = false;
 
+// === FIRESTORE REFERENCA ===
+const selfDestructDocRef = firebase.firestore().collection('system').doc('selfDestruct');
+
 // === SELF DESTRUCT FUNKCIJE ===
-function activateSelfDestruct(duration = 60 * 60 * 1000) {
-  if (!masterControlActive && !selfDestructActive) {
+async function activateSelfDestruct(duration = 60 * 60 * 1000) {
+  if (!masterControlActive) {
     alert("Self destruct lahko aktivira samo master control!");
     return;
   }
 
   if (selfDestructActive && !selfDestructUnlimited) {
-    selfDestructUnlimited = true;
-    selfDestructEndTimestamp = null;
-    localStorage.setItem('selfDestructUnlimited', 'true');
-    clearInterval(window.selfDestructInterval);
-    disableChat();
+    // Preklop na neomejen self destruct
+    await selfDestructDocRef.set({
+      active: true,
+      unlimited: true,
+      endTimestamp: null
+    });
     alert("Self destruct nastavljen na neomejen čas!");
     return;
   }
 
-  selfDestructActive = true;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = Date.now() + duration;
-  localStorage.setItem('selfDestructEnd', selfDestructEndTimestamp);
-  localStorage.removeItem('selfDestructUnlimited');
-  disableChat();
-  startSelfDestructTimer();
+  // Aktivacija self destruct za določen čas
+  await selfDestructDocRef.set({
+    active: true,
+    unlimited: false,
+    endTimestamp: Date.now() + duration
+  });
+
   alert("Self destruct aktiviran za 1 uro.");
 }
 
-function cancelSelfDestruct() {
+async function cancelSelfDestruct() {
   if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive && !selfDestructUnlimited) {
-    return alert("Preklic samo z master control!");
-  }
+  if (!masterControlActive) return alert("Preklic samo z master control!");
 
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
-  localStorage.removeItem('selfDestructEnd');
-  localStorage.removeItem('selfDestructUnlimited');
-  clearInterval(window.selfDestructInterval);
-  enableChat();
+  await selfDestructDocRef.set({
+    active: false,
+    unlimited: false,
+    endTimestamp: null
+  });
   alert("Self destruct je bil deaktiviran.");
 }
 
@@ -999,22 +1001,54 @@ function enableChat() {
 
 function startSelfDestructTimer() {
   clearInterval(window.selfDestructInterval);
-  window.selfDestructInterval = setInterval(() => {
+  window.selfDestructInterval = setInterval(async () => {
     if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
+
     if (Date.now() >= selfDestructEndTimestamp) {
-      selfDestructActive = false;
-      selfDestructEndTimestamp = null;
-      localStorage.removeItem('selfDestructEnd');
-      enableChat();
+      // Samodejno prekliči self destruct ob izteku
+      await selfDestructDocRef.set({
+        active: false,
+        unlimited: false,
+        endTimestamp: null
+      });
       clearInterval(window.selfDestructInterval);
-      alert("Self destruct se je iztekel. Chat je spet omogočen.");
     }
   }, 1000);
 }
 
+// === FIRESTORE POSLUŠALNIK ZA SAMODEJNO SINHRONIZACIJO ===
+selfDestructDocRef.onSnapshot((doc) => {
+  const data = doc.data();
+  if (data?.active) {
+    selfDestructActive = true;
+    selfDestructUnlimited = data.unlimited || false;
+    selfDestructEndTimestamp = data.endTimestamp || null;
+    disableChat();
+
+    if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+      const remaining = selfDestructEndTimestamp - Date.now();
+      if (remaining > 0) {
+        startSelfDestructTimer();
+      } else {
+        // Če je čas potekel, deaktiviraj self destruct
+        selfDestructActive = false;
+        selfDestructEndTimestamp = null;
+        enableChat();
+      }
+    }
+  } else {
+    selfDestructActive = false;
+    selfDestructUnlimited = false;
+    selfDestructEndTimestamp = null;
+    enableChat();
+    clearInterval(window.selfDestructInterval);
+  }
+});
+
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
+  if (selfDestructActive && !masterControlActive) return;
 
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
@@ -1075,6 +1109,7 @@ btnZ.addEventListener('wheel', function (event) {
     btnH.style.display = zActive ? 'none' : 'inline-block';
   }
 
+
   btnZ.addEventListener('click', toggleZMobile);
 
   window.addEventListener('resize', () => {
@@ -1094,6 +1129,7 @@ function interpretCode() {
     masterControlActive = !masterControlActive;
     alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
   } else if (code === 'RRLLRRRL') {
+    if (!masterControlActive) return alert("Self destruct zahteva master control.");
     if (!selfDestructActive) {
       activateSelfDestruct();
     } else if (!selfDestructUnlimited) {
@@ -1101,7 +1137,7 @@ function interpretCode() {
     }
   } else if (code === 'LLRRLLLR') {
     if (selfDestructActive && selfDestructUnlimited) {
-      activateSelfDestruct(60 * 60 * 1000); // reset na 1 uro
+      activateSelfDestruct(60 * 60 * 1000);
     } else if (selfDestructActive) {
       cancelSelfDestruct();
     }
@@ -1133,40 +1169,6 @@ async function onUserSendMessage(sender, message) {
     console.error("Napaka pri shranjevanju:", err);
   }
 }
-
-// === OB ZAGONU ===
-window.addEventListener('load', () => {
-  const unlimited = localStorage.getItem('selfDestructUnlimited') === 'true';
-  const storedEnd = localStorage.getItem('selfDestructEnd');
-
-  if (unlimited) {
-    selfDestructActive = true;
-    selfDestructUnlimited = true;
-    disableChat();
-  } else if (storedEnd) {
-    const end = parseInt(storedEnd, 10);
-    if (Date.now() < end) {
-      selfDestructActive = true;
-      selfDestructEndTimestamp = end;
-      disableChat();
-      startSelfDestructTimer();
-    } else {
-      localStorage.removeItem('selfDestructEnd');
-    }
-  }
-});
-
-// === KONZOLNA PRISILNA DEAKTIVACIJA ===
-window.forceSelfDestructOff = () => {
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
-  clearInterval(window.selfDestructInterval);
-  localStorage.removeItem('selfDestructEnd');
-  localStorage.removeItem('selfDestructUnlimited');
-  enableChat();
-  console.log("Self destruct prisilno izklopljen.");
-};
 
 </script>
 </body>
