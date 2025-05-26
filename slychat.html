@@ -995,9 +995,10 @@ function cancelSelfDestruct(fromConsole = false) {
 }
 
 
-// === ROTACIJA GUMBA ZA ODKLENITEV FUNKCIJ ===
 btnZ.addEventListener('wheel', function(event) {
   event.preventDefault();
+
+  if (selfDestructActive && !masterControlActive) return;
 
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
@@ -1006,37 +1007,26 @@ btnZ.addEventListener('wheel', function(event) {
 
   const code = moves.join('');
 
-  // === MASTER CONTROL TOGGLE ===
+  // MASTER CONTROL toggle
   if (code === 'LRLRLRLR') {
-    if (masterControlActive) {
-      masterControlActive = false;
-      alert("Master control je bil izklopljen.");
-    } else {
-      if (selfDestructActive) {
-        alert("Ne moreš aktivirati Master Control med Self Destruct.");
-        return;
-      }
-      masterControlActive = true;
-      alert("Master control odklenjen!");
+    if (selfDestructActive && !masterControlActive) {
+      alert("Ne moreš aktivirati master control med self destruct.");
+      return;
     }
+    masterControlActive = !masterControlActive;
+    alert(masterControlActive ? "Master control aktiviran." : "Master control deaktiviran.");
     return;
   }
 
-  // === NAPREJ SAMO ČE JE MASTER CONTROL AKTIVEN ===
-  if (!masterControlActive) return;
+  if (!masterControlActive) return;  // brez master control nadaljevanje ni dovoljeno
 
-  // === SELF DESTRUCT AKTIVACIJA ===
   if (code === 'RRLLRRRL') {
     activateSelfDestruct();
-    return;
-  }
-
-  // === SELF DESTRUCT PREKLIC ===
-  if (code === 'LLRRLLLR') {
-    cancelSelfDestruct();
-    return;
+  } else if (code === 'LLRRLLLR') {
+    cancelSelfDestruct(); // preklic samo, če masterControl je true (ker smo tukaj)
   }
 });
+
 
 // === SPOROČILA ===
 function displayMessage(sender, message) {
