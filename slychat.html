@@ -1094,8 +1094,7 @@ window.addEventListener('load', () => {
 
 
 
-// === MOBILNA LOGIKA ZA Z-GUMB ===
-(function() {
+(function () {
   const isMobileWidth = () => window.innerWidth <= 800;
   const btnZ = document.getElementById('privateToggleBtn');
   const btnH = document.getElementById('hiddenToggleBtn');
@@ -1104,7 +1103,7 @@ window.addEventListener('load', () => {
   let isDragging = false;
   let startX = 0;
   let currentX = 0;
-  let isActive = false; // ali je gumb "aktiven" (premaknjen)
+  let zActive = false;
 
   const resetPosition = () => {
     btnZ.style.transition = 'transform 0.3s ease';
@@ -1112,17 +1111,6 @@ window.addEventListener('load', () => {
     setTimeout(() => {
       btnZ.style.transition = '';
     }, 300);
-  };
-
-  const activate = () => {
-    isActive = true;
-    if (btnH) btnH.style.display = 'none';
-  };
-
-  const deactivate = () => {
-    isActive = false;
-    resetPosition();
-    if (btnH) btnH.style.display = '';
   };
 
   const handleSwipe = () => {
@@ -1136,16 +1124,17 @@ window.addEventListener('load', () => {
 
       if (code === 'LRLRLRLR') {
         masterControlActive = !masterControlActive;
-        alert(masterControlActive ? "Master control ODklopljen!" : "Master control IZklopljen!");
+        alert(masterControlActive ? "Master control Vklopljen!" : "Master control Izklopljen!");
       } else if (code === 'RRLLRRRL') {
         activateSelfDestruct();
       } else if (code === 'LLRRLLLR') {
         if (selfDestructActive && selfDestructUnlimited) {
           alert("Self destruct je ponastavljen nazaj na 1 uro.");
           activateSelfDestruct(60 * 60 * 1000);
+        } else if (selfDestructActive && !selfDestructUnlimited) {
+          cancelSelfDestruct();
         }
       }
-      activate(); // po swipe aktiviramo gumb in skrijemo btnH
     }
     resetPosition();
   };
@@ -1171,27 +1160,34 @@ window.addEventListener('load', () => {
       isDragging = false;
       handleSwipe();
     });
-
-    // Klik na gumb za toggle aktivacije
-    btnZ.addEventListener('click', () => {
-      if (isActive) {
-        deactivate();
-      } else {
-        activate();
-      }
-    });
   };
 
   const applyMobileLayout = () => {
     if (isMobileWidth()) {
-      if (btnH) btnH.style.display = '';
-      container.appendChild(btnZ); // premakni v sredino
+      if (btnH) btnH.style.display = 'inline-block';
+      container.appendChild(btnZ);
     } else {
-      if (btnH) btnH.style.display = '';
-      // če želiš premakniti btnZ nazaj v originalni container, tukaj dodaš
-      deactivate();
+      if (btnH) btnH.style.display = 'inline-block';
     }
   };
+
+  const toggleZMobile = () => {
+    if (!isMobileWidth()) return;
+
+    zActive = !zActive;
+
+    if (zActive) {
+      btnZ.classList.add('active');
+      if (btnH) btnH.style.display = 'none';
+      btnZ.style.transform = 'translateX(0px)';
+    } else {
+      btnZ.classList.remove('active');
+      if (btnH) btnH.style.display = 'inline-block';
+      btnZ.style.transform = 'translateX(0px)';
+    }
+  };
+
+  btnZ.addEventListener('click', toggleZMobile);
 
   window.addEventListener('resize', applyMobileLayout);
   window.addEventListener('load', () => {
@@ -1199,6 +1195,8 @@ window.addEventListener('load', () => {
     addTouchEvents();
   });
 })();
+
+
 </script>
 </body>
 </html>
