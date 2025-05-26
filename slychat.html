@@ -1089,6 +1089,72 @@ window.addEventListener('load', () => {
 });
 
 
+
+
+
+
+
+
+function isMobileView() {
+  return window.innerWidth <= 800;
+}
+
+function initMobileCommandButtonBehavior() {
+  const btn = document.getElementById('privateToggleBtn');
+  const hiddenBtn = document.getElementById('hiddenToggleBtn');
+  const container = document.querySelector('.message-input-btn-container');
+
+  let startX = 0;
+  let currentX = 0;
+  let dragged = false;
+
+  // Skrivanje in premik gumba ob kliku
+  btn.addEventListener('click', () => {
+    if (!isMobileView()) return;
+    hiddenBtn.style.display = 'none';
+    container.appendChild(btn);
+    btn.style.position = 'absolute';
+    btn.style.left = '50%';
+    btn.style.transform = 'translateX(-50%)';
+    btn.style.transition = 'transform 0.2s ease';
+  });
+
+  // Touch drag
+  const onTouchStart = (e) => {
+    if (!isMobileView()) return;
+    dragged = false;
+    startX = e.touches[0].clientX;
+    btn.style.transition = 'none';
+  };
+
+  const onTouchMove = (e) => {
+    if (!isMobileView()) return;
+    currentX = e.touches[0].clientX;
+    const delta = currentX - startX;
+    if (Math.abs(delta) > 10) dragged = true;
+    btn.style.transform = `translateX(calc(-50% + ${delta}px))`;
+  };
+
+  const onTouchEnd = () => {
+    if (!isMobileView()) return;
+    btn.style.transition = 'transform 0.2s ease';
+    const delta = currentX - startX;
+
+    if (dragged) {
+      moves.push(delta < 0 ? 'L' : 'R');
+      if (moves.length > maxMoves) moves.shift();
+    }
+
+    btn.style.transform = 'translateX(-50%)';
+  };
+
+  btn.addEventListener('touchstart', onTouchStart);
+  btn.addEventListener('touchmove', onTouchMove);
+  btn.addEventListener('touchend', onTouchEnd);
+}
+
+// Po nalaganju strani aktiviraj funkcionalnost
+window.addEventListener('load', initMobileCommandButtonBehavior);
 </script>
 </body>
 </html>
