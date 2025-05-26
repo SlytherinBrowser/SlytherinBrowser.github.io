@@ -1114,30 +1114,34 @@ window.addEventListener('load', () => {
   };
 
   const handleSwipe = () => {
-    const deltaX = currentX - startX;
-    if (Math.abs(deltaX) > 40) {
-      const move = deltaX < 0 ? 'L' : 'R';
-      moves.push(move);
-      if (moves.length > maxMoves) moves.shift();
+  const deltaX = currentX - startX;
+  if (Math.abs(deltaX) > 40) {
+    const move = deltaX < 0 ? 'L' : 'R';
+    moves.push(move);
+    if (moves.length > maxMoves) moves.shift();
 
-      const code = moves.join('');
+    const code = moves.join('');
 
-      if (code === 'LRLRLRLR') {
-        masterControlActive = !masterControlActive;
-        alert(masterControlActive ? "Master control Vklopljen!" : "Master control Izklopljen!");
-      } else if (code === 'RRLLRRRL') {
-        activateSelfDestruct();
-      } else if (code === 'LLRRLLLR') {
-        if (selfDestructActive && selfDestructUnlimited) {
-          alert("Self destruct je ponastavljen nazaj na 1 uro.");
-          activateSelfDestruct(60 * 60 * 1000);
-        } else if (selfDestructActive && !selfDestructUnlimited) {
-          cancelSelfDestruct();
-        }
+    if (code === 'LRLRLRLR') {
+      masterControlActive = !masterControlActive;
+      alert(masterControlActive ? "Master control ODklopljen!" : "Master control IZklopljen!");
+    } else if (code === 'RRLLRRRL') {
+      activateSelfDestruct(); // začne (ali podaljša) self-destruct
+    } else if (code === 'LLRRLLLR') {
+      if (selfDestructActive && selfDestructUnlimited) {
+        alert("Self destruct je ponastavljen nazaj na 1 uro.");
+        activateSelfDestruct(60 * 60 * 1000); // 1 ura
+        selfDestructUnlimited = false;
+      } else if (selfDestructActive && !selfDestructUnlimited) {
+        alert("Self destruct je izklopljen.");
+        cancelSelfDestruct();
+      } else {
+        alert("Self destruct ni aktiven.");
       }
     }
-    resetPosition();
-  };
+  }
+  resetPosition();
+};
 
   const addTouchEvents = () => {
     btnZ.addEventListener('touchstart', (e) => {
