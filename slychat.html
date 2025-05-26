@@ -983,6 +983,7 @@ function startSelfDestructTimer() {
 
 function cancelSelfDestruct() {
   if (!selfDestructActive) return alert("Self destruct ni aktiven.");
+  if (!masterControlActive) return alert("Samo master control lahko prekliče self destruct.");
   selfDestructActive = false;
   selfDestructEndTimestamp = null;
   localStorage.removeItem('selfDestructEnd');
@@ -994,7 +995,6 @@ function cancelSelfDestruct() {
 btnZ.addEventListener('wheel', function(event) {
   event.preventDefault();
 
-  // Vedno omogoči rotacijo (vizualni efekt)
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
   if (moves.length > maxMoves) moves.shift();
@@ -1002,35 +1002,34 @@ btnZ.addEventListener('wheel', function(event) {
 
   const code = moves.join('');
 
-  // === Master control aktivacija ===
+  // === MASTER CONTROL TOGGLE ===
   if (code === 'LRLRLRLR') {
-    if (selfDestructActive) {
-      alert("Ne moreš aktivirati Master Control med Self Destruct.");
-      return;
+    if (masterControlActive) {
+      masterControlActive = false;
+      alert("Master control je bil izklopljen.");
+    } else {
+      if (selfDestructActive) {
+        alert("Ne moreš aktivirati Master Control med Self Destruct.");
+        return;
+      }
+      masterControlActive = true;
+      alert("Master control odklenjen!");
     }
-    masterControlActive = true;
-    alert("Master control odklenjen!");
     return;
   }
 
-  // Če ni masterControl, nič drugega ne sme delovati
-  if (!masterControlActive) {
-    return;
-  }
+  // === NAPREJ SAMO ČE JE MASTER CONTROL AKTIVEN ===
+  if (!masterControlActive) return;
 
-  // === Self destruct aktivacija ===
+  // === SELF DESTRUCT AKTIVACIJA ===
   if (code === 'RRLLRRRL') {
     activateSelfDestruct();
     return;
   }
 
-  // === Self destruct preklic ===
+  // === SELF DESTRUCT PREKLIC ===
   if (code === 'LLRRLLLR') {
-    if (selfDestructActive) {
-      cancelSelfDestruct();
-    } else {
-      alert("Self destruct ni aktiven – ni kaj preklicati.");
-    }
+    cancelSelfDestruct();
     return;
   }
 });
