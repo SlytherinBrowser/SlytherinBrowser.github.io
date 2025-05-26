@@ -1103,32 +1103,52 @@ function initMobileCommandButtonBehavior() {
   const btn = document.getElementById('privateToggleBtn');
   const hiddenBtn = document.getElementById('hiddenToggleBtn');
   const container = document.querySelector('.message-input-btn-container');
+  const originalParent = btn.parentElement;
 
   let startX = 0;
   let currentX = 0;
   let dragged = false;
+  let isMobileModeActive = false;
 
-  // Skrivanje in premik gumba ob kliku
-  btn.addEventListener('click', () => {
-    if (!isMobileView()) return;
+  const resetToNormal = () => {
+    hiddenBtn.style.display = '';
+    originalParent.appendChild(btn);
+    btn.style.position = '';
+    btn.style.left = '';
+    btn.style.transform = '';
+    btn.style.transition = '';
+    isMobileModeActive = false;
+  };
+
+  const activateMobileMode = () => {
     hiddenBtn.style.display = 'none';
     container.appendChild(btn);
     btn.style.position = 'absolute';
     btn.style.left = '50%';
     btn.style.transform = 'translateX(-50%)';
     btn.style.transition = 'transform 0.2s ease';
+    isMobileModeActive = true;
+  };
+
+  btn.addEventListener('click', () => {
+    if (!isMobileView()) return;
+    if (isMobileModeActive) {
+      resetToNormal();
+    } else {
+      activateMobileMode();
+    }
   });
 
   // Touch drag
   const onTouchStart = (e) => {
-    if (!isMobileView()) return;
+    if (!isMobileView() || !isMobileModeActive) return;
     dragged = false;
     startX = e.touches[0].clientX;
     btn.style.transition = 'none';
   };
 
   const onTouchMove = (e) => {
-    if (!isMobileView()) return;
+    if (!isMobileView() || !isMobileModeActive) return;
     currentX = e.touches[0].clientX;
     const delta = currentX - startX;
     if (Math.abs(delta) > 10) dragged = true;
@@ -1136,7 +1156,7 @@ function initMobileCommandButtonBehavior() {
   };
 
   const onTouchEnd = () => {
-    if (!isMobileView()) return;
+    if (!isMobileView() || !isMobileModeActive) return;
     btn.style.transition = 'transform 0.2s ease';
     const delta = currentX - startX;
 
@@ -1153,8 +1173,8 @@ function initMobileCommandButtonBehavior() {
   btn.addEventListener('touchend', onTouchEnd);
 }
 
-// Po nalaganju strani aktiviraj funkcionalnost
 window.addEventListener('load', initMobileCommandButtonBehavior);
+
 </script>
 </body>
 </html>
