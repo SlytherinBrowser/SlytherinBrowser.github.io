@@ -930,7 +930,6 @@
 // === GLAVNI ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
 
-
 // === NASTAVITVE ===
 let rotationDegree = 0;
 const rotationStep = 12;
@@ -995,8 +994,7 @@ function cancelSelfDestruct() {
 btnZ.addEventListener('wheel', function(event) {
   event.preventDefault();
 
-  if (selfDestructActive) return;
-
+  // Rotacija omogočena vedno, tudi ko je selfDestruct aktiven
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
   if (moves.length > maxMoves) moves.shift();
@@ -1009,6 +1007,12 @@ btnZ.addEventListener('wheel', function(event) {
     alert("Master control odklenjen!");
   } else if (code === 'RRLLRRRL') {
     activateSelfDestruct();
+  } else if (code === 'LLRRLLLR') {
+    if (selfDestructActive) {
+      cancelSelfDestruct();
+    } else {
+      alert("Self destruct ni aktiven – ni kaj preklicati.");
+    }
   }
 });
 
@@ -1020,13 +1024,11 @@ function displayMessage(sender, message) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Obdelava prejete (incoming) sporočila
 function handleIncomingMessage(msg) {
   if (selfDestructActive) return;
   displayMessage(msg.sender, msg.text);
 }
 
-// Obdelava sporočila, ki ga uporabnik pošlje
 async function onUserSendMessage(sender, message) {
   if (selfDestructActive) return;
   displayMessage(sender, message);
@@ -1055,7 +1057,6 @@ window.addEventListener('load', () => {
     localStorage.removeItem('selfDestructEnd');
   }
 });
-
 
 
 </script>
