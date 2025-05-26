@@ -926,10 +926,14 @@
   }   
 
 
-// === GLAVNI ELEMENTI ===
+// === ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
+const btnH = document.getElementById('hiddenToggleBtn');
+const chatBox = document.getElementById('chatBox');
+const messageInput = document.getElementById('messageInput');
+const container = document.querySelector('.message-input-btn-container');
 
-// === NASTAVITVE ===
+// === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
 const rotationStep = 12;
 let moves = [];
@@ -940,18 +944,19 @@ let selfDestructEndTimestamp = null;
 let selfDestructUnlimited = false;
 let masterControlActive = false;
 
-// === SELF DESTRUCT ===
+// === SELF DESTRUCT FUNKCIJE ===
 function activateSelfDestruct(duration = 60 * 60 * 1000) {
   if (!masterControlActive) {
     alert("Self destruct lahko aktivira samo master control!");
     return;
   }
+
   if (selfDestructActive && !selfDestructUnlimited) {
-    // Preklop na neomejen način
     selfDestructUnlimited = true;
     selfDestructEndTimestamp = null;
     localStorage.setItem('selfDestructUnlimited', 'true');
     clearInterval(window.selfDestructInterval);
+    disableChat();
     alert("Self destruct nastavljen na neomejen čas!");
     return;
   }
@@ -963,7 +968,7 @@ function activateSelfDestruct(duration = 60 * 60 * 1000) {
   localStorage.removeItem('selfDestructUnlimited');
   disableChat();
   startSelfDestructTimer();
-  alert("Self destruct aktiviran. Chat bo onemogočen 1 uro.");
+  alert("Self destruct aktiviran za 1 uro.");
 }
 
 function disableChat() {
@@ -995,22 +1000,21 @@ function startSelfDestructTimer() {
 
 function cancelSelfDestruct() {
   if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive) return alert("Self destruct lahko prekliče samo master control!");
+  if (!masterControlActive) return alert("Preklic samo z master control!");
 
   selfDestructActive = false;
-  selfDestructEndTimestamp = null;
   selfDestructUnlimited = false;
+  selfDestructEndTimestamp = null;
   localStorage.removeItem('selfDestructEnd');
   localStorage.removeItem('selfDestructUnlimited');
   clearInterval(window.selfDestructInterval);
   enableChat();
-  alert("Self destruct je bil popolnoma preklican.");
+  alert("Self destruct je bil deaktiviran.");
 }
 
-// === ROTACIJA GUMBA ZA ODKLENITEV FUNKCIJ ===
-btnZ.addEventListener('wheel', function(event) {
+// === ROTACIJSKI GESTURE DESKTOP ===
+btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
-
   if (selfDestructActive && !masterControlActive) return;
 
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
@@ -1018,38 +1022,95 @@ btnZ.addEventListener('wheel', function(event) {
   if (moves.length > maxMoves) moves.shift();
   btnZ.style.transform = `rotate(${rotationDegree}deg)`;
 
-  const code = moves.join('');
+  interpretCode();
+});
 
-  if (code === 'LRLRLRLR') {
-        masterControlActive = !masterControlActive;
-        alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
-      } else if (code === 'RRLLRRRL') {
-        if (!masterControlActive) {
-          alert("Self destruct potrebuje vključen master control.");
-          return;
-        }
-        if (!selfDestructActive) {
-          activateSelfDestruct(60 * 60 * 1000); // 1 ura
-        } else if (!selfDestructUnlimited) {
-          activateSelfDestruct(); // brez omejitve
-        }
-      } else if (code === 'LLRRLLLR') {
-        if (selfDestructActive && selfDestructUnlimited) {
-          alert("Self destruct ponastavljen na 1 uro.");
-          activateSelfDestruct(60 * 60 * 1000);
-        } else if (selfDestructActive && !selfDestructUnlimited) {
-          if (masterControlActive) {
-            cancelSelfDestruct();
-          } else {
-            alert("Za deaktivacijo self destructa je potreben master control.");
-          }
-        }
-      }
+// === GESTURE ZA MOBILNI DOTIK ===
+(function () {
+  let isDragging = false;
+  let startX = 0;
+  let currentX = 0;
+  let zActive = false;
+
+  function resetPosition() {
+    btnZ.style.transition = 'transform 0.3s ease';
+    btnZ.style.transform = 'translateX(0px)';
+    setTimeout(() => { btnZ.style.transition = ''; }, 300);
+  }
+
+  function handleSwipe() {
+    const deltaX = currentX - startX;
+    if (Math.abs(deltaX) > 40) {
+      const move = deltaX < 0 ? 'L' : 'R';
+      moves.push(move);
+      if (moves.length > maxMoves) moves.shift();
+      interpretCode();
     }
     resetPosition();
-  };
+  }
 
-// === SPOROČILA ===
+  function addTouchEvents() {
+    btnZ.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      startX = e.touches[0].clientX;
+    });
+
+    btnZ.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX;
+      const deltaX = currentX - startX;
+      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
+      btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
+    });
+
+    btnZ.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      handleSwipe();
+    });
+  }
+
+  function toggleZMobile() {
+    zActive = !zActive;
+    btnZ.classList.toggle('active', zActive);
+    btnH.style.display = zActive ? 'none' : 'inline-block';
+  }
+
+  btnZ.addEventListener('click', toggleZMobile);
+
+  window.addEventListener('resize', () => {
+    btnH.style.display = 'inline-block';
+    container.appendChild(btnZ);
+  });
+
+  window.addEventListener('load', () => {
+    addTouchEvents();
+  });
+})();
+
+// === DEKODIRANJE GESTURE KODE ===
+function interpretCode() {
+  const code = moves.join('');
+  if (code === 'LRLRLRLR') {
+    masterControlActive = !masterControlActive;
+    alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+  } else if (code === 'RRLLRRRL') {
+    if (!masterControlActive) return alert("Self destruct zahteva master control.");
+    if (!selfDestructActive) {
+      activateSelfDestruct();
+    } else if (!selfDestructUnlimited) {
+      activateSelfDestruct(); // preklop v unlimited
+    }
+  } else if (code === 'LLRRLLLR') {
+    if (selfDestructActive && selfDestructUnlimited) {
+      activateSelfDestruct(60 * 60 * 1000);
+    } else if (selfDestructActive) {
+      cancelSelfDestruct();
+    }
+  }
+}
+
+// === CHAT FUNKCIJE ===
 function displayMessage(sender, message) {
   const el = document.createElement('div');
   el.innerHTML = `<strong>${sender}:</strong> ${message}`;
@@ -1058,22 +1119,20 @@ function displayMessage(sender, message) {
 }
 
 function handleIncomingMessage(msg) {
-  if (selfDestructActive) return;
-  displayMessage(msg.sender, msg.text);
+  if (!selfDestructActive) displayMessage(msg.sender, msg.text);
 }
 
 async function onUserSendMessage(sender, message) {
   if (selfDestructActive) return;
   displayMessage(sender, message);
-
   try {
     await firebase.firestore().collection('messages').add({
       sender: sender,
       text: message,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-  } catch (error) {
-    console.error("Napaka pri shranjevanju sporočila v bazo:", error);
+  } catch (err) {
+    console.error("Napaka pri shranjevanju:", err);
   }
 }
 
@@ -1100,152 +1159,6 @@ window.addEventListener('load', () => {
 });
 
 
-
-
-
-
-
-(function () {
-  const isMobileWidth = () => window.innerWidth <= 800;
-  const btnZ = document.getElementById('privateToggleBtn');
-  const btnH = document.getElementById('hiddenToggleBtn');
-  const container = document.querySelector('.message-input-btn-container');
-
-  let isDragging = false;
-  let startX = 0;
-  let currentX = 0;
-  let zActive = false;
-
-  // === Self destruct stanje ===
-  let masterControlActive = false;
-  let selfDestructActive = false;
-  let selfDestructUnlimited = false;
-
-  const moves = [];
-  const maxMoves = 8;
-
-  const resetPosition = () => {
-    btnZ.style.transition = 'transform 0.3s ease';
-    btnZ.style.transform = 'translateX(0px)';
-    setTimeout(() => {
-      btnZ.style.transition = '';
-    }, 300);
-  };
-
-  const activateSelfDestruct = (durationMs) => {
-    selfDestructActive = true;
-    selfDestructUnlimited = !durationMs;
-    if (durationMs) {
-      alert("Self destruct aktiviran za 1 uro.");
-      setTimeout(() => {
-        if (selfDestructActive && !selfDestructUnlimited) {
-          alert("Self destruct potekel.");
-          selfDestructActive = false;
-        }
-      }, durationMs);
-    } else {
-      alert("Self destruct aktiviran BREZ OMEJITVE.");
-    }
-  };
-
-  const cancelSelfDestruct = () => {
-    selfDestructActive = false;
-    selfDestructUnlimited = false;
-    alert("Self destruct deaktiviran.");
-  };
-
-  const handleSwipe = () => {
-    const deltaX = currentX - startX;
-    if (Math.abs(deltaX) > 40) {
-      const move = deltaX < 0 ? 'L' : 'R';
-      moves.push(move);
-      if (moves.length > maxMoves) moves.shift();
-
-      const code = moves.join('');
-
-      if (code === 'LRLRLRLR') {
-        masterControlActive = !masterControlActive;
-        alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
-      } else if (code === 'RRLLRRRL') {
-        if (!masterControlActive) {
-          alert("Self destruct potrebuje vključen master control.");
-          return;
-        }
-        if (!selfDestructActive) {
-          activateSelfDestruct(60 * 60 * 1000); // 1 ura
-        } else if (!selfDestructUnlimited) {
-          activateSelfDestruct(); // brez omejitve
-        }
-      } else if (code === 'LLRRLLLR') {
-        if (selfDestructActive && selfDestructUnlimited) {
-          alert("Self destruct ponastavljen na 1 uro.");
-          activateSelfDestruct(60 * 60 * 1000);
-        } else if (selfDestructActive && !selfDestructUnlimited) {
-          if (masterControlActive) {
-            cancelSelfDestruct();
-          } else {
-            alert("Za deaktivacijo self destructa je potreben master control.");
-          }
-        }
-      }
-    }
-    resetPosition();
-  };
-
-  const addTouchEvents = () => {
-    btnZ.addEventListener('touchstart', (e) => {
-      if (!isMobileWidth()) return;
-      isDragging = true;
-      startX = e.touches[0].clientX;
-    });
-
-    btnZ.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      currentX = e.touches[0].clientX;
-      let deltaX = currentX - startX;
-      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
-      deltaX = Math.max(-maxX, Math.min(maxX, deltaX));
-      btnZ.style.transform = `translateX(${deltaX}px)`;
-    });
-
-    btnZ.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      handleSwipe();
-    });
-  };
-
-  const applyMobileLayout = () => {
-    if (isMobileWidth()) {
-      if (btnH) btnH.style.display = 'inline-block';
-      container.appendChild(btnZ);
-    } else {
-      if (btnH) btnH.style.display = 'inline-block';
-    }
-  };
-
-  const toggleZMobile = () => {
-    if (!isMobileWidth()) return;
-
-    zActive = !zActive;
-
-    if (zActive) {
-      btnZ.classList.add('active');
-      if (btnH) btnH.style.display = 'none';
-    } else {
-      btnZ.classList.remove('active');
-      if (btnH) btnH.style.display = 'inline-block';
-    }
-  };
-
-  btnZ.addEventListener('click', toggleZMobile);
-
-  window.addEventListener('resize', applyMobileLayout);
-  window.addEventListener('load', () => {
-    applyMobileLayout();
-    addTouchEvents();
-  });
-})();
 </script>
 </body>
 </html>
