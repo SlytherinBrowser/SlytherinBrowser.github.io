@@ -944,7 +944,7 @@ let masterControlActive = false;
 
 // === SELF DESTRUCT FUNKCIJE ===
 function activateSelfDestruct(duration = 60 * 60 * 1000) {
-  if (!masterControlActive) {
+  if (!masterControlActive && !selfDestructActive) {
     alert("Self destruct lahko aktivira samo master control!");
     return;
   }
@@ -967,6 +967,22 @@ function activateSelfDestruct(duration = 60 * 60 * 1000) {
   disableChat();
   startSelfDestructTimer();
   alert("Self destruct aktiviran za 1 uro.");
+}
+
+function cancelSelfDestruct() {
+  if (!selfDestructActive) return alert("Self destruct ni aktiven.");
+  if (!masterControlActive && !selfDestructUnlimited) {
+    return alert("Preklic samo z master control!");
+  }
+
+  selfDestructActive = false;
+  selfDestructUnlimited = false;
+  selfDestructEndTimestamp = null;
+  localStorage.removeItem('selfDestructEnd');
+  localStorage.removeItem('selfDestructUnlimited');
+  clearInterval(window.selfDestructInterval);
+  enableChat();
+  alert("Self destruct je bil deaktiviran.");
 }
 
 function disableChat() {
@@ -996,24 +1012,9 @@ function startSelfDestructTimer() {
   }, 1000);
 }
 
-function cancelSelfDestruct() {
-  if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive) return alert("Preklic samo z master control!");
-
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
-  localStorage.removeItem('selfDestructEnd');
-  localStorage.removeItem('selfDestructUnlimited');
-  clearInterval(window.selfDestructInterval);
-  enableChat();
-  alert("Self destruct je bil deaktiviran.");
-}
-
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
-  if (selfDestructActive && !masterControlActive) return;
 
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
   moves.push(event.deltaY < 0 ? 'L' : 'R');
@@ -1074,7 +1075,6 @@ btnZ.addEventListener('wheel', function (event) {
     btnH.style.display = zActive ? 'none' : 'inline-block';
   }
 
-
   btnZ.addEventListener('click', toggleZMobile);
 
   window.addEventListener('resize', () => {
@@ -1094,7 +1094,6 @@ function interpretCode() {
     masterControlActive = !masterControlActive;
     alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
   } else if (code === 'RRLLRRRL') {
-    if (!masterControlActive) return alert("Self destruct zahteva master control.");
     if (!selfDestructActive) {
       activateSelfDestruct();
     } else if (!selfDestructUnlimited) {
@@ -1102,7 +1101,7 @@ function interpretCode() {
     }
   } else if (code === 'LLRRLLLR') {
     if (selfDestructActive && selfDestructUnlimited) {
-      activateSelfDestruct(60 * 60 * 1000);
+      activateSelfDestruct(60 * 60 * 1000); // reset na 1 uro
     } else if (selfDestructActive) {
       cancelSelfDestruct();
     }
@@ -1157,6 +1156,17 @@ window.addEventListener('load', () => {
   }
 });
 
+// === KONZOLNA PRISILNA DEAKTIVACIJA ===
+window.forceSelfDestructOff = () => {
+  selfDestructActive = false;
+  selfDestructUnlimited = false;
+  selfDestructEndTimestamp = null;
+  clearInterval(window.selfDestructInterval);
+  localStorage.removeItem('selfDestructEnd');
+  localStorage.removeItem('selfDestructUnlimited');
+  enableChat();
+  console.log("Self destruct prisilno izklopljen.");
+};
 
 </script>
 </body>
