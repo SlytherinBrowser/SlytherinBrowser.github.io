@@ -1021,22 +1021,33 @@ btnZ.addEventListener('wheel', function(event) {
   const code = moves.join('');
 
   if (code === 'LRLRLRLR') {
-    masterControlActive = !masterControlActive;
-    alert(masterControlActive ? "Master control ODklopljen!" : "Master control IZklopljen!");
-  }
-
-  else if (code === 'RRLLRRRL') {
-    activateSelfDestruct();
-  }
-
-  else if (code === 'LLRRLLLR') {
-    // Ponastavitev na 1 uro – ne zahteva master
-    if (selfDestructActive && selfDestructUnlimited) {
-      alert("Self destruct je ponastavljen nazaj na 1 uro.");
-      activateSelfDestruct(60 * 60 * 1000);
+        masterControlActive = !masterControlActive;
+        alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+      } else if (code === 'RRLLRRRL') {
+        if (!masterControlActive) {
+          alert("Self destruct potrebuje vključen master control.");
+          return;
+        }
+        if (!selfDestructActive) {
+          activateSelfDestruct(60 * 60 * 1000); // 1 ura
+        } else if (!selfDestructUnlimited) {
+          activateSelfDestruct(); // brez omejitve
+        }
+      } else if (code === 'LLRRLLLR') {
+        if (selfDestructActive && selfDestructUnlimited) {
+          alert("Self destruct ponastavljen na 1 uro.");
+          activateSelfDestruct(60 * 60 * 1000);
+        } else if (selfDestructActive && !selfDestructUnlimited) {
+          if (masterControlActive) {
+            cancelSelfDestruct();
+          } else {
+            alert("Za deaktivacijo self destructa je potreben master control.");
+          }
+        }
+      }
     }
-  }
-});
+    resetPosition();
+  };
 
 // === SPOROČILA ===
 function displayMessage(sender, message) {
@@ -1105,12 +1116,42 @@ window.addEventListener('load', () => {
   let currentX = 0;
   let zActive = false;
 
+  // === Self destruct stanje ===
+  let masterControlActive = false;
+  let selfDestructActive = false;
+  let selfDestructUnlimited = false;
+
+  const moves = [];
+  const maxMoves = 8;
+
   const resetPosition = () => {
     btnZ.style.transition = 'transform 0.3s ease';
     btnZ.style.transform = 'translateX(0px)';
     setTimeout(() => {
       btnZ.style.transition = '';
     }, 300);
+  };
+
+  const activateSelfDestruct = (durationMs) => {
+    selfDestructActive = true;
+    selfDestructUnlimited = !durationMs;
+    if (durationMs) {
+      alert("Self destruct aktiviran za 1 uro.");
+      setTimeout(() => {
+        if (selfDestructActive && !selfDestructUnlimited) {
+          alert("Self destruct potekel.");
+          selfDestructActive = false;
+        }
+      }, durationMs);
+    } else {
+      alert("Self destruct aktiviran BREZ OMEJITVE.");
+    }
+  };
+
+  const cancelSelfDestruct = () => {
+    selfDestructActive = false;
+    selfDestructUnlimited = false;
+    alert("Self destruct deaktiviran.");
   };
 
   const handleSwipe = () => {
@@ -1124,15 +1165,27 @@ window.addEventListener('load', () => {
 
       if (code === 'LRLRLRLR') {
         masterControlActive = !masterControlActive;
-        alert(masterControlActive ? "Master control ODklopljen!" : "Master control IZklopljen!");
+        alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
       } else if (code === 'RRLLRRRL') {
-        activateSelfDestruct();
+        if (!masterControlActive) {
+          alert("Self destruct potrebuje vključen master control.");
+          return;
+        }
+        if (!selfDestructActive) {
+          activateSelfDestruct(60 * 60 * 1000); // 1 ura
+        } else if (!selfDestructUnlimited) {
+          activateSelfDestruct(); // brez omejitve
+        }
       } else if (code === 'LLRRLLLR') {
         if (selfDestructActive && selfDestructUnlimited) {
-          alert("Self destruct je ponastavljen nazaj na 1 uro.");
+          alert("Self destruct ponastavljen na 1 uro.");
           activateSelfDestruct(60 * 60 * 1000);
         } else if (selfDestructActive && !selfDestructUnlimited) {
-          cancelSelfDestruct();
+          if (masterControlActive) {
+            cancelSelfDestruct();
+          } else {
+            alert("Za deaktivacijo self destructa je potreben master control.");
+          }
         }
       }
     }
@@ -1179,11 +1232,9 @@ window.addEventListener('load', () => {
     if (zActive) {
       btnZ.classList.add('active');
       if (btnH) btnH.style.display = 'none';
-      btnZ.style.transform = 'translateX(0px)';
     } else {
       btnZ.classList.remove('active');
       if (btnH) btnH.style.display = 'inline-block';
-      btnZ.style.transform = 'translateX(0px)';
     }
   };
 
@@ -1195,7 +1246,6 @@ window.addEventListener('load', () => {
     addTouchEvents();
   });
 })();
-
 </script>
 </body>
 </html>
