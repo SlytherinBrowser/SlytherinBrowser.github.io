@@ -1068,17 +1068,12 @@ btnZ.addEventListener('wheel', function (event) {
     });
   }
 
-  const toggleZMobile = () => {
-  zActive = !zActive;
-
-  if (zActive) {
-    btnZ.classList.add('active');
-    if (isMobileWidth() && btnH) btnH.style.display = 'none';
-  } else {
-    btnZ.classList.remove('active');
-    if (isMobileWidth() && btnH) btnH.style.display = 'inline-block';
+  function toggleZMobile() {
+    zActive = !zActive;
+    btnZ.classList.toggle('active', zActive);
+    btnH.style.display = zActive ? 'none' : 'inline-block';
   }
-};
+
 
   btnZ.addEventListener('click', toggleZMobile);
 
