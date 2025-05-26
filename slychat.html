@@ -1095,103 +1095,88 @@ window.addEventListener('load', () => {
 
 
 
-function isMobileView() {
-  return window.innerWidth <= 800;
-}
-
-function initMobileCommandButtonBehavior() {
-  const btn = document.getElementById('privateToggleBtn');
-  const hiddenBtn = document.getElementById('hiddenToggleBtn');
+// === MOBILNA LOGIKA ZA Z-GUMB ===
+(function() {
+  const isMobileWidth = () => window.innerWidth <= 800;
+  const btnZ = document.getElementById('privateToggleBtn');
+  const btnH = document.getElementById('hiddenToggleBtn');
   const container = document.querySelector('.message-input-btn-container');
-  const originalParent = btn.parentElement;
 
+  let isDragging = false;
   let startX = 0;
   let currentX = 0;
-  let dragged = false;
-  let isMobileModeActive = false;
 
-  const resetToNormal = () => {
-    hiddenBtn.style.display = '';
-    originalParent.appendChild(btn);
-    btn.style.position = '';
-    btn.style.left = '';
-    btn.style.transform = '';
-    btn.style.transition = '';
-    btn.style.zIndex = '';
-    isMobileModeActive = false;
+  const resetPosition = () => {
+    btnZ.style.transition = 'transform 0.3s ease';
+    btnZ.style.transform = 'translateX(0px)';
+    setTimeout(() => {
+      btnZ.style.transition = '';
+    }, 300);
   };
 
-  const activateMobileMode = () => {
-    hiddenBtn.style.display = 'none';
-    container.appendChild(btn);
-    btn.style.position = 'absolute';
-    btn.style.left = '50%';
-    btn.style.transform = 'translateX(-50%)';
-    btn.style.transition = 'transform 0.2s ease';
-    btn.style.zIndex = '10';
-    isMobileModeActive = true;
-  };
-
-  btn.addEventListener('click', () => {
-    if (!isMobileView()) return;
-    if (isMobileModeActive) {
-      resetToNormal();
-    } else {
-      activateMobileMode();
-    }
-  });
-
-  const getContainerBounds = () => {
-    const rect = container.getBoundingClientRect();
-    return { left: rect.left, right: rect.right };
-  };
-
-  const onTouchStart = (e) => {
-    if (!isMobileView() || !isMobileModeActive) return;
-    dragged = false;
-    startX = e.touches[0].clientX;
-    btn.style.transition = 'none';
-  };
-
-  const onTouchMove = (e) => {
-    if (!isMobileView() || !isMobileModeActive) return;
-
-    currentX = e.touches[0].clientX;
-    const delta = currentX - startX;
-    if (Math.abs(delta) > 10) dragged = true;
-
-    // Omejitev vlečenja znotraj containerja
-    const containerBounds = getContainerBounds();
-    const btnWidth = btn.offsetWidth;
-    const newLeft = btn.offsetLeft + delta;
-    const minLeft = 0;
-    const maxLeft = container.offsetWidth - btnWidth;
-
-    if (newLeft >= minLeft && newLeft <= maxLeft) {
-      btn.style.transform = `translateX(calc(-50% + ${delta}px))`;
-    }
-  };
-
-  const onTouchEnd = () => {
-    if (!isMobileView() || !isMobileModeActive) return;
-
-    const delta = currentX - startX;
-    btn.style.transition = 'transform 0.2s ease';
-    btn.style.transform = 'translateX(-50%)';
-
-    if (dragged) {
-      moves.push(delta < 0 ? 'L' : 'R');
+  const handleSwipe = () => {
+    const deltaX = currentX - startX;
+    if (Math.abs(deltaX) > 40) {
+      const move = deltaX < 0 ? 'L' : 'R';
+      moves.push(move);
       if (moves.length > maxMoves) moves.shift();
 
-      
+      const code = moves.join('');
+
+      if (code === 'LRLRLRLR') {
+        masterControlActive = !masterControlActive;
+        alert(masterControlActive ? "Master control ODklopljen!" : "Master control IZklopljen!");
+      } else if (code === 'RRLLRRRL') {
+        activateSelfDestruct();
+      } else if (code === 'LLRRLLLR') {
+        if (selfDestructActive && selfDestructUnlimited) {
+          alert("Self destruct je ponastavljen nazaj na 1 uro.");
+          activateSelfDestruct(60 * 60 * 1000);
+        }
+      }
+    }
+    resetPosition();
   };
 
-  btn.addEventListener('touchstart', onTouchStart);
-  btn.addEventListener('touchmove', onTouchMove);
-  btn.addEventListener('touchend', onTouchEnd);
-}
+  const addTouchEvents = () => {
+    btnZ.addEventListener('touchstart', (e) => {
+      if (!isMobileWidth()) return;
+      isDragging = true;
+      startX = e.touches[0].clientX;
+    });
 
-window.addEventListener('load', initMobileCommandButtonBehavior);
+    btnZ.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX;
+      let deltaX = currentX - startX;
+      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
+      deltaX = Math.max(-maxX, Math.min(maxX, deltaX));
+      btnZ.style.transform = `translateX(${deltaX}px)`;
+    });
+
+    btnZ.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      handleSwipe();
+    });
+  };
+
+  const applyMobileLayout = () => {
+    if (isMobileWidth()) {
+      if (btnH) btnH.style.display = 'none';
+      container.appendChild(btnZ); // premakni v sredino
+    } else {
+      if (btnH) btnH.style.display = '';
+      // če želiš premakniti nazaj v originalni container, to lahko dodaš
+    }
+  };
+
+  window.addEventListener('resize', applyMobileLayout);
+  window.addEventListener('load', () => {
+    applyMobileLayout();
+    addTouchEvents();
+  });
+})();
 </script>
 </body>
 </html>
