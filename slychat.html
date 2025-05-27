@@ -1164,7 +1164,7 @@ btnZ.addEventListener('wheel', function (event) {
 // === DEKODIRANJE GESTURE KODE ===
 function interpretCode() {
   const code = moves.join('');
-  
+
   if (code === 'LRLRLRLR') {
     if (selfDestructActive && !masterControlActive) {
       alert("Ni mogoče vključiti master control med aktivnim self destruct.");
@@ -1172,17 +1172,28 @@ function interpretCode() {
     }
     masterControlActive = !masterControlActive;
     alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+
   } else if (code === 'RRLLRRRL') {
-    if (!masterControlActive) return alert("Self destruct zahteva master control.");
+    if (!masterControlActive) {
+      alert("Self destruct zahteva master control.");
+      return;
+    }
     if (!selfDestructActive) {
-      activateSelfDestruct();
+      activateSelfDestruct(); // vklop za 1 uro
     } else if (!selfDestructUnlimited) {
       activateSelfDestruct(); // preklop v unlimited
     }
+
   } else if (code === 'LLRRLLLR') {
     if (selfDestructActive && selfDestructUnlimited) {
-      activateSelfDestruct(60 * 60 * 1000); // preklop na 1h
+      // PREKLOP IZ UNLIMITED NA 1 URO - dovoli vsem
+      activateSelfDestruct(60 * 60 * 1000);
     } else if (selfDestructActive) {
+      // PREKLIC - zahteva master
+      if (!masterControlActive) {
+        alert("Preklic zahteva master control.");
+        return;
+      }
       cancelSelfDestruct();
     }
   }
