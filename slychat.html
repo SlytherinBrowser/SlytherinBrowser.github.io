@@ -464,18 +464,13 @@
   
   
   
-      // Nastavi barvo in mavrično animacijo  
-  
-      if (color === "rainbow") {  
-  
-        senderSpan.classList.add("rainbow");  
-  
-      } else if (color) {  
-  
-        senderSpan.style.color = color;  
-  
-      }  
-  
+      if (color === "none") {
+  senderSpan.style.display = "none"; // Skrije ime
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
   
   
       if (isOnline) {  
@@ -659,31 +654,22 @@
   
         alert("Barva imena nastavljena na mavrično (rainbow).");  
   
-      } else {  
-  
-        // Preverimo osnovno veljavnost barve (lahko še izboljšamo)  
-  
-        const s = new Option().style;  
-  
-        s.color = colorVal;  
-  
-        if (s.color === "") {  
-  
-          alert("Neveljavna barva.");  
-  
-          messageInput.value = "";  
-  
-          return;  
-  
-        }  
-  
-        await db.ref("users/" + currentUser.uid).update({ color: colorVal });  
-  
-        userColorsCache[currentUser.uid] = colorVal;  
-  
-        alert("Barva imena nastavljena na: " + colorVal);  
-  
-      }  
+      } else if (colorVal === "none") {
+  await db.ref("users/" + currentUser.uid).update({ color: "none" });
+  userColorsCache[currentUser.uid] = "none";
+  alert("Ime bo zdaj nevidno.");
+} else {
+  const s = new Option().style;
+  s.color = colorVal;
+  if (s.color === "") {
+    alert("Neveljavna barva.");
+    messageInput.value = "";
+    return;
+  }
+  await db.ref("users/" + currentUser.uid).update({ color: colorVal });
+  userColorsCache[currentUser.uid] = colorVal;
+  alert("Barva imena nastavljena na: " + colorVal);
+}
   
       messageInput.value = "";  
   
