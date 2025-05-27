@@ -802,28 +802,16 @@ window.toggleHidden = toggleHidden;
 
 
     let hidden = isHiddenMode;  
+let text = textRaw;  
 
-    let text = textRaw;  
+db.ref("messages").push({
+  uid: currentUser.uid,
+  text: text,
+  hidden: hidden,
+  privateUid: currentChatPartner || null
+});
 
-
-
-    db.ref("messages").push({  
-
-      uid: currentUser.uid,  
-
-      text: text,  
-
-      hidden: hidden,  
-
-      privateUid: currentChatPartner  
-
-    });  
-
-
-
-    messageInput.value = "";  
-
-  }  
+messageInput.value = "";
 
 
 
