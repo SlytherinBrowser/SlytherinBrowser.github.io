@@ -383,8 +383,7 @@ window.toggleHidden = toggleHidden;
         const inviteDiv = document.createElement("div");  
 
         inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.   
-  
-          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
+  <button onclick="acceptInvite(\"${msg.uid}\")">Sprejmi</button>`;
 
         chatBox.appendChild(inviteDiv);  
 
