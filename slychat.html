@@ -380,20 +380,15 @@
   
 
 
-if (textRaw.toLowerCase() === "/msgoff") {
-    silentMode = true;
-    alert("Tihi način vklopljen. Sporočila drugih uporabnikov se ne prikazujejo.");
-    messageInput.value = "";
+
+// Če je tihi način vklopljen in sporočilo ni od tebe, ga ne prikaži
+  if (silentMode && msg.uid !== currentUser.uid) {
+    // Preskoči prikaz
     return;
   }
-
-  if (textRaw.toLowerCase() === "/msgon") {
-    silentMode = false;
-    alert("Tihi način izklopljen. Sporočila se ponovno prikazujejo.");
-    messageInput.value = "";
-    return;
-  }
-
+// Drugače prikaži sporočilo (tvoja funkcija za prikaz)
+  displayMessage(msg);
+});
 
 
 
