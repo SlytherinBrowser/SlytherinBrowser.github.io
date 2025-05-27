@@ -943,20 +943,23 @@ let selfDestructUnlimited = false;
 let masterControlActive = false;
 
 // === FIRESTORE REFERENCA ===
-const selfDestructDocRef = firebase.firestore().collection('system').doc('selfDestruct');
+const database = firebase.database();
+const selfDestructRef = database.ref('system/selfDestruct');
 
-// === Inicializacija dokumenta v Firestore, če ne obstaja ===
+
+
+
 async function initializeSelfDestructDoc() {
-  const doc = await selfDestructDocRef.get();
-  if (!doc.exists) {
-    await selfDestructDocRef.set({
+  const snapshot = await selfDestructRef.once('value');
+  if (!snapshot.exists()) {
+    await selfDestructRef.set({
       active: false,
       unlimited: false,
       endTimestamp: null
     });
-    console.log("Self destruct dokument je bil ustvarjen v Firestore.");
+    console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
   } else {
-    const data = doc.data();
+    const data = snapshot.val();
     selfDestructActive = data.active;
     selfDestructUnlimited = data.unlimited;
     selfDestructEndTimestamp = data.endTimestamp;
