@@ -1281,6 +1281,137 @@ window.addEventListener('load', () => {
 
 
 
+
+
+
+
+
+
+// Spremenljivke za reply
+let replyToMsgId = null;
+let replyToText = null;
+let replyToSender = null;
+
+// DOM elementi (ustrezno prilagodi ID-je glede na svoj HTML)
+const messageInput = document.getElementById("messageInput"); // input polje za vnos sporočila
+const sendButton = document.getElementById("sendButton"); // gumb za pošiljanje
+const chatBox = document.getElementById("chatBox"); // div kjer se prikazujejo sporočila
+
+// Dodaj reply box pod input polje (ustrezno naredi tudi v HTML strani)
+const replyBox = document.createElement("div");
+replyBox.id = "replyBox";
+replyBox.style.display = "none";
+replyBox.style.background = "#eee";
+replyBox.style.padding = "4px";
+replyBox.style.borderLeft = "4px solid #999";
+replyBox.style.marginBottom = "4px";
+
+const replyPreview = document.createElement("span");
+replyPreview.id = "replyPreview";
+
+const cancelReplyBtn = document.createElement("button");
+cancelReplyBtn.textContent = "Prekliči";
+cancelReplyBtn.style.float = "right";
+cancelReplyBtn.onclick = cancelReply;
+
+replyBox.appendChild(document.createTextNode("Odgovarjaš na: "));
+replyBox.appendChild(replyPreview);
+replyBox.appendChild(cancelReplyBtn);
+
+// Vstavi replyBox nad messageInput (predvidevam, da messageInput je input element)
+messageInput.parentNode.insertBefore(replyBox, messageInput);
+
+// Funkcija za začetek odgovora
+function startReply(msgId, text, sender) {
+  replyToMsgId = msgId;
+  replyToText = text;
+  replyToSender = sender;
+  replyPreview.textContent = `${sender}: ${text}`;
+  replyBox.style.display = "block";
+  messageInput.focus();
+}
+
+// Funkcija za preklic odgovora
+function cancelReply() {
+  replyToMsgId = null;
+  replyToText = null;
+  replyToSender = null;
+  replyBox.style.display = "none";
+}
+
+// Pošiljanje sporočila (prilagodi glede na svojo implementacijo)
+sendButton.onclick = function () {
+  const text = messageInput.value.trim();
+  if (!text) return;
+
+  // Predpostavka: imaš firebase db referenco "messages" in currentUser
+  db.ref("messages").push({
+    uid: currentUser.uid,
+    text,
+    privateUid: currentChatPartner || null,
+    hidden: false,
+    replyTo: replyToMsgId || null,
+    replyText: replyToText || null,
+    replySender: replyToSender || null,
+    timestamp: Date.now()
+  });
+
+  messageInput.value = "";
+  cancelReply();
+};
+
+// Prikaz sporočil (prilagodi glede na svojo implementacijo)
+db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
+  const msg = snapshot.val();
+  const div = document.createElement("div");
+  div.style.padding = "6px";
+  div.style.borderBottom = "1px solid #ccc";
+
+  // Prikaz odgovora, če obstaja
+  if (msg.replyTo && msg.replyText && msg.replySender) {
+    const replyDiv = document.createElement("div");
+    replyDiv.textContent = `↪ ${msg.replySender}: ${msg.replyText}`;
+    replyDiv.style.fontStyle = "italic";
+    replyDiv.style.backgroundColor = "#f0f0f0";
+    replyDiv.style.padding = "2px 6px";
+    replyDiv.style.borderLeft = "3px solid #888";
+    replyDiv.style.marginBottom = "4px";
+    replyDiv.title = "Klikni za prikaz izvirnega sporočila";
+
+    // Tooltip z originalnim sporočilom (ob hoverju)
+    replyDiv.onmouseenter = () => {
+      replyDiv.style.backgroundColor = "#e0e0e0";
+    };
+    replyDiv.onmouseleave = () => {
+      replyDiv.style.backgroundColor = "#f0f0f0";
+    };
+
+    div.appendChild(replyDiv);
+  }
+
+  // Glavno sporočilo
+  const senderName = msg.uid === currentUser.uid ? "Ti" : "Drugi";
+  const textDiv = document.createElement("span");
+  textDiv.textContent = `${senderName}: ${msg.text}`;
+  div.appendChild(textDiv);
+
+  // Gumb za odgovor
+  const replyBtn = document.createElement("button");
+  replyBtn.textContent = "↩️";
+  replyBtn.style.marginLeft = "10px";
+  replyBtn.style.cursor = "pointer";
+  replyBtn.title = "Odgovori na sporočilo";
+  replyBtn.onclick = () => startReply(snapshot.key, msg.text, senderName);
+  div.appendChild(replyBtn);
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+
+
+
 </script>
 </body>
 </html>
