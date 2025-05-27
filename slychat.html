@@ -229,7 +229,7 @@
   
   const messageInput = document.getElementById("messageInput");  
   
-  
+  const originalContainerWidth = container.offsetWidth;
   
   let currentChatPartner = null;  
   
@@ -1169,10 +1169,19 @@ btnZ.addEventListener('wheel', function (event) {
   }
 
   function toggleZMobile() {
-    zActive = !zActive;
-    btnZ.classList.toggle('active', zActive);
-    btnH.style.display = zActive ? 'none' : 'inline-block';
+  zActive = !zActive;
+  btnZ.classList.toggle('active', zActive);
+  btnH.style.display = zActive ? 'none' : 'inline-block';
+
+  // === Direktno spremeni širino containerja ===
+  if (zActive) {
+    container.style.transition = 'width 0.3s ease';
+    container.style.width = (container.offsetWidth + 20) + 'px';
+  } else {
+    container.style.transition = 'width 0.3s ease';
+    container.style.width = (container.offsetWidth - 20) + 'px';
   }
+}
 
   btnZ.addEventListener('click', toggleZMobile);
 
