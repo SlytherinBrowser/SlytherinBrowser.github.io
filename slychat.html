@@ -280,7 +280,7 @@
 
   }  
 
-window.toggleHidden = toggleHidden;
+
 
   auth.onAuthStateChanged(async user => {  
 
@@ -383,7 +383,8 @@ window.toggleHidden = toggleHidden;
         const inviteDiv = document.createElement("div");  
 
         inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.   
-  <button onclick="acceptInvite(\"${msg.uid}\")">Sprejmi</button>`;
+  
+          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
 
         chatBox.appendChild(inviteDiv);  
 
@@ -506,7 +507,7 @@ window.toggleHidden = toggleHidden;
     chatBox.innerHTML = "";  
 
     alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");  
-}
+
 
 
     db.ref("messages").push({  
@@ -521,159 +522,309 @@ window.toggleHidden = toggleHidden;
 
     });  
 
-
-
-
-
-
-  
-  
+  }  
 
 
 
   async function sendMessage() {  
-  if (!currentUser) return;  
-  const textRaw = messageInput.value.trim();  
-  if (!textRaw) return;  
 
-  // Če še nima imena - potrdi  
-  if (messageInput.dataset.nameConfirm === "1") {  
-    await db.ref("users/" + currentUser.uid).update({  
-      displayName: textRaw  
-    });  
-    userNamesCache[currentUser.uid] = textRaw;  
-    messageInput.placeholder = "Vnesi sporočilo...";  
-    messageInput.dataset.nameConfirm = "";  
-    alert("Ime potrjeno: " + textRaw);  
-    messageInput.value = "";  
-    return;  
-  }  
+    if (!currentUser) return;  
 
-  // Ukaz za spremembo imena: *name*novoime  
-  if (textRaw.startsWith("*name*")) {  
-    const newName = textRaw.slice(6).trim();  
-    if (!newName) {  
-      alert("Vpiši novo ime za spremembo.");  
+    const textRaw = messageInput.value.trim();  
+
+    if (!textRaw) return;  
+
+
+
+
+
+
+
+
+    // Če še nima imena - potrdi  
+
+    if (messageInput.dataset.nameConfirm === "1") {  
+
+      await db.ref("users/" + currentUser.uid).update({  
+
+        displayName: textRaw  
+
+      });  
+
+      userNamesCache[currentUser.uid] = textRaw;  
+
+      messageInput.placeholder = "Vnesi sporočilo...";  
+
+      messageInput.dataset.nameConfirm = "";  
+
+      alert("Ime potrjeno: " + textRaw);  
+
       messageInput.value = "";  
-      return;  
-    }  
-    await db.ref("users/" + currentUser.uid).update({ displayName: newName });  
-    userNamesCache[currentUser.uid] = newName;  
-    alert("Ime je bilo spremenjeno na: " + newName);  
-    messageInput.value = "";  
-    return;  
-  }  
 
-  // Ukaz za spremembo barve imena: *color*barva  
-  if (textRaw.startsWith("*color*")) {  
-    const colorVal = textRaw.slice(7).trim().toLowerCase();  
-    if (!colorVal) {  
-      alert("Vpiši barvo ali 'rainbow' za mavrično animacijo.");  
-      messageInput.value = "";  
       return;  
+
     }  
-    if (colorVal === "rainbow") {  
-      await db.ref("users/" + currentUser.uid).update({ color: "rainbow" });  
-      userColorsCache[currentUser.uid] = "rainbow";  
-      alert("Barva imena nastavljena na mavrično (rainbow).");  
-    } else {  
-      const s = new Option().style;  
-      s.color = colorVal;  
-      if (s.color === "") {  
-        alert("Neveljavna barva.");  
+
+
+
+    // Ukaz za spremembo imena: *name*novoime  
+
+    if (textRaw.startsWith("*name*")) {  
+
+      const newName = textRaw.slice(6).trim();  
+
+      if (!newName) {  
+
+        alert("Vpiši novo ime za spremembo.");  
+
         messageInput.value = "";  
+
         return;  
+
       }  
-      await db.ref("users/" + currentUser.uid).update({ color: colorVal });  
-      userColorsCache[currentUser.uid] = colorVal;  
-      alert("Barva imena nastavljena na: " + colorVal);  
+
+      await db.ref("users/" + currentUser.uid).update({ displayName: newName });  
+
+      userNamesCache[currentUser.uid] = newName;  
+
+      alert("Ime je bilo spremenjeno na: " + newName);  
+
+      messageInput.value = "";  
+
+      return;  
+
     }  
-    messageInput.value = "";  
-    return;  
-  }  
 
-  if (textRaw === "/public") {  
-    currentChatPartner = null;  
-    chatBox.innerHTML = "";  
-    messageInput.value = "";  
-    alert("Zdaj si v javnem klepetu.");  
-    setTimeout(() => location.reload(), 10);  
-    return;  
-  }  
 
-  if (textRaw === "/clearchat") {  
-    db.ref("messages").remove().then(() => {  
-      alert("Klepetalnica je bila pobrisana.");  
-      location.reload();  
-    }).catch(error => alert("Napaka pri brisanju: " + error.message));  
-    messageInput.value = "";  
-    return;  
-  }  
 
-  if (textRaw.startsWith("/@")) {
-    // Odstranimo začetni "/"
-    const invitesText = textRaw.slice(1).trim(); // "/@ime1 @ime2" -> "@ime1 @ime2"
-    const inviteNames = invitesText.split(" ").filter(n => n.startsWith("@")).map(n => n.slice(1).toLowerCase());
+    // Ukaz za spremembo barve imena: *color*barva  
 
-    if (inviteNames.length === 0) {
-      alert("Vpiši uporabniška imena za povabilo, npr. /@ime1 @ime2");
-      messageInput.value = "";
-      return;
-    }
+    if (textRaw.startsWith("*color*")) {  
 
-    let notFoundUsers = [];
-    let invitedUids = [];
+      const colorVal = textRaw.slice(7).trim().toLowerCase();  
 
-    inviteNames.forEach(name => {
-      let foundUid = null;
-      for (const uid in userNamesCache) {
-        if (userNamesCache[uid].toLowerCase() === name) {
-          foundUid = uid;
-          break;
-        }
-      }
-      if (foundUid) {
-        invitedUids.push(foundUid);
-      } else {
-        notFoundUsers.push(name);
-      }
-    });
+      if (!colorVal) {  
 
-    if (notFoundUsers.length > 0) {
-      alert("Uporabniki niso najdeni: " + notFoundUsers.join(", "));
-    }
+        alert("Vpiši barvo ali 'rainbow' za mavrično animacijo.");  
 
-    invitedUids.forEach(uid => {
-      db.ref("messages").push({
-        uid: currentUser.uid,
-        text: "Povabilo v zasebni klepet",
-        invite: true,
-        privateUid: uid
-      });
-    });
+        messageInput.value = "";  
 
-    if (invitedUids.length > 0) {
-      currentChatPartner = invitedUids[0]; // nastavimo prvega kot trenutnega partnerja
-      chatBox.innerHTML = "";
-      alert("Vstopil si v zasebni pogovor z: " + invitedUids.map(uid => userNamesCache[uid]).join(", "));
-    }
+        return;  
+
+      }  
+
+      if (colorVal === "rainbow") {  
+
+        await db.ref("users/" + currentUser.uid).update({ color: "rainbow" });  
+
+        userColorsCache[currentUser.uid] = "rainbow";  
+
+        alert("Barva imena nastavljena na mavrično (rainbow).");  
+
+      } else {  
+
+        // Preverimo osnovno veljavnost barve (lahko še izboljšamo)  
+
+        const s = new Option().style;  
+
+        s.color = colorVal;  
+
+        if (s.color === "") {  
+
+          alert("Neveljavna barva.");  
+
+          messageInput.value = "";  
+
+          return;  
+
+        }  
+
+        await db.ref("users/" + currentUser.uid).update({ color: colorVal });  
+
+        userColorsCache[currentUser.uid] = colorVal;  
+
+        alert("Barva imena nastavljena na: " + colorVal);  
+
+      }  
+
+      messageInput.value = "";  
+
+      return;  
+
+    }  
+
+
+
+    if (textRaw === "/public") {  
+
+      currentChatPartner = null;  
+
+      chatBox.innerHTML = "";  
+
+      messageInput.value = "";  
+
+      alert("Zdaj si v javnem klepetu.");  
+
+      setTimeout(() => location.reload(), 10);  
+
+      return;  
+
+    }  
+
+
+
+    if (textRaw === "/clearchat") {  
+
+      db.ref("messages").remove().then(() => {  
+
+        alert("Klepetalnica je bila pobrisana.");  
+
+        location.reload();  
+
+      }).catch(error => alert("Napaka pri brisanju: " + error.message));  
+
+      messageInput.value = "";  
+
+      return;  
+
+    }  
+
+
+
+    if (textRaw.startsWith("/@")) {
+
+  // Odstranimo začetni "/"
+
+  const invitesText = textRaw.slice(1).trim(); // "/@ime1 @ime2" -> "@ime1 @ime2"
+
+  // Razdelimo na posamezne uporabniške povabile (npr. "@ime1", "@ime2")
+
+  const inviteNames = invitesText.split(" ").filter(n => n.startsWith("@")).map(n => n.slice(1).toLowerCase());
+
+
+
+  if (inviteNames.length === 0) {
+
+    alert("Vpiši uporabniška imena za povabilo, npr. /@ime1 @ime2");
 
     messageInput.value = "";
+
     return;
+
   }
 
-  let hidden = isHiddenMode;  
-  let text = textRaw;  
 
-  db.ref("messages").push({
-    uid: currentUser.uid,
-    text: text,
-    hidden: hidden,
-    privateUid: currentChatPartner || null
+
+  let notFoundUsers = [];
+
+  let invitedUids = [];
+
+
+
+  // Poiščemo Uid za vsako ime
+
+  inviteNames.forEach(name => {
+
+    let foundUid = null;
+
+    for (const uid in userNamesCache) {
+
+      if (userNamesCache[uid].toLowerCase() === name) {
+
+        foundUid = uid;
+
+        break;
+
+      }
+
+    }
+
+    if (foundUid) {
+
+      invitedUids.push(foundUid);
+
+    } else {
+
+      notFoundUsers.push(name);
+
+    }
+
   });
 
+
+
+  if (notFoundUsers.length > 0) {
+
+    alert("Uporabniki niso najdeni: " + notFoundUsers.join(", "));
+
+  }
+
+
+
+  // Pošljemo povabila v bazo za vse najdene uporabnike
+
+  invitedUids.forEach(uid => {
+
+    db.ref("messages").push({
+
+      uid: currentUser.uid,
+
+      text: "Povabilo v zasebni klepet",
+
+      invite: true,
+
+      privateUid: uid
+
+    });
+
+  });
+
+
+
+  if (invitedUids.length > 0) {
+
+    currentChatPartner = invitedUids[0]; // nastavimo prvega kot trenutnega partnerja
+
+    chatBox.innerHTML = "";
+
+    alert("Vstopil si v zasebni pogovor z: " + invitedUids.map(uid => userNamesCache[uid]).join(", "));
+
+  }
+
+
+
   messageInput.value = "";
-}  // <- zaprtje funkcije sendMessage
+
+  return;
+
+}
+
+
+
+    let hidden = isHiddenMode;  
+
+    let text = textRaw;  
+
+
+
+    db.ref("messages").push({  
+
+      uid: currentUser.uid,  
+
+      text: text,  
+
+      hidden: hidden,  
+
+      privateUid: currentChatPartner  
+
+    });  
+
+
+
+    messageInput.value = "";  
+
+  }  
+
 
 
   function logout() {  
@@ -746,7 +897,7 @@ window.toggleHidden = toggleHidden;
 
     }  
 
-  };   
+  }   
 
 
 
