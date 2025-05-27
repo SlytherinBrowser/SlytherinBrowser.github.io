@@ -930,7 +930,6 @@ const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
 const container = document.querySelector('.message-input-btn-container');
 
-
 // === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
 const rotationStep = 12;
@@ -942,13 +941,11 @@ let selfDestructEndTimestamp = null;
 let selfDestructUnlimited = false;
 let masterControlActive = false;
 
-// === FIRESTORE REFERENCA ===
+// === FIREBASE REALTIME REFERENCA ===
 const database = firebase.database();
 const selfDestructRef = database.ref('system/selfDestruct');
 
-
-
-
+// === INICIALIZACIJA DOKUMENTA (ENKRATNO BERE) ===
 async function initializeSelfDestructDoc() {
   const snapshot = await selfDestructRef.once('value');
   if (!snapshot.exists()) {
@@ -974,6 +971,26 @@ async function initializeSelfDestructDoc() {
   }
 }
 
+// --- TU SEM DODAL POSLUŠANJE V REALNEM ČASU ---
+selfDestructRef.on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (!data) return;
+
+  selfDestructActive = data.active;
+  selfDestructUnlimited = data.unlimited;
+  selfDestructEndTimestamp = data.endTimestamp;
+
+  if (selfDestructActive) {
+    disableChat();
+    if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+      startSelfDestructTimer();
+    }
+  } else {
+    enableChat();
+    clearInterval(window.selfDestructInterval);
+  }
+});
+
 // Klic inicializacije ob zagonu
 initializeSelfDestructDoc().catch(console.error);
 
@@ -988,11 +1005,11 @@ async function activateSelfDestruct(duration = 60 * 60 * 1000) {
     // Preklop na neomejen self destruct
     selfDestructUnlimited = true;
     selfDestructEndTimestamp = null;
-    await selfDestructDocRef.set({
+    await selfDestructRef.update({
       active: true,
       unlimited: true,
       endTimestamp: null
-    }, { merge: true });
+    });
 
     disableChat();
     clearInterval(window.selfDestructInterval);
@@ -1004,11 +1021,11 @@ async function activateSelfDestruct(duration = 60 * 60 * 1000) {
   selfDestructUnlimited = false;
   selfDestructEndTimestamp = Date.now() + duration;
 
-  await selfDestructDocRef.set({
+  await selfDestructRef.update({
     active: true,
     unlimited: false,
     endTimestamp: selfDestructEndTimestamp
-  }, { merge: true });
+  });
 
   disableChat();
   startSelfDestructTimer();
@@ -1036,11 +1053,11 @@ function startSelfDestructTimer() {
       selfDestructEndTimestamp = null;
       selfDestructUnlimited = false;
 
-      await selfDestructDocRef.set({
+      await selfDestructRef.update({
         active: false,
         unlimited: false,
         endTimestamp: null
-      }, { merge: true });
+      });
 
       enableChat();
       clearInterval(window.selfDestructInterval);
@@ -1057,11 +1074,11 @@ async function cancelSelfDestruct() {
   selfDestructUnlimited = false;
   selfDestructEndTimestamp = null;
 
-  await selfDestructDocRef.set({
+  await selfDestructRef.update({
     active: false,
     unlimited: false,
     endTimestamp: null
-  }, { merge: true });
+  });
 
   clearInterval(window.selfDestructInterval);
   enableChat();
@@ -1197,6 +1214,8 @@ window.addEventListener('load', () => {
   // Firestore dokument že naložen v initializeSelfDestructDoc
   // Ta del lahko po potrebi odstraniš
 });
+
+
 
 </script>
 </body>
