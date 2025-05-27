@@ -930,6 +930,7 @@ const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
 const container = document.querySelector('.message-input-btn-container');
 
+
 // === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
 const rotationStep = 12;
@@ -940,6 +941,7 @@ let selfDestructActive = false;
 let selfDestructEndTimestamp = null;
 let selfDestructUnlimited = false;
 let masterControlActive = false;
+let currentUserId = null;  // trenutno prijavljeni uporabnik
 
 // === FIREBASE REALTIME REFERENCA ===
 const database = firebase.database();
@@ -971,7 +973,7 @@ async function initializeSelfDestructDoc() {
   }
 }
 
-// --- TU SEM DODAL POSLUŠANJE V REALNEM ČASU ---
+// --- POSLUŠANJE V REALNEM ČASU za selfDestruct ---
 selfDestructRef.on('value', (snapshot) => {
   const data = snapshot.val();
   if (!data) return;
@@ -991,8 +993,22 @@ selfDestructRef.on('value', (snapshot) => {
   }
 });
 
-// Klic inicializacije ob zagonu
-initializeSelfDestructDoc().catch(console.error);
+// === FUNKCIJA ZA NALAGANJE MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ===
+async function loadUserMasterControl() {
+  if (!currentUserId) return;
+  const snapshot = await database.ref(`users/${currentUserId}/masterControl`).once('value');
+  masterControlActive = snapshot.val() || false;
+  console.log("Master control za uporabnika:", masterControlActive);
+}
+
+// --- POSLUŠANJE SPREMEMB MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ---
+function listenUserMasterControl() {
+  if (!currentUserId) return;
+  database.ref(`users/${currentUserId}/masterControl`).on('value', (snapshot) => {
+    masterControlActive = snapshot.val() || false;
+    console.log("Master control posodobljen:", masterControlActive);
+  });
+}
 
 // === SELF DESTRUCT FUNKCIJE ===
 async function activateSelfDestruct(duration = 60 * 60 * 1000) {
@@ -1085,31 +1101,6 @@ async function cancelSelfDestruct() {
   alert("Self destruct je bil deaktiviran.");
 }
 
-
-
-function forceCancelSelfDestruct() {
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
-
-  selfDestructRef.update({
-    active: false,
-    unlimited: false,
-    endTimestamp: null
-  })
-  .then(() => {
-    clearInterval(window.selfDestructInterval);
-    enableChat();
-    console.log("Force cancel: Self destruct je bil de-aktiviran.");
-    alert("Force cancel: Self destruct je bil de-aktiviran.");
-  })
-  .catch((error) => {
-    console.error("Napaka pri force cancel:", error);
-  });
-}
-
-
-
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
@@ -1196,6 +1187,12 @@ function interpretCode() {
       return;
     }
     masterControlActive = !masterControlActive;
+
+    if (currentUserId) {
+      database.ref(`users/${currentUserId}/masterControl`).set(masterControlActive)
+        .catch(err => console.error("Napaka pri posodobitvi masterControl:", err));
+    }
+
     alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
 
   } else if (code === 'RRLLRRRL') {
@@ -1254,6 +1251,19 @@ async function onUserSendMessage(sender, message) {
 window.addEventListener('load', () => {
   // Firestore dokument že naložen v initializeSelfDestructDoc
   // Ta del lahko po potrebi odstraniš
+
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      currentUserId = user.uid;
+      loadUserMasterControl();
+      listenUserMasterControl();
+    } else {
+      currentUserId = null;
+      masterControlActive = false;
+    }
+  });
+
+  initializeSelfDestructDoc().catch(console.error);
 });
 
 
