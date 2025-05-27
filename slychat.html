@@ -378,6 +378,27 @@
       const msg = snapshot.val();  
   
   
+
+
+if (textRaw.toLowerCase() === "/msgoff") {
+    silentMode = true;
+    alert("Tihi način vklopljen. Sporočila drugih uporabnikov se ne prikazujejo.");
+    messageInput.value = "";
+    return;
+  }
+
+  if (textRaw.toLowerCase() === "/msgon") {
+    silentMode = false;
+    alert("Tihi način izklopljen. Sporočila se ponovno prikazujejo.");
+    messageInput.value = "";
+    return;
+  }
+
+
+
+
+
+
   
       if (msg.system && msg.privateUid === currentUser.uid) {  
   
@@ -550,7 +571,6 @@
   }  
   
   
-  let silentMode = false; // globalna spremenljivka za tihi način
   async function sendMessage() {  
   
 
@@ -564,28 +584,16 @@
  
   
 
-if (textRaw === "") return;
-
-  // Ukaz /msgOFF - vklopi tihi način
-  if (textRaw.toLowerCase() === "/msgoff") {
+if (textRaw.toLowerCase() === "/msgoff") {
     silentMode = true;
-    alert("Tihi način vklopljen. Nova sporočila se ne prikazujejo.");
+    alert("Tihi način vklopljen. Sporočila drugih uporabnikov se ne prikazujejo.");
     messageInput.value = "";
     return;
   }
 
-  // Ukaz /msgON - izklopi tihi način in osveži
   if (textRaw.toLowerCase() === "/msgon") {
     silentMode = false;
-    alert("Tihi način izklopljen. Sporočila se prikazujejo.");
-    // tu lahko pokličeš funkcijo za osvežitev sporočil, če jo imaš
-    messageInput.value = "";
-    return;
-  }
-
-  // Če je tihi način vklopljen, pošiljanje sporočila ni dovoljeno
-  if (silentMode) {
-    alert("Tihi način je vklopljen. Najprej izklopi s /msgON.");
+    alert("Tihi način izklopljen. Sporočila se ponovno prikazujejo.");
     messageInput.value = "";
     return;
   }
