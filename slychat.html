@@ -1164,7 +1164,12 @@ btnZ.addEventListener('wheel', function (event) {
 // === DEKODIRANJE GESTURE KODE ===
 function interpretCode() {
   const code = moves.join('');
+  
   if (code === 'LRLRLRLR') {
+    if (selfDestructActive && !masterControlActive) {
+      alert("Ni mogoče vključiti master control med aktivnim self destruct.");
+      return;
+    }
     masterControlActive = !masterControlActive;
     alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
   } else if (code === 'RRLLRRRL') {
