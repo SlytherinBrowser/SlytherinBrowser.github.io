@@ -228,9 +228,7 @@
   const chatBox = document.getElementById("chatBox");  
   
   const messageInput = document.getElementById("messageInput");  
-  
-  const originalContainerWidth = container.offsetWidth;
-  
+ 
   let currentChatPartner = null;  
   
   let currentUser = null;  
@@ -924,7 +922,6 @@
   
   }   
 
-
 // === ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
@@ -947,48 +944,49 @@ const selfDestructRef = database.ref('system/selfDestruct');
 
 // === INICIALIZACIJA DOKUMENTA (ENKRATNO BERE) ===
 async function initializeSelfDestructDoc() {
-  const snapshot = await selfDestructRef.once('value');
-  if (!snapshot.exists()) {
-    await selfDestructRef.set({
-      active: false,
-      unlimited: false,
-      endTimestamp: null
-    });
-    console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
-  } else {
-    const data = snapshot.val();
-    selfDestructActive = data.active;
-    selfDestructUnlimited = data.unlimited;
-    selfDestructEndTimestamp = data.endTimestamp;
+const snapshot = await selfDestructRef.once('value');
+if (!snapshot.exists()) {
+await selfDestructRef.set({
+active: false,
+unlimited: false,
+endTimestamp: null
+});
+console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
+} else {
+const data = snapshot.val();
+selfDestructActive = data.active;
+selfDestructUnlimited = data.unlimited;
+selfDestructEndTimestamp = data.endTimestamp;
 
-    if (selfDestructActive) {
-      disableChat();
-      if (!selfDestructUnlimited && selfDestructEndTimestamp) {
-        startSelfDestructTimer();
-      }
-    }
-    console.log("Self destruct dokument že obstaja in je stanje naloženo.");
-  }
+if (selfDestructActive) {  
+  disableChat();  
+  if (!selfDestructUnlimited && selfDestructEndTimestamp) {  
+    startSelfDestructTimer();  
+  }  
+}  
+console.log("Self destruct dokument že obstaja in je stanje naloženo.");
+
+}
 }
 
 // --- TU SEM DODAL POSLUŠANJE V REALNEM ČASU ---
 selfDestructRef.on('value', (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+const data = snapshot.val();
+if (!data) return;
 
-  selfDestructActive = data.active;
-  selfDestructUnlimited = data.unlimited;
-  selfDestructEndTimestamp = data.endTimestamp;
+selfDestructActive = data.active;
+selfDestructUnlimited = data.unlimited;
+selfDestructEndTimestamp = data.endTimestamp;
 
-  if (selfDestructActive) {
-    disableChat();
-    if (!selfDestructUnlimited && selfDestructEndTimestamp) {
-      startSelfDestructTimer();
-    }
-  } else {
-    enableChat();
-    clearInterval(window.selfDestructInterval);
-  }
+if (selfDestructActive) {
+disableChat();
+if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+startSelfDestructTimer();
+}
+} else {
+enableChat();
+clearInterval(window.selfDestructInterval);
+}
 });
 
 // Klic inicializacije ob zagonu
@@ -996,297 +994,285 @@ initializeSelfDestructDoc().catch(console.error);
 
 // === SELF DESTRUCT FUNKCIJE ===
 async function activateSelfDestruct(duration = 60 * 60 * 1000) {
-  if (!masterControlActive) {
-    alert("Self destruct lahko aktivira samo master control!");
-    return;
-  }
+if (!masterControlActive) {
+alert("Self destruct lahko aktivira samo master control!");
+return;
+}
 
-  if (selfDestructActive && !selfDestructUnlimited) {
-    // Preklop na neomejen self destruct
-    selfDestructUnlimited = true;
-    selfDestructEndTimestamp = null;
-    await selfDestructRef.update({
-      active: true,
-      unlimited: true,
-      endTimestamp: null
-    });
+if (selfDestructActive && !selfDestructUnlimited) {
+// Preklop na neomejen self destruct
+selfDestructUnlimited = true;
+selfDestructEndTimestamp = null;
+await selfDestructRef.update({
+active: true,
+unlimited: true,
+endTimestamp: null
+});
 
-    disableChat();
-    clearInterval(window.selfDestructInterval);
-    alert("Self destruct nastavljen na neomejen čas!");
-    return;
-  }
+disableChat();  
+clearInterval(window.selfDestructInterval);  
+alert("Self destruct nastavljen na neomejen čas!");  
+return;
 
-  selfDestructActive = true;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = Date.now() + duration;
+}
 
-  await selfDestructRef.update({
-    active: true,
-    unlimited: false,
-    endTimestamp: selfDestructEndTimestamp
-  });
+selfDestructActive = true;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = Date.now() + duration;
 
-  disableChat();
-  startSelfDestructTimer();
-  alert("Self destruct aktiviran za 1 uro.");
+await selfDestructRef.update({
+active: true,
+unlimited: false,
+endTimestamp: selfDestructEndTimestamp
+});
+
+disableChat();
+startSelfDestructTimer();
+alert("Self destruct aktiviran za 1 uro.");
 }
 
 function disableChat() {
-  messageInput.disabled = true;
-  chatBox.style.opacity = '0.6';
-  messageInput.placeholder = "Chat je onemogočen zaradi self destruct.";
+messageInput.disabled = true;
+chatBox.style.opacity = '0.6';
+messageInput.placeholder = "Chat je onemogočen zaradi self destruct.";
 }
 
 function enableChat() {
-  messageInput.disabled = false;
-  chatBox.style.opacity = '1';
-  messageInput.placeholder = "Vpiši sporočilo...";
+messageInput.disabled = false;
+chatBox.style.opacity = '1';
+messageInput.placeholder = "Vpiši sporočilo...";
 }
 
 function startSelfDestructTimer() {
-  clearInterval(window.selfDestructInterval);
-  window.selfDestructInterval = setInterval(async () => {
-    if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
-    if (Date.now() >= selfDestructEndTimestamp) {
-      selfDestructActive = false;
-      selfDestructEndTimestamp = null;
-      selfDestructUnlimited = false;
+clearInterval(window.selfDestructInterval);
+window.selfDestructInterval = setInterval(async () => {
+if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
+if (Date.now() >= selfDestructEndTimestamp) {
+selfDestructActive = false;
+selfDestructEndTimestamp = null;
+selfDestructUnlimited = false;
 
-      await selfDestructRef.update({
-        active: false,
-        unlimited: false,
-        endTimestamp: null
-      });
+await selfDestructRef.update({  
+    active: false,  
+    unlimited: false,  
+    endTimestamp: null  
+  });  
 
-      enableChat();
-      clearInterval(window.selfDestructInterval);
-      alert("Self destruct se je iztekel. Chat je spet omogočen.");
-    }
-  }, 1000);
+  enableChat();  
+  clearInterval(window.selfDestructInterval);  
+  alert("Self destruct se je iztekel. Chat je spet omogočen.");  
+}
+
+}, 1000);
 }
 
 async function cancelSelfDestruct() {
-  if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive) return alert("Preklic samo z master control!");
+if (!selfDestructActive) return alert("Self destruct ni aktiven.");
+if (!masterControlActive) return alert("Preklic samo z master control!");
 
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-  await selfDestructRef.update({
-    active: false,
-    unlimited: false,
-    endTimestamp: null
-  });
+await selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+});
 
-  clearInterval(window.selfDestructInterval);
-  enableChat();
-  alert("Self destruct je bil deaktiviran.");
+clearInterval(window.selfDestructInterval);
+enableChat();
+alert("Self destruct je bil deaktiviran.");
 }
-
-
 
 function forceCancelSelfDestruct() {
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-  selfDestructRef.update({
-    active: false,
-    unlimited: false,
-    endTimestamp: null
-  })
-  .then(() => {
-    clearInterval(window.selfDestructInterval);
-    enableChat();
-    console.log("Force cancel: Self destruct je bil de-aktiviran.");
-    alert("Force cancel: Self destruct je bil de-aktiviran.");
-  })
-  .catch((error) => {
-    console.error("Napaka pri force cancel:", error);
-  });
+selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+})
+.then(() => {
+clearInterval(window.selfDestructInterval);
+enableChat();
+console.log("Force cancel: Self destruct je bil de-aktiviran.");
+alert("Force cancel: Self destruct je bil de-aktiviran.");
+})
+.catch((error) => {
+console.error("Napaka pri force cancel:", error);
+});
 }
-
-
 
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
-  event.preventDefault();
-  if (selfDestructActive && !masterControlActive) return;
+event.preventDefault();
+if (selfDestructActive && !masterControlActive) return;
 
-  rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
-  moves.push(event.deltaY < 0 ? 'L' : 'R');
-  if (moves.length > maxMoves) moves.shift();
-  btnZ.style.transform = `rotate(${rotationDegree}deg)`;
+rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
+moves.push(event.deltaY < 0 ? 'L' : 'R');
+if (moves.length > maxMoves) moves.shift();
+btnZ.style.transform = rotate(${rotationDegree}deg);
 
-  interpretCode();
+interpretCode();
 });
 
 // === GESTURE ZA MOBILNI DOTIK ===
 (function () {
-  let isDragging = false;
-  let startX = 0;
-  let currentX = 0;
-  let zActive = false;
+let isDragging = false;
+let startX = 0;
+let currentX = 0;
+let zActive = false;
 
-  function resetPosition() {
-    btnZ.style.transition = 'transform 0.3s ease';
-    btnZ.style.transform = 'translateX(0px)';
-    setTimeout(() => { btnZ.style.transition = ''; }, 300);
-  }
-
-  function handleSwipe() {
-    const deltaX = currentX - startX;
-    if (Math.abs(deltaX) > 40) {
-      const move = deltaX < 0 ? 'L' : 'R';
-      moves.push(move);
-      if (moves.length > maxMoves) moves.shift();
-      interpretCode();
-    }
-    resetPosition();
-  }
-
-  function addTouchEvents() {
-    btnZ.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      startX = e.touches[0].clientX;
-    });
-
-    btnZ.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      currentX = e.touches[0].clientX;
-      const deltaX = currentX - startX;
-      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
-      btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
-    });
-
-    btnZ.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      handleSwipe();
-    });
-  }
-
-  function toggleZMobile() {
-  zActive = !zActive;
-  btnZ.classList.toggle('active', zActive);
-  btnH.style.display = zActive ? 'none' : 'inline-block';
-
-  // === Direktno spremeni širino containerja ===
-  if (zActive) {
-    container.style.transition = 'width 0.3s ease';
-    container.style.width = (container.offsetWidth + 20) + 'px';
-  } else {
-    container.style.transition = 'width 0.3s ease';
-    container.style.width = (container.offsetWidth - 20) + 'px';
-  }
+function resetPosition() {
+btnZ.style.transition = 'transform 0.3s ease';
+btnZ.style.transform = 'translateX(0px)';
+setTimeout(() => { btnZ.style.transition = ''; }, 300);
 }
 
-  btnZ.addEventListener('click', toggleZMobile);
+function handleSwipe() {
+const deltaX = currentX - startX;
+if (Math.abs(deltaX) > 40) {
+const move = deltaX < 0 ? 'L' : 'R';
+moves.push(move);
+if (moves.length > maxMoves) moves.shift();
+interpretCode();
+}
+resetPosition();
+}
 
-  window.addEventListener('resize', () => {
-    btnH.style.display = 'inline-block';
-    container.appendChild(btnZ);
-  });
+function addTouchEvents() {
+btnZ.addEventListener('touchstart', (e) => {
+isDragging = true;
+startX = e.touches[0].clientX;
+});
 
-  window.addEventListener('load', () => {
-    addTouchEvents();
-  });
+btnZ.addEventListener('touchmove', (e) => {  
+  if (!isDragging) return;  
+  currentX = e.touches[0].clientX;  
+  const deltaX = currentX - startX;  
+  const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;  
+  btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;  
+});  
+
+btnZ.addEventListener('touchend', () => {  
+  if (!isDragging) return;  
+  isDragging = false;  
+  handleSwipe();  
+});
+
+}
+
+function toggleZMobile() {
+zActive = !zActive;
+btnZ.classList.toggle('active', zActive);
+btnH.style.display = zActive ? 'none' : 'inline-block';
+}
+
+btnZ.addEventListener('click', toggleZMobile);
+
+window.addEventListener('resize', () => {
+btnH.style.display = 'inline-block';
+container.appendChild(btnZ);
+});
+
+window.addEventListener('load', () => {
+addTouchEvents();
+});
 })();
 
 // === DEKODIRANJE GESTURE KODE ===
 function interpretCode() {
-  const code = moves.join('');
+const code = moves.join('');
 
-  if (code === 'LRLRLRLR') {
-    if (selfDestructActive && !masterControlActive) {
-      alert("Ni mogoče vključiti master control med aktivnim self destruct.");
-      return;
-    }
-    masterControlActive = !masterControlActive;
-    alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+if (code === 'LRLRLRLR') {
+if (selfDestructActive && !masterControlActive) {
+alert("Ni mogoče vključiti master control med aktivnim self destruct.");
+return;
+}
+masterControlActive = !masterControlActive;
+alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
 
-  } else if (code === 'RRLLRRRL') {
-    if (!masterControlActive) {
-      alert("Self destruct zahteva master control.");
-      return;
-    }
-    if (!selfDestructActive) {
-      activateSelfDestruct(); // vklop za 1 uro
-    } else if (!selfDestructUnlimited) {
-      activateSelfDestruct(); // preklop v unlimited
-    }
+} else if (code === 'RRLLRRRL') {
+if (!masterControlActive) {
+alert("Self destruct zahteva master control.");
+return;
+}
+if (!selfDestructActive) {
+activateSelfDestruct(); // vklop za 1 uro
+} else if (!selfDestructUnlimited) {
+activateSelfDestruct(); // preklop v unlimited
+}
 
-  } else if (code === 'LLRRLLLR') {
-    if (selfDestructActive && selfDestructUnlimited) {
-      // PREKLOP IZ UNLIMITED NA 1 URO - dovoli vsem
-      activateSelfDestruct(60 * 60 * 1000);
-    } else if (selfDestructActive) {
-      // PREKLIC - zahteva master
-      if (!masterControlActive) {
-        alert("Preklic zahteva master control.");
-        return;
-      }
-      cancelSelfDestruct();
-    }
-  }
+} else if (code === 'LLRRLLLR') {
+if (selfDestructActive && selfDestructUnlimited) {
+// PREKLOP IZ UNLIMITED NA 1 URO - dovoli vsem
+activateSelfDestruct(60 * 60 * 1000);
+} else if (selfDestructActive) {
+// PREKLIC - zahteva master
+if (!masterControlActive) {
+alert("Preklic zahteva master control.");
+return;
+}
+cancelSelfDestruct();
+}
+}
 }
 
 // === CHAT FUNKCIJE ===
 function displayMessage(sender, message) {
-  const el = document.createElement('div');
-  el.innerHTML = `<strong>${sender}:</strong> ${message}`;
-  chatBox.appendChild(el);
-  chatBox.scrollTop = chatBox.scrollHeight;
+const el = document.createElement('div');
+el.innerHTML = <strong>${sender}:</strong> ${message};
+chatBox.appendChild(el);
+chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function handleIncomingMessage(msg) {
-  if (!selfDestructActive) displayMessage(msg.sender, msg.text);
+if (!selfDestructActive) displayMessage(msg.sender, msg.text);
 }
 
 async function onUserSendMessage(sender, message) {
-  if (selfDestructActive) return;
-  displayMessage(sender, message);
-  try {
-    await firebase.firestore().collection('messages').add({
-      sender: sender,
-      text: message,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Napaka pri shranjevanju:", err);
-  }
+if (selfDestructActive) return;
+displayMessage(sender, message);
+try {
+await firebase.firestore().collection('messages').add({
+sender: sender,
+text: message,
+timestamp: firebase.firestore.FieldValue.serverTimestamp()
+});
+} catch (err) {
+console.error("Napaka pri shranjevanju:", err);
+}
 }
 
 // === OB ZAGONU ===
 window.addEventListener('load', () => {
-  // Firestore dokument že naložen v initializeSelfDestructDoc
-  // Ta del lahko po potrebi odstraniš
+// Firestore dokument že naložen v initializeSelfDestructDoc
+// Ta del lahko po potrebi odstraniš
 });
 
-
 window.forceCancelSelfDestruct = function() {
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-  selfDestructRef.update({
-    active: false,
-    unlimited: false,
-    endTimestamp: null
-  })
-  .then(() => {
-    clearInterval(window.selfDestructInterval);
-    enableChat();
-    console.log("Force cancel: Self destruct je bil de-aktiviran.");
-    alert("Force cancel: Self destruct je bil de-aktiviran.");
-  })
-  .catch((error) => {
-    console.error("Napaka pri force cancel:", error);
-  });
-}
-
+selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+})
+.then(() => {
+clearInterval(window.selfDestructInterval);
+enableChat();
+console.log("Force cancel: Self destruct je bil de-aktiviran.");
+alert("Force cancel: Self destruct je bil de-aktiviran.");
+})
+.catch((error) => {
+console.error("Napaka pri force cancel:", error);
+});
+} 
 
 </script>
 </body>
