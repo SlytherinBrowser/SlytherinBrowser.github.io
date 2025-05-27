@@ -1085,6 +1085,31 @@ async function cancelSelfDestruct() {
   alert("Self destruct je bil deaktiviran.");
 }
 
+
+
+function forceCancelSelfDestruct() {
+  selfDestructActive = false;
+  selfDestructUnlimited = false;
+  selfDestructEndTimestamp = null;
+
+  selfDestructRef.update({
+    active: false,
+    unlimited: false,
+    endTimestamp: null
+  })
+  .then(() => {
+    clearInterval(window.selfDestructInterval);
+    enableChat();
+    console.log("Force cancel: Self destruct je bil de-aktiviran.");
+    alert("Force cancel: Self destruct je bil de-aktiviran.");
+  })
+  .catch((error) => {
+    console.error("Napaka pri force cancel:", error);
+  });
+}
+
+
+
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
