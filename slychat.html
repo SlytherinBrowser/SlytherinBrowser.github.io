@@ -371,19 +371,31 @@
   
     }  
   
-  
+
+
+
+  // Prosi za dovoljenje za obvestila
+if ("Notification" in window) {
+  if (Notification.permission === "default") {
+    Notification.requestPermission().then(permission => {
+      console.log("Dovoljenje za obvestila:", permission);
+    });
+  }
+}
+
+let windowHasFocus = true;
+window.addEventListener("focus", () => { windowHasFocus = true; });
+window.addEventListener("blur", () => { windowHasFocus = false; });
+
+
+
+
   
     db.ref("messages").on("child_added", snapshot => {  
   
       const msg = snapshot.val();  
   
   
-
-
-
-
-
-
 
 
 
@@ -428,7 +440,22 @@
   
       }  
   
-  
+  // Prikaži obvestilo, če je nova poruka, dovoljenje podeljeno in okno ni v fokusu
+if (Notification.permission === "granted" && !windowHasFocus) {
+  const notification = new Notification(displayName, {
+    body: msg.text,
+    icon: "Slytherin.png" // Po želji nastavi svojo ikono
+  });
+  // Klik na obvestilo aktivira okno in ga prinese v ospredje
+  notification.onclick = () => {
+    window.focus();
+    notification.close();
+  };
+}
+
+
+
+
   
       if (currentChatPartner) {  
   
