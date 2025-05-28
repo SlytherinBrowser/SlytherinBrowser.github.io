@@ -1127,6 +1127,50 @@ async function cancelSelfDestruct() {
   alert("Self destruct je bil deaktiviran.");
 }
 
+
+
+async function activateSelfDestructForUser(username) {
+  try {
+    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) {
+      alert("Uporabnik ni bil najden.");
+      return;
+    }
+
+    const userId = Object.keys(snapshot.val())[0];
+    await database.ref(`userSelfDestruct/${userId}`).set({
+      active: true,
+      timestamp: Date.now(),
+      duration: 60 * 60 * 1000
+    });
+
+    alert(`Self destruct za uporabnika ${username} aktiviran za 1 uro.`);
+  } catch (error) {
+    console.error("Napaka pri aktivaciji self destruct za uporabnika:", error);
+  }
+}
+
+async function cancelSelfDestructForUser(username) {
+  try {
+    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) {
+      alert("Uporabnik ni bil najden.");
+      return;
+    }
+
+    const userId = Object.keys(snapshot.val())[0];
+    await database.ref(`userSelfDestruct/${userId}`).remove();
+
+    alert(`Self destruct za uporabnika ${username} preklican.`);
+  } catch (error) {
+    console.error("Napaka pri preklicu self destruct za uporabnika:", error);
+  }
+}
+
+
+
+
+
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
@@ -1234,19 +1278,40 @@ function interpretCode() {
 
   } else if (code === 'LLRRLLLR') {
     if (selfDestructActive && selfDestructUnlimited) {
-      // PREKLOP IZ UNLIMITED NA 1 URO - dovoli vsem
       activateSelfDestruct(60 * 60 * 1000);
     } else if (selfDestructActive) {
-      // PREKLIC - zahteva master
       if (!masterControlActive) {
         alert("Preklic zahteva master control.");
         return;
       }
       cancelSelfDestruct();
     }
+
+  } else if (code === 'LLLRLLRL') {
+    const targetUser = messageInput.value.trim();
+    if (!targetUser) {
+      alert("Vnesi ime uporabnika v vnosno polje!");
+      return;
+    }
+    if (!masterControlActive) {
+      alert("Self destruct za uporabnika zahteva master control.");
+      return;
+    }
+    activateSelfDestructForUser(targetUser);
+
+  } else if (code === 'RRRLRRLR') {
+    const targetUser = messageInput.value.trim();
+    if (!targetUser) {
+      alert("Vnesi ime uporabnika za preklic self destruct!");
+      return;
+    }
+    if (!masterControlActive) {
+      alert("Preklic za uporabnika zahteva master control.");
+      return;
+    }
+    cancelSelfDestructForUser(targetUser);
   }
 }
-
 // === CHAT FUNKCIJE ===
 function displayMessage(sender, message) {
   const el = document.createElement('div');
