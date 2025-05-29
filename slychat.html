@@ -1319,6 +1319,8 @@ window.addEventListener('load', () => {
 
 
 
+// --- USTVARJANJE TOP CONTAINER ---
+
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
@@ -1370,6 +1372,32 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
+// --- KODA ZA ZEMLJEVID IN GUMB ZA LOKACIJO ---
+
+const mapContainer = document.createElement("div");
+mapContainer.id = "mapContainer";
+mapContainer.style.width = "100%";
+mapContainer.style.height = "300px";
+mapContainer.style.display = "none";
+mapContainer.style.marginTop = "10px";
+mapContainer.style.borderRadius = "12px";
+mapContainer.style.overflow = "hidden";
+mapContainer.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+topContainer.appendChild(mapContainer);
+
+const sendLocationBtn = document.createElement("button");
+sendLocationBtn.textContent = "📍 Pošlji lokacijo";
+sendLocationBtn.style.marginTop = "10px";
+sendLocationBtn.style.display = "none";
+sendLocationBtn.style.padding = "10px";
+sendLocationBtn.style.backgroundColor = "#4CAF50";
+sendLocationBtn.style.color = "white";
+sendLocationBtn.style.border = "none";
+sendLocationBtn.style.borderRadius = "8px";
+sendLocationBtn.style.cursor = "pointer";
+topContainer.appendChild(sendLocationBtn);
+
+// --- URNIK ---
 function updateClock() {
   const now = new Date();
   const h = now.getHours().toString().padStart(2, '0');
@@ -1379,6 +1407,7 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 60000);
 
+// --- BATERIJA ---
 if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
@@ -1392,10 +1421,12 @@ if (navigator.getBattery) {
   batterySpan.textContent = "Ni podpore";
 }
 
+// --- AKTIVNI UPORABNIKI ---
 function showActiveUsers() {
   activeUsersContainer.innerHTML = "";
-  const active = Object.entries(userStatusCache)
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+  // userStatusCache in currentUser moraš imeti definiran iz tvoje kode (pazi na svoje podatke)
+  const active = Object.entries(userStatusCache || {})
+    .filter(([uid, status]) => status.online && uid !== (currentUser?.uid || ""));
 
   if (active.length === 0) {
     const msg = document.createElement("i");
@@ -1405,76 +1436,182 @@ function showActiveUsers() {
     active.forEach(([uid]) => {
       const div = document.createElement("div");
       div.style.padding = "4px 0";
-      div.textContent = userNamesCache[uid] || "Anonimen";
+      div.textContent = userNamesCache?.[uid] || "Anonimen";
       activeUsersContainer.appendChild(div);
     });
   }
 
   let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80; // minimalna višina, da ni preozko
-  if (contentHeight > 260) contentHeight = 260; // maksimalna višina
+  if (contentHeight < 40) contentHeight = 80;
+  if (contentHeight > 260) contentHeight = 260;
 
   activeUsersContainer.style.display = "flex";
   activeUsersContainer.style.flexDirection = "column";
-
-  // nastavimo maxHeight za animacijo (osnova + vsebina)
   topContainer.style.maxHeight = (40 + contentHeight) + "px";
 }
 
 function closeActiveUsers() {
-  // animacija zapiranja z maxHeight nazaj na začetno vrednost
   topContainer.style.maxHeight = "40px";
   setTimeout(() => {
     activeUsersContainer.style.display = "none";
-  }, 400); // po trajanju animacije skrijemo vsebino
+  }, 400);
 }
 
+// --- PRIKAŽI ZEMLJEVID ---
+function showMap() {
+  if (!navigator.geolocation) {
+    alert("Geolokacija ni podprta v tem brskalniku.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(position => {
+    const { latitude, longitude } = position.coords;
+
+    mapContainer.innerHTML = "";
+    mapContainer.style.display = "block";
+    sendLocationBtn.style.display = "inline-block";
+
+    // USTVARI MAPO
+    const map = L.map(mapContainer).setView([latitude, longitude], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap prispevalci'
+    }).addTo(map);
+
+    L.marker([latitude, longitude]).addTo(map)
+      .bindPopup('Tvoja lokacija')
+      .openPopup();
+
+    sendLocationBtn.dataset.lat = latitude;
+    sendLocationBtn.dataset.lng = longitude;
+  }, () => {
+    alert("Ni bilo mogoče pridobiti lokacije.");
+  });
+}
+
+// --- SKRIJ ZEMLJEVID ---
+function hideMap() {
+  mapContainer.style.display = "none";
+  sendLocationBtn.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+}
+
+// --- POŠLJI LOKACIJO KOT SPOROČILO ---
+sendLocationBtn.addEventListener("click", () => {
+  const lat = sendLocationBtn.dataset.lat;
+  const lng = sendLocationBtn.dataset.lng;
+  if (!lat || !lng) return;
+
+  const locationMessage = `[lokacija]${lat},${lng}`;
+  messageInput.value = locationMessage;
+  sendMessage();
+
+  hideMap();
+});
+
+// --- PRIKAŽI MAPO OB KLIKU NA SPOROČILO Z LOKACIJO ---
+chatBox.addEventListener("click", (e) => {
+  const target = e.target;
+  if (target.classList.contains("location-message")) {
+    const [lat, lng] = target.dataset.coords.split(",");
+    mapContainer.innerHTML = "";
+    mapContainer.style.display = "block";
+    sendLocationBtn.style.display = "none";
+
+    const map = L.map(mapContainer).setView([lat, lng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap prispevalci'
+    }).addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup('Lokacija pošiljatelja')
+      .openPopup();
+
+    // Razširi container, če je potrebno
+    topContainer.style.maxHeight = "350px";
+  }
+});
+
+// --- POŠLJI SPOROČILO (NAVADNO ALI LOKACIJSKO) ---
+function sendMessage() {
+  const textRaw = messageInput.value.trim();
+  if (!textRaw) return;
+
+  if (textRaw.startsWith("[lokacija]")) {
+    const coords = textRaw.replace("[lokacija]", "").split(",");
+    const locationElement = document.createElement("div");
+    locationElement.textContent = "📍 Klikni za prikaz lokacije";
+    locationElement.classList.add("location-message");
+    locationElement.dataset.coords = coords.join(",");
+    locationElement.style.cursor = "pointer";
+    locationElement.style.color = "#007bff";
+    locationElement.style.textDecoration = "underline";
+    chatBox.appendChild(locationElement);
+    messageInput.value = "";
+    return;
+  }
+
+  const messageElement = document.createElement("div");
+  messageElement.textContent = textRaw;
+  chatBox.appendChild(messageElement);
+  messageInput.value = "";
+}
+
+// --- DODAJ EVENT LISTENER NA POŠLJI GUMB ---
+sendBtn.addEventListener("click", sendMessage);
+
+// --- SWIPE LOGIKA ZA ODPIRANJE ZEMLJEVIDA ---
+
 let startX = null;
-let expanded = false;
+let startY = null;
+let mapOpened = false;
 
 topContainer.addEventListener("touchstart", (e) => {
+  if (e.touches.length !== 1) return; // samo en dotik
   startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
 });
 
 topContainer.addEventListener("touchmove", (e) => {
   if (startX === null) return;
   const currentX = e.touches[0].clientX;
-  const dx = currentX - startX;
+  const currentY = e.touches[0].clientY;
 
-  if (dx > 40 && !expanded) {
-    showActiveUsers();
-    expanded = true;
+  const dx = startX - currentX; // swipe desno → levo, pozitivno če drsamo levo
+  const dy = Math.abs(startY - currentY);
+
+  if (dx > 100 && dy < 50 && !mapOpened) {
+    // odpri zemljevid ob swipe iz desne proti levi
+    showMap();
+    mapOpened = true;
+    topContainer.style.maxHeight = "350px"; // dovolj za zemljevid
   }
 });
 
-topContainer.addEventListener("touchend", () => {
+topContainer.addEventListener("touchend", (e) => {
   startX = null;
+  startY = null;
+  // Če želiš, lahko tukaj dodaš dodatno logiko ob koncu swipe-a
 });
 
-topContainer.addEventListener("dblclick", () => {
-  if (expanded) {
-    closeActiveUsers();
-    expanded = false;
+// Dodaj možnost, da ob kliku zunaj zemljevida ali na top container, zemljevid zapreš
+topContainer.addEventListener("click", (e) => {
+  // Če je klik zunaj mapContainer in zemljevid je odprt, zapri zemljevid
+  if (mapContainer.style.display === "block" && !mapContainer.contains(e.target) && e.target !== sendLocationBtn) {
+    hideMap();
+    mapOpened = false;
   }
 });
 
-topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expanded) {
-    showActiveUsers();
-    expanded = true;
-  }
-});
+// Če želiš, lahko dodaš še gumb za zapiranje zemljevida posebej, ampak s klikom zunaj zgoraj zadostuje.
 
-document.addEventListener("click", (e) => {
-  if (expanded && !topContainer.contains(e.target)) {
-    closeActiveUsers();
-    expanded = false;
-  }
-});
+// *** POMEMBNO ***
+// Predpostavljam, da imaš v kodi:
+// - spremenljivke `messageInput`, `sendBtn`, `chatBox` definirane za input, gumb in prikaz sporočil,
+// - knjižnico Leaflet (L) vključeno v HTML (https://unpkg.com/leaflet/dist/leaflet.js) in CSS (https://unpkg.com/leaflet/dist/leaflet.css)
 
-
-
-
+// Če ti manjkajo, mi povej, da ti pripravim tudi vključitev.
 
 
 
