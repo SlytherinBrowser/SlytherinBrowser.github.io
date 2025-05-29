@@ -1314,12 +1314,14 @@ window.addEventListener('load', () => {
 
 
 
+// Dodajemo maxHeight namesto height in transition za max-height
+
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px"; // začetna višina
+topContainer.style.maxHeight = "40px"; // za animacijo uporabimo max-height
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1330,8 +1332,10 @@ topContainer.style.zIndex = "9999";
 topContainer.style.transition = "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
 topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";
-topContainer.style.overflow = "hidden";
+topContainer.style.overflow = "hidden"; // skrije vse, kar presega max-height
 document.body.appendChild(topContainer);
+
+// ... (ostali elementi ostanejo isti)
 
 const topRow = document.createElement("div");
 topRow.style.display = "flex";
@@ -1346,49 +1350,10 @@ clockSpan.style.fontWeight = "bold";
 clockSpan.style.fontSize = "1.2em";
 topRow.appendChild(clockSpan);
 
-// Okoli baterije dodamo wrapper z animirajočim se krogcem
-const batteryWrapper = document.createElement("div");
-batteryWrapper.style.position = "relative";
-batteryWrapper.style.width = "30px";
-batteryWrapper.style.height = "30px";
-batteryWrapper.style.display = "flex";
-batteryWrapper.style.justifyContent = "center";
-batteryWrapper.style.alignItems = "center";
-topRow.appendChild(batteryWrapper);
-
 const batterySpan = document.createElement("span");
 batterySpan.style.fontWeight = "bold";
 batterySpan.style.fontSize = "1.2em";
-batterySpan.style.position = "relative";
-batterySpan.style.zIndex = "2";
-batteryWrapper.appendChild(batterySpan);
-
-// Ustvarimo animiran krog brez ozadja okoli baterije
-const loadingCircle = document.createElement("div");
-loadingCircle.style.position = "absolute";
-loadingCircle.style.top = "50%";
-loadingCircle.style.left = "50%";
-loadingCircle.style.width = "28px";
-loadingCircle.style.height = "28px";
-loadingCircle.style.marginTop = "-14px";
-loadingCircle.style.marginLeft = "-14px";
-loadingCircle.style.border = "2px solid rgba(255, 255, 255, 0.5)";
-loadingCircle.style.borderTopColor = "transparent";
-loadingCircle.style.borderRadius = "50%";
-loadingCircle.style.zIndex = "1";
-loadingCircle.style.display = "none"; // skrit po defaultu
-loadingCircle.style.animation = "spin 1s linear infinite";
-batteryWrapper.appendChild(loadingCircle);
-
-// Dodamo CSS animacijo "spin" v glavo dokumenta
-const styleEl = document.createElement('style');
-styleEl.textContent = `
-  @keyframes spin {
-    0% { transform: rotate(0deg);}
-    100% { transform: rotate(360deg);}
-  }
-`;
-document.head.appendChild(styleEl);
+topRow.appendChild(batterySpan);
 
 const activeUsersContainer = document.createElement("div");
 activeUsersContainer.style.width = "100%";
@@ -1417,14 +1382,10 @@ if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
       const pct = Math.round(battery.level * 100);
-      const charging = battery.charging;
-
-      batterySpan.textContent = charging ? `🔋${pct}% +` : `🔋${pct}%`;
-      loadingCircle.style.display = charging ? "block" : "none";
+      batterySpan.textContent = `${pct}%🔋`;
     }
     updateBattery();
     battery.addEventListener('levelchange', updateBattery);
-    battery.addEventListener('chargingchange', updateBattery);
   });
 } else {
   batterySpan.textContent = "Ni podpore";
@@ -1448,15 +1409,15 @@ function showActiveUsers() {
     });
   }
 
-  // višina vsebine za animacijo
+  // izračunamo višino vsebine:
   let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 80) contentHeight = 80;
+  if (contentHeight < 40) contentHeight = 40;
   if (contentHeight > 260) contentHeight = 260;
 
   activeUsersContainer.style.display = "flex";
   activeUsersContainer.style.flexDirection = "column";
 
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
+  topContainer.style.maxHeight = (40 + contentHeight) + "px"; // maxHeight za animacijo
 }
 
 let startX = null;
