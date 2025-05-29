@@ -1378,7 +1378,7 @@ if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
       const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `🔋 ${pct}%`;
+      batterySpan.textContent = `${pct}%🔋`;
     }
     updateBattery();
     battery.addEventListener('levelchange', updateBattery);
