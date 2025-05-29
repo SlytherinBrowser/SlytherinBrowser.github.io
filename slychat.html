@@ -879,15 +879,7 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
-  function logout() {  
-
-    auth.signOut().then(() => {  
-
-      window.location.href = "auth.html";  
-
-    });  
-
-  }  
+  
 
 
 
@@ -1474,7 +1466,85 @@ document.addEventListener("click", (e) => {
 
 
 
+const logoutContainer = document.createElement("div");
+logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none";
+logoutContainer.style.justifyContent = "center";
+logoutContainer.style.alignItems = "center";
+logoutContainer.style.padding = "10px";
+logoutContainer.style.boxSizing = "border-box";
 
+const logoutButton = document.createElement("button");
+logoutButton.textContent = "Odjava";
+logoutButton.className = "btn";
+logoutButton.onclick = logout;
+logoutContainer.appendChild(logoutButton);
+
+topContainer.appendChild(logoutContainer);
+
+// Funkcija za prikaz gumba za odjavo
+function showLogoutButton() {
+  activeUsersContainer.style.display = "none";
+  logoutContainer.style.display = "flex";
+  topContainer.style.maxHeight = "120px";
+}
+
+// Funkcija za zaprtje odjave
+function closeLogoutButton() {
+  logoutContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+}
+
+function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  });
+}
+
+// Podrs z desne proti levi za prikaz gumba za odjavo
+topContainer.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+topContainer.addEventListener("touchmove", (e) => {
+  if (startX === null) return;
+  const currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
+
+  if (dx > 40 && !expanded) {
+    showActiveUsers();
+    expanded = true;
+  } else if (dx < -40 && !expanded) {
+    showLogoutButton();
+    expanded = true;
+  }
+});
+
+topContainer.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0 && !expanded) {
+    showActiveUsers();
+    expanded = true;
+  } else if (e.deltaY < 0 && !expanded) {
+    showLogoutButton();
+    expanded = true;
+  }
+});
+
+document.addEventListener("click", (e) => {
+  if (expanded && !topContainer.contains(e.target)) {
+    closeActiveUsers();
+    closeLogoutButton();
+    expanded = false;
+  }
+});
+
+topContainer.addEventListener("dblclick", () => {
+  if (expanded) {
+    closeActiveUsers();
+    closeLogoutButton();
+    expanded = false;
+  }
+});
 
 
 
