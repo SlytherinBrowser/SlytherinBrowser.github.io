@@ -1322,9 +1322,9 @@ topContainer.style.left = "0";
 topContainer.style.width = "100%";
 topContainer.style.height = "40px"; // začetna višina
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)"; // rahlo prosojno
-topContainer.style.backdropFilter = "blur(8px)";               // blur efekt
-topContainer.style.webkitBackdropFilter = "blur(8px)";         // za Safari podporo
-topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)"; // subtilen rob
+topContainer.style.backdropFilter = "blur(8px)";
+topContainer.style.webkitBackdropFilter = "blur(8px)";
+topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 topContainer.style.display = "flex";
 topContainer.style.flexDirection = "column";
 topContainer.style.zIndex = "9999";
@@ -1378,7 +1378,7 @@ if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
       const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `🔋 ${pct}%`;
+      batterySpan.textContent = `${pct}%🔋`;
     }
     updateBattery();
     battery.addEventListener('levelchange', updateBattery);
@@ -1405,7 +1405,6 @@ function showActiveUsers() {
     });
   }
 
-  // Višina: minimalno 80px, plus 30px na uporabnika, max 300px
   let height = 40 + active.length * 30;
   if (height < 80) height = 80;
   if (height > 300) height = 300;
@@ -1442,6 +1441,14 @@ topContainer.addEventListener("dblclick", () => {
     topContainer.style.height = "40px";
     activeUsersContainer.style.display = "none";
     expanded = false;
+  }
+});
+
+// Scroll navzdol nad containerjem odpre seznam
+topContainer.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0 && !expanded) {
+    showActiveUsers();
+    expanded = true;
   }
 });
 
