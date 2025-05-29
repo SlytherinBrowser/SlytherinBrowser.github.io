@@ -192,7 +192,6 @@
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
-      <button class="btn" onclick="logout()">Odjava</button>
     </div>
   </div>
 
@@ -1316,118 +1315,172 @@ window.addEventListener('load', () => {
 
 
 
-const topContainer = document.createElement("div");
-topContainer.style.position = "fixed";
-topContainer.style.top = "0";
-topContainer.style.left = "0";
-topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px"; // začetna višina (ozka vrstica)
-topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-topContainer.style.backdropFilter = "blur(8px)";
-topContainer.style.webkitBackdropFilter = "blur(8px)";
-topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-topContainer.style.display = "flex";
-topContainer.style.flexDirection = "column";
-topContainer.style.zIndex = "9999";
-topContainer.style.transition = "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
-topContainer.style.boxSizing = "border-box";
-topContainer.style.padding = "0 15px";
-topContainer.style.overflow = "hidden";
-document.body.appendChild(topContainer);
+const topContainer = document.createElement("div");  
+topContainer.style.position = "fixed";  
+topContainer.style.top = "0";  
+topContainer.style.left = "0";  
+topContainer.style.width = "100%";  
+topContainer.style.maxHeight = "40px";  
+topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";  
+topContainer.style.backdropFilter = "blur(8px)";  
+topContainer.style.webkitBackdropFilter = "blur(8px)";  
+topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";  
+topContainer.style.display = "flex";  
+topContainer.style.flexDirection = "column";  
+topContainer.style.zIndex = "9999";  
+topContainer.style.transition = "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)";  
+topContainer.style.boxSizing = "border-box";  
+topContainer.style.padding = "0 15px";  
+topContainer.style.overflow = "hidden";  
+document.body.appendChild(topContainer);  
+  
+const topRow = document.createElement("div");  
+topRow.style.display = "flex";  
+topRow.style.justifyContent = "space-between";  
+topRow.style.alignItems = "center";  
+topRow.style.width = "100%";  
+topRow.style.height = "40px";  
+topContainer.appendChild(topRow);  
+  
+const clockSpan = document.createElement("span");  
+clockSpan.style.fontWeight = "bold";  
+clockSpan.style.fontSize = "1.2em";  
+topRow.appendChild(clockSpan);  
+  
+const batterySpan = document.createElement("span");  
+batterySpan.style.fontWeight = "bold";  
+batterySpan.style.fontSize = "1.2em";  
+topRow.appendChild(batterySpan);  
+  
+function updateClock() {  
+  const now = new Date();  
+  const h = now.getHours().toString().padStart(2, '0');  
+  const m = now.getMinutes().toString().padStart(2, '0');  
+  clockSpan.textContent = `${h}:${m}`;  
+}  
+updateClock();  
+setInterval(updateClock, 60000);  
+  
+if (navigator.getBattery) {  
+  navigator.getBattery().then(battery => {  
+    function updateBattery() {  
+      const pct = Math.round(battery.level * 100);  
+      batterySpan.textContent = `${pct}%🔋`;  
+    }  
+    updateBattery();  
+    battery.addEventListener('levelchange', updateBattery);  
+  });  
+} else {  
+  batterySpan.textContent = "Ni podpore";  
+}  
+  
+const activeUsersContainer = document.createElement("div");  
+activeUsersContainer.style.width = "100%";  
+activeUsersContainer.style.flexDirection = "column";  
+activeUsersContainer.style.flexGrow = "1";  
+activeUsersContainer.style.display = "none";  
+activeUsersContainer.style.padding = "10px";  
+activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";  
+activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";  
+activeUsersContainer.style.borderRadius = "10px";  
+activeUsersContainer.style.overflowY = "auto";  
+activeUsersContainer.style.gap = "10px";  
+activeUsersContainer.style.boxSizing = "border-box";  
+topContainer.appendChild(activeUsersContainer);  
+  
+function showActiveUsers() {  
+  activeUsersContainer.innerHTML = "";  
+  const active = Object.entries(userStatusCache)  
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid && status.activityVisible !== false);  
+  
+  if (active.length === 0) {  
+    const msg = document.createElement("i");  
+    msg.textContent = "Ni drugih aktivnih uporabnikov.";  
+    activeUsersContainer.appendChild(msg);  
+  } else {  
+    active.forEach(([uid]) => {  
+      const div = document.createElement("div");  
+      div.style.padding = "4px 0";  
+      div.textContent = userNamesCache[uid] || "Anonimen";  
+      activeUsersContainer.appendChild(div);  
+    });  
+  }  
+  
+  let contentHeight = activeUsersContainer.scrollHeight;  
+  if (contentHeight < 40) contentHeight = 80;  
+  if (contentHeight > 260) contentHeight = 260;  
+  
+  activeUsersContainer.style.display = "flex";  
+  activeUsersContainer.style.flexDirection = "column";  
+  topContainer.style.maxHeight = (40 + contentHeight) + "px";  
+}  
+  
+function closeActiveUsers() {  
+  topContainer.style.maxHeight = "40px";  
+  setTimeout(() => {  
+    activeUsersContainer.style.display = "none";  
+  }, 400);  
+}  
+  
+// 🔸 PROFIL razširitev
+const profileContainer = document.createElement("div");
+profileContainer.style.display = "none";
+profileContainer.style.flexDirection = "column";
+profileContainer.style.padding = "10px";
+profileContainer.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+profileContainer.style.gap = "10px";
+topContainer.appendChild(profileContainer);
 
-const topRow = document.createElement("div");
-topRow.style.display = "flex";
-topRow.style.justifyContent = "space-between";
-topRow.style.alignItems = "center";
-topRow.style.width = "100%";
-topRow.style.height = "40px";
-topContainer.appendChild(topRow);
+const nameRow = document.createElement("div");
+nameRow.style.display = "flex";
+nameRow.style.justifyContent = "space-between";
+nameRow.style.alignItems = "center";
+profileContainer.appendChild(nameRow);
 
-const clockSpan = document.createElement("span");
-clockSpan.style.fontWeight = "bold";
-clockSpan.style.fontSize = "1.2em";
-topRow.appendChild(clockSpan);
+const profileName = document.createElement("span");
+profileName.style.fontWeight = "bold";
+profileName.textContent = currentUser.displayName || "Jaz";
+nameRow.appendChild(profileName);
 
-const batterySpan = document.createElement("span");
-batterySpan.style.fontWeight = "bold";
-batterySpan.style.fontSize = "1.2em";
-topRow.appendChild(batterySpan);
+const activityToggle = document.createElement("button");
+activityToggle.textContent = "Skrij aktivnost";
+activityToggle.style.padding = "5px 10px";
+activityToggle.style.border = "none";
+activityToggle.style.borderRadius = "5px";
+activityToggle.style.cursor = "pointer";
+activityToggle.style.background = "#ddd";
+nameRow.appendChild(activityToggle);
 
-const activeUsersContainer = document.createElement("div");
-activeUsersContainer.style.width = "100%";
-activeUsersContainer.style.flexDirection = "column";
-activeUsersContainer.style.flexGrow = "1";
-activeUsersContainer.style.display = "none";
-activeUsersContainer.style.padding = "10px";
-activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-activeUsersContainer.style.borderRadius = "10px";
-activeUsersContainer.style.overflowY = "auto";
-activeUsersContainer.style.gap = "10px";
-activeUsersContainer.style.boxSizing = "border-box";
-topContainer.appendChild(activeUsersContainer);
+const logoutBtn = document.createElement("button");
+logoutBtn.textContent = "Odjava";
+logoutBtn.style.padding = "5px 10px";
+logoutBtn.style.border = "none";
+logoutBtn.style.borderRadius = "5px";
+logoutBtn.style.cursor = "pointer";
+logoutBtn.style.background = "#e66";
+profileContainer.appendChild(logoutBtn);
 
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours().toString().padStart(2, '0');
-  const m = now.getMinutes().toString().padStart(2, '0');
-  clockSpan.textContent = `${h}:${m}`;
+// Firebase shrani vidnost aktivnosti
+function setActivityVisibleInFirebase(visible) {
+  const userRef = firebase.database().ref(`users/${currentUser.uid}`);
+  userRef.update({ activityVisible: visible });
 }
-updateClock();
-setInterval(updateClock, 60000);
 
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function updateBattery() {
-      const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `${pct}%🔋`;
-    }
-    updateBattery();
-    battery.addEventListener('levelchange', updateBattery);
-  });
-} else {
-  batterySpan.textContent = "Ni podpore";
-}
+let activityVisible = true;
+activityToggle.addEventListener("click", () => {
+  activityVisible = !activityVisible;
+  activityToggle.textContent = activityVisible ? "Skrij aktivnost" : "Pokaži aktivnost";
+  setActivityVisibleInFirebase(activityVisible);
+});
 
-function showActiveUsers() {
-  activeUsersContainer.innerHTML = "";
-  const active = Object.entries(userStatusCache)
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+logoutBtn.addEventListener("click", () => {
+  firebase.auth().signOut().then(() => location.reload());
+});
 
-  if (active.length === 0) {
-    const msg = document.createElement("i");
-    msg.textContent = "Ni drugih aktivnih uporabnikov.";
-    activeUsersContainer.appendChild(msg);
-  } else {
-    active.forEach(([uid]) => {
-      const div = document.createElement("div");
-      div.style.padding = "4px 0";
-      div.textContent = userNamesCache[uid] || "Anonimen";
-      activeUsersContainer.appendChild(div);
-    });
-  }
-
-  let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80; // minimalna višina, da ni preozko
-  if (contentHeight > 260) contentHeight = 260; // maksimalna višina
-
-  activeUsersContainer.style.display = "flex";
-  activeUsersContainer.style.flexDirection = "column";
-
-  // nastavimo maxHeight za animacijo (osnova + vsebina)
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
-}
-
-function closeActiveUsers() {
-  // animacija zapiranja z maxHeight nazaj na začetno vrednost
-  topContainer.style.maxHeight = "40px";
-  setTimeout(() => {
-    activeUsersContainer.style.display = "none";
-  }, 400); // po trajanju animacije skrijemo vsebino
-}
-
+// GESTURE: levi poteg za aktivne, desni za profil
 let startX = null;
 let expanded = false;
+let direction = null;
 
 topContainer.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
@@ -1440,7 +1493,16 @@ topContainer.addEventListener("touchmove", (e) => {
 
   if (dx > 40 && !expanded) {
     showActiveUsers();
+    profileContainer.style.display = "none";
+    activeUsersContainer.style.display = "flex";
     expanded = true;
+    direction = "left";
+  } else if (dx < -40 && !expanded) {
+    activeUsersContainer.style.display = "none";
+    profileContainer.style.display = "flex";
+    topContainer.style.maxHeight = "180px";
+    expanded = true;
+    direction = "right";
   }
 });
 
@@ -1451,6 +1513,7 @@ topContainer.addEventListener("touchend", () => {
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
     closeActiveUsers();
+    profileContainer.style.display = "none";
     expanded = false;
   }
 });
@@ -1458,17 +1521,19 @@ topContainer.addEventListener("dblclick", () => {
 topContainer.addEventListener("wheel", (e) => {
   if (e.deltaY > 0 && !expanded) {
     showActiveUsers();
+    profileContainer.style.display = "none";
     expanded = true;
+    direction = "left";
   }
 });
 
 document.addEventListener("click", (e) => {
   if (expanded && !topContainer.contains(e.target)) {
     closeActiveUsers();
+    profileContainer.style.display = "none";
     expanded = false;
   }
 });
-
 
 
 
