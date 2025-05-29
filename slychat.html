@@ -11,6 +11,45 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+
+<style>
+  :root[data-style="default"] {
+    /* privzete vrednosti - že imaš */
+  }
+
+  :root[data-style="style1"] {
+    --custom-bg: rgba(0, 0, 0, 0.7);
+    --chat-bg: rgba(255, 255, 255, 0.03);
+    --sender-color: #4dd0e1;
+    --font: 'Courier New', monospace;
+  }
+
+  :root[data-style="style2"] {
+    --custom-bg: rgba(50, 0, 70, 0.7);
+    --chat-bg: rgba(255, 255, 255, 0.04);
+    --sender-color: #ff80ab;
+    --font: 'Georgia', serif;
+  }
+
+  body {
+    font-family: var(--font, 'Segoe UI', sans-serif);
+  }
+
+  #chatBox div {
+    background: var(--custom-bg, rgba(0,0,0,0.6));
+  }
+
+  .sender {
+    color: var(--sender-color, #ffd700);
+  }
+
+  #chatBox {
+    background-color: var(--chat-bg, rgba(255, 255, 255, 0.05));
+  }
+</style>
+
+
   <style>
     * {
       box-sizing: border-box;
@@ -1467,6 +1506,98 @@ document.addEventListener("click", (e) => {
   }
 });
 
+
+
+
+
+
+
+const styleSwitcherContainer = document.createElement("div");
+styleSwitcherContainer.style.display = "none";
+styleSwitcherContainer.style.flexDirection = "row";
+styleSwitcherContainer.style.gap = "10px";
+styleSwitcherContainer.style.justifyContent = "center";
+styleSwitcherContainer.style.padding = "10px 0";
+topContainer.appendChild(styleSwitcherContainer);
+
+// Funkcija za ustvarjanje gumba
+function createStyleButton(label, onClick) {
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.style.padding = "6px 10px";
+  btn.style.borderRadius = "6px";
+  btn.style.border = "none";
+  btn.style.background = "rgba(255,255,255,0.2)";
+  btn.style.color = "#fff";
+  btn.style.cursor = "pointer";
+  btn.style.fontWeight = "bold";
+  btn.style.transition = "background 0.3s";
+  btn.addEventListener("mouseenter", () => btn.style.background = "rgba(255,255,255,0.35)");
+  btn.addEventListener("mouseleave", () => btn.style.background = "rgba(255,255,255,0.2)");
+  btn.onclick = onClick;
+  return btn;
+}
+
+// Funkcije za preklop stilov
+function applyDefaultStyle() {
+  document.documentElement.setAttribute("data-style", "default");
+}
+
+function applyStyle1() {
+  document.documentElement.setAttribute("data-style", "style1");
+}
+
+function applyStyle2() {
+  document.documentElement.setAttribute("data-style", "style2");
+}
+
+// Dodaj gumbe
+styleSwitcherContainer.appendChild(createStyleButton("Moj stil", applyDefaultStyle));
+styleSwitcherContainer.appendChild(createStyleButton("Stil 1", applyStyle1));
+styleSwitcherContainer.appendChild(createStyleButton("Stil 2", applyStyle2));
+
+let swipeStartX = null;
+let switcherExpanded = false;
+
+topContainer.addEventListener("touchstart", (e) => {
+  swipeStartX = e.touches[0].clientX;
+});
+
+topContainer.addEventListener("touchmove", (e) => {
+  if (swipeStartX === null) return;
+  const dx = swipeStartX - e.touches[0].clientX;
+
+  if (dx > 40 && !switcherExpanded) {
+    showStyleSwitcher();
+    switcherExpanded = true;
+  }
+});
+
+topContainer.addEventListener("touchend", () => {
+  swipeStartX = null;
+});
+
+// Pokaži gumbno vrstico za stile
+function showStyleSwitcher() {
+  styleSwitcherContainer.style.display = "flex";
+  const contentHeight = styleSwitcherContainer.scrollHeight;
+  topContainer.style.maxHeight = (40 + contentHeight) + "px";
+}
+
+// Zapri z dvoklikom, kot za uporabnike
+topContainer.addEventListener("dblclick", () => {
+  if (switcherExpanded) {
+    hideStyleSwitcher();
+    switcherExpanded = false;
+  }
+});
+
+function hideStyleSwitcher() {
+  topContainer.style.maxHeight = "40px";
+  setTimeout(() => {
+    styleSwitcherContainer.style.display = "none";
+  }, 400);
+}
 
 </script>
 </body>
