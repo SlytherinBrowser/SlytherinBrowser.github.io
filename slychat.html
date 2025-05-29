@@ -1322,7 +1322,7 @@ topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.height = "3cm";
+topContainer.style.height = "40px"; // manjša višina
 topContainer.style.backgroundColor = "#eee";
 topContainer.style.display = "flex";
 topContainer.style.justifyContent = "space-between";
@@ -1340,7 +1340,7 @@ topRow.style.display = "flex";
 topRow.style.justifyContent = "space-between";
 topRow.style.alignItems = "center";
 topRow.style.width = "100%";
-topRow.style.height = "3cm";
+topRow.style.height = "40px";
 topContainer.appendChild(topRow);
 
 // Ura (leva stran)
@@ -1412,42 +1412,38 @@ function showActiveUsers() {
   }
 }
 
-// Swipe navzdol po levi polovici containerja za razširitev
-let startY = null;
+// Swipe od leve proti desni za razširitev
+let startX = null;
 let expanded = false;
 
 topContainer.addEventListener("touchstart", (e) => {
-  startY = e.touches[0].clientY;
+  startX = e.touches[0].clientX;
 });
 
 topContainer.addEventListener("touchmove", (e) => {
-  if (startY === null) return;
+  if (startX === null) return;
 
-  const currentY = e.touches[0].clientY;
-  const dy = currentY - startY;
   const currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
 
-  // Leva polovica zaslona
-  if (currentX <= window.innerWidth / 2) {
-    if (dy > 40 && !expanded) {
-      // Razširi
-      topContainer.style.height = "10cm";
-      activeUsersContainer.style.display = "flex";
-      activeUsersContainer.style.flexDirection = "column";
-      showActiveUsers();
-      expanded = true;
-    }
+  if (dx > 40 && !expanded) {
+    // Razširi container navpično
+    topContainer.style.height = "10cm";
+    activeUsersContainer.style.display = "flex";
+    activeUsersContainer.style.flexDirection = "column";
+    showActiveUsers();
+    expanded = true;
   }
 });
 
 topContainer.addEventListener("touchend", () => {
-  startY = null;
+  startX = null;
 });
 
 // Dvojni klik za skrčenje nazaj
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
-    topContainer.style.height = "3cm";
+    topContainer.style.height = "40px";
     activeUsersContainer.style.display = "none";
     expanded = false;
   }
