@@ -1608,10 +1608,12 @@ document.addEventListener("click", (e) => {
 
 // PODRS Z DESNE → LEVO
 let touchStartX = 0;
-document.addEventListener("touchstart", (e) => {
+
+topContainer.addEventListener("touchstart", (e) => {
   touchStartX = e.changedTouches[0].screenX;
 });
-document.addEventListener("touchend", (e) => {
+
+topContainer.addEventListener("touchend", (e) => {
   const touchEndX = e.changedTouches[0].screenX;
   if (touchStartX - touchEndX > 100) {
     showMap();
