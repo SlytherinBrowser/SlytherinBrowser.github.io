@@ -6,6 +6,9 @@
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Leaflet zemljevidi -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1473,6 +1476,148 @@ document.addEventListener("click", (e) => {
 
 
 
+
+
+
+
+// USTVARI MAP CONTAINER
+const mapContainer = document.createElement("div");
+mapContainer.id = "mapContainer";
+mapContainer.style.width = "100%";
+mapContainer.style.height = "300px";
+mapContainer.style.display = "none";
+mapContainer.style.marginTop = "10px";
+mapContainer.style.borderRadius = "12px";
+mapContainer.style.overflow = "hidden";
+mapContainer.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+topContainer.appendChild(mapContainer);
+
+// USTVARI GUMB ZA POŠILJANJE LOKACIJE
+const sendLocationBtn = document.createElement("button");
+sendLocationBtn.textContent = "📍 Pošlji lokacijo";
+sendLocationBtn.style.marginTop = "10px";
+sendLocationBtn.style.display = "none";
+sendLocationBtn.style.padding = "10px";
+sendLocationBtn.style.backgroundColor = "#4CAF50";
+sendLocationBtn.style.color = "white";
+sendLocationBtn.style.border = "none";
+sendLocationBtn.style.borderRadius = "8px";
+sendLocationBtn.style.cursor = "pointer";
+topContainer.appendChild(sendLocationBtn);
+
+// PRIDOBI IN PRIKAŽI TRENUTNO LOKACIJO NA ZEMLJEVIDU
+function showMap() {
+  if (!navigator.geolocation) {
+    alert("Geolokacija ni podprta v tem brskalniku.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(position => {
+    const { latitude, longitude } = position.coords;
+
+    mapContainer.innerHTML = "";
+    mapContainer.style.display = "block";
+    sendLocationBtn.style.display = "inline-block";
+
+    const map = L.map(mapContainer).setView([latitude, longitude], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap prispevalci'
+    }).addTo(map);
+
+    L.marker([latitude, longitude]).addTo(map)
+      .bindPopup('Tvoja lokacija')
+      .openPopup();
+
+    sendLocationBtn.dataset.lat = latitude;
+    sendLocationBtn.dataset.lng = longitude;
+  }, () => {
+    alert("Ni bilo mogoče pridobiti lokacije.");
+  });
+}
+
+// POŠLJI LOKACIJO KOT SPOROČILO
+sendLocationBtn.addEventListener("click", () => {
+  const lat = sendLocationBtn.dataset.lat;
+  const lng = sendLocationBtn.dataset.lng;
+  if (!lat || !lng) return;
+
+  const locationMessage = `[lokacija]${lat},${lng}`;
+  messageInput.value = locationMessage;
+  sendMessage();
+
+  mapContainer.style.display = "none";
+  sendLocationBtn.style.display = "none";
+});
+
+// PRIKAŽI MAPO OB KLIKU NA SPOROČILO Z LOKACIJO
+chatBox.addEventListener("click", (e) => {
+  const target = e.target;
+  if (target.classList.contains("location-message")) {
+    const [lat, lng] = target.dataset.coords.split(",");
+    mapContainer.innerHTML = "";
+    mapContainer.style.display = "block";
+    sendLocationBtn.style.display = "none";
+
+    const map = L.map(mapContainer).setView([lat, lng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap prispevalci'
+    }).addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+      .bindPopup('Lokacija pošiljatelja')
+      .openPopup();
+  }
+});
+
+// POŠLJI SPOROČILO (LOKACIJSKO ALI NAVADNO)
+function sendMessage() {
+  const textRaw = messageInput.value.trim();
+  if (!textRaw) return;
+
+  if (textRaw.startsWith("[lokacija]")) {
+    const coords = textRaw.replace("[lokacija]", "").split(",");
+    const locationElement = document.createElement("div");
+    locationElement.textContent = "📍 Klikni za prikaz lokacije";
+    locationElement.classList.add("location-message");
+    locationElement.dataset.coords = coords.join(",");
+    locationElement.style.cursor = "pointer";
+    locationElement.style.color = "#007bff";
+    locationElement.style.textDecoration = "underline";
+    chatBox.appendChild(locationElement);
+    messageInput.value = "";
+    return;
+  }
+
+  const messageElement = document.createElement("div");
+  messageElement.textContent = textRaw;
+  chatBox.appendChild(messageElement);
+  messageInput.value = "";
+}
+
+// DODAJ FUNKCIONALNOST GUMBA POŠLJI
+sendBtn.addEventListener("click", sendMessage);
+
+// SKRIJ ZEMLJEVID OB KLIKU IZVEN NJEGA
+document.addEventListener("click", (e) => {
+  if (!mapContainer.contains(e.target) && !sendLocationBtn.contains(e.target)) {
+    mapContainer.style.display = "none";
+    sendLocationBtn.style.display = "none";
+  }
+});
+
+// PODRS Z DESNE → PRIKAŽI MAPO
+let touchStartX = 0;
+document.addEventListener("touchstart", (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+document.addEventListener("touchend", (e) => {
+  const touchEndX = e.changedTouches[0].screenX;
+  if (touchStartX - touchEndX > 100) {
+    showMap();
+  }
+});
 
 
 
