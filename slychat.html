@@ -14,41 +14,71 @@
 
 
 <style>
-  :root[data-style="default"] {
-    /* privzete vrednosti - že imaš */
+  body.style-default, #chatContainer.style-default {
+    background-color: #0f0f0f;
+    color: #4dd0e1;
   }
 
-  :root[data-style="style1"] {
-    --custom-bg: rgba(0, 0, 0, 0.7);
-    --chat-bg: rgba(255, 255, 255, 0.03);
-    --sender-color: #4dd0e1;
-    --font: 'Courier New', monospace;
+  #chatContainer.style-default {
+    background-color: rgba(30, 30, 30, 0.9);
+    border-radius: 12px;
   }
 
-  :root[data-style="style2"] {
-    --custom-bg: rgba(50, 0, 70, 0.7);
-    --chat-bg: rgba(255, 255, 255, 0.04);
-    --sender-color: #ff80ab;
-    --font: 'Georgia', serif;
+  .chat-message.style-default {
+    background-color: #222;
+    color: #4dd0e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin: 4px 0;
   }
 
-  body {
-    font-family: var(--font, 'Segoe UI', sans-serif);
+  .chat-button.style-default {
+    background-color: #1e88e5;
+    color: white;
+    border-radius: 6px;
+    border: none;
   }
 
-  #chatBox div {
-    background: var(--custom-bg, rgba(0,0,0,0.6));
+  /* STYLE 1 */
+  body.style-1, #chatContainer.style-1 {
+    background-color: #1a1a2e;
+    color: #e94560;
   }
 
-  .sender {
-    color: var(--sender-color, #ffd700);
+  #chatContainer.style-1 {
+    background-color: #16213e;
   }
 
-  #chatBox {
-    background-color: var(--chat-bg, rgba(255, 255, 255, 0.05));
+  .chat-message.style-1 {
+    background-color: #0f3460;
+    color: #e94560;
+  }
+
+  .chat-button.style-1 {
+    background-color: #e94560;
+    color: #fff;
+  }
+
+  /* STYLE 2 */
+  body.style-2, #chatContainer.style-2 {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+
+  #chatContainer.style-2 {
+    background-color: #ffffff;
+  }
+
+  .chat-message.style-2 {
+    background-color: #e0e0e0;
+    color: #333;
+  }
+
+  .chat-button.style-2 {
+    background-color: #2196f3;
+    color: white;
   }
 </style>
-
 
   <style>
     * {
@@ -1539,29 +1569,26 @@ function createStyleButton(label, styleFn) {
   return btn;
 }
 
-// Stilne funkcije (spreminjajo barve telesa, ozadje, font...)
-function applyDefaultStyle() {
-  document.body.style.backgroundColor = "";
-  document.body.style.color = "";
-  document.body.style.fontFamily = "";
+function applyStyle(styleName) {
+  const allStyles = ["style-default", "style-1", "style-2"];
+  const elements = [
+    document.body,
+    document.getElementById("chatContainer"),
+    ...document.querySelectorAll(".chat-message"),
+    ...document.querySelectorAll(".chat-button")
+  ];
+
+  elements.forEach(el => {
+    allStyles.forEach(s => el.classList.remove(s));
+    el.classList.add(styleName);
+  });
 }
 
-function applyStyle1() {
-  document.body.style.backgroundColor = "#0f0f0f";
-  document.body.style.color = "#4dd0e1";
-  document.body.style.fontFamily = "'Courier New', monospace";
-}
-
-function applyStyle2() {
-  document.body.style.backgroundColor = "#1c0030";
-  document.body.style.color = "#ff80ab";
-  document.body.style.fontFamily = "Georgia, serif";
-}
 
 // Dodaj gumbe
-styleSwitcherContainer.appendChild(createStyleButton("Moj stil", applyDefaultStyle));
-styleSwitcherContainer.appendChild(createStyleButton("Stil 1", applyStyle1));
-styleSwitcherContainer.appendChild(createStyleButton("Stil 2", applyStyle2));
+style1Button.onclick = () => applyStyle("style-default");
+style2Button.onclick = () => applyStyle("style-1");
+style3Button.onclick = () => applyStyle("style-2");
 
 // Logika za prikazovanje z vlekom desno-levo
 let swipeStartX = null;
