@@ -1426,154 +1426,55 @@ function closeActiveUsers() {
   }, 400); // po trajanju animacije skrijemo vsebino
 }
 
-
-
-
-
-
-
-// ... (obstoječa koda do vključno topContainer in topRow) ...
-
-let showActivity = true;
-
-const profileContainer = document.createElement("div");
-profileContainer.style.width = "100%";
-profileContainer.style.display = "none";
-profileContainer.style.flexDirection = "column";
-profileContainer.style.padding = "10px";
-profileContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-profileContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-profileContainer.style.borderRadius = "10px";
-profileContainer.style.boxSizing = "border-box";
-profileContainer.style.gap = "10px";
-
-// Profilna vrstica
-const profileHeader = document.createElement("div");
-profileHeader.style.display = "flex";
-profileHeader.style.justifyContent = "space-between";
-profileHeader.style.alignItems = "center";
-
-const profileName = document.createElement("span");
-profileName.textContent = currentUser.displayName || "Uporabnik";
-
-const visibilityToggle = document.createElement("span");
-visibilityToggle.textContent = showActivity ? "👁️" : "🚫";
-visibilityToggle.style.cursor = "pointer";
-visibilityToggle.onclick = () => {
-  showActivity = !showActivity;
-  visibilityToggle.textContent = showActivity ? "👁️" : "🚫";
-};
-
-profileHeader.appendChild(profileName);
-profileHeader.appendChild(visibilityToggle);
-profileContainer.appendChild(profileHeader);
-
-// Gumb za odjavo
-const logoutBtn = document.createElement("button");
-logoutBtn.textContent = "Odjavi se";
-logoutBtn.className = "btn";
-logoutBtn.onclick = function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  });
-};
-profileContainer.appendChild(logoutBtn);
-
-topContainer.appendChild(profileContainer);
-
-// Posodobljeni show/hide
-function showActiveUsers() {
-  profileContainer.style.display = "none";
-  activeUsersContainer.style.display = "flex";
-  activeUsersContainer.innerHTML = "";
-  const active = Object.entries(userStatusCache)
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
-
-  if (active.length === 0) {
-    const msg = document.createElement("i");
-    msg.textContent = "Ni drugih aktivnih uporabnikov.";
-    activeUsersContainer.appendChild(msg);
-  } else {
-    active.forEach(([uid]) => {
-      const div = document.createElement("div");
-      div.style.padding = "4px 0";
-      div.textContent = userNamesCache[uid] || "Anonimen";
-      activeUsersContainer.appendChild(div);
-    });
-  }
-
-  let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80;
-  if (contentHeight > 260) contentHeight = 260;
-
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
-  expanded = true;
-}
-
-function showProfile() {
-  activeUsersContainer.style.display = "none";
-  profileContainer.style.display = "flex";
-
-  let contentHeight = profileContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80;
-  if (contentHeight > 260) contentHeight = 260;
-
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
-  expanded = true;
-}
-
-function closeAll() {
-  topContainer.style.maxHeight = "40px";
-  setTimeout(() => {
-    activeUsersContainer.style.display = "none";
-    profileContainer.style.display = "none";
-  }, 400);
-  expanded = false;
-}
-
-// Gesture
 let startX = null;
-let startY = null;
+let expanded = false;
 
 topContainer.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
 });
 
 topContainer.addEventListener("touchmove", (e) => {
-  if (startX === null || startY === null) return;
-  const dx = e.touches[0].clientX - startX;
-  const dy = e.touches[0].clientY - startY;
+  if (startX === null) return;
+  const currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
 
   if (dx > 40 && !expanded) {
     showActiveUsers();
-  } else if (dx < -40 && !expanded) {
-    showProfile();
+    expanded = true;
   }
 });
 
 topContainer.addEventListener("touchend", () => {
   startX = null;
-  startY = null;
 });
 
 topContainer.addEventListener("dblclick", () => {
-  if (expanded) closeAll();
+  if (expanded) {
+    closeActiveUsers();
+    expanded = false;
+  }
 });
 
 topContainer.addEventListener("wheel", (e) => {
   if (e.deltaY > 0 && !expanded) {
     showActiveUsers();
-  } else if (e.deltaY < 0 && !expanded) {
-    showProfile();
+    expanded = true;
   }
 });
 
 document.addEventListener("click", (e) => {
   if (expanded && !topContainer.contains(e.target)) {
-    closeAll();
+    closeActiveUsers();
+    expanded = false;
   }
 });
+
+
+
+
+
+
+
 
 
 
