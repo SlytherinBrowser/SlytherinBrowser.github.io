@@ -895,7 +895,7 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
-  
+
 
 
 
@@ -1326,267 +1326,208 @@ window.addEventListener('load', () => {
 
 
 
-const topContainer = document.createElement("div");  
-topContainer.style.position = "fixed";  
-topContainer.style.top = "0";  
-topContainer.style.left = "0";  
-topContainer.style.width = "100%";  
-topContainer.style.maxHeight = "40px";  
-topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";  
-topContainer.style.backdropFilter = "blur(8px)";  
-topContainer.style.webkitBackdropFilter = "blur(8px)";  
-topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";  
-topContainer.style.display = "flex";  
-topContainer.style.flexDirection = "column";  
-topContainer.style.zIndex = "9999";  
-topContainer.style.transition = "max-height 0.4s ease";  
-topContainer.style.boxSizing = "border-box";  
-topContainer.style.padding = "0 15px";  
-topContainer.style.overflow = "hidden";  
-document.body.appendChild(topContainer);  
-  
-const topRow = document.createElement("div");  
-topRow.style.display = "flex";  
-topRow.style.justifyContent = "space-between";  
-topRow.style.alignItems = "center";  
-topRow.style.width = "100%";  
-topRow.style.height = "40px";  
-topContainer.appendChild(topRow);  
-  
-const clockSpan = document.createElement("span");  
-clockSpan.style.fontWeight = "bold";  
-clockSpan.style.fontSize = "1.2em";  
-topRow.appendChild(clockSpan);  
-  
-const batterySpan = document.createElement("span");  
-batterySpan.style.fontWeight = "bold";  
-batterySpan.style.fontSize = "1.2em";  
-topRow.appendChild(batterySpan);  
-  
-const activeUsersContainer = document.createElement("div");  
-activeUsersContainer.style.width = "100%";  
-activeUsersContainer.style.flexDirection = "column";  
-activeUsersContainer.style.flexGrow = "1";  
-activeUsersContainer.style.display = "none";  
-activeUsersContainer.style.padding = "10px";  
-activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";  
-activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";  
-activeUsersContainer.style.borderRadius = "10px";  
-activeUsersContainer.style.overflowY = "auto";  
-activeUsersContainer.style.gap = "10px";  
-activeUsersContainer.style.boxSizing = "border-box";  
-topContainer.appendChild(activeUsersContainer);  
-  
-const logoutContainer = document.createElement("div");  
-logoutContainer.style.width = "100%";  
-logoutContainer.style.flexDirection = "column";  
-logoutContainer.style.flexGrow = "1";  
-logoutContainer.style.display = "none";  
-logoutContainer.style.padding = "10px";  
-logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";  
-logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";  
-logoutContainer.style.borderRadius = "10px";  
-logoutContainer.style.boxSizing = "border-box";  
-logoutContainer.style.justifyContent = "center";  
-logoutContainer.style.alignItems = "center";  
-topContainer.appendChild(logoutContainer);  
-  
-const logoutBtn = document.createElement("button");  
-logoutBtn.className = "btn1";  
-logoutBtn.textContent = "Odjavi se";  
-logoutBtn.onclick = function logout() {  
-  auth.signOut().then(() => {  
-    window.location.href = "auth.html";  
-  });  
-};  
-logoutContainer.appendChild(logoutBtn);  
+const topContainer = document.createElement("div");
+topContainer.style.position = "fixed";
+topContainer.style.top = "0";
+topContainer.style.left = "0";
+topContainer.style.width = "100%";
+topContainer.style.maxHeight = "40px";
+topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+topContainer.style.backdropFilter = "blur(8px)";
+topContainer.style.webkitBackdropFilter = "blur(8px)";
+topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+topContainer.style.display = "flex";
+topContainer.style.flexDirection = "column";
+topContainer.style.zIndex = "9999";
+topContainer.style.transition = "max-height 0.4s ease";
+topContainer.style.boxSizing = "border-box";
+topContainer.style.padding = "0 15px";
+topContainer.style.overflow = "hidden";
+document.body.appendChild(topContainer);
 
-const toggleChatViewBtn = document.createElement("button");
-toggleChatViewBtn.className = "btn1";
-toggleChatViewBtn.textContent = "Preklopi izgled chata";
-logoutContainer.appendChild(toggleChatViewBtn);
+// Prva vrstica (čas + baterija)
+const topRow = document.createElement("div");
+topRow.style.display = "flex";
+topRow.style.justifyContent = "space-between";
+topRow.style.alignItems = "center";
+topRow.style.width = "100%";
+topRow.style.height = "40px";
+topContainer.appendChild(topRow);
 
-const chatContainer = document.querySelector(".container");
+const clockSpan = document.createElement("span");
+clockSpan.style.fontWeight = "bold";
+clockSpan.style.fontSize = "1.2em";
+topRow.appendChild(clockSpan);
 
-let isExpandedChat = false;
+const batterySpan = document.createElement("span");
+batterySpan.style.fontWeight = "bold";
+batterySpan.style.fontSize = "1.2em";
+topRow.appendChild(batterySpan);
 
-toggleChatViewBtn.onclick = () => {
-  if (!isExpandedChat) {
-    chatContainer.style.position = "fixed";
-    chatContainer.style.top = topContainer.offsetHeight + "px";
-    chatContainer.style.left = "0";
-    chatContainer.style.width = "100%";
-    chatContainer.style.height = `calc(100vh - ${topContainer.offsetHeight}px - 50px)`;
-    chatContainer.style.borderRadius = "0";
-    chatContainer.style.padding = "15px 30px 70px 30px";
+// Aktivni uporabniki
+const activeUsersContainer = document.createElement("div");
+activeUsersContainer.style.width = "100%";
+activeUsersContainer.style.flexDirection = "column";
+activeUsersContainer.style.flexGrow = "1";
+activeUsersContainer.style.display = "none";
+activeUsersContainer.style.padding = "10px";
+activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+activeUsersContainer.style.borderRadius = "10px";
+activeUsersContainer.style.overflowY = "auto";
+activeUsersContainer.style.gap = "10px";
+activeUsersContainer.style.boxSizing = "border-box";
+topContainer.appendChild(activeUsersContainer);
 
-    const inputContainer = chatContainer.querySelector(".message-input-container");
-    if (inputContainer) {
-      inputContainer.style.position = "fixed";
-      inputContainer.style.bottom = "10px";
-      inputContainer.style.left = "0";
-      inputContainer.style.width = "100%";
-      inputContainer.style.padding = "0 30px";
-      inputContainer.style.background = "rgba(0,0,0,0.6)";
-      inputContainer.style.borderRadius = "0";
-      inputContainer.style.zIndex = "10000";
-    }
+// Logout gumb container
+const logoutContainer = document.createElement("div");
+logoutContainer.style.width = "100%";
+logoutContainer.style.flexDirection = "column";
+logoutContainer.style.flexGrow = "1";
+logoutContainer.style.display = "none";
+logoutContainer.style.padding = "10px";
+logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+logoutContainer.style.borderRadius = "10px";
+logoutContainer.style.boxSizing = "border-box";
+logoutContainer.style.justifyContent = "center";
+logoutContainer.style.alignItems = "center";
+topContainer.appendChild(logoutContainer);
 
-    const chatBox = chatContainer.querySelector("#chatBox");
-    if (chatBox) {
-      chatBox.style.height = `calc(100% - 70px)`;
-      chatBox.style.overflowY = "auto";
-    }
-
-    isExpandedChat = true;
-  } else {
-    chatContainer.style.position = "";
-    chatContainer.style.top = "";
-    chatContainer.style.left = "";
-    chatContainer.style.width = "";
-    chatContainer.style.height = "";
-    chatContainer.style.borderRadius = "16px";
-    chatContainer.style.padding = "30px";
-
-    const inputContainer = chatContainer.querySelector(".message-input-container");
-    if (inputContainer) {
-      inputContainer.style.position = "";
-      inputContainer.style.bottom = "";
-      inputContainer.style.left = "";
-      inputContainer.style.width = "";
-      inputContainer.style.padding = "";
-      inputContainer.style.background = "";
-      inputContainer.style.borderRadius = "";
-      inputContainer.style.zIndex = "";
-    }
-
-    const chatBox = chatContainer.querySelector("#chatBox");
-    if (chatBox) {
-      chatBox.style.height = "300px";
-      chatBox.style.overflowY = "auto";
-    }
-
-    isExpandedChat = false;
-  }
+const logoutBtn = document.createElement("button");
+logoutBtn.className = "btn1";
+logoutBtn.textContent = "Odjavi se";
+logoutBtn.onclick = function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  });
 };
+logoutContainer.appendChild(logoutBtn);
 
-function updateClock() {  
-  const now = new Date();  
-  const h = now.getHours().toString().padStart(2, '0');  
-  const m = now.getMinutes().toString().padStart(2, '0');  
-  clockSpan.textContent = `${h}:${m}`;  
-}  
-updateClock();  
-setInterval(updateClock, 60000);  
-  
-if (navigator.getBattery) {  
-  navigator.getBattery().then(battery => {  
-    function updateBattery() {  
-      const pct = Math.round(battery.level * 100);  
-      batterySpan.textContent = `${pct}%🔋`;  
-    }  
-    updateBattery();  
-    battery.addEventListener('levelchange', updateBattery);  
-  });  
-} else {  
-  batterySpan.textContent = "Ni podpore";  
-}  
-  
-function showActiveUsers() {  
-  activeUsersContainer.innerHTML = "";  
-  const active = Object.entries(userStatusCache)  
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);  
-  
-  if (active.length === 0) {  
-    const msg = document.createElement("i");  
-    msg.textContent = "Ni drugih aktivnih uporabnikov.";  
-    activeUsersContainer.appendChild(msg);  
-  } else {  
-    active.forEach(([uid]) => {  
-      const div = document.createElement("div");  
-      div.style.padding = "4px 0";  
-      div.textContent = userNamesCache[uid] || "Anonimen";  
-      activeUsersContainer.appendChild(div);  
-    });  
-  }  
-  
-  let contentHeight = activeUsersContainer.scrollHeight;  
-  if (contentHeight < 40) contentHeight = 80;  
-  if (contentHeight > 260) contentHeight = 260;  
-  
-  logoutContainer.style.display = "none";  
-  activeUsersContainer.style.display = "flex";  
-  activeUsersContainer.style.flexDirection = "column";  
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";  
-  expandedUsers = true;  
-  expandedLogout = false;  
-}  
-  
-function closeActiveUsers() {  
-  activeUsersContainer.style.display = "none";  
-  topContainer.style.maxHeight = "40px";  
-  expandedUsers = false;  
-}  
-  
-function showLogoutButton() {  
-  activeUsersContainer.style.display = "none";  
-  logoutContainer.style.display = "flex";  
-  topContainer.style.maxHeight = "120px";  
-  expandedLogout = true;  
-  expandedUsers = false;  
-}  
-  
-function closeLogoutButton() {  
-  logoutContainer.style.display = "none";  
-  topContainer.style.maxHeight = "40px";  
-  expandedLogout = false;  
-}  
-  
-let startX = null;  
-let expandedUsers = false;  
-let expandedLogout = false;  
-  
-topContainer.addEventListener("touchstart", (e) => {  
-  startX = e.touches[0].clientX;  
-});  
-  
-topContainer.addEventListener("touchmove", (e) => {  
-  if (startX === null) return;  
-  const currentX = e.touches[0].clientX;  
-  const dx = currentX - startX;  
-  
-  if (dx > 40 && !expandedUsers && !expandedLogout) {  
-    showActiveUsers();  
-  } else if (dx < -40 && !expandedLogout && !expandedUsers) {  
-    showLogoutButton();  
-  }  
-});  
-  
-topContainer.addEventListener("touchend", () => {  
-  startX = null;  
-});  
-  
-topContainer.addEventListener("wheel", (e) => {  
-  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {  
-    showActiveUsers();  
-  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {  
-    showLogoutButton();  
-  }  
-});  
-  
-topContainer.addEventListener("dblclick", () => {  
-  if (expandedUsers) {  
-    closeActiveUsers();  
-  } else if (expandedLogout) {  
-    closeLogoutButton();  
-  }  
-});  
-  
-document.addEventListener("click", (e) => {  
-  if (!topContainer.contains(e.target)) {  
-    if (expandedUsers) closeActiveUsers();  
-    if (expandedLogout) closeLogoutButton();  
-  }  
+// Posodobi uro
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes().toString().padStart(2, '0');
+  clockSpan.textContent = `${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 60000);
+
+// Baterija
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function updateBattery() {
+      const pct = Math.round(battery.level * 100);
+      batterySpan.textContent = `${pct}%🔋`;
+    }
+    updateBattery();
+    battery.addEventListener('levelchange', updateBattery);
+  });
+} else {
+  batterySpan.textContent = "Ni podpore";
+}
+
+// Prikaz aktivnih uporabnikov
+function showActiveUsers() {
+  activeUsersContainer.innerHTML = "";
+  const active = Object.entries(userStatusCache)
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+  if (active.length === 0) {
+    const msg = document.createElement("i");
+    msg.textContent = "Ni drugih aktivnih uporabnikov.";
+    activeUsersContainer.appendChild(msg);
+  } else {
+    active.forEach(([uid]) => {
+      const div = document.createElement("div");
+      div.style.padding = "4px 0";
+      div.textContent = userNamesCache[uid] || "Anonimen";
+      activeUsersContainer.appendChild(div);
+    });
+  }
+
+  let contentHeight = activeUsersContainer.scrollHeight;
+  if (contentHeight < 40) contentHeight = 80;
+  if (contentHeight > 260) contentHeight = 260;
+
+  logoutContainer.style.display = "none";
+  activeUsersContainer.style.display = "flex";
+  activeUsersContainer.style.flexDirection = "column";
+  topContainer.style.maxHeight = (40 + contentHeight) + "px";
+  expandedUsers = true;
+  expandedLogout = false;
+}
+
+function closeActiveUsers() {
+  activeUsersContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+  expandedUsers = false;
+}
+
+function showLogoutButton() {
+  activeUsersContainer.style.display = "none";
+  logoutContainer.style.display = "flex";
+  topContainer.style.maxHeight = "120px";
+  expandedLogout = true;
+  expandedUsers = false;
+}
+
+function closeLogoutButton() {
+  logoutContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+  expandedLogout = false;
+}
+
+let startX = null;
+let expandedUsers = false;
+let expandedLogout = false;
+
+// Touch podrs
+topContainer.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+topContainer.addEventListener("touchmove", (e) => {
+  if (startX === null) return;
+  const currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
+
+  if (dx > 40 && !expandedUsers && !expandedLogout) {
+    showActiveUsers();
+  } else if (dx < -40 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
+  }
+});
+
+topContainer.addEventListener("touchend", () => {
+  startX = null;
+});
+
+// Scroll z miško
+topContainer.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {
+    showActiveUsers();
+  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
+  }
+});
+
+// Dvojni klik = zapri
+topContainer.addEventListener("dblclick", () => {
+  if (expandedUsers) {
+    closeActiveUsers();
+  } else if (expandedLogout) {
+    closeLogoutButton();
+  }
+});
+
+// Klik zunaj = zapri
+document.addEventListener("click", (e) => {
+  if (!topContainer.contains(e.target)) {
+    if (expandedUsers) closeActiveUsers();
+    if (expandedLogout) closeLogoutButton();
+  }
 });
 
 
