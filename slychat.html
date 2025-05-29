@@ -1512,16 +1512,17 @@ document.addEventListener("click", (e) => {
 
 
 
+// Gumbna vrstica za stil
 const styleSwitcherContainer = document.createElement("div");
 styleSwitcherContainer.style.display = "none";
 styleSwitcherContainer.style.flexDirection = "row";
-styleSwitcherContainer.style.gap = "10px";
 styleSwitcherContainer.style.justifyContent = "center";
+styleSwitcherContainer.style.gap = "10px";
 styleSwitcherContainer.style.padding = "10px 0";
 topContainer.appendChild(styleSwitcherContainer);
 
-// Funkcija za ustvarjanje gumba
-function createStyleButton(label, onClick) {
+// Ustvari gumb
+function createStyleButton(label, styleFn) {
   const btn = document.createElement("button");
   btn.textContent = label;
   btn.style.padding = "6px 10px";
@@ -1534,21 +1535,27 @@ function createStyleButton(label, onClick) {
   btn.style.transition = "background 0.3s";
   btn.addEventListener("mouseenter", () => btn.style.background = "rgba(255,255,255,0.35)");
   btn.addEventListener("mouseleave", () => btn.style.background = "rgba(255,255,255,0.2)");
-  btn.onclick = onClick;
+  btn.onclick = styleFn;
   return btn;
 }
 
-// Funkcije za preklop stilov
+// Stilne funkcije (spreminjajo barve telesa, ozadje, font...)
 function applyDefaultStyle() {
-  document.documentElement.setAttribute("data-style", "default");
+  document.body.style.backgroundColor = "";
+  document.body.style.color = "";
+  document.body.style.fontFamily = "";
 }
 
 function applyStyle1() {
-  document.documentElement.setAttribute("data-style", "style1");
+  document.body.style.backgroundColor = "#0f0f0f";
+  document.body.style.color = "#4dd0e1";
+  document.body.style.fontFamily = "'Courier New', monospace";
 }
 
 function applyStyle2() {
-  document.documentElement.setAttribute("data-style", "style2");
+  document.body.style.backgroundColor = "#1c0030";
+  document.body.style.color = "#ff80ab";
+  document.body.style.fontFamily = "Georgia, serif";
 }
 
 // Dodaj gumbe
@@ -1556,6 +1563,7 @@ styleSwitcherContainer.appendChild(createStyleButton("Moj stil", applyDefaultSty
 styleSwitcherContainer.appendChild(createStyleButton("Stil 1", applyStyle1));
 styleSwitcherContainer.appendChild(createStyleButton("Stil 2", applyStyle2));
 
+// Logika za prikazovanje z vlekom desno-levo
 let swipeStartX = null;
 let switcherExpanded = false;
 
@@ -1577,27 +1585,33 @@ topContainer.addEventListener("touchend", () => {
   swipeStartX = null;
 });
 
-// Pokaži gumbno vrstico za stile
 function showStyleSwitcher() {
   styleSwitcherContainer.style.display = "flex";
   const contentHeight = styleSwitcherContainer.scrollHeight;
   topContainer.style.maxHeight = (40 + contentHeight) + "px";
 }
 
-// Zapri z dvoklikom, kot za uporabnike
-topContainer.addEventListener("dblclick", () => {
-  if (switcherExpanded) {
-    hideStyleSwitcher();
-    switcherExpanded = false;
-  }
-});
-
 function hideStyleSwitcher() {
   topContainer.style.maxHeight = "40px";
   setTimeout(() => {
     styleSwitcherContainer.style.display = "none";
   }, 400);
+  switcherExpanded = false;
 }
+
+// Skrij, če klikneš ven
+document.addEventListener("click", (e) => {
+  if (switcherExpanded && !topContainer.contains(e.target)) {
+    hideStyleSwitcher();
+  }
+});
+
+// Dvoklik za zapiranje
+topContainer.addEventListener("dblclick", () => {
+  if (switcherExpanded) {
+    hideStyleSwitcher();
+  }
+});
 
 </script>
 </body>
