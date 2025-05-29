@@ -1551,8 +1551,8 @@ styleSwitcherContainer.style.gap = "10px";
 styleSwitcherContainer.style.padding = "10px 0";
 topContainer.appendChild(styleSwitcherContainer);
 
-// Ustvari gumb
-function createStyleButton(label, styleFn) {
+// Funkcija za ustvarjanje gumba
+function createStyleButton(label, styleClass) {
   const btn = document.createElement("button");
   btn.textContent = label;
   btn.style.padding = "6px 10px";
@@ -1565,10 +1565,11 @@ function createStyleButton(label, styleFn) {
   btn.style.transition = "background 0.3s";
   btn.addEventListener("mouseenter", () => btn.style.background = "rgba(255,255,255,0.35)");
   btn.addEventListener("mouseleave", () => btn.style.background = "rgba(255,255,255,0.2)");
-  btn.onclick = styleFn;
+  btn.onclick = () => applyStyle(styleClass);
   return btn;
 }
 
+// Funkcija za uporabo stila
 function applyStyle(styleName) {
   const allStyles = ["style-default", "style-1", "style-2"];
   const elements = [
@@ -1584,13 +1585,17 @@ function applyStyle(styleName) {
   });
 }
 
+// Ustvari gumbe
+const style1Button = createStyleButton("Moj stil", "style-default");
+const style2Button = createStyleButton("Stil 1", "style-1");
+const style3Button = createStyleButton("Stil 2", "style-2");
 
-// Dodaj gumbe
-style1Button.onclick = () => applyStyle("style-default");
-style2Button.onclick = () => applyStyle("style-1");
-style3Button.onclick = () => applyStyle("style-2");
+// Dodaj gumbe v container
+styleSwitcherContainer.appendChild(style1Button);
+styleSwitcherContainer.appendChild(style2Button);
+styleSwitcherContainer.appendChild(style3Button);
 
-// Logika za prikazovanje z vlekom desno-levo
+// Logika za prikazovanje z vlekom z desne na levo
 let swipeStartX = null;
 let switcherExpanded = false;
 
@@ -1612,12 +1617,14 @@ topContainer.addEventListener("touchend", () => {
   swipeStartX = null;
 });
 
+// Funkcija za prikaz gumbov
 function showStyleSwitcher() {
   styleSwitcherContainer.style.display = "flex";
   const contentHeight = styleSwitcherContainer.scrollHeight;
   topContainer.style.maxHeight = (40 + contentHeight) + "px";
 }
 
+// Funkcija za skrivanje gumbov
 function hideStyleSwitcher() {
   topContainer.style.maxHeight = "40px";
   setTimeout(() => {
@@ -1626,7 +1633,7 @@ function hideStyleSwitcher() {
   switcherExpanded = false;
 }
 
-// Skrij, če klikneš ven
+// Skrij, če klikneš zunaj
 document.addEventListener("click", (e) => {
   if (switcherExpanded && !topContainer.contains(e.target)) {
     hideStyleSwitcher();
