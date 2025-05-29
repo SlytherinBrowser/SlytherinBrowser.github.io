@@ -1317,21 +1317,20 @@ window.addEventListener('load', () => {
 
 
 // Ustvari container na vrhu
+// Ustvari container na vrhu
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.height = "40px"; // manjša višina
+topContainer.style.height = "40px"; // tanek container
 topContainer.style.backgroundColor = "#eee";
 topContainer.style.display = "flex";
-topContainer.style.justifyContent = "space-between";
-topContainer.style.alignItems = "center";
-topContainer.style.padding = "0 15px";
-topContainer.style.boxSizing = "border-box";
-topContainer.style.transition = "height 0.3s ease";
 topContainer.style.flexDirection = "column";
 topContainer.style.zIndex = "9999";
+topContainer.style.transition = "height 0.3s ease";
+topContainer.style.boxSizing = "border-box";
+topContainer.style.padding = "0 15px";
 document.body.appendChild(topContainer);
 
 // Vrstica z uro in baterijo (flex row)
@@ -1359,13 +1358,14 @@ topRow.appendChild(batterySpan);
 const activeUsersContainer = document.createElement("div");
 activeUsersContainer.style.width = "100%";
 activeUsersContainer.style.flexDirection = "column";
-activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.flexGrow = "1";
 activeUsersContainer.style.display = "none";
-activeUsersContainer.style.padding = "10px 15px";
-activeUsersContainer.style.boxSizing = "border-box";
-activeUsersContainer.style.borderTop = "1px solid #ccc";
-activeUsersContainer.style.backgroundColor = "#fafafa";
+activeUsersContainer.style.padding = "10px";
+activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+activeUsersContainer.style.borderRadius = "10px";
+activeUsersContainer.style.overflowY = "auto";
+activeUsersContainer.style.gap = "10px";
 topContainer.appendChild(activeUsersContainer);
 
 // Funkcija za osvežitev ure
