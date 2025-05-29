@@ -164,6 +164,23 @@
       background-color: rgba(255, 255, 255, 0.25);
     }
 
+
+.btn1 { width: 90%;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn1:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+
     .actions {
       display: flex;
       gap: 10px;
@@ -192,7 +209,6 @@
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
-      <button class="btn" onclick="logout()">Odjava</button>
     </div>
   </div>
 
@@ -1308,12 +1324,14 @@ window.addEventListener('load', () => {
 
 
 
+
+
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px"; // začetna višina (ozka vrstica)
+topContainer.style.maxHeight = "40px";
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1321,12 +1339,13 @@ topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 topContainer.style.display = "flex";
 topContainer.style.flexDirection = "column";
 topContainer.style.zIndex = "9999";
-topContainer.style.transition = "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+topContainer.style.transition = "max-height 0.4s ease";
 topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";
 topContainer.style.overflow = "hidden";
 document.body.appendChild(topContainer);
 
+// Prva vrstica (čas + baterija)
 const topRow = document.createElement("div");
 topRow.style.display = "flex";
 topRow.style.justifyContent = "space-between";
@@ -1345,6 +1364,7 @@ batterySpan.style.fontWeight = "bold";
 batterySpan.style.fontSize = "1.2em";
 topRow.appendChild(batterySpan);
 
+// Aktivni uporabniki
 const activeUsersContainer = document.createElement("div");
 activeUsersContainer.style.width = "100%";
 activeUsersContainer.style.flexDirection = "column";
@@ -1359,6 +1379,32 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
+// Logout gumb container
+const logoutContainer = document.createElement("div");
+logoutContainer.style.width = "100%";
+logoutContainer.style.flexDirection = "column";
+logoutContainer.style.flexGrow = "1";
+logoutContainer.style.display = "none";
+logoutContainer.style.padding = "10px";
+logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+logoutContainer.style.borderRadius = "10px";
+logoutContainer.style.boxSizing = "border-box";
+logoutContainer.style.justifyContent = "center";
+logoutContainer.style.alignItems = "center";
+topContainer.appendChild(logoutContainer);
+
+const logoutBtn = document.createElement("button");
+logoutBtn.className = "btn1";
+logoutBtn.textContent = "Odjavi se";
+logoutBtn.onclick = function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  });
+};
+logoutContainer.appendChild(logoutBtn);
+
+// Posodobi uro
 function updateClock() {
   const now = new Date();
   const h = now.getHours().toString().padStart(2, '0');
@@ -1368,6 +1414,7 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 60000);
 
+// Baterija
 if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
@@ -1381,6 +1428,7 @@ if (navigator.getBattery) {
   batterySpan.textContent = "Ni podpore";
 }
 
+// Prikaz aktivnih uporabnikov
 function showActiveUsers() {
   activeUsersContainer.innerHTML = "";
   const active = Object.entries(userStatusCache)
@@ -1400,27 +1448,42 @@ function showActiveUsers() {
   }
 
   let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80; // minimalna višina, da ni preozko
-  if (contentHeight > 260) contentHeight = 260; // maksimalna višina
+  if (contentHeight < 40) contentHeight = 80;
+  if (contentHeight > 260) contentHeight = 260;
 
+  logoutContainer.style.display = "none";
   activeUsersContainer.style.display = "flex";
   activeUsersContainer.style.flexDirection = "column";
-
-  // nastavimo maxHeight za animacijo (osnova + vsebina)
   topContainer.style.maxHeight = (40 + contentHeight) + "px";
+  expandedUsers = true;
+  expandedLogout = false;
 }
 
 function closeActiveUsers() {
-  // animacija zapiranja z maxHeight nazaj na začetno vrednost
+  activeUsersContainer.style.display = "none";
   topContainer.style.maxHeight = "40px";
-  setTimeout(() => {
-    activeUsersContainer.style.display = "none";
-  }, 400); // po trajanju animacije skrijemo vsebino
+  expandedUsers = false;
+}
+
+function showLogoutButton() {
+  activeUsersContainer.style.display = "none";
+  logoutContainer.style.display = "flex";
+  topContainer.style.maxHeight = "120px";
+  expandedLogout = true;
+  expandedUsers = false;
+}
+
+function closeLogoutButton() {
+  logoutContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+  expandedLogout = false;
 }
 
 let startX = null;
-let expanded = false;
+let expandedUsers = false;
+let expandedLogout = false;
 
+// Touch podrs
 topContainer.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
 });
@@ -1430,9 +1493,10 @@ topContainer.addEventListener("touchmove", (e) => {
   const currentX = e.touches[0].clientX;
   const dx = currentX - startX;
 
-  if (dx > 40 && !expanded) {
+  if (dx > 40 && !expandedUsers && !expandedLogout) {
     showActiveUsers();
-    expanded = true;
+  } else if (dx < -40 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
   }
 });
 
@@ -1440,112 +1504,31 @@ topContainer.addEventListener("touchend", () => {
   startX = null;
 });
 
-topContainer.addEventListener("dblclick", () => {
-  if (expanded) {
-    closeActiveUsers();
-    expanded = false;
-  }
-});
-
+// Scroll z miško
 topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expanded) {
+  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {
     showActiveUsers();
-    expanded = true;
-  }
-});
-
-document.addEventListener("click", (e) => {
-  if (expanded && !topContainer.contains(e.target)) {
-    closeActiveUsers();
-    expanded = false;
-  }
-});
-
-
-
-
-
-
-const logoutContainer = document.createElement("div");
-logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none";
-logoutContainer.style.justifyContent = "center";
-logoutContainer.style.alignItems = "center";
-logoutContainer.style.padding = "10px";
-logoutContainer.style.boxSizing = "border-box";
-
-const logoutButton = document.createElement("button");
-logoutButton.textContent = "Odjava";
-logoutButton.className = "btn";
-logoutButton.onclick = logout;
-logoutContainer.appendChild(logoutButton);
-
-topContainer.appendChild(logoutContainer);
-
-// Funkcija za prikaz gumba za odjavo
-function showLogoutButton() {
-  activeUsersContainer.style.display = "none";
-  logoutContainer.style.display = "flex";
-  topContainer.style.maxHeight = "120px";
-}
-
-// Funkcija za zaprtje odjave
-function closeLogoutButton() {
-  logoutContainer.style.display = "none";
-  topContainer.style.maxHeight = "40px";
-}
-
-function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  });
-}
-
-// Podrs z desne proti levi za prikaz gumba za odjavo
-topContainer.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX;
-});
-
-topContainer.addEventListener("touchmove", (e) => {
-  if (startX === null) return;
-  const currentX = e.touches[0].clientX;
-  const dx = currentX - startX;
-
-  if (dx > 40 && !expanded) {
-    showActiveUsers();
-    expanded = true;
-  } else if (dx < -40 && !expanded) {
+  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {
     showLogoutButton();
-    expanded = true;
   }
 });
 
-topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expanded) {
-    showActiveUsers();
-    expanded = true;
-  } else if (e.deltaY < 0 && !expanded) {
-    showLogoutButton();
-    expanded = true;
-  }
-});
-
-document.addEventListener("click", (e) => {
-  if (expanded && !topContainer.contains(e.target)) {
-    closeActiveUsers();
-    closeLogoutButton();
-    expanded = false;
-  }
-});
-
+// Dvojni klik = zapri
 topContainer.addEventListener("dblclick", () => {
-  if (expanded) {
+  if (expandedUsers) {
     closeActiveUsers();
+  } else if (expandedLogout) {
     closeLogoutButton();
-    expanded = false;
   }
 });
 
+// Klik zunaj = zapri
+document.addEventListener("click", (e) => {
+  if (!topContainer.contains(e.target)) {
+    if (expandedUsers) closeActiveUsers();
+    if (expandedLogout) closeLogoutButton();
+  }
+});
 
 
 </script>
