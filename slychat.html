@@ -1333,7 +1333,7 @@ topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";  
 topContainer.style.overflow = "hidden";  
 document.body.appendChild(topContainer);  
-  
+
 const topRow = document.createElement("div");  
 topRow.style.display = "flex";  
 topRow.style.justifyContent = "space-between";  
@@ -1341,17 +1341,17 @@ topRow.style.alignItems = "center";
 topRow.style.width = "100%";  
 topRow.style.height = "40px";  
 topContainer.appendChild(topRow);  
-  
+
 const clockSpan = document.createElement("span");  
 clockSpan.style.fontWeight = "bold";  
 clockSpan.style.fontSize = "1.2em";  
 topRow.appendChild(clockSpan);  
-  
+
 const batterySpan = document.createElement("span");  
 batterySpan.style.fontWeight = "bold";  
 batterySpan.style.fontSize = "1.2em";  
 topRow.appendChild(batterySpan);  
-  
+
 function updateClock() {  
   const now = new Date();  
   const h = now.getHours().toString().padStart(2, '0');  
@@ -1360,7 +1360,7 @@ function updateClock() {
 }  
 updateClock();  
 setInterval(updateClock, 60000);  
-  
+
 if (navigator.getBattery) {  
   navigator.getBattery().then(battery => {  
     function updateBattery() {  
@@ -1373,7 +1373,7 @@ if (navigator.getBattery) {
 } else {  
   batterySpan.textContent = "Ni podpore";  
 }  
-  
+
 const activeUsersContainer = document.createElement("div");  
 activeUsersContainer.style.width = "100%";  
 activeUsersContainer.style.flexDirection = "column";  
@@ -1387,12 +1387,12 @@ activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.gap = "10px";  
 activeUsersContainer.style.boxSizing = "border-box";  
 topContainer.appendChild(activeUsersContainer);  
-  
+
 function showActiveUsers() {  
   activeUsersContainer.innerHTML = "";  
   const active = Object.entries(userStatusCache)  
     .filter(([uid, status]) => status.online && uid !== currentUser.uid && status.activityVisible !== false);  
-  
+
   if (active.length === 0) {  
     const msg = document.createElement("i");  
     msg.textContent = "Ni drugih aktivnih uporabnikov.";  
@@ -1405,23 +1405,23 @@ function showActiveUsers() {
       activeUsersContainer.appendChild(div);  
     });  
   }  
-  
+
   let contentHeight = activeUsersContainer.scrollHeight;  
   if (contentHeight < 40) contentHeight = 80;  
   if (contentHeight > 260) contentHeight = 260;  
-  
+
   activeUsersContainer.style.display = "flex";  
   activeUsersContainer.style.flexDirection = "column";  
   topContainer.style.maxHeight = (40 + contentHeight) + "px";  
 }  
-  
+
 function closeActiveUsers() {  
   topContainer.style.maxHeight = "40px";  
   setTimeout(() => {  
     activeUsersContainer.style.display = "none";  
   }, 400);  
 }  
-  
+
 // 🔸 PROFIL razširitev
 const profileContainer = document.createElement("div");
 profileContainer.style.display = "none";
@@ -1482,22 +1482,22 @@ let startX = null;
 let expanded = false;
 let direction = null; // 'left' (aktivni) ali 'right' (profil)
 
-topContainer.addEventListener("touchstart", (e) => {
+document.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
 });
 
-topContainer.addEventListener("touchmove", (e) => {
-  if (startX === null) return;
+document.addEventListener("touchmove", (e) => {
+  if (startX === null || expanded) return;
   const currentX = e.touches[0].clientX;
   const dx = currentX - startX;
 
-  if (dx > 40 && !expanded) {
+  if (dx > 40) {
     // Swipano z leve proti desni – aktivni uporabniki
     showActiveUsers();
     profileContainer.style.display = "none";
     expanded = true;
     direction = "left";
-  } else if (dx < -40 && !expanded) {
+  } else if (dx < -40) {
     // Swipano z desne proti levi – profil
     activeUsersContainer.style.display = "none";
     profileContainer.style.display = "flex";
@@ -1507,10 +1507,11 @@ topContainer.addEventListener("touchmove", (e) => {
   }
 });
 
-topContainer.addEventListener("touchend", () => {
+document.addEventListener("touchend", () => {
   startX = null;
 });
 
+// Kolesček (scroll) samo če je miška nad topContainer
 topContainer.addEventListener("wheel", (e) => {
   if (expanded) return;
 
@@ -1530,6 +1531,7 @@ topContainer.addEventListener("wheel", (e) => {
   }
 });
 
+// Dvojni klik zapre razširitev
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
     closeActiveUsers();
@@ -1539,6 +1541,7 @@ topContainer.addEventListener("dblclick", () => {
   }
 });
 
+// Klik izven zapre razširitev
 document.addEventListener("click", (e) => {
   if (expanded && !topContainer.contains(e.target)) {
     closeActiveUsers();
@@ -1547,8 +1550,6 @@ document.addEventListener("click", (e) => {
     direction = null;
   }
 });
-
-
 
 
 
