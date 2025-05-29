@@ -902,54 +902,7 @@ if (Notification.permission === "granted" && !windowHasFocus) {
   
   
   
-  let showingActiveUsers = false;  
   
-  
-  
-  function toggleActiveUsers() {  
-  
-    showingActiveUsers = !showingActiveUsers;  
-  
-    chatBox.innerHTML = "";  
-  
-  
-  
-    if (showingActiveUsers) {  
-  
-      const activeUsers = Object.entries(userStatusCache)  
-  
-        .filter(([uid, status]) => status.online && uid !== currentUser.uid);  
-  
-  
-  
-      if (activeUsers.length === 0) {  
-  
-        chatBox.innerHTML = "<i>Ni drugih aktivnih uporabnikov.</i>";  
-  
-      } else {  
-  
-        activeUsers.forEach(([uid]) => {  
-  
-          const name = userNamesCache[uid] || "Anonimen";  
-  
-          const div = document.createElement("div");  
-  
-          div.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${name}`;  
-  
-          chatBox.appendChild(div);  
-  
-        });  
-  
-      }  
-  
-    } else {  
-  
-      location.reload();  
-  
-    }  
-  
-  }   
-
 
 // === ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
@@ -1360,6 +1313,145 @@ window.addEventListener('load', () => {
 
 
 
+
+
+
+// Ustvari container na vrhu
+const topContainer = document.createElement("div");
+topContainer.style.position = "fixed";
+topContainer.style.top = "0";
+topContainer.style.left = "0";
+topContainer.style.width = "100%";
+topContainer.style.height = "3cm";
+topContainer.style.backgroundColor = "#eee";
+topContainer.style.display = "flex";
+topContainer.style.justifyContent = "space-between";
+topContainer.style.alignItems = "center";
+topContainer.style.padding = "0 15px";
+topContainer.style.boxSizing = "border-box";
+topContainer.style.transition = "height 0.3s ease";
+topContainer.style.flexDirection = "column";
+topContainer.style.zIndex = "9999";
+document.body.appendChild(topContainer);
+
+// Vrstica z uro in baterijo (flex row)
+const topRow = document.createElement("div");
+topRow.style.display = "flex";
+topRow.style.justifyContent = "space-between";
+topRow.style.alignItems = "center";
+topRow.style.width = "100%";
+topRow.style.height = "3cm";
+topContainer.appendChild(topRow);
+
+// Ura (leva stran)
+const clockSpan = document.createElement("span");
+clockSpan.style.fontWeight = "bold";
+clockSpan.style.fontSize = "1.2em";
+topRow.appendChild(clockSpan);
+
+// Baterija (desna stran)
+const batterySpan = document.createElement("span");
+batterySpan.style.fontWeight = "bold";
+batterySpan.style.fontSize = "1.2em";
+topRow.appendChild(batterySpan);
+
+// Seznam aktivnih uporabnikov (skrit na začetku)
+const activeUsersContainer = document.createElement("div");
+activeUsersContainer.style.width = "100%";
+activeUsersContainer.style.flexDirection = "column";
+activeUsersContainer.style.overflowY = "auto";
+activeUsersContainer.style.flexGrow = "1";
+activeUsersContainer.style.display = "none";
+activeUsersContainer.style.padding = "10px 15px";
+activeUsersContainer.style.boxSizing = "border-box";
+activeUsersContainer.style.borderTop = "1px solid #ccc";
+activeUsersContainer.style.backgroundColor = "#fafafa";
+topContainer.appendChild(activeUsersContainer);
+
+// Funkcija za osvežitev ure
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes().toString().padStart(2, '0');
+  clockSpan.textContent = `${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 60000);
+
+// Prikaz baterije (če je podprto)
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function updateBattery() {
+      const pct = Math.round(battery.level * 100);
+      batterySpan.textContent = `🔋 ${pct}%`;
+    }
+    updateBattery();
+    battery.addEventListener('levelchange', updateBattery);
+  });
+} else {
+  batterySpan.textContent = "Ni podpore";
+}
+
+// Prikaži seznam aktivnih uporabnikov (uporabi svoje podatke)
+function showActiveUsers() {
+  activeUsersContainer.innerHTML = "";
+  const active = Object.entries(userStatusCache)
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+  if (active.length === 0) {
+    const msg = document.createElement("i");
+    msg.textContent = "Ni drugih aktivnih uporabnikov.";
+    activeUsersContainer.appendChild(msg);
+  } else {
+    active.forEach(([uid]) => {
+      const div = document.createElement("div");
+      div.style.padding = "4px 0";
+      div.textContent = userNamesCache[uid] || "Anonimen";
+      activeUsersContainer.appendChild(div);
+    });
+  }
+}
+
+// Swipe navzdol po levi polovici containerja za razširitev
+let startY = null;
+let expanded = false;
+
+topContainer.addEventListener("touchstart", (e) => {
+  startY = e.touches[0].clientY;
+});
+
+topContainer.addEventListener("touchmove", (e) => {
+  if (startY === null) return;
+
+  const currentY = e.touches[0].clientY;
+  const dy = currentY - startY;
+  const currentX = e.touches[0].clientX;
+
+  // Leva polovica zaslona
+  if (currentX <= window.innerWidth / 2) {
+    if (dy > 40 && !expanded) {
+      // Razširi
+      topContainer.style.height = "10cm";
+      activeUsersContainer.style.display = "flex";
+      activeUsersContainer.style.flexDirection = "column";
+      showActiveUsers();
+      expanded = true;
+    }
+  }
+});
+
+topContainer.addEventListener("touchend", () => {
+  startY = null;
+});
+
+// Dvojni klik za skrčenje nazaj
+topContainer.addEventListener("dblclick", () => {
+  if (expanded) {
+    topContainer.style.height = "3cm";
+    activeUsersContainer.style.display = "none";
+    expanded = false;
+  }
+});
 
 </script>
 </body>
