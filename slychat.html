@@ -1415,15 +1415,24 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 60000);
 
-// Baterija
+// Baterija - prikaz z znaki za polnjenje in nizko baterijo
 if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
       const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `${pct}%🔋`;
+      let symbol = "🔋";
+
+      if (battery.charging) {
+        symbol = "⚡️";  // polnjenje
+      } else if (pct <= 20) {
+        symbol = "🪫";   // prazna baterija (lahko zamenjaš emoji)
+      }
+
+      batterySpan.textContent = battery.charging ? `${symbol}${pct}%` : `${pct}%${symbol}`;
     }
     updateBattery();
     battery.addEventListener('levelchange', updateBattery);
+    battery.addEventListener('chargingchange', updateBattery);
   });
 } else {
   batterySpan.textContent = "Ni podpore";
