@@ -1419,7 +1419,7 @@ if (navigator.getBattery) {
       const pct = Math.round(battery.level * 100);
       const charging = battery.charging;
 
-      batterySpan.textContent = charging ? `🔋${pct}% +` : `🔋${pct}%`;
+      batterySpan.textContent = charging ? `+${pct}%🔋` : `${pct}%🔋`;
       loadingCircle.style.display = charging ? "block" : "none";
     }
     updateBattery();
