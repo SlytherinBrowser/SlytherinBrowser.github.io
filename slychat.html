@@ -1316,6 +1316,9 @@ window.addEventListener('load', () => {
 
 
 
+// Predpostavljam, da imaš auth in currentUser, userNamesCache, userStatusCache definirane kot v tvojem primeru
+
+// Ustvari topContainer
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
@@ -1335,6 +1338,7 @@ topContainer.style.padding = "0 15px";
 topContainer.style.overflow = "hidden";
 document.body.appendChild(topContainer);
 
+// Vrstica z imenom in gumbom za vidnost aktivnosti
 const topRow = document.createElement("div");
 topRow.style.display = "flex";
 topRow.style.justifyContent = "space-between";
@@ -1343,91 +1347,111 @@ topRow.style.width = "100%";
 topRow.style.height = "40px";
 topContainer.appendChild(topRow);
 
-const clockSpan = document.createElement("span");
-clockSpan.style.fontWeight = "bold";
-clockSpan.style.fontSize = "1.2em";
-topRow.appendChild(clockSpan);
+// Ime prijavljenega uporabnika (levo)
+const userNameSpan = document.createElement("span");
+userNameSpan.style.fontWeight = "bold";
+userNameSpan.style.fontSize = "1.2em";
+userNameSpan.style.color = "white";
+topRow.appendChild(userNameSpan);
 
-const batterySpan = document.createElement("span");
-batterySpan.style.fontWeight = "bold";
-batterySpan.style.fontSize = "1.2em";
-topRow.appendChild(batterySpan);
+// Gumb-pika za vklop/izklop vidljivosti (desno)
+const toggleDot = document.createElement("button");
+toggleDot.textContent = "●"; // velika piko
+toggleDot.style.fontSize = "1.8em";
+toggleDot.style.color = "limegreen";
+toggleDot.style.background = "transparent";
+toggleDot.style.border = "none";
+toggleDot.style.cursor = "pointer";
+toggleDot.style.padding = "0";
+toggleDot.style.lineHeight = "1";
+topRow.appendChild(toggleDot);
 
+// Container za aktivne uporabnike
 const activeUsersContainer = document.createElement("div");
 activeUsersContainer.style.width = "100%";
 activeUsersContainer.style.flexDirection = "column";
 activeUsersContainer.style.flexGrow = "1";
-activeUsersContainer.style.display = "none";
+activeUsersContainer.style.display = "flex"; // privzeto vidno
 activeUsersContainer.style.padding = "10px";
-activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+activeUsersContainer.style.borderTop = "1px solid rgba(255, 255, 255, 0.2)";
 activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-activeUsersContainer.style.borderRadius = "10px";
+activeUsersContainer.style.borderRadius = "0 0 10px 10px";
 activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours().toString().padStart(2, '0');
-  const m = now.getMinutes().toString().padStart(2, '0');
-  clockSpan.textContent = `${h}:${m}`;
-}
-updateClock();
-setInterval(updateClock, 60000);
+// Gumb za odjavo
+const logoutBtn = document.createElement("button");
+logoutBtn.textContent = "Odjava";
+logoutBtn.className = "btn";
+logoutBtn.style.marginTop = "10px";
+logoutBtn.style.alignSelf = "center";
+activeUsersContainer.appendChild(logoutBtn);
 
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function updateBattery() {
-      const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `${pct}%🔋`;
-    }
-    updateBattery();
-    battery.addEventListener('levelchange', updateBattery);
+logoutBtn.addEventListener("click", () => {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
   });
-} else {
-  batterySpan.textContent = "Ni podpore";
-}
+});
 
+// Funkcija za prikaz aktivnih uporabnikov
 function showActiveUsers() {
-  activeUsersContainer.innerHTML = "";
+  activeUsersContainer.innerHTML = ""; // počisti
+  activeUsersContainer.appendChild(logoutBtn); // gumb za odjavo vedno na dnu
+
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
   if (active.length === 0) {
     const msg = document.createElement("i");
     msg.textContent = "Ni drugih aktivnih uporabnikov.";
-    activeUsersContainer.appendChild(msg);
+    activeUsersContainer.insertBefore(msg, logoutBtn);
   } else {
     active.forEach(([uid]) => {
       const div = document.createElement("div");
       div.style.padding = "4px 0";
+      div.style.color = "white";
       div.textContent = userNamesCache[uid] || "Anonimen";
-      activeUsersContainer.appendChild(div);
+      activeUsersContainer.insertBefore(div, logoutBtn);
     });
   }
-
-  let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80; // minimalna višina, da ni preozko
-  if (contentHeight > 260) contentHeight = 260; // maksimalna višina
-
-  activeUsersContainer.style.display = "flex";
-  activeUsersContainer.style.flexDirection = "column";
-
-  // nastavimo maxHeight za animacijo (osnova + vsebina)
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
 }
 
-function closeActiveUsers() {
-  // animacija zapiranja z maxHeight nazaj na začetno vrednost
-  topContainer.style.maxHeight = "40px";
-  setTimeout(() => {
+// Nastavi ime prijavljenega uporabnika
+function updateUserName() {
+  userNameSpan.textContent = userNamesCache[currentUser.uid] || "Anonimen";
+}
+
+// Spremenljivka za vidljivost aktivnosti
+let activeUsersVisible = true;
+
+// Funkcija za toggle vidljivosti
+function toggleActiveUsersVisibility() {
+  activeUsersVisible = !activeUsersVisible;
+
+  if (activeUsersVisible) {
+    activeUsersContainer.style.display = "flex";
+    toggleDot.style.color = "limegreen";
+  } else {
     activeUsersContainer.style.display = "none";
-  }, 400); // po trajanju animacije skrijemo vsebino
+    toggleDot.style.color = "gray";
+  }
 }
 
+// Dogodek na klik pike
+toggleDot.addEventListener("click", () => {
+  toggleActiveUsersVisibility();
+});
+
+// Inicializacija
+updateUserName();
+showActiveUsers();
+toggleActiveUsersVisibility(); // ker želimo privzeto vidno, pokličemo toggle 1x, da barva sledi
+
+// Odpri container za profil z desnega proti levemu podrsom (touch event)
 let startX = null;
-let expanded = false;
+let expanded = true; // privzeto vidno
 
 topContainer.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
@@ -1438,37 +1462,23 @@ topContainer.addEventListener("touchmove", (e) => {
   const currentX = e.touches[0].clientX;
   const dx = currentX - startX;
 
-  if (dx > 40 && !expanded) {
-    showActiveUsers();
+  // Podrs desno proti levi (negativen dx) za odpiranje
+  if (dx < -40 && !expanded) {
+    activeUsersContainer.style.display = "flex";
     expanded = true;
+    toggleDot.style.color = "limegreen";
+  }
+  // Podrs levo proti desni (pozitiven dx) za zapiranje
+  if (dx > 40 && expanded) {
+    activeUsersContainer.style.display = "none";
+    expanded = false;
+    toggleDot.style.color = "gray";
   }
 });
 
 topContainer.addEventListener("touchend", () => {
   startX = null;
 });
-
-topContainer.addEventListener("dblclick", () => {
-  if (expanded) {
-    closeActiveUsers();
-    expanded = false;
-  }
-});
-
-topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expanded) {
-    showActiveUsers();
-    expanded = true;
-  }
-});
-
-document.addEventListener("click", (e) => {
-  if (expanded && !topContainer.contains(e.target)) {
-    closeActiveUsers();
-    expanded = false;
-  }
-});
-
 
 
 
