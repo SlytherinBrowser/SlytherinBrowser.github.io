@@ -1316,14 +1316,12 @@ window.addEventListener('load', () => {
 
 
 
-// Ustvari container na vrhu
-// Ustvari container na vrhu
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.height = "40px"; // tanek container
+topContainer.style.height = "40px"; // minimalna višina
 topContainer.style.backgroundColor = "#eee";
 topContainer.style.display = "flex";
 topContainer.style.flexDirection = "column";
@@ -1333,7 +1331,6 @@ topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";
 document.body.appendChild(topContainer);
 
-// Vrstica z uro in baterijo (flex row)
 const topRow = document.createElement("div");
 topRow.style.display = "flex";
 topRow.style.justifyContent = "space-between";
@@ -1342,19 +1339,16 @@ topRow.style.width = "100%";
 topRow.style.height = "40px";
 topContainer.appendChild(topRow);
 
-// Ura (leva stran)
 const clockSpan = document.createElement("span");
 clockSpan.style.fontWeight = "bold";
 clockSpan.style.fontSize = "1.2em";
 topRow.appendChild(clockSpan);
 
-// Baterija (desna stran)
 const batterySpan = document.createElement("span");
 batterySpan.style.fontWeight = "bold";
 batterySpan.style.fontSize = "1.2em";
 topRow.appendChild(batterySpan);
 
-// Seznam aktivnih uporabnikov (skrit na začetku)
 const activeUsersContainer = document.createElement("div");
 activeUsersContainer.style.width = "100%";
 activeUsersContainer.style.flexDirection = "column";
@@ -1366,9 +1360,9 @@ activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 activeUsersContainer.style.borderRadius = "10px";
 activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.gap = "10px";
+activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Funkcija za osvežitev ure
 function updateClock() {
   const now = new Date();
   const h = now.getHours().toString().padStart(2, '0');
@@ -1378,7 +1372,6 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 60000);
 
-// Prikaz baterije (če je podprto)
 if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
@@ -1392,7 +1385,6 @@ if (navigator.getBattery) {
   batterySpan.textContent = "Ni podpore";
 }
 
-// Prikaži seznam aktivnih uporabnikov (uporabi svoje podatke)
 function showActiveUsers() {
   activeUsersContainer.innerHTML = "";
   const active = Object.entries(userStatusCache)
@@ -1410,9 +1402,16 @@ function showActiveUsers() {
       activeUsersContainer.appendChild(div);
     });
   }
+
+  // Dinamična višina: 40px minimalno + 30px na uporabnika, max 300px
+  let height = 40 + active.length * 30;
+  if (height > 300) height = 300;
+  topContainer.style.height = height + "px";
+
+  activeUsersContainer.style.display = "flex";
+  activeUsersContainer.style.flexDirection = "column";
 }
 
-// Swipe od leve proti desni za razširitev
 let startX = null;
 let expanded = false;
 
@@ -1422,15 +1421,10 @@ topContainer.addEventListener("touchstart", (e) => {
 
 topContainer.addEventListener("touchmove", (e) => {
   if (startX === null) return;
-
   const currentX = e.touches[0].clientX;
   const dx = currentX - startX;
 
   if (dx > 40 && !expanded) {
-    // Razširi container navpično
-    topContainer.style.height = "10cm";
-    activeUsersContainer.style.display = "flex";
-    activeUsersContainer.style.flexDirection = "column";
     showActiveUsers();
     expanded = true;
   }
@@ -1440,7 +1434,6 @@ topContainer.addEventListener("touchend", () => {
   startX = null;
 });
 
-// Dvojni klik za skrčenje nazaj
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
     topContainer.style.height = "40px";
@@ -1449,6 +1442,14 @@ topContainer.addEventListener("dblclick", () => {
   }
 });
 
+// Zapri ob kliku izven containerja
+document.addEventListener("click", (e) => {
+  if (expanded && !topContainer.contains(e.target)) {
+    topContainer.style.height = "40px";
+    activeUsersContainer.style.display = "none";
+    expanded = false;
+  }
+});
 </script>
 </body>
 </html>
