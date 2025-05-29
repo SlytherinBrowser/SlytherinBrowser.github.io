@@ -1479,7 +1479,7 @@ document.addEventListener("click", (e) => {
 
 
 
-// USTVARI MAP CONTAINER
+// MAP CONTAINER
 const mapContainer = document.createElement("div");
 mapContainer.id = "mapContainer";
 mapContainer.style.width = "100%";
@@ -1489,9 +1489,9 @@ mapContainer.style.marginTop = "10px";
 mapContainer.style.borderRadius = "12px";
 mapContainer.style.overflow = "hidden";
 mapContainer.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
-topContainer.appendChild(mapContainer);
+document.body.appendChild(mapContainer); // ali topContainer, če obstaja
 
-// USTVARI GUMB ZA POŠILJANJE LOKACIJE
+// GUMB ZA POŠILJANJE LOKACIJE
 const sendLocationBtn = document.createElement("button");
 sendLocationBtn.textContent = "📍 Pošlji lokacijo";
 sendLocationBtn.style.marginTop = "10px";
@@ -1502,9 +1502,9 @@ sendLocationBtn.style.color = "white";
 sendLocationBtn.style.border = "none";
 sendLocationBtn.style.borderRadius = "8px";
 sendLocationBtn.style.cursor = "pointer";
-topContainer.appendChild(sendLocationBtn);
+document.body.appendChild(sendLocationBtn); // ali topContainer, če obstaja
 
-// PRIDOBI IN PRIKAŽI TRENUTNO LOKACIJO NA ZEMLJEVIDU
+// PRIDOBI IN PRIKAŽI LOKACIJO
 function showMap() {
   if (!navigator.geolocation) {
     alert("Geolokacija ni podprta v tem brskalniku.");
@@ -1535,7 +1535,7 @@ function showMap() {
   });
 }
 
-// POŠLJI LOKACIJO KOT SPOROČILO
+// GUMB ZA POŠILJANJE
 sendLocationBtn.addEventListener("click", () => {
   const lat = sendLocationBtn.dataset.lat;
   const lng = sendLocationBtn.dataset.lng;
@@ -1549,7 +1549,7 @@ sendLocationBtn.addEventListener("click", () => {
   sendLocationBtn.style.display = "none";
 });
 
-// PRIKAŽI MAPO OB KLIKU NA SPOROČILO Z LOKACIJO
+// OBDELAVA KLIKA NA SPOROČILO Z LOKACIJO
 chatBox.addEventListener("click", (e) => {
   const target = e.target;
   if (target.classList.contains("location-message")) {
@@ -1570,7 +1570,7 @@ chatBox.addEventListener("click", (e) => {
   }
 });
 
-// POŠLJI SPOROČILO (LOKACIJSKO ALI NAVADNO)
+// FUNKCIJA ZA POŠILJANJE SPOROČILA
 function sendMessage() {
   const textRaw = messageInput.value.trim();
   if (!textRaw) return;
@@ -1595,10 +1595,10 @@ function sendMessage() {
   messageInput.value = "";
 }
 
-// DODAJ FUNKCIONALNOST GUMBA POŠLJI
+// GUMB ZA POŠILJANJE
 sendBtn.addEventListener("click", sendMessage);
 
-// SKRIJ ZEMLJEVID OB KLIKU IZVEN NJEGA
+// SKRIJ MAPO, ČE KLIKNEŠ IZVEN NJE
 document.addEventListener("click", (e) => {
   if (!mapContainer.contains(e.target) && !sendLocationBtn.contains(e.target)) {
     mapContainer.style.display = "none";
@@ -1606,7 +1606,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// PODRS Z DESNE → PRIKAŽI MAPO
+// PODRS Z DESNE → LEVO
 let touchStartX = 0;
 document.addEventListener("touchstart", (e) => {
   touchStartX = e.changedTouches[0].screenX;
