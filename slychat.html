@@ -1480,7 +1480,7 @@ logoutBtn.addEventListener("click", () => {
 // GESTURE: levi poteg za aktivne, desni za profil
 let startX = null;
 let expanded = false;
-let direction = null;
+let direction = null; // 'left' (aktivni) ali 'right' (profil)
 
 topContainer.addEventListener("touchstart", (e) => {
   startX = e.touches[0].clientX;
@@ -1492,12 +1492,13 @@ topContainer.addEventListener("touchmove", (e) => {
   const dx = currentX - startX;
 
   if (dx > 40 && !expanded) {
+    // Swipano z leve proti desni – aktivni uporabniki
     showActiveUsers();
     profileContainer.style.display = "none";
-    activeUsersContainer.style.display = "flex";
     expanded = true;
     direction = "left";
   } else if (dx < -40 && !expanded) {
+    // Swipano z desne proti levi – profil
     activeUsersContainer.style.display = "none";
     profileContainer.style.display = "flex";
     topContainer.style.maxHeight = "180px";
@@ -1510,20 +1511,31 @@ topContainer.addEventListener("touchend", () => {
   startX = null;
 });
 
+topContainer.addEventListener("wheel", (e) => {
+  if (expanded) return;
+
+  if (e.deltaY > 0) {
+    // kolešček dol – aktivni uporabniki
+    showActiveUsers();
+    profileContainer.style.display = "none";
+    expanded = true;
+    direction = "left";
+  } else if (e.deltaY < 0) {
+    // kolešček gor – profil
+    activeUsersContainer.style.display = "none";
+    profileContainer.style.display = "flex";
+    topContainer.style.maxHeight = "180px";
+    expanded = true;
+    direction = "right";
+  }
+});
+
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
     closeActiveUsers();
     profileContainer.style.display = "none";
     expanded = false;
-  }
-});
-
-topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expanded) {
-    showActiveUsers();
-    profileContainer.style.display = "none";
-    expanded = true;
-    direction = "left";
+    direction = null;
   }
 });
 
@@ -1532,9 +1544,9 @@ document.addEventListener("click", (e) => {
     closeActiveUsers();
     profileContainer.style.display = "none";
     expanded = false;
+    direction = null;
   }
 });
-
 
 
 
