@@ -1321,8 +1321,11 @@ topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.height = "40px"; // minimalna višina
-topContainer.style.backgroundColor = "#eee";
+topContainer.style.height = "40px"; // začetna višina
+topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)"; // rahlo prosojno
+topContainer.style.backdropFilter = "blur(8px)";               // blur efekt
+topContainer.style.webkitBackdropFilter = "blur(8px)";         // za Safari podporo
+topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)"; // subtilen rob
 topContainer.style.display = "flex";
 topContainer.style.flexDirection = "column";
 topContainer.style.zIndex = "9999";
@@ -1403,8 +1406,9 @@ function showActiveUsers() {
     });
   }
 
-  // Dinamična višina: 40px minimalno + 30px na uporabnika, max 300px
+  // Višina: minimalno 80px, plus 30px na uporabnika, max 300px
   let height = 40 + active.length * 30;
+  if (height < 80) height = 80;
   if (height > 300) height = 300;
   topContainer.style.height = height + "px";
 
@@ -1450,6 +1454,8 @@ document.addEventListener("click", (e) => {
     expanded = false;
   }
 });
+
+
 </script>
 </body>
 </html>
