@@ -1360,7 +1360,398 @@ window.addEventListener('load', () => {
 
 
 
+// ------- Setup container in DOM -------
 
+// Create elements
+const topContainer = document.createElement("div");
+const leftPanel = document.createElement("div");    // Active users
+const rightPanel = document.createElement("div");   // Buttons panel
+const settingsPanel = document.createElement("div"); // Settings panel
+const clockSpan = document.createElement("span");
+const batterySpan = document.createElement("span");
+
+// Add containers to body
+document.body.prepend(topContainer);
+document.body.appendChild(leftPanel);
+document.body.appendChild(rightPanel);
+document.body.appendChild(settingsPanel);
+
+// Style topContainer (blur, transparent, fixed)
+Object.assign(topContainer.style, {
+  position: "fixed",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "3cm",
+  background: "rgba(255,255,255,0.2)",
+  backdropFilter: "blur(10px)",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "0 1rem",
+  boxSizing: "border-box",
+  zIndex: "1000",
+  userSelect: "none",
+  cursor: "grab",
+  overflow: "hidden",
+  transition: "height 0.3s ease",
+  fontFamily: "Arial, sans-serif",
+});
+
+// Style leftPanel (active users list)
+Object.assign(leftPanel.style, {
+  position: "fixed",
+  top: "3cm",
+  left: "0",
+  width: "300px",
+  height: "calc(100% - 3cm)",
+  background: "rgba(255,255,255,0.95)",
+  boxShadow: "2px 0 8px rgba(0,0,0,0.15)",
+  overflowY: "auto",
+  transition: "transform 0.3s ease",
+  transform: "translateX(-100%)",
+  zIndex: "999",
+  padding: "1rem",
+  fontSize: "1rem",
+  color: "#222",
+});
+
+// Style rightPanel (buttons)
+Object.assign(rightPanel.style, {
+  position: "fixed",
+  top: "3cm",
+  right: "0",
+  width: "300px",
+  height: "calc(100% - 3cm)",
+  background: "rgba(255,255,255,0.95)",
+  boxShadow: "-2px 0 8px rgba(0,0,0,0.15)",
+  overflowY: "auto",
+  transition: "transform 0.3s ease",
+  transform: "translateX(100%)",
+  zIndex: "999",
+  padding: "1rem",
+  fontSize: "1rem",
+  color: "#222",
+});
+
+// Style settingsPanel (centered popup)
+Object.assign(settingsPanel.style, {
+  position: "fixed",
+  top: "3cm",
+  left: "50%",
+  width: "400px",
+  height: "calc(100% - 3cm)",
+  background: "white",
+  borderRadius: "8px",
+  boxShadow: "0 0 15px rgba(0,0,0,0.3)",
+  transform: "translate(-50%, -20%) scale(0)",
+  opacity: "0",
+  transition: "transform 0.3s ease, opacity 0.3s ease",
+  zIndex: "1100",
+  padding: "2rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "1rem",
+  fontFamily: "Arial, sans-serif",
+  color: "#222",
+});
+
+// Add clock and battery to topContainer
+clockSpan.style.fontWeight = "600";
+clockSpan.style.fontSize = "1.3rem";
+batterySpan.style.fontWeight = "600";
+batterySpan.style.fontSize = "1.3rem";
+
+topContainer.appendChild(clockSpan);
+topContainer.appendChild(batterySpan);
+
+// ------- Clock update -------
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, "0");
+  const m = now.getMinutes().toString().padStart(2, "0");
+  const s = now.getSeconds().toString().padStart(2, "0");
+  clockSpan.textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ------- Battery display -------
+function updateBatteryStatus(battery) {
+  const level = Math.round(battery.level * 100);
+  const charging = battery.charging ? "⚡" : "";
+  batterySpan.textContent = `🔋 ${level}% ${charging}`;
+}
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    updateBatteryStatus(battery);
+    battery.addEventListener("levelchange", () => updateBatteryStatus(battery));
+    battery.addEventListener("chargingchange", () => updateBatteryStatus(battery));
+  });
+} else {
+  batterySpan.textContent = "🔋 Ni podpore";
+}
+
+// ------- Right panel buttons HTML -------
+rightPanel.innerHTML = `
+  <button id="darkModeBtn" style="padding: 0.5rem 1rem; font-size: 1rem; cursor:pointer;">Temni način</button><br><br>
+  <button id="changePasswordBtn" style="padding: 0.5rem 1rem; font-size: 1rem; cursor:pointer;">Spremeni geslo</button><br><br>
+  <button id="profileSettingsBtn" style="padding: 0.5rem 1rem; font-size: 1rem; cursor:pointer;">Nastavitve profila</button>
+`;
+
+// Left panel header and list container
+leftPanel.innerHTML = `<h3>Aktivni uporabniki</h3><div id="activeUsersList"></div>`;
+
+// Settings panel content
+settingsPanel.innerHTML = `
+  <h2>Nastavitve profila</h2>
+  <label>Ime:<br><input type="text" id="profileNameInput" style="font-size:1rem; padding:0.3rem; width: 100%;"></label><br>
+  <label>Status aktivnosti:<br>
+    <select id="statusSelect" style="font-size:1rem; padding:0.3rem; width: 100%;">
+      <option value="online">Online</option>
+      <option value="away">Odsoten</option>
+      <option value="offline">Offline</option>
+    </select>
+  </label><br>
+  <button id="saveSettingsBtn" style="padding: 0.5rem 1rem; font-size: 1rem; cursor:pointer;">Shrani nastavitve</button><br>
+  <button id="backToChatBtn" style="padding: 0.5rem 1rem; font-size: 1rem; cursor:pointer;">Nazaj v chat</button>
+`;
+
+// ------- State variables -------
+let containerExpandedSide = null; // "left", "right", or null
+let settingsOpen = false;
+
+// ------- Functions to open/close panels -------
+function openLeftPanel() {
+  leftPanel.style.transform = "translateX(0)";
+  rightPanel.style.transform = "translateX(100%)";
+  settingsPanel.style.transform = "translate(-50%, -20%) scale(0)";
+  settingsPanel.style.opacity = "0";
+  containerExpandedSide = "left";
+  settingsOpen = false;
+  refreshActiveUsers();
+}
+
+function openRightPanel() {
+  rightPanel.style.transform = "translateX(0)";
+  leftPanel.style.transform = "translateX(-100%)";
+  settingsPanel.style.transform = "translate(-50%, -20%) scale(0)";
+  settingsPanel.style.opacity = "0";
+  containerExpandedSide = "right";
+  settingsOpen = false;
+}
+
+function closePanels() {
+  leftPanel.style.transform = "translateX(-100%)";
+  rightPanel.style.transform = "translateX(100%)";
+  settingsPanel.style.transform = "translate(-50%, -20%) scale(0)";
+  settingsPanel.style.opacity = "0";
+  containerExpandedSide = null;
+  settingsOpen = false;
+}
+
+function openSettings() {
+  settingsPanel.style.transform = "translate(-50%, 0) scale(1)";
+  settingsPanel.style.opacity = "1";
+  leftPanel.style.transform = "translateX(-100%)";
+  rightPanel.style.transform = "translateX(100%)";
+  containerExpandedSide = null;
+  settingsOpen = true;
+
+  // Load current user data (from cache or db)
+  document.getElementById("profileNameInput").value = userNamesCache[currentUser.uid] || "";
+
+  // Load status from db
+  db.ref("users/" + currentUser.uid).once("value").then(snap => {
+    const data = snap.val() || {};
+    const status = data.status || "online";
+    document.getElementById("statusSelect").value = status;
+  });
+}
+
+function closeSettings() {
+  settingsPanel.style.transform = "translate(-50%, -20%) scale(0)";
+  settingsPanel.style.opacity = "0";
+  settingsOpen = false;
+}
+
+// ------- Event listeners for buttons -------
+document.getElementById("darkModeBtn").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  alert("Temni način vklopljen / izklopljen.");
+});
+
+document.getElementById("changePasswordBtn").addEventListener("click", () => {
+  const newPass = prompt("Vpiši novo geslo:");
+  if (newPass) {
+    currentUser.updatePassword(newPass).then(() => {
+      alert("Geslo spremenjeno.");
+    }).catch(err => alert("Napaka: " + err.message));
+  }
+});
+
+document.getElementById("profileSettingsBtn").addEventListener("click", openSettings);
+
+document.getElementById("saveSettingsBtn").addEventListener("click", () => {
+  const newName = document.getElementById("profileNameInput").value.trim();
+  const newStatus = document.getElementById("statusSelect").value;
+
+  if (!newName) {
+    alert("Ime ne sme biti prazno.");
+    return;
+  }
+
+  db.ref("users/" + currentUser.uid).update({
+    displayName: newName,
+    status: newStatus
+  }).then(() => {
+    userNamesCache[currentUser.uid] = newName; // posodobimo cache
+    alert("Nastavitve so shranjene.");
+    closeSettings();
+  }).catch(err => {
+    alert("Napaka pri shranjevanju: " + err.message);
+  });
+});
+
+document.getElementById("backToChatBtn").addEventListener("click", () => {
+  closeSettings();
+});
+
+// ------- Swipe detection za topContainer -------
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+topContainer.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }
+});
+
+topContainer.addEventListener("touchend", (e) => {
+  touchEndX = e.changedTouches[0].clientX;
+  touchEndY = e.changedTouches[0].clientY;
+
+  const dx = touchEndX - touchStartX;
+  const dy = touchEndY - touchStartY;
+
+  // Če je premik večji v Y osi in navzdol (pozitivno dy)
+  if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx)) {
+    if (touchStartX < window.innerWidth / 2) {
+      // levo spodaj povleci navzdol -> odpri leftPanel
+      openLeftPanel();
+    } else {
+      // desno spodaj povleci navzdol -> odpri rightPanel
+      openRightPanel();
+    }
+  } else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+    // horizontalni swipe - zapri vse panele
+    closePanels();
+  }
+});
+
+// ------- Funkcija za osvežitev seznama aktivnih uporabnikov -------
+function refreshActiveUsers() {
+  const activeUsersDiv = document.getElementById("activeUsersList");
+  activeUsersDiv.innerHTML = "Nalaganje...";
+
+  // Preberemo vse uporabnike iz Firebase DB (predpostavimo pot: /users)
+  db.ref("users").orderByChild("lastActive").limitToLast(50).once("value").then(snapshot => {
+    const users = snapshot.val();
+    if (!users) {
+      activeUsersDiv.innerHTML = "Ni aktivnih uporabnikov.";
+      return;
+    }
+    const userList = Object.entries(users)
+      .filter(([uid, data]) => data.status === "online" || data.status === "away")
+      .sort((a, b) => b[1].lastActive - a[1].lastActive);
+
+    if (userList.length === 0) {
+      activeUsersDiv.innerHTML = "Ni aktivnih uporabnikov.";
+      return;
+    }
+
+    activeUsersDiv.innerHTML = ""; // počistimo
+
+    userList.forEach(([uid, data]) => {
+      const div = document.createElement("div");
+      div.style.padding = "0.3rem 0";
+      div.style.borderBottom = "1px solid #ccc";
+      div.style.cursor = "pointer";
+      div.textContent = `${data.displayName || "(brez imena)"} — ${data.status}`;
+      div.title = `UID: ${uid}`;
+      // Klik na uporabnika - lahko odpreš chat z njim ipd.
+      div.addEventListener("click", () => {
+        alert(`Kliknil si na uporabnika: ${data.displayName || uid}`);
+        // Tukaj lahko dodaš funkcionalnost za zasebni chat itd.
+      });
+      activeUsersDiv.appendChild(div);
+    });
+  }).catch(err => {
+    activeUsersDiv.innerHTML = "Napaka pri nalaganju uporabnikov.";
+    console.error(err);
+  });
+}
+
+// Ob zagonu lahko osvežiš uporabnike (če želiš)
+refreshActiveUsers();
+
+// ------- Tema: preklop temnega načina --------
+const darkModeCss = `
+  body.dark-mode {
+    background-color: #121212;
+    color: #eee;
+  }
+  body.dark-mode #leftPanel, body.dark-mode #rightPanel, body.dark-mode #settingsPanel {
+    background-color: #222;
+    color: #eee;
+    box-shadow: none;
+  }
+`;
+const styleEl = document.createElement("style");
+styleEl.textContent = darkModeCss;
+document.head.appendChild(styleEl);
+
+// ------- Dummy cache in currentUser za demo --------
+// Če nimaš še Firebase avtentikacije in db, lahko tukaj simuliraš:
+const userNamesCache = {};
+const userStatusCache = {};
+const currentUser = {
+  uid: "demoUser",
+  updatePassword: (newPass) => new Promise((res, rej) => {
+    console.log("Geslo spremenjeno na:", newPass);
+    res();
+  }),
+};
+// dummy db za demo
+const db = {
+  ref: (path) => ({
+    once: (event) => new Promise((resolve) => {
+      if (path === "users") {
+        resolve({
+          val: () => ({
+            demoUser: { displayName: "Demo Uporabnik", status: "online", lastActive: Date.now() },
+            user2: { displayName: "Ana", status: "away", lastActive: Date.now() - 10000 },
+            user3: { displayName: "Boris", status: "offline", lastActive: Date.now() - 60000 },
+          }),
+        });
+      } else if (path.startsWith("users/")) {
+        resolve({
+          val: () => ({ displayName: "Demo Uporabnik", status: "online" }),
+        });
+      }
+    }),
+    update: (data) => new Promise((res) => {
+      console.log("DB update:", path, data);
+      res();
+    }),
+  }),
+};
+
+// Če boš potreboval še kaj, povej. 
+// Vse skupaj lahko lepo vključiš v svojo stran, stili in funkcionalnost so osnovni, a delujoči.
 
 </script>
 </body>
