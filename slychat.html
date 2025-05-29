@@ -1314,14 +1314,12 @@ window.addEventListener('load', () => {
 
 
 
-// Dodajemo maxHeight namesto height in transition za max-height
-
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px"; // za animacijo uporabimo max-height
+topContainer.style.maxHeight = "40px"; // začetna višina (ozka vrstica)
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1332,10 +1330,8 @@ topContainer.style.zIndex = "9999";
 topContainer.style.transition = "max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
 topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";
-topContainer.style.overflow = "hidden"; // skrije vse, kar presega max-height
+topContainer.style.overflow = "hidden";
 document.body.appendChild(topContainer);
-
-// ... (ostali elementi ostanejo isti)
 
 const topRow = document.createElement("div");
 topRow.style.display = "flex";
@@ -1382,7 +1378,7 @@ if (navigator.getBattery) {
   navigator.getBattery().then(battery => {
     function updateBattery() {
       const pct = Math.round(battery.level * 100);
-      batterySpan.textContent = `${pct}%🔋`;
+      batterySpan.textContent = `🔋 ${pct}%`;
     }
     updateBattery();
     battery.addEventListener('levelchange', updateBattery);
@@ -1409,15 +1405,23 @@ function showActiveUsers() {
     });
   }
 
-  // izračunamo višino vsebine:
   let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 40;
-  if (contentHeight > 260) contentHeight = 260;
+  if (contentHeight < 40) contentHeight = 80; // minimalna višina, da ni preozko
+  if (contentHeight > 260) contentHeight = 260; // maksimalna višina
 
   activeUsersContainer.style.display = "flex";
   activeUsersContainer.style.flexDirection = "column";
 
-  topContainer.style.maxHeight = (40 + contentHeight) + "px"; // maxHeight za animacijo
+  // nastavimo maxHeight za animacijo (osnova + vsebina)
+  topContainer.style.maxHeight = (40 + contentHeight) + "px";
+}
+
+function closeActiveUsers() {
+  // animacija zapiranja z maxHeight nazaj na začetno vrednost
+  topContainer.style.maxHeight = "40px";
+  setTimeout(() => {
+    activeUsersContainer.style.display = "none";
+  }, 400); // po trajanju animacije skrijemo vsebino
 }
 
 let startX = null;
@@ -1444,8 +1448,7 @@ topContainer.addEventListener("touchend", () => {
 
 topContainer.addEventListener("dblclick", () => {
   if (expanded) {
-    topContainer.style.maxHeight = "40px";
-    activeUsersContainer.style.display = "none";
+    closeActiveUsers();
     expanded = false;
   }
 });
@@ -1459,11 +1462,11 @@ topContainer.addEventListener("wheel", (e) => {
 
 document.addEventListener("click", (e) => {
   if (expanded && !topContainer.contains(e.target)) {
-    topContainer.style.maxHeight = "40px";
-    activeUsersContainer.style.display = "none";
+    closeActiveUsers();
     expanded = false;
   }
 });
+
 
 </script>
 </body>
