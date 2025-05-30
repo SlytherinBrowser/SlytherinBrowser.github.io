@@ -1413,7 +1413,7 @@ function updateClock() {
   clockSpan.textContent = `${h}:${m}`;
 }
 updateClock();
-setInterval(updateClock, 60000);
+setInterval(updateClock, 600);
 
 // Baterija - prikaz z znaki za polnjenje in nizko baterijo
 if (navigator.getBattery) {
