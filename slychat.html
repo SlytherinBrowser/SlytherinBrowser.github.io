@@ -210,6 +210,7 @@ width: 100%;
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
+<button class="btn" id="listtoggle">Uporabniki</button>
     </div>
   </div>
 
@@ -1541,6 +1542,66 @@ document.addEventListener("click", (e) => {
 });
 
 
+
+
+
+
+
+
+
+let inUserList = false;
+let originalMessagesHTML = '';
+let inPrivateChat = false; // nastavi to na true/false glede na stanje
+
+document.getElementById("listtoggle").addEventListener("click", async () => {
+  const chatbox = document.getElementById("chatbox");
+
+  if (!inUserList) {
+    originalMessagesHTML = chatbox.innerHTML;
+    chatbox.innerHTML = "<p>Nalaganje uporabnikov...</p>";
+
+    const snapshot = await firebase.database().ref("users").once("value");
+    const users = snapshot.val();
+
+    if (!users) {
+      chatbox.innerHTML = "<p>Ni uporabnikov.</p>";
+      return;
+    }
+
+    chatbox.innerHTML = `<ul id="userList"></ul><button id="startPrivateChat">Pošlji v zasebni klepet</button>`;
+    const userList = document.getElementById("userList");
+
+    Object.keys(users).forEach(uid => {
+      const li = document.createElement("li");
+      li.textContent = users[uid].name || uid;
+      li.dataset.uid = uid;
+      li.style.cursor = "pointer";
+      li.onclick = () => li.classList.toggle("selected");
+      userList.appendChild(li);
+    });
+
+    document.getElementById("startPrivateChat").addEventListener("click", () => {
+      const selectedUIDs = Array.from(userList.querySelectorAll(".selected")).map(li => li.dataset.uid);
+      if (selectedUIDs.length === 0) return alert("Izberi vsaj enega uporabnika.");
+
+      // Funkcija za preklop v zasebni klepet z izbranimi uporabniki
+      joinPrivateChat(selectedUIDs);
+    });
+
+    inUserList = true;
+  } else {
+    chatbox.innerHTML = originalMessagesHTML;
+    inUserList = false;
+  }
+});
+
+function joinPrivateChat(selectedUIDs) {
+  // Tukaj daš svoj obstoječi način za ustvarjanje zasebnega klepeta
+  console.log("Začenjam zasebni klepet z:", selectedUIDs);
+  inPrivateChat = true;
+
+  // Po želji lahko tukaj zamenjaš gumb ali nadomestiš `#chatbox` z vsebino zasebnega klepeta
+}
 </script>
 </body>
 </html>
