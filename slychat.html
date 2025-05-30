@@ -1548,12 +1548,19 @@ document.addEventListener("click", (e) => {
 
 // --- Obstoječa koda (ni ponovljena) ---
 
-// Novi elementi za opomnike
+
+
+// Ostali elementi (clockSpan, topContainer, activeUsersContainer, logoutContainer) so že definirani
+
+// Pridržimo stanje, ali je opomnik odprt
+let remindersExpanded = false;
+
+// Novi container za opomnike
 const reminderContainer = document.createElement("div");
 reminderContainer.style.width = "100%";
 reminderContainer.style.flexDirection = "column";
 reminderContainer.style.padding = "10px";
-reminderContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+reminderContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 reminderContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 reminderContainer.style.borderRadius = "10px";
 reminderContainer.style.boxSizing = "border-box";
@@ -1561,7 +1568,6 @@ reminderContainer.style.display = "none";
 reminderContainer.style.flexGrow = "1";
 topContainer.appendChild(reminderContainer);
 
-// Ikona opozorila ‼️, ki se pojavi na sredini, ko je čas za opomnik, container ni razširjen
 const alertIcon = document.createElement("div");
 alertIcon.textContent = "‼️";
 alertIcon.style.position = "absolute";
@@ -1574,7 +1580,6 @@ alertIcon.style.display = "none";
 alertIcon.style.pointerEvents = "none";
 topContainer.appendChild(alertIcon);
 
-// Inputi in gumbi za dodajanje opomnika
 const reminderInput = document.createElement("input");
 reminderInput.type = "text";
 reminderInput.placeholder = "Ime opomnika...";
@@ -1612,11 +1617,10 @@ reminderForm.appendChild(btnCreate);
 
 reminderContainer.appendChild(reminderForm);
 
-let reminders = []; // Array opomnikov: {id, text, datetime: Date, triggered: bool}
+let reminders = []; // {id, text, datetime: Date, triggered: bool}
 
 // Funkcija za render opomnikov
 function renderReminders() {
-  // Počisti container razen forme
   reminderContainer.querySelectorAll(".reminder-item").forEach(e => e.remove());
 
   reminders.forEach(reminder => {
@@ -1629,7 +1633,6 @@ function renderReminders() {
     item.style.borderTop = "1px solid rgba(255,255,255,0.1)";
     item.style.color = reminder.triggered ? "red" : "inherit";
 
-    // Tekst opomnika + datum in ura
     const textDiv = document.createElement("div");
     const dt = reminder.datetime;
     const dateStr = dt.toLocaleDateString();
@@ -1637,36 +1640,25 @@ function renderReminders() {
     textDiv.textContent = `${reminder.text} (${dateStr} ${timeStr})`;
     item.appendChild(textDiv);
 
-    // Gumbi
     const btns = document.createElement("div");
     btns.style.display = "flex";
     btns.style.gap = "8px";
 
-    // Gumb za potrditev (samo če je čas za opomnik)
     if (reminder.triggered) {
       const btnOk = document.createElement("button");
       btnOk.textContent = "✅️";
       btnOk.title = "Potrdi opomnik";
       btnOk.onclick = () => {
-        reminders = reminders.filter(r => r.id !== reminder.id);
-        renderReminders();
-        if (reminders.every(r => !r.triggered)) {
-          alertIcon.style.display = "none";
-        }
+        removeReminder(reminder.id);
       };
       btns.appendChild(btnOk);
     }
 
-    // Gumb za brisanje
     const btnDel = document.createElement("button");
     btnDel.textContent = "❌️";
     btnDel.title = "Izbriši opomnik";
     btnDel.onclick = () => {
-      reminders = reminders.filter(r => r.id !== reminder.id);
-      renderReminders();
-      if (reminders.every(r => !r.triggered)) {
-        alertIcon.style.display = "none";
-      }
+      removeReminder(reminder.id);
     };
     btns.appendChild(btnDel);
 
@@ -1675,7 +1667,54 @@ function renderReminders() {
   });
 }
 
-// Dodajanje opomnika
+// Funkcija za odstranitev opomnika in update baze
+function removeReminder(id) {
+  reminders = reminders.filter(r => r.id !== id);
+  saveRemindersToFirebase();
+  renderReminders();
+  updateAlertIcon();
+}
+
+// Shranjevanje v Firebase
+function saveRemindersToFirebase() {
+  // Shranimo samo potrebne podatke (id, text, datetime ISO string, triggered)
+  const dataToSave = reminders.map(r => ({
+    id: r.id,
+    text: r.text,
+    datetime: r.datetime.toISOString(),
+    triggered: r.triggered,
+  }));
+  database.ref("reminders").set(dataToSave);
+}
+
+// Naloži opomnike iz Firebase
+function loadRemindersFromFirebase() {
+  database.ref("reminders").once("value", snapshot => {
+    const data = snapshot.val();
+    if (data && Array.isArray(data)) {
+      reminders = data.map(r => ({
+        id: r.id,
+        text: r.text,
+        datetime: new Date(r.datetime),
+        triggered: r.triggered,
+      }));
+      renderReminders();
+      updateAlertIcon();
+    }
+  });
+}
+
+// Posodobi prikaz opozorilne ikone ‼️
+function updateAlertIcon() {
+  const anyTriggered = reminders.some(r => r.triggered);
+  if (!remindersExpanded && anyTriggered) {
+    alertIcon.style.display = "block";
+  } else {
+    alertIcon.style.display = "none";
+  }
+}
+
+// Dodajanje novega opomnika
 btnCreate.onclick = () => {
   const text = reminderInput.value.trim();
   const dateVal = dateInput.value;
@@ -1704,57 +1743,65 @@ btnCreate.onclick = () => {
   reminderInput.value = "";
   dateInput.value = "";
   timeInput.value = "";
+  saveRemindersToFirebase();
   renderReminders();
-  alertIcon.style.display = "none";
+  updateAlertIcon();
 };
 
-// Prikaži/skrij opomnik ob kliku na uro
+// Toggle razširitev opomnika ob kliku na uro
 clockSpan.style.cursor = "pointer";
 clockSpan.addEventListener("click", () => {
-  if (reminderContainer.style.display === "none") {
-    // prikaži opomnik
+  remindersExpanded = !remindersExpanded;
+  if (remindersExpanded) {
     reminderContainer.style.display = "flex";
     topContainer.style.maxHeight = "300px";
-    // skrij aktivne uporabnike in logout
+
+    // Blur + transparentnost
+    topContainer.style.backdropFilter = "blur(8px)";
+    topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
+
+    // Skrij druge elemente
     activeUsersContainer.style.display = "none";
     logoutContainer.style.display = "none";
-    expandedUsers = false;
-    expandedLogout = false;
   } else {
-    // skrij opomnik
     reminderContainer.style.display = "none";
     topContainer.style.maxHeight = "40px";
+
+    // Odstrani blur + transparentnost
+    topContainer.style.backdropFilter = "";
+    topContainer.style.backgroundColor = "";
+
+    // Prikaži ostale elemente (po želji)
+    activeUsersContainer.style.display = "";
+    logoutContainer.style.display = "";
   }
+  updateAlertIcon();
 });
 
-// Funkcija za preverjanje opomnikov in prikaz opozorila
+// Preverjanje opomnikov in sprožitev opozorila
 function checkReminders() {
   const now = new Date();
-  let showAlert = false;
+  let anyTriggered = false;
 
   reminders.forEach(r => {
     if (!r.triggered && r.datetime <= now) {
       r.triggered = true;
-      showAlert = true;
+      anyTriggered = true;
     }
   });
-
-  renderReminders();
-
-  // Če ni razširjen opomnik in je vsaj en opomnik triggeran, prikaži ‼️
-  if (!expandedUsers && !expandedLogout && reminderContainer.style.display === "none" && showAlert) {
-    alertIcon.style.display = "block";
-  } else {
-    alertIcon.style.display = "none";
+  if (anyTriggered) {
+    saveRemindersToFirebase();
   }
+  renderReminders();
+  updateAlertIcon();
 }
 
-// Preverjaj vsakih 10 sekund
+// Začnemo preverjati vsakih 10s
 setInterval(checkReminders, 10000);
 checkReminders();
 
-// --- Ostanek tvoje kode (npr. showActiveUsers itd.) ---
-
+// Ob začetku naložimo opomnike iz baze
+loadRemindersFromFirebase();
 
 
 </script>
