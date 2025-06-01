@@ -1332,7 +1332,7 @@ topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.height = "40px";                 // Namesto maxHeight
+topContainer.style.maxHeight = "40px";
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1340,7 +1340,7 @@ topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 topContainer.style.display = "flex";
 topContainer.style.flexDirection = "column";
 topContainer.style.zIndex = "9999";
-topContainer.style.transition = "height 0.4s ease";  // Prehod na višini
+topContainer.style.transition = "max-height 0.4s ease";
 topContainer.style.boxSizing = "border-box";
 topContainer.style.padding = "0 15px";
 topContainer.style.overflow = "hidden";
@@ -1375,7 +1375,7 @@ activeUsersContainer.style.padding = "10px";
 activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 activeUsersContainer.style.borderRadius = "10px";
-activeUsersContainer.style.overflowY = "hidden";   // Začnimo skrito overflow
+activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
@@ -1396,20 +1396,8 @@ logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "center";
-logoutContainer.style.overflowY = "hidden";          // Začnimo skrito overflow
-topContainer.appendChild(logoutContainer);
 
-// Okvirček za ime in mail
-const userBox = document.createElement("div");
-userBox.style.border = "1px solid rgba(255, 255, 255, 0.3)";
-userBox.style.borderRadius = "8px";
-userBox.style.padding = "10px 15px";
-userBox.style.marginBottom = "15px";
-userBox.style.width = "100%";
-userBox.style.maxWidth = "300px";
-userBox.style.boxSizing = "border-box";
-userBox.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-logoutContainer.appendChild(userBox);
+topContainer.appendChild(logoutContainer);
 
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
@@ -1418,8 +1406,8 @@ userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
 
-userBox.appendChild(userName);
-userBox.appendChild(userEmail);
+logoutContainer.appendChild(userName);
+logoutContainer.appendChild(userEmail);
 
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
@@ -1450,6 +1438,11 @@ auth.onAuthStateChanged((user) => {
     logoutContainer.style.display = "none";
   }
 });
+
+
+
+
+
 
 // Posodobi uro
 function updateClock() {
@@ -1503,52 +1496,35 @@ function showActiveUsers() {
     });
   }
 
-  // Omejimo višino vsebine in omogočimo scroll, če je potrebno
   let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight > 260) {
-    contentHeight = 260;
-    activeUsersContainer.style.overflowY = "auto";
-  } else {
-    activeUsersContainer.style.overflowY = "hidden";
-  }
+  if (contentHeight < 40) contentHeight = 80;
+  if (contentHeight > 260) contentHeight = 260;
 
   logoutContainer.style.display = "none";
   activeUsersContainer.style.display = "flex";
   activeUsersContainer.style.flexDirection = "column";
-
-  topContainer.style.height = (40 + contentHeight) + "px";
+  topContainer.style.maxHeight = (40 + contentHeight) + "px";
   expandedUsers = true;
   expandedLogout = false;
 }
 
 function closeActiveUsers() {
   activeUsersContainer.style.display = "none";
-  topContainer.style.height = "40px";
+  topContainer.style.maxHeight = "40px";
   expandedUsers = false;
 }
 
 function showLogoutButton() {
   activeUsersContainer.style.display = "none";
   logoutContainer.style.display = "flex";
-
-  let contentHeight = logoutContainer.scrollHeight;
-
-  if (contentHeight > 260) {
-    contentHeight = 260;
-    logoutContainer.style.overflowY = "auto";
-  } else {
-    logoutContainer.style.overflowY = "hidden";
-  }
-
-  topContainer.style.height = (40 + contentHeight) + "px";
-
+  topContainer.style.maxHeight = "120px";
   expandedLogout = true;
   expandedUsers = false;
 }
 
 function closeLogoutButton() {
   logoutContainer.style.display = "none";
-  topContainer.style.height = "40px";
+  topContainer.style.maxHeight = "40px";
   expandedLogout = false;
 }
 
@@ -1556,41 +1532,20 @@ let startX = null;
 let expandedUsers = false;
 let expandedLogout = false;
 
-// Touch dogodki za vlečenje
+// Touch podrs
 topContainer.addEventListener("touchstart", (e) => {
-  if (e.touches.length === 1) {
-    startX = e.touches[0].clientX;
-  }
+  startX = e.touches[0].clientX;
 });
 
 topContainer.addEventListener("touchmove", (e) => {
-  if (!startX || e.touches.length !== 1) return;
-
+  if (startX === null) return;
   const currentX = e.touches[0].clientX;
-  const deltaX = currentX - startX;
+  const dx = currentX - startX;
 
-  // Odprtje aktivnih uporabnikov: vlečenje desno levo več kot 30 px
-  if (deltaX < -30 && !expandedUsers) {
+  if (dx > 40 && !expandedUsers && !expandedLogout) {
     showActiveUsers();
-    startX = null; // reset
-  }
-
-  // Zapiranje aktivnih uporabnikov: vlečenje levo desno več kot 30 px
-  if (deltaX > 30 && expandedUsers) {
-    closeActiveUsers();
-    startX = null;
-  }
-
-  // Odprtje logout containerja: vlečenje levo desno več kot 30 px
-  if (deltaX > 30 && !expandedLogout) {
+  } else if (dx < -40 && !expandedLogout && !expandedUsers) {
     showLogoutButton();
-    startX = null;
-  }
-
-  // Zapiranje logout containerja: vlečenje desno levo več kot 30 px
-  if (deltaX < -30 && expandedLogout) {
-    closeLogoutButton();
-    startX = null;
   }
 });
 
@@ -1598,6 +1553,31 @@ topContainer.addEventListener("touchend", () => {
   startX = null;
 });
 
+// Scroll z miško
+topContainer.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {
+    showActiveUsers();
+  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
+  }
+});
+
+// Dvojni klik = zapri
+topContainer.addEventListener("dblclick", () => {
+  if (expandedUsers) {
+    closeActiveUsers();
+  } else if (expandedLogout) {
+    closeLogoutButton();
+  }
+});
+
+// Klik zunaj = zapri
+document.addEventListener("click", (e) => {
+  if (!topContainer.contains(e.target)) {
+    if (expandedUsers) closeActiveUsers();
+    if (expandedLogout) closeLogoutButton();
+  }
+});
 
 
 
