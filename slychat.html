@@ -1428,16 +1428,7 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
-// Posodobitev imena in maila, ko je uporabnik prijavljen
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    userNameDisplay.textContent = user.displayName || "Anonimen";
-    userEmailDisplay.textContent = user.email || "";
-  } else {
-    userNameDisplay.textContent = "";
-    userEmailDisplay.textContent = "";
-  }
-});
+
 
 
 
