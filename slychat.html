@@ -1380,12 +1380,12 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Logout gumb container
+// Logout container, privzeto skrit
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none"; // skrito na začetku
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
@@ -1393,17 +1393,51 @@ logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
+logoutContainer.style.color = "white";
+logoutContainer.style.fontFamily = "Arial, sans-serif";
+logoutContainer.style.textAlign = "center";
+
 topContainer.appendChild(logoutContainer);
 
+// Element za prikaz imena in maila (ločeno v vrsticah)
+const userName = document.createElement("div");
+const userEmail = document.createElement("div");
+userEmail.style.marginTop = "4px";
+userEmail.style.fontSize = "0.9em";
+userEmail.style.opacity = "0.8";
+
+logoutContainer.appendChild(userName);
+logoutContainer.appendChild(userEmail);
+
+// Gumb za odjavo
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = function logout() {
+logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
   });
 };
 logoutContainer.appendChild(logoutBtn);
+
+// Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
+    const ime = user.displayName ? user.displayName : "Brez imena";
+    const mail = user.email ? user.email : "Brez emaila";
+
+    userName.textContent = ime;
+    userEmail.textContent = mail;
+  } else {
+    // Ko ni uporabnika, lahko počistimo ali skrijemo
+    userName.textContent = "";
+    userEmail.textContent = "";
+    logoutContainer.style.display = "none";
+  }
+});
 
 
 
