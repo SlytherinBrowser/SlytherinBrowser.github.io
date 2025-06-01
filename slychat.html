@@ -1395,20 +1395,6 @@ logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
 topContainer.appendChild(logoutContainer);
 
-// Pridobi trenutnega uporabnika iz Firebase Auth
-const currentUser = auth.currentUser || { displayName: "Brez imena", email: "Ni emaila" };
-
-// Prikaz imena in emaila nad gumbom za odjavo
-const userInfoDiv = document.createElement("div");
-userInfoDiv.style.marginBottom = "10px";
-userInfoDiv.style.color = "white";
-userInfoDiv.style.textAlign = "center";
-userInfoDiv.style.fontWeight = "bold";
-userInfoDiv.style.fontSize = "1em";
-
-userInfoDiv.textContent = `${currentUser.displayName} — ${currentUser.email}`;
-
-// Gumb za odjavo
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
@@ -1417,10 +1403,12 @@ logoutBtn.onclick = function logout() {
     window.location.href = "auth.html";
   });
 };
-
-// Najprej dodamo userInfoDiv, nato gumb
-logoutContainer.appendChild(userInfoDiv);
 logoutContainer.appendChild(logoutBtn);
+
+
+
+
+
 
 // Posodobi uro
 function updateClock() {
@@ -1556,6 +1544,8 @@ document.addEventListener("click", (e) => {
     if (expandedLogout) closeLogoutButton();
   }
 });
+
+
 
 
 
