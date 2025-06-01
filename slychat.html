@@ -1407,53 +1407,19 @@ logoutContainer.appendChild(logoutBtn);
 
 
 
-// 👤 Profil + vidnost aktivnosti
+// Ustvari div za prikaz uporabniškega profila (brez gumba)
 const userProfileDiv = document.createElement("div");
 userProfileDiv.style.display = "flex";
 userProfileDiv.style.alignItems = "center";
-userProfileDiv.style.justifyContent = "space-between";
-userProfileDiv.style.width = "100%";
-userProfileDiv.style.marginBottom = "10px";
-userProfileDiv.style.color = "white";
-logoutContainer.insertBefore(userProfileDiv, logoutBtn); // vstavi nad logoutBtn
+userProfileDiv.style.justifyContent = "flex-start";
+userProfileDiv.style.padding = "5px 0";
+userProfileDiv.style.color = "#fff";
+userProfileDiv.style.fontWeight = "bold";
+userProfileDiv.style.fontSize = "1.1em";
+userProfileDiv.textContent = currentUser.displayName || currentUser.email || "Uporabnik";
 
-const userInfoSpan = document.createElement("span");
-userInfoSpan.style.fontWeight = "bold";
-userInfoSpan.style.fontSize = "1em";
-userProfileDiv.appendChild(userInfoSpan);
-
-const toggleVisibilityBtn = document.createElement("button");
-toggleVisibilityBtn.textContent = "Skrij aktivnost";
-toggleVisibilityBtn.style.marginLeft = "10px";
-toggleVisibilityBtn.className = "btn1";
-userProfileDiv.appendChild(toggleVisibilityBtn);
-
-auth.onAuthStateChanged(async (user) => {
-  if (!user) return;
-
-  const userRef = ref(db, `status/${user.uid}/visible`);
-
-  // Prikaži ime (ali email)
-  userInfoSpan.textContent = user.displayName || user.email || "Uporabnik";
-
-  // Preberi začetno stanje vidnosti
-  const snapshot = await get(userRef);
-  let visible = snapshot.exists() ? snapshot.val() : true;
-
-  updateButtonLabel();
-
-  toggleVisibilityBtn.onclick = () => {
-    visible = !visible;
-    set(userRef, visible);
-    updateButtonLabel();
-  };
-
-  function updateButtonLabel() {
-    toggleVisibilityBtn.textContent = visible ? "Skrij aktivnost" : "Pokaži aktivnost";
-    toggleVisibilityBtn.style.opacity = visible ? "1" : "0.5";
-  }
-});
-
+// Vstavi profil tik nad gumb za odjavo
+logoutContainer.insertBefore(userProfileDiv, logoutBtn);
 
 
 
