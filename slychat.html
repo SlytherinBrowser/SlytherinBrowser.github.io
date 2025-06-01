@@ -1380,14 +1380,12 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Predpostavka: že imaš inicializiran Firebase in auth
-
-// Ustvarimo container za logout, skrit na začetku
+// Logout gumb container
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none"; // privzeto skrito
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
+logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
@@ -1395,42 +1393,18 @@ logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
-logoutContainer.style.color = "white";
-logoutContainer.style.fontFamily = "Arial, sans-serif";
-logoutContainer.style.textAlign = "center";
-
 topContainer.appendChild(logoutContainer);
 
-// Ustvarimo element za prikaz uporabnika
-const userInfo = document.createElement("div");
-userInfo.style.marginBottom = "10px";
-logoutContainer.appendChild(userInfo);
-
-// Ustvarimo logout gumb
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = () => {
+logoutBtn.onclick = function logout() {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
-  }).catch((error) => {
-    console.error("Napaka pri odjavi:", error);
   });
 };
 logoutContainer.appendChild(logoutBtn);
 
-// Prikaz uporabnika ob spremembi avtentikacije
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    // Prikaži container
-    logoutContainer.style.display = "flex";
-
-// Prikaži uporabniško ime in email
-const ime = user.displayName ? user.displayName : "Brez imena";
-const mail = user.email ? user.email : "Brez emaila";
-
-// Uporabi \n za novo vrstico, vendar v HTML moraš uporabiti <br>
-userInfo.innerHTML = `${ime}<br>${mail}`;
 
 
 
