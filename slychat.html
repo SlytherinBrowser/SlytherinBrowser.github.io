@@ -1380,7 +1380,6 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Logout gumb container
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
 logoutContainer.style.flexDirection = "column";
@@ -1395,6 +1394,20 @@ logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
 topContainer.appendChild(logoutContainer);
 
+// Prikaz imena in emaila nad gumbom za odjavo
+const userInfoDiv = document.createElement("div");
+userInfoDiv.style.marginBottom = "10px";
+userInfoDiv.style.color = "white";
+userInfoDiv.style.textAlign = "center";
+userInfoDiv.style.fontWeight = "bold";
+userInfoDiv.style.fontSize = "1em";
+
+const userName = currentUser.displayName || "Brez imena";
+const userEmail = currentUser.email || "Ni emaila";
+
+userInfoDiv.textContent = `${userName} — ${userEmail}`;
+
+// Gumb za odjavo
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
@@ -1403,6 +1416,9 @@ logoutBtn.onclick = function logout() {
     window.location.href = "auth.html";
   });
 };
+
+// Najprej dodamo userInfoDiv, nato gumb
+logoutContainer.appendChild(userInfoDiv);
 logoutContainer.appendChild(logoutBtn);
 
 
