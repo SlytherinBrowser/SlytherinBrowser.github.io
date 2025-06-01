@@ -1404,18 +1404,38 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
+// Element za ime uporabnika
 const userNameDisplay = document.createElement("div");
 userNameDisplay.style.fontWeight = "bold";
-userNameDisplay.style.marginBottom = "8px";
 userNameDisplay.style.color = "white";
-logoutContainer.insertBefore(userNameDisplay, logoutBtn);
+userNameDisplay.style.marginBottom = "4px";
+logoutContainer.appendChild(userNameDisplay);
 
-// Posodobi uporabniško ime šele, ko Firebase vrne podatke o prijavi
+// Element za email uporabnika
+const userEmailDisplay = document.createElement("div");
+userEmailDisplay.style.color = "white";
+userEmailDisplay.style.marginBottom = "12px";
+logoutContainer.appendChild(userEmailDisplay);
+
+// Gumb za odjavo
+const logoutBtn = document.createElement("button");
+logoutBtn.className = "btn1";
+logoutBtn.textContent = "Odjavi se";
+logoutBtn.onclick = function logout() {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  });
+};
+logoutContainer.appendChild(logoutBtn);
+
+// Posodobitev imena in maila, ko je uporabnik prijavljen
 firebase.auth().onAuthStateChanged(user => {
   if (user) {
-    userNameDisplay.textContent = user.displayName || user.email || "Uporabnik";
+    userNameDisplay.textContent = user.displayName || "Anonimen";
+    userEmailDisplay.textContent = user.email || "";
   } else {
-    userNameDisplay.textContent = "Ni prijavljen";
+    userNameDisplay.textContent = "";
+    userEmailDisplay.textContent = "";
   }
 });
 
