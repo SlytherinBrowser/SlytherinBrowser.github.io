@@ -1407,21 +1407,6 @@ logoutContainer.appendChild(logoutBtn);
 
 
 
-// Ustvari div za prikaz uporabniškega profila (brez gumba)
-const userProfileDiv = document.createElement("div");
-userProfileDiv.style.display = "flex";
-userProfileDiv.style.alignItems = "center";
-userProfileDiv.style.justifyContent = "flex-start";
-userProfileDiv.style.padding = "5px 0";
-userProfileDiv.style.color = "#fff";
-userProfileDiv.style.fontWeight = "bold";
-userProfileDiv.style.fontSize = "1.1em";
-userProfileDiv.textContent = currentUser.displayName || currentUser.email || "Uporabnik";
-
-// Vstavi profil tik nad gumb za odjavo
-logoutContainer.insertBefore(userProfileDiv, logoutBtn);
-
-
 
 
 
