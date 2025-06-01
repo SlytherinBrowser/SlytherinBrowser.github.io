@@ -1331,8 +1331,8 @@ const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
-topContainer.style.width = "40%";
-topContainer.style.maxHeight = "70px";
+topContainer.style.width = "100%";
+topContainer.style.maxHeight = "40px";
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1380,11 +1380,14 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
+// Predpostavka: že imaš inicializiran Firebase in auth
+
+// Ustvarimo container za logout, skrit na začetku
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none"; // privzeto skrito
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
@@ -1392,42 +1395,50 @@ logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
+logoutContainer.style.color = "white";
+logoutContainer.style.fontFamily = "Arial, sans-serif";
+logoutContainer.style.textAlign = "center";
+
 topContainer.appendChild(logoutContainer);
 
-// Element za ime uporabnika
-const userNameDisplay = document.createElement("div");
-userNameDisplay.style.fontWeight = "bold";
-userNameDisplay.style.color = "white";
-userNameDisplay.style.marginBottom = "4px";
-logoutContainer.appendChild(userNameDisplay);
+// Ustvarimo element za prikaz uporabnika
+const userInfo = document.createElement("div");
+userInfo.style.marginBottom = "10px";
+logoutContainer.appendChild(userInfo);
 
-// Element za email uporabnika
-const userEmailDisplay = document.createElement("div");
-userEmailDisplay.style.color = "white";
-userEmailDisplay.style.marginBottom = "12px";
-logoutContainer.appendChild(userEmailDisplay);
-
-// Gumb za odjavo
+// Ustvarimo logout gumb
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = function logout() {
-auth.signOut().then(() => {
-window.location.href = "auth.html";
-});
+logoutBtn.onclick = () => {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
+  });
 };
 logoutContainer.appendChild(logoutBtn);
 
-// Posodobitev imena in maila, ko je uporabnik prijavljen
-firebase.auth().onAuthStateChanged(user => {
-if (user) {
-userNameDisplay.textContent = user.displayName || "Anonimen";
-userEmailDisplay.textContent = user.email || "";
-} else {
-userNameDisplay.textContent = "";
-userEmailDisplay.textContent = "";
-}
+// Prikaz uporabnika ob spremembi avtentikacije
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    // Prikaži container
+    logoutContainer.style.display = "flex";
+
+    // Prikaži uporabniško ime in email
+    const ime = user.displayName ? user.displayName : "Brez imena";
+    const mail = user.email ? user.email : "Brez emaila";
+
+    userInfo.textContent = `Uporabnik: ${ime}\nEmail: ${mail}`;
+  } else {
+    // Skrij container, če ni prijavljen
+    logoutContainer.style.display = "none";
+  }
 });
+
+
+
+
 
 // Posodobi uro
 function updateClock() {
