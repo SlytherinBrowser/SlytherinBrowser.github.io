@@ -1383,7 +1383,7 @@ topContainer.appendChild(activeUsersContainer);
 // 1. Ustvari logout container (skrit na začetku)
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none"; // skrit na začetku
+logoutContainer.style.display = "none"; // vedno skrit na začetku
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
 logoutContainer.style.padding = "10px";
@@ -1399,10 +1399,9 @@ logoutContainer.style.textAlign = "center";
 
 topContainer.appendChild(logoutContainer);
 
-// 2. Ustvari element za prikaz imena in emaila
+// 2. Ustvari element za prikaz uporabnika
 const userInfo = document.createElement("div");
 userInfo.style.marginBottom = "10px";
-userInfo.style.whiteSpace = "pre-line"; // da '\n' naredi novo vrstico
 logoutContainer.appendChild(userInfo);
 
 // 3. Ustvari logout gumb
@@ -1418,24 +1417,35 @@ logoutBtn.onclick = () => {
 };
 logoutContainer.appendChild(logoutBtn);
 
-// 4. Ustvari gumb za prikaz logout containerja
+// 4. Pridobi trenutno prijavljenega uporabnika
+let currentUser = null;
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+  } else {
+    currentUser = null;
+    logoutContainer.style.display = "none"; // skrij container, če ni uporabnika
+  }
+});
+
+// 5. Ustvari gumb za odpiranje logoutContainer (npr. gumb za profil)
 const openLogoutBtn = document.createElement("button");
 openLogoutBtn.textContent = "Prikaži profil in odjavo";
 openLogoutBtn.className = "btn1";
 topContainer.appendChild(openLogoutBtn);
 
-// 5. Ob kliku na gumb prikaži ime in email ter pokaži logout container
+// 6. Ob kliku na gumb prikaži logoutContainer in osveži podatke
 openLogoutBtn.onclick = () => {
-  const user = auth.currentUser;
-  if (!user) {
+  if (!currentUser) {
     alert("Niste prijavljeni.");
     return;
   }
-  const ime = user.displayName ? user.displayName : "";
-  const mail = user.email ? user.email : "";
 
-  userInfo.textContent = `${ime}\n${mail}`;
-  logoutContainer.style.display = "flex";
+  const ime = currentUser.displayName ? currentUser.displayName : "Brez imena";
+  const mail = currentUser.email ? currentUser.email : "Brez emaila";
+
+  userInfo.textContent = `Uporabnik: ${ime}\nEmail: ${mail}`;
+  logoutContainer.style.display = "flex"; // prikaži container
 };
 
 
