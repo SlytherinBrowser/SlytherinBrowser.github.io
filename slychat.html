@@ -1380,12 +1380,12 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Logout gumb container
+// Logout container - skrit na začetku
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none"; // skrit na začetku
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
@@ -1393,19 +1393,60 @@ logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
+logoutContainer.style.color = "white";
+logoutContainer.style.fontFamily = "Arial, sans-serif";
+logoutContainer.style.textAlign = "center";
+
 topContainer.appendChild(logoutContainer);
 
+// Element za prikaz imena in maila (brez prednapisov)
+const userInfo = document.createElement("div");
+userInfo.style.marginBottom = "10px";
+logoutContainer.appendChild(userInfo);
+
+// Logout gumb
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = function logout() {
+logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
   });
 };
 logoutContainer.appendChild(logoutBtn);
 
+// Trenutno prijavljen uporabnik
+let currentUser = null;
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUser = user;
+  } else {
+    currentUser = null;
+    logoutContainer.style.display = "none"; // skrij če ni prijavljen
+  }
+});
 
+// Gumb za prikaz logoutContainer
+const openLogoutBtn = document.createElement("button");
+openLogoutBtn.textContent = "Prikaži profil in odjavo";
+openLogoutBtn.className = "btn1";
+topContainer.appendChild(openLogoutBtn);
+
+openLogoutBtn.onclick = () => {
+  if (!currentUser) {
+    alert("Niste prijavljeni.");
+    return;
+  }
+
+  const ime = currentUser.displayName ? currentUser.displayName : "Brez imena";
+  const mail = currentUser.email ? currentUser.email : "Brez emaila";
+
+  // Prikaže samo ime in email na ločenih vrsticah brez dodatnega besedila
+  userInfo.innerHTML = `${ime}<br>${mail}`;
+  logoutContainer.style.display = "flex";
+};
 
 
 
