@@ -1425,16 +1425,12 @@ auth.onAuthStateChanged((user) => {
     // Prikaži container
     logoutContainer.style.display = "flex";
 
-    // Prikaži uporabniško ime in email
-    const ime = user.displayName ? user.displayName : "Brez imena";
-    const mail = user.email ? user.email : "Brez emaila";
+// Prikaži uporabniško ime in email
+const ime = user.displayName ? user.displayName : "Brez imena";
+const mail = user.email ? user.email : "Brez emaila";
 
-    userInfo.textContent = `${ime}\n ${mail}`;
-  } else {
-    // Skrij container, če ni prijavljen
-    logoutContainer.style.display = "none";
-  }
-});
+// Uporabi \n za novo vrstico, vendar v HTML moraš uporabiti <br>
+userInfo.innerHTML = `${ime}<br>${mail}`;
 
 
 
