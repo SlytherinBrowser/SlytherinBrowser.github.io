@@ -1384,7 +1384,6 @@ const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.minHeight = "150px";
 logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
@@ -1413,23 +1412,22 @@ const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
 logoutBtn.onclick = function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  });
+auth.signOut().then(() => {
+window.location.href = "auth.html";
+});
 };
 logoutContainer.appendChild(logoutBtn);
 
 // Posodobitev imena in maila, ko je uporabnik prijavljen
 firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    userNameDisplay.textContent = user.displayName || "Anonimen";
-    userEmailDisplay.textContent = user.email || "";
-  } else {
-    userNameDisplay.textContent = "";
-    userEmailDisplay.textContent = "";
-  }
+if (user) {
+userNameDisplay.textContent = user.displayName || "Anonimen";
+userEmailDisplay.textContent = user.email || "";
+} else {
+userNameDisplay.textContent = "";
+userEmailDisplay.textContent = "";
+}
 });
-
 
 // Posodobi uro
 function updateClock() {
