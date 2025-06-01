@@ -1399,6 +1399,18 @@ logoutContainer.style.textAlign = "center";
 
 topContainer.appendChild(logoutContainer);
 
+// Okvirček za ime in mail
+const userBox = document.createElement("div");
+userBox.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+userBox.style.borderRadius = "8px";
+userBox.style.padding = "10px 15px";
+userBox.style.marginBottom = "15px";
+userBox.style.width = "100%";
+userBox.style.maxWidth = "300px";
+userBox.style.boxSizing = "border-box";
+userBox.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+logoutContainer.appendChild(userBox);
+
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
 const userEmail = document.createElement("div");
@@ -1406,8 +1418,8 @@ userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
 
-logoutContainer.appendChild(userName);
-logoutContainer.appendChild(userEmail);
+userBox.appendChild(userName);
+userBox.appendChild(userEmail);
 
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
