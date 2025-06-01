@@ -1325,6 +1325,8 @@ window.addEventListener('load', () => {
 
 
 
+
+
 const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
@@ -1393,20 +1395,6 @@ logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
 topContainer.appendChild(logoutContainer);
 
-// Dodaj prikaz profila (ime in email) v logoutContainer
-const profileName = document.createElement("div");
-profileName.style.fontWeight = "bold";
-profileName.style.marginBottom = "5px";
-profileName.style.fontSize = "1.1em";
-
-const profileEmail = document.createElement("div");
-profileEmail.style.fontSize = "0.9em";
-profileEmail.style.color = "rgba(255, 255, 255, 0.7)";
-profileEmail.style.marginBottom = "10px";
-
-logoutContainer.appendChild(profileName);
-logoutContainer.appendChild(profileEmail);
-
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
@@ -1417,14 +1405,10 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
-// Funkcija za nastavljanje profila, npr. po prijavi
-function setProfileInfo(user) {
-  profileName.textContent = user.displayName || user.email || "Uporabnik";
-  profileEmail.textContent = user.email || "";
-}
 
-// Predpostavka: obstaja objekt currentUser z informacijami
-setProfileInfo(currentUser);
+
+
+
 
 // Posodobi uro
 function updateClock() {
@@ -1560,6 +1544,7 @@ document.addEventListener("click", (e) => {
     if (expandedLogout) closeLogoutButton();
   }
 });
+
 
 
 
