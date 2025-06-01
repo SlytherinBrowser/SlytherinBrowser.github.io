@@ -1332,7 +1332,7 @@ topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
 topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px";
+topContainer.style.maxHeight = "50px";
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
 topContainer.style.webkitBackdropFilter = "blur(8px)";
@@ -1385,37 +1385,32 @@ logoutContainer.style.width = "100%";
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
 logoutContainer.style.display = "none";
-logoutContainer.style.padding = "20px 15px";
+logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
-logoutContainer.style.maxHeight = "180px";  // večja višina
 topContainer.appendChild(logoutContainer);
 
 // Element za ime uporabnika
 const userNameDisplay = document.createElement("div");
 userNameDisplay.style.fontWeight = "bold";
 userNameDisplay.style.color = "white";
-userNameDisplay.style.fontSize = "1.4em";  // malo večja pisava
-userNameDisplay.style.marginBottom = "10px";  // več razmika
+userNameDisplay.style.marginBottom = "4px";
 logoutContainer.appendChild(userNameDisplay);
 
 // Element za email uporabnika
 const userEmailDisplay = document.createElement("div");
 userEmailDisplay.style.color = "white";
-userEmailDisplay.style.fontSize = "1.1em";
-userEmailDisplay.style.marginBottom = "20px";  // večji razmik do gumba
+userEmailDisplay.style.marginBottom = "12px";
 logoutContainer.appendChild(userEmailDisplay);
 
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.style.padding = "10px 25px";  // večji gumb
-logoutBtn.style.fontSize = "1.1em";
 logoutBtn.onclick = function logout() {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
