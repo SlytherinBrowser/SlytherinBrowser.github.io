@@ -1394,16 +1394,6 @@ logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
 topContainer.appendChild(logoutContainer);
 
-const logoutBtn = document.createElement("button");
-logoutBtn.className = "btn1";
-logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = function logout() {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  });
-};
-logoutContainer.appendChild(logoutBtn);
-
 // Element za ime uporabnika
 const userNameDisplay = document.createElement("div");
 userNameDisplay.style.fontWeight = "bold";
@@ -1428,6 +1418,16 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
+// Posodobitev imena in maila, ko je uporabnik prijavljen
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    userNameDisplay.textContent = user.displayName || "Anonimen";
+    userEmailDisplay.textContent = user.email || "";
+  } else {
+    userNameDisplay.textContent = "";
+    userEmailDisplay.textContent = "";
+  }
+});
 
 
 
