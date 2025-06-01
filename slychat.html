@@ -1429,7 +1429,7 @@ auth.onAuthStateChanged((user) => {
     const ime = user.displayName ? user.displayName : "Brez imena";
     const mail = user.email ? user.email : "Brez emaila";
 
-    userInfo.textContent = `Uporabnik: ${ime}\nEmail: ${mail}`;
+    userInfo.textContent = `${ime}\n ${mail}`;
   } else {
     // Skrij container, če ni prijavljen
     logoutContainer.style.display = "none";
