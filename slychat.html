@@ -1395,20 +1395,10 @@ logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
 topContainer.appendChild(logoutContainer);
 
-// Pridobi trenutno prijavljenega uporabnika
-const user = auth.currentUser;
-
 // Element za prikaz imena in emaila
 const userInfo = document.createElement("div");
 userInfo.style.marginBottom = "10px";
 userInfo.style.textAlign = "center";
-if (user) {
-  // Prikaži displayName, če obstaja, drugače uporabniško ime (email)
-  const displayName = user.displayName ? user.displayName : "Uporabnik";
-  userInfo.textContent = `${displayName} (${user.email})`;
-} else {
-  userInfo.textContent = "Ni prijavljenega uporabnika";
-}
 logoutContainer.appendChild(userInfo);
 
 const logoutBtn = document.createElement("button");
@@ -1421,6 +1411,17 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
+// Poslušaj spremembo prijave in prikaži podatke uporabnika, ko so na voljo
+auth.onAuthStateChanged(user => {
+  if (user) {
+    logoutContainer.style.display = "flex";  // pokaži container, ko je uporabnik prijavljen
+    const displayName = user.displayName ? user.displayName : "Uporabnik";
+    userInfo.textContent = `${displayName} (${user.email})`;
+  } else {
+    logoutContainer.style.display = "none";  // skrij container, če ni uporabnika
+    userInfo.textContent = "";
+  }
+});
 
 
 
