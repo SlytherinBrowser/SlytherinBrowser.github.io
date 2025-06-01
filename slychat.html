@@ -1408,13 +1408,16 @@ const userNameDisplay = document.createElement("div");
 userNameDisplay.style.fontWeight = "bold";
 userNameDisplay.style.marginBottom = "8px";
 userNameDisplay.style.color = "white";
-
-const userName = currentUser && (currentUser.displayName || currentUser.email) ? (currentUser.displayName || currentUser.email) : "Uporabnik";
-userNameDisplay.textContent = userName;
-
-// Dodamo ime **pred** gumb za odjavo
 logoutContainer.insertBefore(userNameDisplay, logoutBtn);
 
+// Posodobi uporabniško ime šele, ko Firebase vrne podatke o prijavi
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    userNameDisplay.textContent = user.displayName || user.email || "Uporabnik";
+  } else {
+    userNameDisplay.textContent = "Ni prijavljen";
+  }
+});
 
 
 
