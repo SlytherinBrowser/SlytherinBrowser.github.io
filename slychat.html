@@ -1380,12 +1380,12 @@ activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
 topContainer.appendChild(activeUsersContainer);
 
-// Logout gumb container
+// 1. Ustvari logout container (skrit na začetku)
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none"; // skrit na začetku
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
@@ -1393,18 +1393,50 @@ logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.justifyContent = "center";
 logoutContainer.style.alignItems = "center";
+logoutContainer.style.color = "white";
+logoutContainer.style.fontFamily = "Arial, sans-serif";
+logoutContainer.style.textAlign = "center";
+
 topContainer.appendChild(logoutContainer);
 
+// 2. Ustvari element za prikaz imena in emaila
+const userInfo = document.createElement("div");
+userInfo.style.marginBottom = "10px";
+userInfo.style.whiteSpace = "pre-line"; // da '\n' naredi novo vrstico
+logoutContainer.appendChild(userInfo);
+
+// 3. Ustvari logout gumb
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = function logout() {
+logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
   });
 };
 logoutContainer.appendChild(logoutBtn);
 
+// 4. Ustvari gumb za prikaz logout containerja
+const openLogoutBtn = document.createElement("button");
+openLogoutBtn.textContent = "Prikaži profil in odjavo";
+openLogoutBtn.className = "btn1";
+topContainer.appendChild(openLogoutBtn);
+
+// 5. Ob kliku na gumb prikaži ime in email ter pokaži logout container
+openLogoutBtn.onclick = () => {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Niste prijavljeni.");
+    return;
+  }
+  const ime = user.displayName ? user.displayName : "";
+  const mail = user.email ? user.email : "";
+
+  userInfo.textContent = `${ime}\n${mail}`;
+  logoutContainer.style.display = "flex";
+};
 
 
 
