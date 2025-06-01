@@ -1331,7 +1331,7 @@ const topContainer = document.createElement("div");
 topContainer.style.position = "fixed";
 topContainer.style.top = "0";
 topContainer.style.left = "0";
-topContainer.style.width = "100%";
+topContainer.style.width = "40%";
 topContainer.style.maxHeight = "70px";
 topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
 topContainer.style.backdropFilter = "blur(8px)";
@@ -1384,6 +1384,7 @@ const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
+logoutContainer.style.minHeight = "150px";
 logoutContainer.style.display = "none";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
@@ -1428,8 +1429,6 @@ firebase.auth().onAuthStateChanged(user => {
     userEmailDisplay.textContent = "";
   }
 });
-
-
 
 
 // Posodobi uro
