@@ -1405,6 +1405,60 @@ logoutBtn.onclick = function logout() {
 };
 logoutContainer.appendChild(logoutBtn);
 
+
+
+// 👤 Profil + vidnost aktivnosti
+const userProfileDiv = document.createElement("div");
+userProfileDiv.style.display = "flex";
+userProfileDiv.style.alignItems = "center";
+userProfileDiv.style.justifyContent = "space-between";
+userProfileDiv.style.width = "100%";
+userProfileDiv.style.marginBottom = "10px";
+userProfileDiv.style.color = "white";
+logoutContainer.insertBefore(userProfileDiv, logoutBtn); // vstavi nad logoutBtn
+
+const userInfoSpan = document.createElement("span");
+userInfoSpan.style.fontWeight = "bold";
+userInfoSpan.style.fontSize = "1em";
+userProfileDiv.appendChild(userInfoSpan);
+
+const toggleVisibilityBtn = document.createElement("button");
+toggleVisibilityBtn.textContent = "Skrij aktivnost";
+toggleVisibilityBtn.style.marginLeft = "10px";
+toggleVisibilityBtn.className = "btn1";
+userProfileDiv.appendChild(toggleVisibilityBtn);
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) return;
+
+  const userRef = ref(db, `status/${user.uid}/visible`);
+
+  // Prikaži ime (ali email)
+  userInfoSpan.textContent = user.displayName || user.email || "Uporabnik";
+
+  // Preberi začetno stanje vidnosti
+  const snapshot = await get(userRef);
+  let visible = snapshot.exists() ? snapshot.val() : true;
+
+  updateButtonLabel();
+
+  toggleVisibilityBtn.onclick = () => {
+    visible = !visible;
+    set(userRef, visible);
+    updateButtonLabel();
+  };
+
+  function updateButtonLabel() {
+    toggleVisibilityBtn.textContent = visible ? "Skrij aktivnost" : "Pokaži aktivnost";
+    toggleVisibilityBtn.style.opacity = visible ? "1" : "0.5";
+  }
+});
+
+
+
+
+
+
 // Posodobi uro
 function updateClock() {
   const now = new Date();
