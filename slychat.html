@@ -1405,6 +1405,26 @@ logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "center";
 
 topContainer.appendChild(logoutContainer);
+const recoveryBtn = document.createElement("button");
+recoveryBtn.className = "btn1";
+recoveryBtn.textContent = "Pridobi varnostno kodo";
+
+recoveryBtn.onclick = () => {
+  const user = auth.currentUser;
+  if (!user) return alert("Nisi prijavljen.");
+
+  const code = Math.random().toString(36).substring(2, 10); // Naključna 8-znakovna koda
+
+  db.ref("users/" + user.uid + "/recoveryCode").set(code)
+    .then(() => {
+      alert("Tvoja varnostna koda je:\n\n" + code);
+    })
+    .catch(err => {
+      alert("Napaka pri ustvarjanju kode: " + err.message);
+    });
+};
+
+logoutContainer.appendChild(recoveryBtn);
 
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
@@ -1844,6 +1864,42 @@ setInterval(checkAlerts, 10 * 1000); // vsake 10 sekund
 // Inicialni izris in preverjanje
 renderReminders();
 checkAlerts();
+
+
+
+
+  window.addEventListener("load", () => {
+  if (sessionStorage.getItem("resetMode") === "true") {
+    const input = document.getElementById("messageInput");
+    input.placeholder = "Vpiši novo geslo in pritisni Enter";
+    
+    input.onkeypress = function (e) {
+      if (e.key === "Enter") {
+        const newPassword = input.value.trim();
+        const email = sessionStorage.getItem("emailForReset");
+
+        if (!newPassword || newPassword.length < 6) {
+          alert("Geslo mora imeti vsaj 6 znakov.");
+          return;
+        }
+
+        // Posodobi geslo
+        const user = auth.currentUser;
+        user.updatePassword(newPassword).then(() => {
+          // Odstrani recovery kodo
+          db.ref("users/" + user.uid + "/recoveryCode").remove();
+          alert("Geslo je bilo uspešno posodobljeno.");
+          sessionStorage.removeItem("resetMode");
+          sessionStorage.removeItem("emailForReset");
+          input.placeholder = "Vpiši sporočilo...";
+          input.value = "";
+        }).catch(err => {
+          alert("Napaka pri posodabljanju gesla: " + err.message);
+        });
+      }
+    };
+  }
+});
 
 </script>
 </body>
