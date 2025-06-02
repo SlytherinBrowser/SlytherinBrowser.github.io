@@ -31,29 +31,6 @@
       color: white;
     }
 
-
-
-#hiddenToggleBtn.hidden1 {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-#hiddenToggleBtn.hidden2 {
-  background-color: rgba(255, 0, 0, 0.3);
-}
-
-
-.hiddenMessage {
-  background-color: rgba(255, 255, 0, 0.1);
-  padding: 4px;
-  border-radius: 4px;
-  font-style: italic;
-}
-
-.hiddenText {
-  cursor: pointer;
-  color: #888;
-  margin-left: 4px;
-}
-
     .container {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(6px);
@@ -287,7 +264,7 @@ width: 100%;
 
   let userStatusCache = {};  
 
-  let hiddenMode = 0; // 0 = izklopljeno, 1 = skrito sporočilo, 2 = zasebno sporočilo
+  let isHiddenMode = false;  
 
   let userColorsCache = {}; // Za shranjevanje barv uporabnikov  
 
@@ -331,25 +308,27 @@ width: 100%;
 
 
 
-  
+  function toggleHidden() {  
 
-function toggleHidden() {
-  hiddenMode = (hiddenMode + 1) % 3;
-  const btn = document.getElementById("hiddenToggleBtn");
+    isHiddenMode = !isHiddenMode;  
 
-  btn.classList.remove("hidden1", "hidden2");
+    const btn = document.getElementById("hiddenToggleBtn");  
 
-  if (hiddenMode === 0) {
-    btn.classList.remove("active");
-    btn.title = "Skrito izklopljeno";
-  } else if (hiddenMode === 1) {
-    btn.classList.add("active", "hidden1");
-    btn.title = "Način skrito sporočilo (hover za vse)";
-  } else if (hiddenMode === 2) {
-    btn.classList.add("active", "hidden2");
-    btn.title = "Način zasebno sporočilo (hover samo za izbranega)";
-  }
-}
+    if (isHiddenMode) {  
+
+      btn.classList.add("active");  
+
+      btn.title = "Skrito vklopljeno";  
+
+    } else {  
+
+      btn.classList.remove("active");  
+
+      btn.title = "Skrito izklopljeno";  
+
+    }  
+
+  }  
 
 
 
@@ -566,31 +545,29 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
-      const isHiddenVisibleToAll = msg.hidden === "all";
-const isHiddenVisibleToOne = msg.hidden === "one" && (msg.uid === currentUser.uid || msg.privateUid === currentUser.uid);
+      if (msg.hidden) {  
 
-if (msg.hidden && msg.privateUid) {
-  const isSender = msg.uid === currentUser.uid;
-  const isReceiver = msg.privateUid === currentUser.uid;
+        const hiddenText = document.createElement("span");  
 
-  const hiddenText = document.createElement("span");
-  hiddenText.classList.add("hiddenText");
+        hiddenText.classList.add("hiddenText");  
 
-  if (isSender || isReceiver) {
-    realText.textContent = msg.text; // Pravi tekst vidi pošiljatelj in prejemnik
-    div.appendChild(senderSpan);
-    div.appendChild(realText);
-  } else {
-    hiddenText.textContent = "Zasebno sporočilo";
-    div.appendChild(senderSpan);
-    div.appendChild(hiddenText);
-  }
+        hiddenText.textContent = "Zasebno sporočilo";  
 
-  div.classList.add("hiddenMessage");
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  return;
-}
+        div.classList.add("hiddenMessage");  
+
+        div.appendChild(senderSpan);  
+
+        div.appendChild(hiddenText);  
+
+        div.appendChild(realText);  
+
+      } else {  
+
+        div.appendChild(senderSpan);  
+
+        div.appendChild(realText);  
+
+      }  
 
 
 
@@ -651,58 +628,28 @@ if (msg.hidden && msg.privateUid) {
 
     // Če še nima imena - potrdi  
 
-    if (messageInput.dataset.nameConfirm === "1") {
-  await db.ref("users/" + currentUser.uid).update({
-    displayName: textRaw
-  });
-  userNamesCache[currentUser.uid] = textRaw;
-  messageInput.placeholder = "Vnesi sporočilo...";
-  messageInput.dataset.nameConfirm = "";
-  alert("Ime potrjeno: " + textRaw);
-  messageInput.value = "";
-  return;
-}
-if (hiddenMode === 1) {
-  await db.ref("messages").push({
-    uid: currentUser.uid,
-    text: textRaw,
-    hidden: "all",
-    timestamp: Date.now()
-  });
-  messageInput.value = "";
-  return;
-}
-if (hiddenMode === 2) {
-  let privateUser = prompt("Vnesi ime uporabnika, ki lahko vidi sporočilo:");
-  if (!privateUser) {
-    alert("Pošiljanje zasebnega sporočila preklicano.");
-    return;
-  }
+    if (messageInput.dataset.nameConfirm === "1") {  
 
-  // Poišči uid uporabnika po imenu
-  let privateUid = null;
-  for (const uid in userNamesCache) {
-    if (userNamesCache[uid].toLowerCase() === privateUser.toLowerCase()) {
-      privateUid = uid;
-      break;
-    }
-  }
+      await db.ref("users/" + currentUser.uid).update({  
 
-  if (!privateUid) {
-    alert("Uporabnik z imenom '" + privateUser + "' ni najden.");
-    return;
-  }
+        displayName: textRaw  
 
-  await db.ref("messages").push({
-    uid: currentUser.uid,
-    text: textRaw,
-    hidden: "one",
-    privateUid: privateUid,
-    timestamp: Date.now()
-  });
-  messageInput.value = "";
-  return;
-}
+      });  
+
+      userNamesCache[currentUser.uid] = textRaw;  
+
+      messageInput.placeholder = "Vnesi sporočilo...";  
+
+      messageInput.dataset.nameConfirm = "";  
+
+      alert("Ime potrjeno: " + textRaw);  
+
+      messageInput.value = "";  
+
+      return;  
+
+    }  
+
 
 
     // Ukaz za spremembo imena: *name*novoime  
