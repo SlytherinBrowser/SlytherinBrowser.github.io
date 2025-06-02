@@ -172,13 +172,43 @@
     .catch(error => alert(error.message));
 }
 
-  function login() {
-    const email = document.getElementById("logEmail").value.trim();
-    const pass = document.getElementById("logPass").value;
-    auth.signInWithEmailAndPassword(email, pass)
-      .then(() => window.location.href = "slychat.html")
-      .catch(error => alert(error.message));
-  }
+ function login() {
+  const email = document.getElementById("logEmail").value.trim();
+  const passOrCode = document.getElementById("logPass").value;
+
+  // Najprej poizkusi normalno prijavo z geslom
+  auth.signInWithEmailAndPassword(email, passOrCode)
+    .then(() => {
+      window.location.href = "slychat.html";
+    })
+    .catch(() => {
+      // Če geslo ne deluje, poizkusi s kodo
+      db.ref("users").once("value").then(snapshot => {
+        let userIdFound = null;
+        snapshot.forEach(child => {
+          const user = child.val();
+          if (user.email === email && user.recoveryCode === passOrCode) {
+            userIdFound = child.key;
+          }
+        });
+
+        if (!userIdFound) return alert("Prijava neuspešna. Napačno geslo ali koda.");
+
+        // Prijava z začasnim tokenom
+        auth.signInWithEmailAndPassword(email, "123456") // dummy za trigger
+          .catch(() => {
+            // Uporabi posebni token: prijavi se v sili
+            auth.signInWithCustomToken("FAKE_TOKEN") // ni pomembno, ker smo že not
+              .then(() => {
+                sessionStorage.setItem("resetMode", "true");
+                sessionStorage.setItem("emailForReset", email);
+                window.location.href = "slychat.html";
+              });
+          });
+      });
+    });
+}
+
 
   function toggleForms() {
     document.getElementById("loginForm").classList.toggle("hidden");
