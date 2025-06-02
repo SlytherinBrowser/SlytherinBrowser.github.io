@@ -569,29 +569,27 @@ if (Notification.permission === "granted" && !windowHasFocus) {
       const isHiddenVisibleToAll = msg.hidden === "all";
 const isHiddenVisibleToOne = msg.hidden === "one" && (msg.uid === currentUser.uid || msg.privateUid === currentUser.uid);
 
-if (msg.hidden && (isHiddenVisibleToAll || isHiddenVisibleToOne)) {
+if (msg.hidden && msg.privateUid) {
+  const isSender = msg.uid === currentUser.uid;
+  const isReceiver = msg.privateUid === currentUser.uid;
+
   const hiddenText = document.createElement("span");
   hiddenText.classList.add("hiddenText");
-  hiddenText.textContent = msg.hidden === "all" ? "Skrito sporočilo" : "Zasebno sporočilo";
+
+  if (isSender || isReceiver) {
+    realText.textContent = msg.text; // Pravi tekst vidi pošiljatelj in prejemnik
+    div.appendChild(senderSpan);
+    div.appendChild(realText);
+  } else {
+    hiddenText.textContent = "Zasebno sporočilo";
+    div.appendChild(senderSpan);
+    div.appendChild(hiddenText);
+  }
+
   div.classList.add("hiddenMessage");
-  div.appendChild(senderSpan);
-  div.appendChild(hiddenText);
-  realText.style.display = "none";
-
-  // Razkrij ob hoverju
-  hiddenText.addEventListener("mouseenter", () => {
-    realText.style.display = "inline";
-    hiddenText.style.display = "none";
-  });
-  hiddenText.addEventListener("mouseleave", () => {
-    realText.style.display = "none";
-    hiddenText.style.display = "inline";
-  });
-
-  div.appendChild(realText);
-} else {
-  div.appendChild(senderSpan);
-  div.appendChild(realText);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  return;
 }
 
 
