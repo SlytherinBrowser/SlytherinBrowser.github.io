@@ -1436,18 +1436,10 @@ userEmail.style.opacity = "0.8";
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
 
-// Vrstica za gumba (flex vrstica)
-const buttonRow = document.createElement("div");
-buttonRow.style.display = "flex";
-buttonRow.style.width = "100%";
-buttonRow.style.marginTop = "10px";
-buttonRow.style.gap = "10px"; // razmik med gumbi
-
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.style.flex = "1"; // polovica širine
 logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
@@ -1455,33 +1447,7 @@ logoutBtn.onclick = () => {
     console.error("Napaka pri odjavi:", error);
   });
 };
-
-// Gumb za pridobitev kode
-const recoveryBtn = document.createElement("button");
-recoveryBtn.className = "btn1";
-recoveryBtn.textContent = "Pridobi kodo";
-recoveryBtn.style.flex = "1"; // polovica širine
-recoveryBtn.onclick = () => {
-  const user = auth.currentUser;
-  if (!user) return alert("Nisi prijavljen.");
-
-  const code = Math.random().toString(36).substring(2, 10); // naključna 8-znakovna koda
-
-  db.ref("users/" + user.uid + "/recoveryCode").set(code)
-    .then(() => {
-      alert("Tvoja varnostna koda je:\n\n" + code);
-    })
-    .catch(err => {
-      alert("Napaka pri ustvarjanju kode: " + err.message);
-    });
-};
-
-// Dodaj gumba v vrstico
-buttonRow.appendChild(logoutBtn);
-buttonRow.appendChild(recoveryBtn);
-
-// Dodaj vrstico v logoutContainer
-logoutContainer.appendChild(buttonRow);
+logoutContainer.appendChild(logoutBtn);
 
 // Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
 auth.onAuthStateChanged((user) => {
