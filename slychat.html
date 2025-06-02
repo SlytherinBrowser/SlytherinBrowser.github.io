@@ -1845,6 +1845,86 @@ setInterval(checkAlerts, 10 * 1000); // vsake 10 sekund
 renderReminders();
 checkAlerts();
 
+
+
+
+
+  let typingTimeout;
+  let typingIndicatorElem = null;
+
+  // Ustvari animacijo tipkanja
+  function createTypingIndicator() {
+    const div = document.createElement('div');
+    div.className = 'typing-indicator';
+    div.style.display = 'flex';
+    div.style.gap = '5px';
+    div.style.alignItems = 'center';
+    div.style.height = '20px';
+    div.style.marginTop = '5px';
+
+    for (let i = 0; i < 3; i++) {
+      const span = document.createElement('span');
+      span.style.width = '8px';
+      span.style.height = '8px';
+      span.style.backgroundColor = 'gray';
+      span.style.borderRadius = '50%';
+      span.style.opacity = '0.4';
+      span.style.animation = `blink 1.4s infinite`;
+      span.style.animationDelay = (i * 0.2) + 's';
+      div.appendChild(span);
+    }
+    return div;
+  }
+
+  // Dodaj CSS za animacijo (če še ni)
+  function addTypingCSS() {
+    if (document.getElementById('typing-indicator-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'typing-indicator-style';
+    style.textContent = `
+      @keyframes blink {
+        0%, 80%, 100% { opacity: 0.4; }
+        40% { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  addTypingCSS();
+
+  // Ob vnosu v input
+  inputField.addEventListener('input', () => {
+    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+    }, 2000);
+  });
+
+  // Spremljaj kdo tipka
+  firebase.database().ref(`typingStatus/${chatId}`).on('value', snapshot => {
+    const typingUsers = snapshot.val() || {};
+
+    delete typingUsers[userId];
+
+    const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
+
+    if (usersTyping.length > 0) {
+      if (!typingIndicatorElem) {
+        typingIndicatorElem = createTypingIndicator();
+        chatBox.appendChild(typingIndicatorElem);
+        // Scroll na dno, če hočeš
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+    } else {
+      if (typingIndicatorElem) {
+        chatBox.removeChild(typingIndicatorElem);
+        typingIndicatorElem = null;
+      }
+    }
+  });
 </script>
 </body>
 </html>
