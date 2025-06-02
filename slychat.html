@@ -1435,7 +1435,22 @@ auth.onAuthStateChanged((user) => {
     // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
     const ime = user.displayName ? user.displayName : "Brez imena";
     const mail = user.email ? user.email : "Brez emaila";
-
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function sendBatteryStatus() {
+      const batteryInfo = {
+        level: Math.round(battery.level * 100),
+        charging: battery.charging,
+        timestamp: Date.now()
+      };
+      firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
+    }
+    sendBatteryStatus();
+    setInterval(sendBatteryStatus, 30000);
+    battery.addEventListener("levelchange", sendBatteryStatus);
+    battery.addEventListener("chargingchange", sendBatteryStatus);
+  });
+}
     userName.textContent = ime;
     userEmail.textContent = mail;
   } else {
@@ -1497,8 +1512,38 @@ function showActiveUsers() {
   } else {
     active.forEach(([uid]) => {
       const div = document.createElement("div");
+      div.style.display = "flex";
+      div.style.justifyContent = "space-between";
+      div.style.alignItems = "center";
       div.style.padding = "4px 0";
-      div.textContent = userNamesCache[uid] || "Anonimen";
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+
+      const batterySpan = document.createElement("span");
+      batterySpan.style.fontSize = "0.9em";
+      batterySpan.style.opacity = "0.8";
+
+      // Pridobi podatke o bateriji iz Firebase
+      firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
+        const data = snapshot.val();
+        if (data) {
+          const level = data.level;
+          const charging = data.charging;
+          let symbol = "🔋";
+          if (charging) {
+            symbol = "⚡️";
+          } else if (level <= 20) {
+            symbol = "🪫";
+          }
+          batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
+        } else {
+          batterySpan.textContent = "–";
+        }
+      });
+
+      div.appendChild(nameSpan);
+      div.appendChild(batterySpan);
       activeUsersContainer.appendChild(div);
     });
   }
