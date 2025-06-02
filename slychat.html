@@ -1848,15 +1848,18 @@ checkAlerts();
 
 
 
-  // --- Konfiguracija ---
+
+  
+
   const chatId = "globalChat";
   const userId = "user_" + Math.floor(Math.random() * 10000);
 
   const inputField = document.getElementById('messageInput');
+  const defaultPlaceholder = "Vpiši sporočilo...";
 
   let typingTimeout;
 
-  // Dinamično dodaj CSS animacijo za utripanje roba input polja
+  // Dodaj CSS za utripanje roba
   (function addBlinkCSS() {
     if (document.getElementById('typing-blink-style')) return;
     const style = document.createElement('style');
@@ -1876,28 +1879,51 @@ checkAlerts();
     document.head.appendChild(style);
   })();
 
-  // Ob tipkanju lastnika inputa sporoči na Firebase
+  // Pošiljanje svojega statusa tipkanja
   inputField.addEventListener('input', () => {
     firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
-
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
       firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
     }, 2000);
   });
 
-  // Spremljaj tipkanje ostalih uporabnikov in prilagodi utripanje
-  firebase.database().ref(`typingStatus/${chatId}`).on('value', snapshot => {
-    const typingUsers = snapshot.val() || {};
+  // Funkcija za pridobitev imen uporabnikov po idjih
+  async function getUserNames(userIds) {
+    const db = firebase.database();
+    const promises = userIds.map(id =>
+      db.ref(`users/${id}/name`).once('value').then(snap => snap.val())
+    );
+    return Promise.all(promises);
+  }
 
-    delete typingUsers[userId];
+  // Spremljanje tipkanja
+  firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
+    const typingUsers = snapshot.val() || {};
+    delete typingUsers[userId]; // odstrani sebe
 
     const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
 
     if(usersTyping.length > 0) {
       inputField.classList.add('typing-blink');
+
+      // Pridobi imena
+      const names = await getUserNames(usersTyping);
+
+      // Filter praznih imen
+      const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
+
+      // Pripravimo placeholder
+      if(cleanNames.length === 1) {
+        inputField.placeholder = `${cleanNames[0]} tipka...`;
+      } else if(cleanNames.length > 1) {
+        inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
+      } else {
+        inputField.placeholder = "Nekdo tipka...";
+      }
     } else {
       inputField.classList.remove('typing-blink');
+      inputField.placeholder = defaultPlaceholder;
     }
   });
 </script>
