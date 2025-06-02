@@ -1505,6 +1505,8 @@ function showActiveUsers() {
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
+  const pageIsFocused = document.hasFocus();
+
   if (active.length === 0) {
     const msg = document.createElement("i");
     msg.textContent = "Ni drugih aktivnih uporabnikov.";
@@ -1518,7 +1520,9 @@ function showActiveUsers() {
       div.style.padding = "4px 0";
 
       const nameSpan = document.createElement("span");
-      nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+      // Dodamo emoji 💤, če stran ni v fokusu
+      const sleepEmoji = pageIsFocused ? "" : "💤 ";
+      nameSpan.textContent = sleepEmoji + (userNamesCache[uid] || "Anonimen");
 
       const batterySpan = document.createElement("span");
       batterySpan.style.fontSize = "0.9em";
@@ -1559,6 +1563,7 @@ function showActiveUsers() {
   expandedUsers = true;
   expandedLogout = false;
 }
+
 
 function closeActiveUsers() {
   activeUsersContainer.style.display = "none";
