@@ -1395,7 +1395,7 @@ topContainer.appendChild(activeUsersContainer);
 // Logout container, privzeto skrit
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none"; // skrito na začetku
+logoutContainer.style.display = "none"; // pomembno: skrit na začetku!
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
 logoutContainer.style.padding = "10px";
@@ -1406,30 +1406,26 @@ logoutContainer.style.boxSizing = "border-box";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "center";
+logoutContainer.style.alignItems = "center"; // centrira elemente
 
 topContainer.appendChild(logoutContainer);
 
-// Element za prikaz imena in maila
+// Elementa za ime in email
 const userName = document.createElement("div");
 const userEmail = document.createElement("div");
 userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
-
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
 
-// Container za gumba (v isti vrstici, brez dodatnega wrapperja)
-logoutContainer.style.display = "flex";
-logoutContainer.style.flexDirection = "column";
-logoutContainer.style.alignItems = "center";
-
-// Wrapper za gumba, da sta v vrstici
+// Gumb wrapper (ostane v logoutContainer)
 const btnRow = document.createElement("div");
 btnRow.style.display = "flex";
 btnRow.style.width = "100%";
 btnRow.style.marginTop = "10px";
 btnRow.style.gap = "10px";
+logoutContainer.appendChild(btnRow);
 
 // CSS razred za gumbe
 const buttonStyle = `
@@ -1451,8 +1447,6 @@ const buttonStyle = `
     background-color: rgba(255, 255, 255, 0.25);
   }
 `;
-
-// Dodaj stil v dokument
 const styleTag = document.createElement("style");
 styleTag.innerHTML = buttonStyle;
 document.head.appendChild(styleTag);
@@ -1473,6 +1467,7 @@ recoveryBtn.onclick = () => {
       alert("Napaka pri ustvarjanju kode: " + err.message);
     });
 };
+btnRow.appendChild(recoveryBtn);
 
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
@@ -1485,21 +1480,17 @@ logoutBtn.onclick = () => {
     console.error("Napaka pri odjavi:", error);
   });
 };
-
-// Dodaj gumba v vrstico in vrstico v container
-btnRow.appendChild(recoveryBtn);
 btnRow.appendChild(logoutBtn);
-logoutContainer.appendChild(btnRow);
 
 // Pridobi uporabniške podatke
 auth.onAuthStateChanged((user) => {
   if (user) {
-    const ime = user.displayName ? user.displayName : "Brez imena";
-    const mail = user.email ? user.email : "Brez emaila";
+    const ime = user.displayName || "Brez imena";
+    const mail = user.email || "Brez emaila";
     userName.textContent = ime;
     userEmail.textContent = mail;
 
-    // Pošlji stanje baterije
+    // Stanje baterije
     if (navigator.getBattery) {
       navigator.getBattery().then(battery => {
         function sendBatteryStatus() {
@@ -1522,7 +1513,6 @@ auth.onAuthStateChanged((user) => {
     logoutContainer.style.display = "none";
   }
 });
-
 
 
 
