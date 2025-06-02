@@ -579,7 +579,23 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
   });  
 
+function updateFocusStatus() {
+      const isFocused = document.hasFocus();
+      firebase.database().ref("focusStatus/" + user.uid).set({
+        focused: isFocused,
+        timestamp: Date.now()
+      });
+    }
 
+    // Pošlji ob začetku
+    updateFocusStatus();
+
+    // Posodabljaj ob spremembi fokusa in vidljivosti strani
+    window.addEventListener("focus", updateFocusStatus);
+    window.addEventListener("blur", updateFocusStatus);
+    document.addEventListener("visibilitychange", updateFocusStatus);
+  }
+});
 
   function acceptInvite(inviterUid) {  
 
@@ -1505,8 +1521,6 @@ function showActiveUsers() {
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
-  const pageIsFocused = document.hasFocus();
-
   if (active.length === 0) {
     const msg = document.createElement("i");
     msg.textContent = "Ni drugih aktivnih uporabnikov.";
@@ -1520,15 +1534,20 @@ function showActiveUsers() {
       div.style.padding = "4px 0";
 
       const nameSpan = document.createElement("span");
-      // Dodamo emoji 💤, če stran ni v fokusu
-      const sleepEmoji = pageIsFocused ? "" : "💤 ";
-      nameSpan.textContent = sleepEmoji + (userNamesCache[uid] || "Anonimen");
+
+      // Pridobi status fokusa iz Firebase
+      firebase.database().ref("focusStatus/" + uid).once("value").then(snapshot => {
+        const data = snapshot.val();
+        const focused = data ? data.focused : true; // če ni podatka, predpostavimo fokus
+        const emoji = focused ? "" : "💤 ";
+        nameSpan.textContent = emoji + (userNamesCache[uid] || "Anonimen");
+      });
 
       const batterySpan = document.createElement("span");
       batterySpan.style.fontSize = "0.9em";
       batterySpan.style.opacity = "0.8";
 
-      // Pridobi podatke o bateriji iz Firebase
+      // Pridobi baterijo iz Firebase
       firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
         const data = snapshot.val();
         if (data) {
@@ -1550,8 +1569,7 @@ function showActiveUsers() {
       div.appendChild(batterySpan);
       activeUsersContainer.appendChild(div);
     });
-  }
-
+    
   let contentHeight = activeUsersContainer.scrollHeight;
   if (contentHeight < 40) contentHeight = 80;
   if (contentHeight > 260) contentHeight = 260;
