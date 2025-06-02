@@ -104,11 +104,13 @@
       <input type="email" id="logEmail" placeholder="Email" />
       <input type="password" id="logPass" placeholder="Geslo" />
       <button onclick="login()">Prijavi se</button>
-      <div class="toggle" onclick="toggleForms('registerForm')">Še nimaš računa? Registriraj se</div>
-      <!-- Pozabljeno geslo link -->
-      <div id="forgotLink" class="toggle" style="margin-top: 10px; font-size: 0.9em; color: #cccccc;" onclick="toggleForms('resetForm')">
-        Pozabil/a si geslo?
-      </div>
+      <button
+        onclick="resetPassword()"
+        style="margin-top: 8px; background-color: rgba(255,255,255,0.1); font-size: 0.9em;"
+      >
+        Pozabil/a geslo?
+      </button>
+      <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
     </div>
 
     <!-- REGISTRACIJA -->
@@ -118,16 +120,7 @@
       <input type="email" id="regEmail" placeholder="Email" />
       <input type="password" id="regPass" placeholder="Geslo" />
       <button onclick="register()">Registriraj</button>
-      <div class="toggle" onclick="toggleForms('loginForm')">Že imaš račun? Prijavi se</div>
-    </div>
-
-    <!-- POZABLJENO GESLO -->
-    <div id="resetForm" class="hidden">
-      <h2>Pozabljeno geslo</h2>
-      <input type="email" id="resetEmail" placeholder="Vnesi svoj email" />
-      <button onclick="sendResetEmail()">Pošlji povezavo za obnovo gesla</button>
-      <div class="toggle" onclick="toggleForms('loginForm')">Nazaj na prijavo</div>
-      <div id="resetMessage" style="margin-top: 10px;"></div>
+      <div class="toggle" onclick="toggleForms()">Že imaš račun? Prijavi se</div>
     </div>
   </div>
 
@@ -139,15 +132,15 @@
       projectId: "chater-cf682",
       storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // Avtomatska prijava, če je že prijavljen
-    auth.onAuthStateChanged(user => {
+    // ✅ Avtomatska prijava, če je že prijavljen
+    auth.onAuthStateChanged((user) => {
       if (user) {
         window.location.href = "slychat.html";
       }
@@ -163,97 +156,60 @@
         return;
       }
 
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(userCredential => {
+      auth
+        .createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
           const user = userCredential.user;
+
           // Nastavi displayName v Firebase auth profilu
-          return user.updateProfile({
-            displayName: name
-          }).then(() => {
-            // Shrani v bazo
-            return db.ref('users/' + user.uid).set({
+          return user
+            .updateProfile({
               displayName: name,
-              email: email
+            })
+            .then(() => {
+              // Shrani v bazo
+              return db.ref("users/" + user.uid).set({
+                displayName: name,
+                email: email,
+              });
             });
-          });
         })
         .then(() => {
           alert("Registracija uspešna!");
           window.location.href = "slychat.html";
         })
-        .catch(error => alert(error.message));
+        .catch((error) => alert(error.message));
     }
 
     function login() {
       const email = document.getElementById("logEmail").value.trim();
-      const passOrCode = document.getElementById("logPass").value;
-
-      // Najprej poizkusi normalno prijavo z geslom
-      auth.signInWithEmailAndPassword(email, passOrCode)
-        .then(() => {
-          window.location.href = "slychat.html";
-        })
-        .catch(() => {
-          // Če geslo ne deluje, poizkusi s kodo
-          db.ref("users").once("value").then(snapshot => {
-            let userIdFound = null;
-            snapshot.forEach(child => {
-              const user = child.val();
-              if (user.email === email && user.recoveryCode === passOrCode) {
-                userIdFound = child.key;
-              }
-            });
-
-            if (!userIdFound) return alert("Prijava neuspešna. Napačno geslo ali koda.");
-
-            // Prijava z začasnim tokenom (to lahko prilagodiš glede na svojo logiko)
-            auth.signInWithEmailAndPassword(email, "123456")
-              .catch(() => {
-                auth.signInWithCustomToken("FAKE_TOKEN")
-                  .then(() => {
-                    sessionStorage.setItem("resetMode", "true");
-                    sessionStorage.setItem("emailForReset", email);
-                    window.location.href = "slychat.html";
-                  });
-              });
-          });
-        });
+      const pass = document.getElementById("logPass").value;
+      auth
+        .signInWithEmailAndPassword(email, pass)
+        .then(() => (window.location.href = "slychat.html"))
+        .catch((error) => alert(error.message));
     }
 
-    function toggleForms(showForm) {
-      const forms = ["loginForm", "registerForm", "resetForm"];
-      forms.forEach(formId => {
-        document.getElementById(formId).classList.add("hidden");
-      });
-      document.getElementById(showForm).classList.remove("hidden");
-    }
-
-    function sendResetEmail() {
-      const email = document.getElementById("resetEmail").value.trim();
-      const messageDiv = document.getElementById("resetMessage");
-
+    function resetPassword() {
+      const email = document.getElementById("logEmail").value.trim();
       if (!email) {
-        messageDiv.textContent = "Prosim vnesi email.";
-        messageDiv.style.color = "red";
+        alert("Prosimo, vnesite vaš email za ponastavitev gesla.");
         return;
       }
 
-      auth.sendPasswordResetEmail(email)
+      auth
+        .sendPasswordResetEmail(email)
         .then(() => {
-          messageDiv.textContent = "Povezava za obnovo gesla je bila poslana na tvoj email.";
-          messageDiv.style.color = "lightgreen";
+          alert("Na vaš email je bilo poslano sporočilo za ponastavitev gesla.");
         })
-        .catch(error => {
-          console.error("Napaka pri pošiljanju povezave za obnovo gesla:", error);
-          if (error.code === 'auth/user-not-found') {
-            messageDiv.textContent = "Email ni najden v sistemu.";
-          } else if (error.code === 'auth/invalid-email') {
-            messageDiv.textContent = "Neveljaven email naslov.";
-          } else {
-            messageDiv.textContent = "Napaka: " + error.message;
-          }
-          messageDiv.style.color = "red";
+        .catch((error) => {
+          alert("Napaka: " + error.message);
         });
+    }
+
+    function toggleForms() {
+      document.getElementById("loginForm").classList.toggle("hidden");
+      document.getElementById("registerForm").classList.toggle("hidden");
     }
   </script>
 </body>
