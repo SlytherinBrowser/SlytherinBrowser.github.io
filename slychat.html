@@ -173,25 +173,20 @@ width: 100%;
     }
 
 
-.btn1 {
-  width: 50%;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
+.btn1 { width: 100%;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
 
-.btn1:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
+    .btn1:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
 
 
     .actions {
@@ -1395,7 +1390,7 @@ topContainer.appendChild(activeUsersContainer);
 // Logout container, privzeto skrit
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none"; // pomembno: skrit na začetku!
+logoutContainer.style.display = "none"; // skrito na začetku
 logoutContainer.style.flexDirection = "column";
 logoutContainer.style.flexGrow = "1";
 logoutContainer.style.padding = "10px";
@@ -1403,71 +1398,23 @@ logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
+logoutContainer.style.justifyContent = "center";
+logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "center";
-logoutContainer.style.alignItems = "center"; // centrira elemente
 
 topContainer.appendChild(logoutContainer);
 
-// Elementa za ime in email
+// Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
 const userEmail = document.createElement("div");
 userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
+
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
-
-// Gumb wrapper (ostane v logoutContainer)
-const btnRow = document.createElement("div");
-btnRow.style.display = "flex";
-btnRow.style.width = "100%";
-btnRow.style.marginTop = "10px";
-btnRow.style.gap = "10px";
-logoutContainer.appendChild(btnRow);
-
-// CSS razred za gumbe
-const buttonStyle = `
-  .btn1 {
-    width: 50%;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.15);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .btn1:hover {
-    background-color: rgba(255, 255, 255, 0.25);
-  }
-`;
-const styleTag = document.createElement("style");
-styleTag.innerHTML = buttonStyle;
-document.head.appendChild(styleTag);
-
-// Gumb za varnostno kodo
-const recoveryBtn = document.createElement("button");
-recoveryBtn.className = "btn1";
-recoveryBtn.textContent = "Pridobi kodo";
-recoveryBtn.onclick = () => {
-  const user = auth.currentUser;
-  if (!user) return alert("Nisi prijavljen.");
-  const code = Math.random().toString(36).substring(2, 10);
-  db.ref("users/" + user.uid + "/recoveryCode").set(code)
-    .then(() => {
-      alert("Tvoja varnostna koda je:\n\n" + code);
-    })
-    .catch(err => {
-      alert("Napaka pri ustvarjanju kode: " + err.message);
-    });
-};
-btnRow.appendChild(recoveryBtn);
 
 // Gumb za odjavo
 const logoutBtn = document.createElement("button");
@@ -1480,39 +1427,41 @@ logoutBtn.onclick = () => {
     console.error("Napaka pri odjavi:", error);
   });
 };
-btnRow.appendChild(logoutBtn);
+logoutContainer.appendChild(logoutBtn);
 
-// Pridobi uporabniške podatke
+// Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
 auth.onAuthStateChanged((user) => {
   if (user) {
-    const ime = user.displayName || "Brez imena";
-    const mail = user.email || "Brez emaila";
+    // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
+    const ime = user.displayName ? user.displayName : "Brez imena";
+    const mail = user.email ? user.email : "Brez emaila";
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function sendBatteryStatus() {
+      const batteryInfo = {
+        level: Math.round(battery.level * 100),
+        charging: battery.charging,
+        timestamp: Date.now()
+      };
+      firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
+    }
+    sendBatteryStatus();
+    setInterval(sendBatteryStatus, 30000);
+    battery.addEventListener("levelchange", sendBatteryStatus);
+    battery.addEventListener("chargingchange", sendBatteryStatus);
+  });
+}
     userName.textContent = ime;
     userEmail.textContent = mail;
-
-    // Stanje baterije
-    if (navigator.getBattery) {
-      navigator.getBattery().then(battery => {
-        function sendBatteryStatus() {
-          const batteryInfo = {
-            level: Math.round(battery.level * 100),
-            charging: battery.charging,
-            timestamp: Date.now()
-          };
-          firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
-        }
-        sendBatteryStatus();
-        setInterval(sendBatteryStatus, 30000);
-        battery.addEventListener("levelchange", sendBatteryStatus);
-        battery.addEventListener("chargingchange", sendBatteryStatus);
-      });
-    }
   } else {
+    // Ko ni uporabnika, lahko počistimo ali skrijemo
     userName.textContent = "";
     userEmail.textContent = "";
     logoutContainer.style.display = "none";
   }
 });
+
+
 
 
 
@@ -1895,42 +1844,6 @@ setInterval(checkAlerts, 10 * 1000); // vsake 10 sekund
 // Inicialni izris in preverjanje
 renderReminders();
 checkAlerts();
-
-
-
-
-  window.addEventListener("load", () => {
-  if (sessionStorage.getItem("resetMode") === "true") {
-    const input = document.getElementById("messageInput");
-    input.placeholder = "Vpiši novo geslo in pritisni Enter";
-    
-    input.onkeypress = function (e) {
-      if (e.key === "Enter") {
-        const newPassword = input.value.trim();
-        const email = sessionStorage.getItem("emailForReset");
-
-        if (!newPassword || newPassword.length < 6) {
-          alert("Geslo mora imeti vsaj 6 znakov.");
-          return;
-        }
-
-        // Posodobi geslo
-        const user = auth.currentUser;
-        user.updatePassword(newPassword).then(() => {
-          // Odstrani recovery kodo
-          db.ref("users/" + user.uid + "/recoveryCode").remove();
-          alert("Geslo je bilo uspešno posodobljeno.");
-          sessionStorage.removeItem("resetMode");
-          sessionStorage.removeItem("emailForReset");
-          input.placeholder = "Vpiši sporočilo...";
-          input.value = "";
-        }).catch(err => {
-          alert("Napaka pri posodabljanju gesla: " + err.message);
-        });
-      }
-    };
-  }
-});
 
 </script>
 </body>
