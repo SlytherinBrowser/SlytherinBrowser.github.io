@@ -1849,7 +1849,7 @@ checkAlerts();
 
 
 
-  
+
 
  const chatId = "globalChat";
 const userId = "user_" + Math.floor(Math.random() * 10000);
@@ -1925,13 +1925,6 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
     inputField.placeholder = defaultPlaceholder;
   }
 });
-
-
-
-
-
-
-
 
 </script>
 </body>
