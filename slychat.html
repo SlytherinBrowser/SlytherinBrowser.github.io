@@ -10,6 +10,35 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+.message {
+  padding: 10px;
+  margin: 5px;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.message.reply::before {
+  content: attr(data-reply-user) ": " attr(data-reply-text);
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  color: #888;
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+.message.reply .original-content {
+  visibility: visible;
+}
+
+.message.reply:hover .original-content {
+  visibility: hidden;
+}
+</style>
 
 
 
@@ -788,6 +817,23 @@ if (Notification.permission === "granted" && !windowHasFocus) {
     return;
 
   }
+
+
+
+
+// PREVERI, ali gre za reply:
+  if (handleReplyBeforeSend("Ti", text)) {
+    input.value = "";
+    return;
+  }
+
+  // tvoj navaden način dodajanja sporočil
+  addMessageToChat("Ti", text, true);
+  input.value = "";
+}
+
+
+
 
 
 
@@ -1945,6 +1991,64 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
     inputField.placeholder = defaultPlaceholder;
   }
 });
+
+
+
+
+
+
+// --- REPLY PODPORA BREZ PODVAJANJA TVOJE FUNKCIJE ---
+let replyTarget = null;
+
+// ✨ Funkcija za dodajanje sporočila z opcijskim reply
+function addMessageToChat(user, text, isOwn = false, replyInfo = null) {
+
+  const msgDiv = document.createElement('div');
+  msgDiv.classList.add('message');
+
+  if (replyInfo) {
+    msgDiv.classList.add('reply');
+    msgDiv.setAttribute('data-reply-user', replyInfo.user);
+    msgDiv.setAttribute('data-reply-text', replyInfo.text);
+  }
+
+  const content = document.createElement('div');
+  content.className = 'original-content';
+  content.innerText = (isOwn ? "Ti" : user) + ": " + text;
+  msgDiv.appendChild(content);
+  chatBox.appendChild(msgDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// ✨ Poslušalec za klik na sporočilo (aktivira reply)
+document.getElementById('chatBox').addEventListener('click', function (e) {
+  const msg = e.target.closest('.message');
+  if (!msg) return;
+
+  const text = msg.querySelector('.original-content')?.innerText || msg.innerText;
+  const parts = text.split(':');
+  const user = parts[0] || 'Uporabnik';
+  const content = parts.slice(1).join(':').trim();
+
+  replyTarget = {
+    user: user.trim(),
+    text: content
+  };
+
+  // Izberi vnosno polje
+  document.getElementById('messageInput')?.focus();
+});
+
+// ✨ Hook za tvojo obstoječo sendMessage() funkcijo
+// Pokliči to funkcijo ZNOTRAJ tvoje sendMessage():
+function handleReplyBeforeSend(user, text) {
+  if (replyTarget) {
+    addMessageToChat(user, text, true, replyTarget);
+    replyTarget = null;
+    return true; // reply processed
+  }
+  return false; // no reply
+}
 
 
 </script>
