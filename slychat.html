@@ -1851,7 +1851,7 @@ checkAlerts();
 
 
 
- const chatId = "globalChat";
+const chatId = "globalChat";
 const userId = "user_" + Math.floor(Math.random() * 10000);
 
 const inputField = document.getElementById('messageInput');
@@ -1859,7 +1859,7 @@ const defaultPlaceholder = "Vpiši sporočilo...";
 
 let typingTimeout;
 
-// Dodaj CSS za utripanje roba (enkrat)
+// 🔹 Dodaj CSS za utripanje roba
 (function addBlinkCSS() {
   if (document.getElementById('typing-blink-style')) return;
   const style = document.createElement('style');
@@ -1879,16 +1879,25 @@ let typingTimeout;
   document.head.appendChild(style);
 })();
 
-// Pošiljanje svojega statusa tipkanja ob inputu
+// 🔹 Nastavi onDisconnect, da se status pobriše ob izgubi povezave
+firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
+
+// 🔹 Pošlji status tipkanja ob vnosu
 inputField.addEventListener('input', () => {
   firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
+
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => {
     firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
   }, 2000);
 });
 
-// Funkcija za pridobitev imen uporabnikov po idjih (z displayName)
+// 🔹 Resetiraj status ob zapiranju okna
+window.addEventListener('beforeunload', () => {
+  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+});
+
+// 🔹 Pridobi prikazna imena uporabnikov
 async function getUserNames(userIds) {
   const db = firebase.database();
   const promises = userIds.map(id =>
@@ -1897,25 +1906,36 @@ async function getUserNames(userIds) {
   return Promise.all(promises);
 }
 
-// Spremljanje tipkanja drugih uporabnikov
+// 🔹 Spremljaj status tipkanja drugih uporabnikov
 firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
   const typingUsers = snapshot.val() || {};
   delete typingUsers[userId]; // odstrani sebe iz prikaza
 
   const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
 
-  if(usersTyping.length > 0) {
+  // 🔸 Prisilni reset po 10 sekundah za vsak "zataknjen" status
+  Object.entries(typingUsers).forEach(([uid, isTyping]) => {
+    if (isTyping) {
+      setTimeout(() => {
+        firebase.database().ref(`typingStatus/${chatId}/${uid}`).once('value').then(snap => {
+          if (snap.val() === true) {
+            firebase.database().ref(`typingStatus/${chatId}/${uid}`).set(false);
+          }
+        });
+      }, 10000);
+    }
+  });
+
+  if (usersTyping.length > 0) {
     inputField.classList.add('typing-blink');
 
     // Pridobi imena
     const names = await getUserNames(usersTyping);
-
-    // Filtriraj prazna ali undefined imena
     const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
 
-    if(cleanNames.length === 1) {
+    if (cleanNames.length === 1) {
       inputField.placeholder = `${cleanNames[0]} tipka...`;
-    } else if(cleanNames.length > 1) {
+    } else if (cleanNames.length > 1) {
       inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
     } else {
       inputField.placeholder = "Nekdo tipka...";
@@ -1925,6 +1945,7 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
     inputField.placeholder = defaultPlaceholder;
   }
 });
+
 
 </script>
 </body>
