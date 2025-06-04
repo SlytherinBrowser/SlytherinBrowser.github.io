@@ -5,6 +5,7 @@
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1949,7 +1950,17 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
+window.onerror = napaka;
 
+function napaka(sporocilo, url, vrstica) {
+    var txt = "V kodi te spletne strani je napaka.\n\n";
+    txt += "Napaka: " + sporocilo + "\n";
+    txt += "URL: " + url + "\n";
+    txt += "Vrstica: " + vrstica + "\n\n";
+    txt += "Za nadaljevanje klikni OK.\n\n";
+    alert(txt);
+    return true; // prepreči privzeto sporočilo brskalnika
+}
 
 
 </script>
