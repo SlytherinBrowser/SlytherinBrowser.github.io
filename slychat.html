@@ -1950,17 +1950,7 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-window.onerror = napaka;
 
-function napaka(sporocilo, url, vrstica) {
-    var txt = "V kodi te spletne strani je napaka.\n\n";
-    txt += "Napaka: " + sporocilo + "\n";
-    txt += "URL: " + url + "\n";
-    txt += "Vrstica: " + vrstica + "\n\n";
-    txt += "Za nadaljevanje klikni OK.\n\n";
-    alert(txt);
-    return true; // prepreči privzeto sporočilo brskalnika
-}
 
 
 </script>
