@@ -1526,107 +1526,104 @@ if (navigator.getBattery) {
 }
 
 // Prikaz aktivnih uporabnikov
+let showAllUsers = false;
+let touchStartX = null;
+
+// Nadgrajena funkcija prikaza
 function showActiveUsers() {
   activeUsersContainer.innerHTML = "";
 
-  // Aktivni uporabniki
-  const activeTitle = document.createElement("div");
-  activeTitle.textContent = "🔵 Aktivni uporabniki";
-  activeTitle.style.fontWeight = "bold";
-  activeTitle.style.marginBottom = "6px";
-  activeUsersContainer.appendChild(activeTitle);
+  // Naslov glede na stanje
+  const title = document.createElement("div");
+  title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
+  title.style.fontWeight = "bold";
+  title.style.marginBottom = "6px";
+  activeUsersContainer.appendChild(title);
 
-  const active = Object.entries(userStatusCache)
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+  if (!showAllUsers) {
+    const active = Object.entries(userStatusCache)
+      .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
-  if (active.length === 0) {
-    const msg = document.createElement("i");
-    msg.textContent = "Ni drugih aktivnih uporabnikov.";
-    activeUsersContainer.appendChild(msg);
-  } else {
-    active.forEach(([uid]) => {
-      const div = document.createElement("div");
-      div.style.display = "flex";
-      div.style.justifyContent = "space-between";
-      div.style.alignItems = "center";
-      div.style.padding = "4px 0";
+    if (active.length === 0) {
+      const msg = document.createElement("i");
+      msg.textContent = "Ni drugih aktivnih uporabnikov.";
+      activeUsersContainer.appendChild(msg);
+    } else {
+      active.forEach(([uid]) => {
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+        div.style.padding = "4px 0";
 
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = userNamesCache[uid] || "Anonimen";
 
-      const batterySpan = document.createElement("span");
-      batterySpan.style.fontSize = "0.9em";
-      batterySpan.style.opacity = "0.8";
+        const batterySpan = document.createElement("span");
+        batterySpan.style.fontSize = "0.9em";
+        batterySpan.style.opacity = "0.8";
 
-      firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
-        const data = snapshot.val();
-        if (data) {
-          const level = data.level;
-          const charging = data.charging;
-          let symbol = "🔋";
-          if (charging) {
-            symbol = "⚡️";
-          } else if (level <= 20) {
-            symbol = "🪫";
+        firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
+          const data = snapshot.val();
+          if (data) {
+            const level = data.level;
+            const charging = data.charging;
+            let symbol = "🔋";
+            if (charging) symbol = "⚡️";
+            else if (level <= 20) symbol = "🪫";
+            batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
+          } else {
+            batterySpan.textContent = "–";
           }
-          batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
-        } else {
-          batterySpan.textContent = "–";
-        }
+        });
+
+        div.appendChild(nameSpan);
+        div.appendChild(batterySpan);
+        activeUsersContainer.appendChild(div);
       });
-
-      div.appendChild(nameSpan);
-      div.appendChild(batterySpan);
-      activeUsersContainer.appendChild(div);
-    });
-  }
-
-  // Vsi uporabniki
-  const allTitle = document.createElement("div");
-  allTitle.textContent = "👥 Vsi uporabniki";
-  allTitle.style.fontWeight = "bold";
-  allTitle.style.margin = "12px 0 6px";
-  activeUsersContainer.appendChild(allTitle);
-
-  const allUsers = Object.entries(userNamesCache)
-    .filter(([uid]) => uid !== currentUser.uid)
-    .sort((a, b) => a[1].localeCompare(b[1])); // po abecedi
-
-  if (allUsers.length === 0) {
-    const msg = document.createElement("i");
-    msg.textContent = "Ni drugih uporabnikov.";
-    activeUsersContainer.appendChild(msg);
+    }
   } else {
-    allUsers.forEach(([uid, name]) => {
-      const div = document.createElement("div");
-      div.style.display = "flex";
-      div.style.justifyContent = "space-between";
-      div.style.alignItems = "center";
-      div.style.padding = "4px 0";
+    const allUsers = Object.entries(userNamesCache)
+      .filter(([uid]) => uid !== currentUser.uid)
+      .sort((a, b) => a[1].localeCompare(b[1]));
 
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = name || "Anonimen";
+    if (allUsers.length === 0) {
+      const msg = document.createElement("i");
+      msg.textContent = "Ni drugih uporabnikov.";
+      activeUsersContainer.appendChild(msg);
+    } else {
+      allUsers.forEach(([uid, name]) => {
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+        div.style.padding = "4px 0";
 
-      const statusSpan = document.createElement("span");
-      statusSpan.style.fontSize = "0.8em";
-      statusSpan.style.opacity = "0.7";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = name || "Anonimen";
 
-      const status = userStatusCache[uid];
-      if (status?.online) {
-        statusSpan.textContent = "🟢 online";
-      } else if (status?.lastChanged) {
-        const formatted = formatTimestamp(status.lastChanged);
-        statusSpan.textContent = `⚫ offline (${formatted})`;
-      } else {
-        statusSpan.textContent = "⚫ offline";
-      }
+        const statusSpan = document.createElement("span");
+        statusSpan.style.fontSize = "0.8em";
+        statusSpan.style.opacity = "0.7";
 
-      div.appendChild(nameSpan);
-      div.appendChild(statusSpan);
-      activeUsersContainer.appendChild(div);
-    });
+        const status = userStatusCache[uid];
+        if (status?.online) {
+          statusSpan.textContent = "🟢 online";
+        } else if (status?.lastChanged) {
+          const formatted = formatTimestamp(status.lastChanged);
+          statusSpan.textContent = `⚫ offline (${formatted})`;
+        } else {
+          statusSpan.textContent = "⚫ offline";
+        }
+
+        div.appendChild(nameSpan);
+        div.appendChild(statusSpan);
+        activeUsersContainer.appendChild(div);
+      });
+    }
   }
 
+  // Višina
   let contentHeight = activeUsersContainer.scrollHeight;
   if (contentHeight < 40) contentHeight = 80;
   if (contentHeight > 360) contentHeight = 360;
@@ -1639,7 +1636,7 @@ function showActiveUsers() {
   expandedLogout = false;
 }
 
-// Funkcija za pretvorbo časovnega žiga v lokalni prikaz
+// Formatiranje datuma
 function formatTimestamp(timestamp) {
   const date = new Date(timestamp);
   return date.toLocaleString("sl-SI", {
@@ -1650,6 +1647,34 @@ function formatTimestamp(timestamp) {
     minute: '2-digit'
   });
 }
+
+// 🎯 Swipe/touch zaznavanje
+activeUsersContainer.addEventListener("touchstart", e => {
+  touchStartX = e.touches[0].clientX;
+});
+activeUsersContainer.addEventListener("touchend", e => {
+  if (touchStartX === null) return;
+  const diffX = e.changedTouches[0].clientX - touchStartX;
+  if (diffX > 50) {
+    showAllUsers = true;
+    showActiveUsers();
+  } else if (diffX < -50) {
+    showAllUsers = false;
+    showActiveUsers();
+  }
+  touchStartX = null;
+});
+
+// 🎯 Miškin kolešček za preklapljanje
+activeUsersContainer.addEventListener("wheel", e => {
+  if (e.deltaY > 20) {
+    showAllUsers = true;
+    showActiveUsers();
+  } else if (e.deltaY < -20) {
+    showAllUsers = false;
+    showActiveUsers();
+  }
+});
 
 function closeActiveUsers() {
   activeUsersContainer.style.display = "none";
