@@ -1528,12 +1528,14 @@ if (navigator.getBattery) {
 // Prikaz aktivnih uporabnikov
 let showAllUsers = false;
 let touchStartX = null;
+let userStatusCache = {};
+let userNamesCache = {};
 
-// Nadgrajena funkcija prikaza
+
+// ⚡ Prikaz aktivnih oz. vseh uporabnikov
 function showActiveUsers() {
   activeUsersContainer.innerHTML = "";
 
-  // Naslov glede na stanje
   const title = document.createElement("div");
   title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
   title.style.fontWeight = "bold";
@@ -1609,9 +1611,6 @@ function showActiveUsers() {
         const status = userStatusCache[uid];
         if (status?.online) {
           statusSpan.textContent = "🟢 online";
-        } else if (status?.lastChanged) {
-          const formatted = formatTimestamp(status.lastChanged);
-          statusSpan.textContent = `⚫ offline (${formatted})`;
         } else {
           statusSpan.textContent = "⚫ offline";
         }
@@ -1636,19 +1635,29 @@ function showActiveUsers() {
   expandedLogout = false;
 }
 
-// Formatiranje datuma
-function formatTimestamp(timestamp) {
-  const date = new Date(timestamp);
-  return date.toLocaleString("sl-SI", {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
+// 🔁 Spremljaj spremembe statusov v realnem času
+firebase.database().ref("status").on("value", snapshot => {
+  userStatusCache = snapshot.val() || {};
+  showActiveUsers();
+});
 
-// 🎯 Swipe/touch zaznavanje
+// 🔁 Spremljaj imena uporabnikov
+firebase.database().ref("users").on("value", snapshot => {
+  userNamesCache = snapshot.val() || {};
+  showActiveUsers();
+});
+
+// 💡 Nastavi svoj status in onDisconnect
+firebase.database().ref(".info/connected").on("value", function(snapshot) {
+  if (snapshot.val() === false) return;
+
+  const userStatusRef = firebase.database().ref("status/" + currentUser.uid);
+  userStatusRef.onDisconnect().set({ online: false }).then(() => {
+    userStatusRef.set({ online: true });
+  });
+});
+
+// 🎯 Swipe zaznavanje
 activeUsersContainer.addEventListener("touchstart", e => {
   touchStartX = e.touches[0].clientX;
 });
@@ -1665,7 +1674,7 @@ activeUsersContainer.addEventListener("touchend", e => {
   touchStartX = null;
 });
 
-// 🎯 Miškin kolešček za preklapljanje
+// 🎯 Miškin kolešček za preklop
 activeUsersContainer.addEventListener("wheel", e => {
   if (e.deltaY > 20) {
     showAllUsers = true;
