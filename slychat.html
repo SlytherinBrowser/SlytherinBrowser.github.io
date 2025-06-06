@@ -1524,163 +1524,160 @@ if (navigator.getBattery) {
 } else {
   batterySpan.textContent = "Ni podpore";
 }
-
 // Prikaz aktivnih uporabnikov
 let showAllUsers = false;
 let touchStartX = null;
 
-// ⚡ Prikaz aktivnih oz. vseh uporabnikov
+// Nadgrajena funkcija prikaza
 function showActiveUsers() {
-  activeUsersContainer.innerHTML = "";
+activeUsersContainer.innerHTML = "";
 
-  const title = document.createElement("div");
-  title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
-  title.style.fontWeight = "bold";
-  title.style.marginBottom = "6px";
-  activeUsersContainer.appendChild(title);
+// Naslov glede na stanje
+const title = document.createElement("div");
+title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
+title.style.fontWeight = "bold";
+title.style.marginBottom = "6px";
+activeUsersContainer.appendChild(title);
 
-  if (!showAllUsers) {
-    const active = Object.entries(userStatusCache)
-      .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+if (!showAllUsers) {
+const active = Object.entries(userStatusCache)
+.filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
-    if (active.length === 0) {
-      const msg = document.createElement("i");
-      msg.textContent = "Ni drugih aktivnih uporabnikov.";
-      activeUsersContainer.appendChild(msg);
-    } else {
-      active.forEach(([uid]) => {
-        const div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.justifyContent = "space-between";
-        div.style.alignItems = "center";
-        div.style.padding = "4px 0";
+if (active.length === 0) {  
+  const msg = document.createElement("i");  
+  msg.textContent = "Ni drugih aktivnih uporabnikov.";  
+  activeUsersContainer.appendChild(msg);  
+} else {  
+  active.forEach(([uid]) => {  
+    const div = document.createElement("div");  
+    div.style.display = "flex";  
+    div.style.justifyContent = "space-between";  
+    div.style.alignItems = "center";  
+    div.style.padding = "4px 0";  
 
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+    const nameSpan = document.createElement("span");  
+    nameSpan.textContent = userNamesCache[uid] || "Anonimen";  
 
-        const batterySpan = document.createElement("span");
-        batterySpan.style.fontSize = "0.9em";
-        batterySpan.style.opacity = "0.8";
+    const batterySpan = document.createElement("span");  
+    batterySpan.style.fontSize = "0.9em";  
+    batterySpan.style.opacity = "0.8";  
 
-        firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
-          const data = snapshot.val();
-          if (data) {
-            const level = data.level;
-            const charging = data.charging;
-            let symbol = "🔋";
-            if (charging) symbol = "⚡️";
-            else if (level <= 20) symbol = "🪫";
-            batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
-          } else {
-            batterySpan.textContent = "–";
-          }
-        });
+    firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {  
+      const data = snapshot.val();  
+      if (data) {  
+        const level = data.level;  
+        const charging = data.charging;  
+        let symbol = "🔋";  
+        if (charging) symbol = "⚡️";  
+        else if (level <= 20) symbol = "🪫";  
+        batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;  
+      } else {  
+        batterySpan.textContent = "–";  
+      }  
+    });  
 
-        div.appendChild(nameSpan);
-        div.appendChild(batterySpan);
-        activeUsersContainer.appendChild(div);
-      });
-    }
-  } else {
-    const allUsers = Object.entries(userNamesCache)
-      .filter(([uid]) => uid !== currentUser.uid)
-      .sort((a, b) => a[1].localeCompare(b[1]));
-
-    if (allUsers.length === 0) {
-      const msg = document.createElement("i");
-      msg.textContent = "Ni drugih uporabnikov.";
-      activeUsersContainer.appendChild(msg);
-    } else {
-      allUsers.forEach(([uid, name]) => {
-        const div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.justifyContent = "space-between";
-        div.style.alignItems = "center";
-        div.style.padding = "4px 0";
-
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = name || "Anonimen";
-
-        const statusSpan = document.createElement("span");
-        statusSpan.style.fontSize = "0.8em";
-        statusSpan.style.opacity = "0.7";
-
-        const status = userStatusCache[uid];
-        if (status?.online) {
-          statusSpan.textContent = "🟢 online";
-        } else {
-          statusSpan.textContent = "⚫ offline";
-        }
-
-        div.appendChild(nameSpan);
-        div.appendChild(statusSpan);
-        activeUsersContainer.appendChild(div);
-      });
-    }
-  }
-
-  // Višina
-  let contentHeight = activeUsersContainer.scrollHeight;
-  if (contentHeight < 40) contentHeight = 80;
-  if (contentHeight > 360) contentHeight = 360;
-
-  logoutContainer.style.display = "none";
-  activeUsersContainer.style.display = "flex";
-  activeUsersContainer.style.flexDirection = "column";
-  topContainer.style.maxHeight = (40 + contentHeight) + "px";
-  expandedUsers = true;
-  expandedLogout = false;
+    div.appendChild(nameSpan);  
+    div.appendChild(batterySpan);  
+    activeUsersContainer.appendChild(div);  
+  });  
 }
 
-// 🔁 Spremljaj spremembe statusov v realnem času
-firebase.database().ref("status").on("value", snapshot => {
-  userStatusCache = snapshot.val() || {};
-  showActiveUsers();
+} else {
+const allUsers = Object.entries(userNamesCache)
+.filter(([uid]) => uid !== currentUser.uid)
+.sort((a, b) => a[1].localeCompare(b[1]));
+
+if (allUsers.length === 0) {  
+  const msg = document.createElement("i");  
+  msg.textContent = "Ni drugih uporabnikov.";  
+  activeUsersContainer.appendChild(msg);  
+} else {  
+  allUsers.forEach(([uid, name]) => {  
+    const div = document.createElement("div");  
+    div.style.display = "flex";  
+    div.style.justifyContent = "space-between";  
+    div.style.alignItems = "center";  
+    div.style.padding = "4px 0";  
+
+    const nameSpan = document.createElement("span");  
+    nameSpan.textContent = name || "Anonimen";  
+
+    const statusSpan = document.createElement("span");  
+    statusSpan.style.fontSize = "0.8em";  
+    statusSpan.style.opacity = "0.7";  
+
+    const status = userStatusCache[uid];  
+    if (status?.online) {  
+      statusSpan.textContent = "🟢 online";  
+    } else if (status?.lastChanged) {  
+      const formatted = formatTimestamp(status.lastChanged);  
+      statusSpan.textContent = `⚫ offline (${formatted})`;  
+    } else {  
+      statusSpan.textContent = "⚫ offline";  
+    }  
+
+    div.appendChild(nameSpan);  
+    div.appendChild(statusSpan);  
+    activeUsersContainer.appendChild(div);  
+  });  
+}
+
+}
+
+// Višina
+let contentHeight = activeUsersContainer.scrollHeight;
+if (contentHeight < 40) contentHeight = 80;
+if (contentHeight > 360) contentHeight = 360;
+
+logoutContainer.style.display = "none";
+activeUsersContainer.style.display = "flex";
+activeUsersContainer.style.flexDirection = "column";
+topContainer.style.maxHeight = (40 + contentHeight) + "px";
+expandedUsers = true;
+expandedLogout = false;
+}
+
+// Formatiranje datuma
+function formatTimestamp(timestamp) {
+const date = new Date(timestamp);
+return date.toLocaleString("sl-SI", {
+day: '2-digit',
+month: '2-digit',
+year: 'numeric',
+hour: '2-digit',
+minute: '2-digit'
 });
+}
 
-// 🔁 Spremljaj imena uporabnikov
-firebase.database().ref("users").on("value", snapshot => {
-  userNamesCache = snapshot.val() || {};
-  showActiveUsers();
-});
-
-// 💡 Nastavi svoj status in onDisconnect
-firebase.database().ref(".info/connected").on("value", function(snapshot) {
-  if (snapshot.val() === false) return;
-
-  const userStatusRef = firebase.database().ref("status/" + currentUser.uid);
-  userStatusRef.onDisconnect().set({ online: false }).then(() => {
-    userStatusRef.set({ online: true });
-  });
-});
-
-// 🎯 Swipe zaznavanje
+// 🎯 Swipe/touch zaznavanje
 activeUsersContainer.addEventListener("touchstart", e => {
-  touchStartX = e.touches[0].clientX;
+touchStartX = e.touches[0].clientX;
 });
 activeUsersContainer.addEventListener("touchend", e => {
-  if (touchStartX === null) return;
-  const diffX = e.changedTouches[0].clientX - touchStartX;
-  if (diffX > 50) {
-    showAllUsers = true;
-    showActiveUsers();
-  } else if (diffX < -50) {
-    showAllUsers = false;
-    showActiveUsers();
-  }
-  touchStartX = null;
+if (touchStartX === null) return;
+const diffX = e.changedTouches[0].clientX - touchStartX;
+if (diffX > 50) {
+showAllUsers = true;
+showActiveUsers();
+} else if (diffX < -50) {
+showAllUsers = false;
+showActiveUsers();
+}
+touchStartX = null;
 });
 
-// 🎯 Miškin kolešček za preklop
+// 🎯 Miškin kolešček za preklapljanje
 activeUsersContainer.addEventListener("wheel", e => {
-  if (e.deltaY > 20) {
-    showAllUsers = true;
-    showActiveUsers();
-  } else if (e.deltaY < -20) {
-    showAllUsers = false;
-    showActiveUsers();
-  }
-});
+if (e.deltaY > 20) {
+showAllUsers = true;
+showActiveUsers();
+} else if (e.deltaY < -20) {
+showAllUsers = false;
+showActiveUsers();
+}
+}); poskrbi da se pravilno posodobi status odstrani tudi čas zadnje aktivnosti
+
+
 
 function closeActiveUsers() {
   activeUsersContainer.style.display = "none";
