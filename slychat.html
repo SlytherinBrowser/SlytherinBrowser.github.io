@@ -217,9 +217,13 @@ width: 100%;
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
+
+<!-- Gumb za prikaz seznama uporabnikov -->
+<button id="btnUsers" style="position: fixed; top: 10px; right: 10px; z-index: 999;">👥 Uporabniki</button>
     </div>
   </div>
-
+<!-- Div za seznam uporabnikov -->
+<div id="userList" style="display:none; position: fixed; top: 50px; right: 10px; background: white; border: 1px solid gray; max-height: 300px; overflow-y: auto; z-index:999;"></div>
 <script>  
 
   const firebaseConfig = {  
@@ -1949,6 +1953,75 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
+
+
+
+// Firebase referenca
+const dbRef = firebase.database().ref();
+
+// Gumb za prikaz seznama uporabnikov
+document.getElementById("btnUsers").addEventListener("click", async () => {
+  const currentUser = firebase.auth().currentUser;
+  const usersSnap = await firebase.database().ref("users").once("value");
+  const users = usersSnap.val();
+  const listDiv = document.getElementById("userList");
+  listDiv.innerHTML = "";
+  listDiv.style.display = listDiv.style.display === "none" ? "block" : "none";
+
+  for (const uid in users) {
+    if (uid !== currentUser.uid) {
+      const user = users[uid];
+      const item = document.createElement("div");
+      item.textContent = user.name || uid;
+      item.style.cursor = "pointer";
+      item.style.padding = "5px";
+      item.onclick = () => startPrivateChat(uid, user.name || uid);
+      listDiv.appendChild(item);
+    }
+  }
+});
+
+// Ustvari chatId vedno v istem vrstnem redu
+function generateChatId(uid1, uid2) {
+  return [uid1, uid2].sort().join("_");
+}
+
+// Prikaži zasebni klepet
+function startPrivateChat(targetUid, targetName) {
+  const currentUid = firebase.auth().currentUser.uid;
+  const chatId = generateChatId(currentUid, targetUid);
+  const chatPath = `privateChats/${chatId}/messages`;
+
+  const chatWindow = document.getElementById("messages"); // predpostavljamo da obstaja
+  chatWindow.innerHTML = `<div style="font-weight: bold;">💬 Zasebni klepet z ${targetName}</div>`;
+
+  // Nalaganje obstoječih sporočil
+  firebase.database().ref(chatPath).off(); // odstranimo prejšnje poslušalce
+  firebase.database().ref(chatPath).on("child_added", (snapshot) => {
+    const msg = snapshot.val();
+    const el = document.createElement("div");
+    el.textContent = `${msg.name}: ${msg.text}`;
+    chatWindow.appendChild(el);
+  });
+
+  // Pošiljanje novega sporočila
+  const input = document.getElementById("input");
+  input.onkeypress = (e) => {
+    if (e.key === "Enter") {
+      const text = input.value.trim();
+      if (text) {
+        const msg = {
+          name: firebase.auth().currentUser.displayName || "Uporabnik",
+          uid: currentUid,
+          text: text,
+          timestamp: Date.now()
+        };
+        firebase.database().ref(chatPath).push(msg);
+        input.value = "";
+      }
+    }
+  };
+}
 
 
 
