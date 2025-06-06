@@ -218,12 +218,10 @@ width: 100%;
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
 
-<!-- Gumb za prikaz seznama uporabnikov -->
-<button id="btnUsers" style="position: fixed; top: 10px; right: 10px; z-index: 999;">👥 Uporabniki</button>
+
     </div>
   </div>
-<!-- Div za seznam uporabnikov -->
-<div id="userList" style="display:none; position: fixed; top: 50px; right: 10px; background: white; border: 1px solid gray; max-height: 300px; overflow-y: auto; z-index:999;"></div>
+
 <script>  
 
   const firebaseConfig = {  
@@ -1958,120 +1956,6 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-let currentChatContext = "public"; // "public" ali chatId
-let chatListeners = {}; // za odjavo prejšnjih listenerjev
-
-// Ob prijavi shrani uporabnika
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    firebase.database().ref(`users/${user.uid}`).set({
-      name: user.displayName || "Uporabnik",
-      email: user.email
-    });
-    listenForPrivateMessages(user.uid);
-  }
-});
-
-// Gumb za prikaz uporabnikov
-document.getElementById("btnUsers").addEventListener("click", async () => {
-  const currentUser = firebase.auth().currentUser;
-  const usersSnap = await firebase.database().ref("users").once("value");
-  const users = usersSnap.val();
-  const listDiv = document.getElementById("userList");
-  listDiv.innerHTML = "";
-  listDiv.style.display = listDiv.style.display === "none" ? "block" : "none";
-
-  for (const uid in users) {
-    if (uid !== currentUser.uid) {
-      const user = users[uid];
-      const item = document.createElement("div");
-      item.textContent = user.name || uid;
-      item.style.cursor = "pointer";
-      item.style.padding = "5px";
-      item.onclick = () => {
-        document.getElementById("userList").style.display = "none";
-        startPrivateChat(uid, user.name || uid);
-      };
-      listDiv.appendChild(item);
-    }
-  }
-});
-
-// Ustvari vedno enak ID
-function generateChatId(uid1, uid2) {
-  return [uid1, uid2].sort().join("_");
-}
-
-// Prikaži zasebni klepet
-function startPrivateChat(targetUid, targetName) {
-  const currentUid = firebase.auth().currentUser.uid;
-  const chatId = generateChatId(currentUid, targetUid);
-  currentChatContext = chatId;
-  
-  const chatPath = `privateChats/${chatId}/messages`;
-  const chatWindow = document.getElementById("messages");
-  chatWindow.innerHTML = `<div style="font-weight: bold;">💬 Zasebni klepet z ${targetName}</div>`;
-
-  // Odstrani prejšnje listenerje
-  for (const path in chatListeners) {
-    firebase.database().ref(path).off("child_added", chatListeners[path]);
-  }
-
-  // Prikaži sporočila
-  chatListeners[chatPath] = firebase.database().ref(chatPath).on("child_added", (snapshot) => {
-    const msg = snapshot.val();
-    const el = document.createElement("div");
-    el.textContent = `${msg.name}: ${msg.text}`;
-    chatWindow.appendChild(el);
-  });
-
-  // Shrani čas odprtja klepeta
-  firebase.database().ref(`privateChats/${chatId}/lastRead/${currentUid}`).set(Date.now());
-
-  // Pošiljanje
-  const input = document.getElementById("input");
-  input.onkeypress = (e) => {
-    if (e.key === "Enter") {
-      const text = input.value.trim();
-      if (text) {
-        const msg = {
-          name: firebase.auth().currentUser.displayName || "Uporabnik",
-          uid: currentUid,
-          text: text,
-          timestamp: Date.now()
-        };
-        firebase.database().ref(chatPath).push(msg);
-        input.value = "";
-        firebase.database().ref(`privateChats/${chatId}/lastRead/${currentUid}`).set(Date.now());
-      }
-    }
-  };
-}
-
-// 🎯 Poslušanje vseh zasebnih klepetov za nova sporočila
-function listenForPrivateMessages(currentUid) {
-  firebase.database().ref("privateChats").on("child_added", checkNewMessages);
-  firebase.database().ref("privateChats").on("child_changed", checkNewMessages);
-
-  async function checkNewMessages(snapshot) {
-    const data = snapshot.val();
-    if (!data.users || !data.users.includes(currentUid)) return;
-    
-    const chatId = snapshot.key;
-    const messagesSnap = await firebase.database().ref(`privateChats/${chatId}/messages`).limitToLast(1).once("value");
-    const messages = messagesSnap.val();
-    if (!messages) return;
-    
-    const lastMsg = Object.values(messages)[0];
-    const lastReadSnap = await firebase.database().ref(`privateChats/${chatId}/lastRead/${currentUid}`).once("value");
-    const lastRead = lastReadSnap.val() || 0;
-
-    const hasNew = lastMsg.timestamp > lastRead;
-    if (hasNew && currentChatContext !== chatId) {
-      document.getElementById("btnUsers").style.backgroundColor = "#ffaaaa"; // obarvamo gumb
-    }
-  }
-}
 
 
 
