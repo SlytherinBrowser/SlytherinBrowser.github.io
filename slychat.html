@@ -202,16 +202,7 @@ width: 100%;
 
 
 
-.message {
-  position: relative;
-}
 
-.reaction {
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  font-size: 18px;
-}
   </style>
 </head>
 <body>
@@ -222,7 +213,6 @@ width: 100%;
    <div class="message-input-container" style="position: relative;">
   <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
   <div class="message-input-btn-container">
-  <button id="emojiReactionBtn" title="Emoji odziv">😊</button>
   <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
   <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
 </div>
@@ -1971,65 +1961,6 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-const emojiReactionBtn = document.getElementById("emojiReactionBtn");
-
-// Seznam emojijev
-const emojiList = ["😀", "😂", "🤣", "😊", "😍", "😎", "🤔", "😢", "😭", "😮", "😡", "👍", "👎", "👏", "🙏", "💪", "🔥", "💯", "❤️", "💩"];
-let currentEmojiIndex = 0;
-let selectedEmoji = null;
-let startY = null;
-
-// Posodobi prikaz na gumbu
-function updateEmojiButton() {
-  emojiReactionBtn.textContent = emojiList[currentEmojiIndex];
-}
-
-// Detekcija podrsavanja (touch + miška)
-emojiReactionBtn.addEventListener("mousedown", (e) => startY = e.clientY);
-emojiReactionBtn.addEventListener("mouseup", (e) => handleSwipe(e.clientY));
-emojiReactionBtn.addEventListener("touchstart", (e) => startY = e.touches[0].clientY);
-emojiReactionBtn.addEventListener("touchend", (e) => {
-  const endY = e.changedTouches[0].clientY;
-  handleSwipe(endY);
-});
-
-function handleSwipe(endY) {
-  if (startY === null) return;
-  const diff = startY - endY;
-  if (Math.abs(diff) > 10) {
-    if (diff > 0) {
-      // Podrsaj gor
-      currentEmojiIndex = (currentEmojiIndex + 1) % emojiList.length;
-    } else {
-      // Podrsaj dol
-      currentEmojiIndex = (currentEmojiIndex - 1 + emojiList.length) % emojiList.length;
-    }
-    updateEmojiButton();
-  } else {
-    // Klik brez drsanja = aktiviraj
-    selectedEmoji = emojiList[currentEmojiIndex];
-    alert("Klikni sporočilo za emoji odziv: " + selectedEmoji);
-  }
-  startY = null;
-}
-
-// Klik sporočila za dodajanje emojija
-document.addEventListener("click", function (e) {
-  if (selectedEmoji && e.target.classList.contains("message")) {
-    const existing = e.target.querySelector(".reaction");
-    if (existing) existing.remove();
-
-    const reaction = document.createElement("div");
-    reaction.className = "reaction";
-    reaction.textContent = selectedEmoji;
-    e.target.appendChild(reaction);
-
-    selectedEmoji = null;
-  }
-});
-
-// Inicializacija gumba
-updateEmojiButton();
 
 
 
