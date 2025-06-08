@@ -5,14 +5,11 @@
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
-<!-- Firebase -->
+<<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-
   <style>
     * {
       box-sizing: border-box;
@@ -71,13 +68,6 @@
       position: relative;
     }
 
-
-
-
-
-
-
-
     .sender {
       font-weight: 600;
       color: #ffd700;
@@ -132,7 +122,7 @@
   align-items: center;
   z-index: 10;
   height: 27px;
-  min-width: 55px; /* prostor za oba gumba */
+  min-width: 45px; /* prostor za oba gumba */
   box-sizing: content-box;
 }
 
@@ -157,7 +147,6 @@
 
 
     .btn {
-width: 100%;
       padding: 10px;
       background-color: rgba(255, 255, 255, 0.15);
       border: none;
@@ -172,23 +161,6 @@ width: 100%;
       background-color: rgba(255, 255, 255, 0.25);
     }
 
-
-.btn1 { width: 100%;
-      padding: 10px;
-      background-color: rgba(255, 255, 255, 0.15);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .btn1:hover {
-      background-color: rgba(255, 255, 255, 0.25);
-    }
-
-
     .actions {
       display: flex;
       gap: 10px;
@@ -199,10 +171,6 @@ width: 100%;
         flex-direction: column;
       }
     }
-
-
-
-
   </style>
 </head>
 <body>
@@ -213,67 +181,43 @@ width: 100%;
    <div class="message-input-container" style="position: relative;">
   <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
   <div class="message-input-btn-container">
-  <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
-  <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
-</div>
+    <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
+    <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+  </div>
 </div>
 
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
-
+      <button class="btn" onclick="toggleActiveUsers()">Aktivni uporabniki</button>
+      <button class="btn" onclick="logout()">Odjava</button>
     </div>
   </div>
 
 <script>  
 
-  const firebaseConfig = {  
-
+   const firebaseConfig = {  
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",  
-
     authDomain: "chater-cf682.firebaseapp.com",  
-
     databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",  
-
     projectId: "chater-cf682",  
-
-    storageBucket: "chater-cf682.appspot.com",  
-
+    storageBucket: "chater-cf682.appspot.com",
     messagingSenderId: "233632075480",  
-
     appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"  
-
   };  
 
-
-
   firebase.initializeApp(firebaseConfig);  
-
   const auth = firebase.auth();  
-
   const db = firebase.database();  
-
-
-
   const chatBox = document.getElementById("chatBox");  
-
   const messageInput = document.getElementById("messageInput");  
 
-
-
   let currentChatPartner = null;  
-
   let currentUser = null;  
-
   const userNamesCache = {};  
-
   let userStatusCache = {};  
-
   let isHiddenMode = false;  
-
   let userColorsCache = {}; // Za shranjevanje barv uporabnikov  
-
-
 
   // DODANO: animacija mavrične barve (rainbow)  
 
@@ -335,7 +279,7 @@ width: 100%;
 
   }  
 
-
+window.toggleHidden = toggleHidden;
 
   auth.onAuthStateChanged(async user => {  
 
@@ -402,19 +346,10 @@ width: 100%;
     }  
 
 
-let windowHasFocus = true;
-window.addEventListener("focus", () => { windowHasFocus = true; });
-window.addEventListener("blur", () => { windowHasFocus = false; });
-
-
-
 
     db.ref("messages").on("child_added", snapshot => {  
 
       const msg = snapshot.val();  
-
-
-
 
 
 
@@ -447,8 +382,7 @@ window.addEventListener("blur", () => { windowHasFocus = false; });
         const inviteDiv = document.createElement("div");  
 
         inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.   
-  
-          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
+  <button onclick="acceptInvite(\"${msg.uid}\")">Sprejmi</button>`;
 
         chatBox.appendChild(inviteDiv);  
 
@@ -457,21 +391,6 @@ window.addEventListener("blur", () => { windowHasFocus = false; });
         return;  
 
       }  
-
-  // Prikaži obvestilo, če je nova poruka, dovoljenje podeljeno in okno ni v fokusu
-if (Notification.permission === "granted" && !windowHasFocus) {
-  const notification = new Notification(displayName, {
-    body: msg.text,
-    icon: "Slytherin.png" // Po želji nastavi svojo ikono
-  });
-  // Klik na obvestilo aktivira okno in ga prinese v ospredje
-  notification.onclick = () => {
-    window.focus();
-    notification.close();
-  };
-}
-
-
 
 
 
@@ -509,13 +428,18 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
-      if (color === "none") {
-  senderSpan.style.display = "none"; // Skrije ime
-} else if (color === "rainbow") {
-  senderSpan.classList.add("rainbow");
-} else if (color) {
-  senderSpan.style.color = color;
-}
+      // Nastavi barvo in mavrično animacijo  
+
+      if (color === "rainbow") {  
+
+        senderSpan.classList.add("rainbow");  
+
+      } else if (color) {  
+
+        senderSpan.style.color = color;  
+
+      }  
+
 
 
       if (isOnline) {  
@@ -602,16 +526,11 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
   async function sendMessage() {  
 
-
     if (!currentUser) return;  
 
     const textRaw = messageInput.value.trim();  
 
     if (!textRaw) return;  
-
-
-
-
 
 
 
@@ -700,22 +619,31 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
         alert("Barva imena nastavljena na mavrično (rainbow).");  
 
-      } else if (colorVal === "none") {
-  await db.ref("users/" + currentUser.uid).update({ color: "none" });
-  userColorsCache[currentUser.uid] = "none";
-  alert("Ime bo zdaj nevidno.");
-} else {
-  const s = new Option().style;
-  s.color = colorVal;
-  if (s.color === "") {
-    alert("Neveljavna barva.");
-    messageInput.value = "";
-    return;
-  }
-  await db.ref("users/" + currentUser.uid).update({ color: colorVal });
-  userColorsCache[currentUser.uid] = colorVal;
-  alert("Barva imena nastavljena na: " + colorVal);
-}
+      } else {  
+
+        // Preverimo osnovno veljavnost barve (lahko še izboljšamo)  
+
+        const s = new Option().style;  
+
+        s.color = colorVal;  
+
+        if (s.color === "") {  
+
+          alert("Neveljavna barva.");  
+
+          messageInput.value = "";  
+
+          return;  
+
+        }  
+
+        await db.ref("users/" + currentUser.uid).update({ color: colorVal });  
+
+        userColorsCache[currentUser.uid] = colorVal;  
+
+        alert("Barva imena nastavljena na: " + colorVal);  
+
+      }  
 
       messageInput.value = "";  
 
@@ -872,29 +800,18 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
     let hidden = isHiddenMode;  
+let text = textRaw;  
 
-    let text = textRaw;  
+db.ref("messages").push({
+  uid: currentUser.uid,
+  text: text,
+  hidden: hidden,
+  privateUid: currentChatPartner || null
+});
 
+messageInput.value = "";
 
-
-    db.ref("messages").push({  
-
-      uid: currentUser.uid,  
-
-      text: text,  
-
-      hidden: hidden,  
-
-      privateUid: currentChatPartner  
-
-    });  
-
-
-
-    messageInput.value = "";  
-
-  }  
-
+}
 
 
   function logout() {  
@@ -921,13 +838,61 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
+  let showingActiveUsers = false;  
+
+
+
+  function toggleActiveUsers() {  
+
+    showingActiveUsers = !showingActiveUsers;  
+
+    chatBox.innerHTML = "";  
+
+
+
+    if (showingActiveUsers) {  
+
+      const activeUsers = Object.entries(userStatusCache)  
+
+        .filter(([uid, status]) => status.online && uid !== currentUser.uid);  
+
+
+
+      if (activeUsers.length === 0) {  
+
+        chatBox.innerHTML = "<i>Ni drugih aktivnih uporabnikov.</i>";  
+
+      } else {  
+
+        activeUsers.forEach(([uid]) => {  
+
+          const name = userNamesCache[uid] || "Anonimen";  
+
+          const div = document.createElement("div");  
+
+          div.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${name}`;  
+
+          chatBox.appendChild(div);  
+
+        });  
+
+      }  
+
+    } else {  
+
+      location.reload();  
+
+    }  
+
+  };   
+
+
 
 
 // === ELEMENTI ===
 const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
 const container = document.querySelector('.message-input-btn-container');
-
 
 // === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
@@ -939,7 +904,6 @@ let selfDestructActive = false;
 let selfDestructEndTimestamp = null;
 let selfDestructUnlimited = false;
 let masterControlActive = false;
-let currentUserId = null;  // trenutno prijavljeni uporabnik
 
 // === FIREBASE REALTIME REFERENCA ===
 const database = firebase.database();
@@ -947,1106 +911,335 @@ const selfDestructRef = database.ref('system/selfDestruct');
 
 // === INICIALIZACIJA DOKUMENTA (ENKRATNO BERE) ===
 async function initializeSelfDestructDoc() {
-  const snapshot = await selfDestructRef.once('value');
-  if (!snapshot.exists()) {
-    await selfDestructRef.set({
-      active: false,
-      unlimited: false,
-      endTimestamp: null
-    });
-    console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
-  } else {
-    const data = snapshot.val();
-    selfDestructActive = data.active;
-    selfDestructUnlimited = data.unlimited;
-    selfDestructEndTimestamp = data.endTimestamp;
+const snapshot = await selfDestructRef.once('value');
+if (!snapshot.exists()) {
+await selfDestructRef.set({
+active: false,
+unlimited: false,
+endTimestamp: null
+});
+console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
+} else {
+const data = snapshot.val();
+selfDestructActive = data.active;
+selfDestructUnlimited = data.unlimited;
+selfDestructEndTimestamp = data.endTimestamp;
 
-    if (selfDestructActive) {
-      disableChat();
-      if (!selfDestructUnlimited && selfDestructEndTimestamp) {
-        startSelfDestructTimer();
-      }
-    }
-    console.log("Self destruct dokument že obstaja in je stanje naloženo.");
-  }
+if (selfDestructActive) {  
+  disableChat();  
+  if (!selfDestructUnlimited && selfDestructEndTimestamp) {  
+    startSelfDestructTimer();  
+  }  
+}  
+console.log("Self destruct dokument že obstaja in je stanje naloženo.");
+
+}
 }
 
-// --- POSLUŠANJE V REALNEM ČASU za selfDestruct ---
+// --- TU SEM DODAL POSLUŠANJE V REALNEM ČASU ---
 selfDestructRef.on('value', (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+const data = snapshot.val();
+if (!data) return;
 
-  selfDestructActive = data.active;
-  selfDestructUnlimited = data.unlimited;
-  selfDestructEndTimestamp = data.endTimestamp;
+selfDestructActive = data.active;
+selfDestructUnlimited = data.unlimited;
+selfDestructEndTimestamp = data.endTimestamp;
 
-  if (selfDestructActive) {
-    disableChat();
-    if (!selfDestructUnlimited && selfDestructEndTimestamp) {
-      startSelfDestructTimer();
-    }
-  } else {
-    enableChat();
-    clearInterval(window.selfDestructInterval);
-  }
+if (selfDestructActive) {
+disableChat();
+if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+startSelfDestructTimer();
+}
+} else {
+enableChat();
+clearInterval(window.selfDestructInterval);
+}
 });
 
-// === FUNKCIJA ZA NALAGANJE MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ===
-async function loadUserMasterControl() {
-  if (!currentUserId) return;
-  const snapshot = await database.ref(`users/${currentUserId}/masterControl`).once('value');
-  masterControlActive = snapshot.val() || false;
-  console.log("Master control za uporabnika:", masterControlActive);
-}
-
-// --- POSLUŠANJE SPREMEMB MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ---
-function listenUserMasterControl() {
-  if (!currentUserId) return;
-  database.ref(`users/${currentUserId}/masterControl`).on('value', (snapshot) => {
-    masterControlActive = snapshot.val() || false;
-    console.log("Master control posodobljen:", masterControlActive);
-  });
-}
+// Klic inicializacije ob zagonu
+initializeSelfDestructDoc().catch(console.error);
 
 // === SELF DESTRUCT FUNKCIJE ===
 async function activateSelfDestruct(duration = 60 * 60 * 1000) {
-  if (!masterControlActive) {
-    alert("Self destruct lahko aktivira samo master control!");
-    return;
-  }
+if (!masterControlActive) {
+alert("Self destruct lahko aktivira samo master control!");
+return;
+}
 
-  if (selfDestructActive && !selfDestructUnlimited) {
-    // Preklop na neomejen self destruct
-    selfDestructUnlimited = true;
-    selfDestructEndTimestamp = null;
-    await selfDestructRef.update({
-      active: true,
-      unlimited: true,
-      endTimestamp: null
-    });
+if (selfDestructActive && !selfDestructUnlimited) {
+// Preklop na neomejen self destruct
+selfDestructUnlimited = true;
+selfDestructEndTimestamp = null;
+await selfDestructRef.update({
+active: true,
+unlimited: true,
+endTimestamp: null
+});
 
-    disableChat();
-    clearInterval(window.selfDestructInterval);
-    alert("Self destruct nastavljen na neomejen čas!");
-    return;
-  }
+disableChat();  
+clearInterval(window.selfDestructInterval);  
+alert("Self destruct nastavljen na neomejen čas!");  
+return;
 
-  selfDestructActive = true;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = Date.now() + duration;
+}
 
-  await selfDestructRef.update({
-    active: true,
-    unlimited: false,
-    endTimestamp: selfDestructEndTimestamp
-  });
+selfDestructActive = true;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = Date.now() + duration;
 
-  disableChat();
-  startSelfDestructTimer();
-  alert("Self destruct aktiviran za 1 uro.");
+await selfDestructRef.update({
+active: true,
+unlimited: false,
+endTimestamp: selfDestructEndTimestamp
+});
+
+disableChat();
+startSelfDestructTimer();
+alert("Self destruct aktiviran za 1 uro.");
 }
 
 function disableChat() {
-  messageInput.disabled = true;
-  chatBox.style.opacity = '0.6';
-  messageInput.placeholder = "Chat je onemogočen zaradi self destruct.";
+messageInput.disabled = true;
+chatBox.style.opacity = '0.6';
+messageInput.placeholder = "Chat je onemogočen zaradi self destruct.";
 }
 
 function enableChat() {
-  messageInput.disabled = false;
-  chatBox.style.opacity = '1';
-  messageInput.placeholder = "Vpiši sporočilo...";
+messageInput.disabled = false;
+chatBox.style.opacity = '1';
+messageInput.placeholder = "Vpiši sporočilo...";
 }
 
 function startSelfDestructTimer() {
-  clearInterval(window.selfDestructInterval);
-  window.selfDestructInterval = setInterval(async () => {
-    if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
-    if (Date.now() >= selfDestructEndTimestamp) {
-      selfDestructActive = false;
-      selfDestructEndTimestamp = null;
-      selfDestructUnlimited = false;
+clearInterval(window.selfDestructInterval);
+window.selfDestructInterval = setInterval(async () => {
+if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
+if (Date.now() >= selfDestructEndTimestamp) {
+selfDestructActive = false;
+selfDestructEndTimestamp = null;
+selfDestructUnlimited = false;
 
-      await selfDestructRef.update({
-        active: false,
-        unlimited: false,
-        endTimestamp: null
-      });
+await selfDestructRef.update({  
+    active: false,  
+    unlimited: false,  
+    endTimestamp: null  
+  });  
 
-      enableChat();
-      clearInterval(window.selfDestructInterval);
-      alert("Self destruct se je iztekel. Chat je spet omogočen.");
-    }
-  }, 1000);
+  enableChat();  
+  clearInterval(window.selfDestructInterval);  
+  alert("Self destruct se je iztekel. Chat je spet omogočen.");  
+}
+
+}, 1000);
 }
 
 async function cancelSelfDestruct() {
-  if (!selfDestructActive) return alert("Self destruct ni aktiven.");
-  if (!masterControlActive) return alert("Preklic samo z master control!");
+if (!selfDestructActive) return alert("Self destruct ni aktiven.");
+if (!masterControlActive) return alert("Preklic samo z master control!");
 
-  selfDestructActive = false;
-  selfDestructUnlimited = false;
-  selfDestructEndTimestamp = null;
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-  await selfDestructRef.update({
-    active: false,
-    unlimited: false,
-    endTimestamp: null
-  });
+await selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+});
 
-  clearInterval(window.selfDestructInterval);
-  enableChat();
-  alert("Self destruct je bil deaktiviran.");
+clearInterval(window.selfDestructInterval);
+enableChat();
+alert("Self destruct je bil deaktiviran.");
 }
 
+function forceCancelSelfDestruct() {
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-
-async function activateSelfDestructForUser(username) {
-  try {
-    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
-    if (!snapshot.exists()) {
-      alert("Uporabnik ni bil najden.");
-      return;
-    }
-
-    const userId = Object.keys(snapshot.val())[0];
-    await database.ref(`userSelfDestruct/${userId}`).set({
-      active: true,
-      timestamp: Date.now(),
-      duration: 60 * 60 * 1000
-    });
-
-    alert(`Self destruct za uporabnika ${username} aktiviran za 1 uro.`);
-  } catch (error) {
-    console.error("Napaka pri aktivaciji self destruct za uporabnika:", error);
-  }
+selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+})
+.then(() => {
+clearInterval(window.selfDestructInterval);
+enableChat();
+console.log("Force cancel: Self destruct je bil de-aktiviran.");
+alert("Force cancel: Self destruct je bil de-aktiviran.");
+})
+.catch((error) => {
+console.error("Napaka pri force cancel:", error);
+});
 }
-
-async function cancelSelfDestructForUser(username) {
-  try {
-    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
-    if (!snapshot.exists()) {
-      alert("Uporabnik ni bil najden.");
-      return;
-    }
-
-    const userId = Object.keys(snapshot.val())[0];
-    await database.ref(`userSelfDestruct/${userId}`).remove();
-
-    alert(`Self destruct za uporabnika ${username} preklican.`);
-  } catch (error) {
-    console.error("Napaka pri preklicu self destruct za uporabnika:", error);
-  }
-}
-
-
-
-
 
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
-  event.preventDefault();
-  if (selfDestructActive && !masterControlActive) return;
+event.preventDefault();
+if (selfDestructActive && !masterControlActive) return;
 
-  rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
-  moves.push(event.deltaY < 0 ? 'L' : 'R');
-  if (moves.length > maxMoves) moves.shift();
-  btnZ.style.transform = `rotate(${rotationDegree}deg)`;
+rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
+moves.push(event.deltaY < 0 ? 'L' : 'R');
+if (moves.length > maxMoves) moves.shift();
+btnZ.style.transform = rotate(${rotationDegree}deg);
 
-  interpretCode();
+interpretCode();
 });
 
 // === GESTURE ZA MOBILNI DOTIK ===
 (function () {
-  let isDragging = false;
-  let startX = 0;
-  let currentX = 0;
-  let zActive = false;
+let isDragging = false;
+let startX = 0;
+let currentX = 0;
+let zActive = false;
 
-  function resetPosition() {
-    btnZ.style.transition = 'transform 0.3s ease';
-    btnZ.style.transform = 'translateX(0px)';
-    setTimeout(() => { btnZ.style.transition = ''; }, 300);
-  }
+function resetPosition() {
+btnZ.style.transition = 'transform 0.3s ease';
+btnZ.style.transform = 'translateX(0px)';
+setTimeout(() => { btnZ.style.transition = ''; }, 300);
+}
 
-  function handleSwipe() {
-    const deltaX = currentX - startX;
-    if (Math.abs(deltaX) > 40) {
-      const move = deltaX < 0 ? 'L' : 'R';
-      moves.push(move);
-      if (moves.length > maxMoves) moves.shift();
-      interpretCode();
-    }
-    resetPosition();
-  }
+function handleSwipe() {
+const deltaX = currentX - startX;
+if (Math.abs(deltaX) > 40) {
+const move = deltaX < 0 ? 'L' : 'R';
+moves.push(move);
+if (moves.length > maxMoves) moves.shift();
+interpretCode();
+}
+resetPosition();
+}
 
-  function addTouchEvents() {
-    btnZ.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      startX = e.touches[0].clientX;
-    });
+function addTouchEvents() {
+btnZ.addEventListener('touchstart', (e) => {
+isDragging = true;
+startX = e.touches[0].clientX;
+});
 
-    btnZ.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      currentX = e.touches[0].clientX;
-      const deltaX = currentX - startX;
-      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
-      btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
-    });
+btnZ.addEventListener('touchmove', (e) => {  
+  if (!isDragging) return;  
+  currentX = e.touches[0].clientX;  
+  const deltaX = currentX - startX;  
+  const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;  
+  btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;  
+});  
 
-    btnZ.addEventListener('touchend', () => {
-      if (!isDragging) return;
-      isDragging = false;
-      handleSwipe();
-    });
-  }
+btnZ.addEventListener('touchend', () => {  
+  if (!isDragging) return;  
+  isDragging = false;  
+  handleSwipe();  
+});
 
-  function toggleZMobile() {
-    zActive = !zActive;
-    btnZ.classList.toggle('active', zActive);
-    btnH.style.display = zActive ? 'none' : 'inline-block';
-  }
+}
 
-  btnZ.addEventListener('click', toggleZMobile);
+function toggleZMobile() {
+zActive = !zActive;
+btnZ.classList.toggle('active', zActive);
+btnH.style.display = zActive ? 'none' : 'inline-block';
+}
 
-  window.addEventListener('resize', () => {
-    btnH.style.display = 'inline-block';
-    container.appendChild(btnZ);
-  });
+btnZ.addEventListener('click', toggleZMobile);
 
-  window.addEventListener('load', () => {
-    addTouchEvents();
-  });
+window.addEventListener('resize', () => {
+btnH.style.display = 'inline-block';
+container.appendChild(btnZ);
+});
+
+window.addEventListener('load', () => {
+addTouchEvents();
+});
 })();
 
 // === DEKODIRANJE GESTURE KODE ===
 function interpretCode() {
-  const code = moves.join('');
+const code = moves.join('');
 
-  if (code === 'LRLRLRLR') {
-    if (selfDestructActive && !masterControlActive) {
-      alert("Ni mogoče vključiti master control med aktivnim self destruct.");
-      return;
-    }
-    masterControlActive = !masterControlActive;
-
-    if (currentUserId) {
-      database.ref(`users/${currentUserId}/masterControl`).set(masterControlActive)
-        .catch(err => console.error("Napaka pri posodobitvi masterControl:", err));
-    }
-
-    alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
-
-  } else if (code === 'RRLLRRRL') {
-    if (!masterControlActive) {
-      alert("Self destruct zahteva master control.");
-      return;
-    }
-    if (!selfDestructActive) {
-      activateSelfDestruct(); // vklop za 1 uro
-    } else if (!selfDestructUnlimited) {
-      activateSelfDestruct(); // preklop v unlimited
-    }
-
-  } else if (code === 'LLRRLLLR') {
-    if (selfDestructActive && selfDestructUnlimited) {
-      activateSelfDestruct(60 * 60 * 1000);
-    } else if (selfDestructActive) {
-      if (!masterControlActive) {
-        alert("Preklic zahteva master control.");
-        return;
-      }
-      cancelSelfDestruct();
-    }
-
-  } else if (code === 'LLLRLLRL') {
-    const targetUser = messageInput.value.trim();
-    if (!targetUser) {
-      alert("Vnesi ime uporabnika v vnosno polje!");
-      return;
-    }
-    if (!masterControlActive) {
-      alert("Self destruct za uporabnika zahteva master control.");
-      return;
-    }
-    activateSelfDestructForUser(targetUser);
-
-  } else if (code === 'RRRLRRLR') {
-    const targetUser = messageInput.value.trim();
-    if (!targetUser) {
-      alert("Vnesi ime uporabnika za preklic self destruct!");
-      return;
-    }
-    if (!masterControlActive) {
-      alert("Preklic za uporabnika zahteva master control.");
-      return;
-    }
-    cancelSelfDestructForUser(targetUser);
-  }
+if (code === 'LRLRLRLR') {
+if (selfDestructActive && !masterControlActive) {
+alert("Ni mogoče vključiti master control med aktivnim self destruct.");
+return;
 }
+masterControlActive = !masterControlActive;
+alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+
+} else if (code === 'RRLLRRRL') {
+if (!masterControlActive) {
+alert("Self destruct zahteva master control.");
+return;
+}
+if (!selfDestructActive) {
+activateSelfDestruct(); // vklop za 1 uro
+} else if (!selfDestructUnlimited) {
+activateSelfDestruct(); // preklop v unlimited
+}
+
+} else if (code === 'LLRRLLLR') {
+if (selfDestructActive && selfDestructUnlimited) {
+// PREKLOP IZ UNLIMITED NA 1 URO - dovoli vsem
+activateSelfDestruct(60 * 60 * 1000);
+} else if (selfDestructActive) {
+// PREKLIC - zahteva master
+if (!masterControlActive) {
+alert("Preklic zahteva master control.");
+return;
+}
+cancelSelfDestruct();
+}
+}
+}
+
 // === CHAT FUNKCIJE ===
 function displayMessage(sender, message) {
-  const el = document.createElement('div');
-  el.innerHTML = `<strong>${sender}:</strong> ${message}`;
-  chatBox.appendChild(el);
-  chatBox.scrollTop = chatBox.scrollHeight;
+const el = document.createElement('div');
+el.innerHTML = <strong>${sender}:</strong> ${message};
+chatBox.appendChild(el);
+chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 function handleIncomingMessage(msg) {
-  if (!selfDestructActive) displayMessage(msg.sender, msg.text);
+if (!selfDestructActive) displayMessage(msg.sender, msg.text);
 }
 
 async function onUserSendMessage(sender, message) {
-  if (selfDestructActive) return;
-  displayMessage(sender, message);
-  try {
-    await firebase.firestore().collection('messages').add({
-      sender: sender,
-      text: message,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (err) {
-    console.error("Napaka pri shranjevanju:", err);
-  }
+if (selfDestructActive) return;
+displayMessage(sender, message);
+try {
+await firebase.firestore().collection('messages').add({
+sender: sender,
+text: message,
+timestamp: firebase.firestore.FieldValue.serverTimestamp()
+});
+} catch (err) {
+console.error("Napaka pri shranjevanju:", err);
+}
 }
 
 // === OB ZAGONU ===
 window.addEventListener('load', () => {
-  // Firestore dokument že naložen v initializeSelfDestructDoc
-  // Ta del lahko po potrebi odstraniš
-
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      currentUserId = user.uid;
-      loadUserMasterControl();
-      listenUserMasterControl();
-    } else {
-      currentUserId = null;
-      masterControlActive = false;
-    }
-  });
-
-  initializeSelfDestructDoc().catch(console.error);
+// Firestore dokument že naložen v initializeSelfDestructDoc
+// Ta del lahko po potrebi odstraniš
 });
 
+window.forceCancelSelfDestruct = function() {
+selfDestructActive = false;
+selfDestructUnlimited = false;
+selfDestructEndTimestamp = null;
 
-
-
-
-
-
-
-const topContainer = document.createElement("div");
-topContainer.style.position = "fixed";
-topContainer.style.top = "0";
-topContainer.style.left = "0";
-topContainer.style.width = "100%";
-topContainer.style.maxHeight = "40px";
-topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-topContainer.style.backdropFilter = "blur(8px)";
-topContainer.style.webkitBackdropFilter = "blur(8px)";
-topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-topContainer.style.display = "flex";
-topContainer.style.flexDirection = "column";
-topContainer.style.zIndex = "9999";
-topContainer.style.transition = "max-height 0.4s ease";
-topContainer.style.boxSizing = "border-box";
-topContainer.style.padding = "0 15px";
-topContainer.style.overflow = "hidden";
-document.body.appendChild(topContainer);
-
-// Prva vrstica (čas + baterija)
-const topRow = document.createElement("div");
-topRow.style.display = "flex";
-topRow.style.justifyContent = "space-between";
-topRow.style.alignItems = "center";
-topRow.style.width = "100%";
-topRow.style.height = "40px";
-topContainer.appendChild(topRow);
-
-const clockSpan = document.createElement("span");
-clockSpan.style.fontWeight = "bold";
-clockSpan.style.fontSize = "1.2em";
-topRow.appendChild(clockSpan);
-
-const batterySpan = document.createElement("span");
-batterySpan.style.fontWeight = "bold";
-batterySpan.style.fontSize = "1.2em";
-topRow.appendChild(batterySpan);
-
-// Aktivni uporabniki
-const activeUsersContainer = document.createElement("div");
-activeUsersContainer.style.width = "100%";
-activeUsersContainer.style.flexDirection = "column";
-activeUsersContainer.style.flexGrow = "1";
-activeUsersContainer.style.display = "none";
-activeUsersContainer.style.padding = "10px";
-activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-activeUsersContainer.style.borderRadius = "10px";
-activeUsersContainer.style.overflowY = "auto";
-activeUsersContainer.style.gap = "10px";
-activeUsersContainer.style.boxSizing = "border-box";
-topContainer.appendChild(activeUsersContainer);
-
-// Logout container, privzeto skrit
-const logoutContainer = document.createElement("div");
-logoutContainer.style.width = "100%";
-logoutContainer.style.display = "none"; // skrito na začetku
-logoutContainer.style.flexDirection = "column";
-logoutContainer.style.flexGrow = "1";
-logoutContainer.style.padding = "10px";
-logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
-logoutContainer.style.borderRadius = "10px";
-logoutContainer.style.boxSizing = "border-box";
-logoutContainer.style.justifyContent = "center";
-logoutContainer.style.alignItems = "center";
-logoutContainer.style.color = "white";
-logoutContainer.style.fontFamily = "Arial, sans-serif";
-logoutContainer.style.textAlign = "center";
-
-topContainer.appendChild(logoutContainer);
-
-// Element za prikaz imena in maila (ločeno v vrsticah)
-const userName = document.createElement("div");
-const userEmail = document.createElement("div");
-userEmail.style.marginTop = "4px";
-userEmail.style.fontSize = "0.9em";
-userEmail.style.opacity = "0.8";
-
-logoutContainer.appendChild(userName);
-logoutContainer.appendChild(userEmail);
-
-// Gumb za odjavo
-const logoutBtn = document.createElement("button");
-logoutBtn.className = "btn1";
-logoutBtn.textContent = "Odjavi se";
-logoutBtn.onclick = () => {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  }).catch((error) => {
-    console.error("Napaka pri odjavi:", error);
-  });
-};
-logoutContainer.appendChild(logoutBtn);
-
-// Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
-    const ime = user.displayName ? user.displayName : "Brez imena";
-    const mail = user.email ? user.email : "Brez emaila";
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function sendBatteryStatus() {
-      const batteryInfo = {
-        level: Math.round(battery.level * 100),
-        charging: battery.charging,
-        timestamp: Date.now()
-      };
-      firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
-    }
-    sendBatteryStatus();
-    setInterval(sendBatteryStatus, 30000);
-    battery.addEventListener("levelchange", sendBatteryStatus);
-    battery.addEventListener("chargingchange", sendBatteryStatus);
-  });
-}
-    userName.textContent = ime;
-    userEmail.textContent = mail;
-  } else {
-    // Ko ni uporabnika, lahko počistimo ali skrijemo
-    userName.textContent = "";
-    userEmail.textContent = "";
-    logoutContainer.style.display = "none";
-  }
+selfDestructRef.update({
+active: false,
+unlimited: false,
+endTimestamp: null
+})
+.then(() => {
+clearInterval(window.selfDestructInterval);
+enableChat();
+console.log("Force cancel: Self destruct je bil de-aktiviran.");
+alert("Force cancel: Self destruct je bil de-aktiviran.");
+})
+.catch((error) => {
+console.error("Napaka pri force cancel:", error);
 });
-
-
-
-
-
-
-// Posodobi uro
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours().toString().padStart(2, '0');
-  const m = now.getMinutes().toString().padStart(2, '0');
-  clockSpan.textContent = `${h}:${m}`;
-}
-updateClock();
-setInterval(updateClock, 600);
-
-// Baterija - prikaz z znaki za polnjenje in nizko baterijo
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function updateBattery() {
-      const pct = Math.round(battery.level * 100);
-      let symbol = "🔋";
-
-      if (battery.charging) {
-        symbol = "⚡️";  // polnjenje
-      } else if (pct <= 20) {
-        symbol = "🪫";   // prazna baterija (lahko zamenjaš emoji)
-      }
-
-      batterySpan.textContent = battery.charging ? `${symbol}${pct}%` : `${pct}%${symbol}`;
-    }
-    updateBattery();
-    battery.addEventListener('levelchange', updateBattery);
-    battery.addEventListener('chargingchange', updateBattery);
-  });
-} else {
-  batterySpan.textContent = "Ni podpore";
-}
-// Prikaz aktivnih uporabnikov
-let showAllUsers = false;
-let touchStartX = null;
-
-// Nadgrajena funkcija prikaza
-function showActiveUsers() {
-activeUsersContainer.innerHTML = "";
-
-// Naslov glede na stanje
-const title = document.createElement("div");
-title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
-title.style.fontWeight = "bold";
-title.style.marginBottom = "6px";
-activeUsersContainer.appendChild(title);
-
-if (!showAllUsers) {
-const active = Object.entries(userStatusCache)
-.filter(([uid, status]) => status.online && uid !== currentUser.uid);
-
-if (active.length === 0) {  
-  const msg = document.createElement("i");  
-  msg.textContent = "Ni drugih aktivnih uporabnikov.";  
-  activeUsersContainer.appendChild(msg);  
-} else {  
-  active.forEach(([uid]) => {  
-    const div = document.createElement("div");  
-    div.style.display = "flex";  
-    div.style.justifyContent = "space-between";  
-    div.style.alignItems = "center";  
-    div.style.padding = "4px 0";  
-
-    const nameSpan = document.createElement("span");  
-    nameSpan.textContent = userNamesCache[uid] || "Anonimen";  
-
-    const batterySpan = document.createElement("span");  
-    batterySpan.style.fontSize = "0.9em";  
-    batterySpan.style.opacity = "0.8";  
-
-    firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {  
-      const data = snapshot.val();  
-      if (data) {  
-        const level = data.level;  
-        const charging = data.charging;  
-        let symbol = "🔋";  
-        if (charging) symbol = "⚡️";  
-        else if (level <= 20) symbol = "🪫";  
-        batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;  
-      } else {  
-        batterySpan.textContent = "–";  
-      }  
-    });  
-
-    div.appendChild(nameSpan);  
-    div.appendChild(batterySpan);  
-    activeUsersContainer.appendChild(div);  
-  });  
-}
-
-} else {
-const allUsers = Object.entries(userNamesCache)
-.filter(([uid]) => uid !== currentUser.uid)
-.sort((a, b) => a[1].localeCompare(b[1]));
-
-if (allUsers.length === 0) {  
-  const msg = document.createElement("i");  
-  msg.textContent = "Ni drugih uporabnikov.";  
-  activeUsersContainer.appendChild(msg);  
-} else {  
-  allUsers.forEach(([uid, name]) => {  
-    const div = document.createElement("div");  
-    div.style.display = "flex";  
-    div.style.justifyContent = "space-between";  
-    div.style.alignItems = "center";  
-    div.style.padding = "4px 0";  
-
-    const nameSpan = document.createElement("span");  
-    nameSpan.textContent = name || "Anonimen";  
-
-    const statusSpan = document.createElement("span");  
-    statusSpan.style.fontSize = "0.8em";  
-    statusSpan.style.opacity = "0.7";  
-
-    const status = userStatusCache[uid];  
-    if (status?.online) {  
-      statusSpan.textContent = "🟢 online";  
-    } else if (status?.lastChanged) {  
-      const formatted = formatTimestamp(status.lastChanged);  
-      statusSpan.textContent = `⚫ offline (${formatted})`;  
-    } else {  
-      statusSpan.textContent = "⚫ offline";  
-    }  
-
-    div.appendChild(nameSpan);  
-    div.appendChild(statusSpan);  
-    activeUsersContainer.appendChild(div);  
-  });  
-}
-
-}
-
-// Višina
-let contentHeight = activeUsersContainer.scrollHeight;
-if (contentHeight < 40) contentHeight = 80;
-if (contentHeight > 360) contentHeight = 360;
-
-logoutContainer.style.display = "none";
-activeUsersContainer.style.display = "flex";
-activeUsersContainer.style.flexDirection = "column";
-topContainer.style.maxHeight = (40 + contentHeight) + "px";
-expandedUsers = true;
-expandedLogout = false;
-}
-
-// Formatiranje datuma
-function formatTimestamp(timestamp) {
-const date = new Date(timestamp);
-return date.toLocaleString("sl-SI", {
-day: '2-digit',
-month: '2-digit',
-year: 'numeric',
-hour: '2-digit',
-minute: '2-digit'
-});
-}
-
-// 🎯 Swipe/touch zaznavanje
-activeUsersContainer.addEventListener("touchstart", e => {
-touchStartX = e.touches[0].clientX;
-});
-activeUsersContainer.addEventListener("touchend", e => {
-if (touchStartX === null) return;
-const diffX = e.changedTouches[0].clientX - touchStartX;
-if (diffX > 50) {
-showAllUsers = true;
-showActiveUsers();
-} else if (diffX < -50) {
-showAllUsers = false;
-showActiveUsers();
-}
-touchStartX = null;
-});
-
-// 🎯 Miškin kolešček za preklapljanje
-activeUsersContainer.addEventListener("wheel", e => {
-if (e.deltaY > 20) {
-showAllUsers = true;
-showActiveUsers();
-} else if (e.deltaY < -20) {
-showAllUsers = false;
-showActiveUsers();
-}
-}); 
-
-function closeActiveUsers() {
-  activeUsersContainer.style.display = "none";
-  topContainer.style.maxHeight = "40px";
-  expandedUsers = false;
-}
-
-function showLogoutButton() {
-  activeUsersContainer.style.display = "none";
-  logoutContainer.style.display = "flex";
-  topContainer.style.maxHeight = "120px";
-  expandedLogout = true;
-  expandedUsers = false;
-}
-
-function closeLogoutButton() {
-  logoutContainer.style.display = "none";
-  topContainer.style.maxHeight = "40px";
-  expandedLogout = false;
-}
-
-let startX = null;
-let expandedUsers = false;
-let expandedLogout = false;
-
-// Touch podrs
-topContainer.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX;
-});
-
-topContainer.addEventListener("touchmove", (e) => {
-  if (startX === null) return;
-  const currentX = e.touches[0].clientX;
-  const dx = currentX - startX;
-
-  if (dx > 40 && !expandedUsers && !expandedLogout) {
-    showActiveUsers();
-  } else if (dx < -40 && !expandedLogout && !expandedUsers) {
-    showLogoutButton();
-  }
-});
-
-topContainer.addEventListener("touchend", () => {
-  startX = null;
-});
-
-// Scroll z miško
-topContainer.addEventListener("wheel", (e) => {
-  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {
-    showActiveUsers();
-  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {
-    showLogoutButton();
-  }
-});
-
-// Dvojni klik = zapri
-topContainer.addEventListener("dblclick", () => {
-  if (expandedUsers) {
-    closeActiveUsers();
-  } else if (expandedLogout) {
-    closeLogoutButton();
-  }
-});
-
-// Klik zunaj = zapri
-document.addEventListener("click", (e) => {
-  if (!topContainer.contains(e.target)) {
-    if (expandedUsers) closeActiveUsers();
-    if (expandedLogout) closeLogoutButton();
-  }
-});
-
-
-
-
-
-
-
-// --- Obstoječa koda (ni ponovljena) ---
-
-
-
-// --- Spremenljivke in container za opomnike ---
-let remindersExpanded = false;
-let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-
-const reminderContainer = document.createElement("div");
-reminderContainer.style.display = "none";
-reminderContainer.style.flexDirection = "column";
-reminderContainer.style.padding = "10px";
-reminderContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
-reminderContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-reminderContainer.style.backdropFilter = "blur(8px)";
-reminderContainer.style.borderRadius = "10px";
-reminderContainer.style.marginTop = "5px";
-reminderContainer.style.maxHeight = "220px";
-reminderContainer.style.overflowY = "auto";
-reminderContainer.style.gap = "10px";
-reminderContainer.style.boxSizing = "border-box";
-topContainer.appendChild(reminderContainer);
-
-// Znak ‼️ za opozorilo
-const alertIcon = document.createElement("div");
-alertIcon.textContent = "‼️";
-alertIcon.style.position = "absolute";
-alertIcon.style.left = "50%";
-alertIcon.style.top = "50%";
-alertIcon.style.transform = "translate(-50%, -50%)";
-alertIcon.style.fontSize = "1.8em";
-alertIcon.style.color = "red";
-alertIcon.style.display = "none";
-topContainer.appendChild(alertIcon);
-
-// Inputi in gumbi za dodajanje opomnika
-const reminderInput = document.createElement("input");
-reminderInput.type = "text";
-reminderInput.placeholder = "Ime opomnika";
-reminderInput.style.marginBottom = "5px";
-reminderInput.style.padding = "5px";
-reminderInput.style.borderRadius = "5px";
-reminderInput.style.border = "1px solid #ccc";
-reminderContainer.appendChild(reminderInput);
-
-const datetimeInput = document.createElement("input");
-datetimeInput.type = "datetime-local";
-datetimeInput.style.marginBottom = "5px";
-datetimeInput.style.padding = "5px";
-datetimeInput.style.borderRadius = "5px";
-datetimeInput.style.border = "1px solid #ccc";
-reminderContainer.appendChild(datetimeInput);
-
-const createBtn = document.createElement("button");
-createBtn.textContent = "Ustvari";
-createBtn.style.padding = "5px 10px";
-createBtn.style.borderRadius = "5px";
-createBtn.style.border = "none";
-createBtn.style.backgroundColor = "#4CAF50";
-createBtn.style.color = "white";
-createBtn.style.cursor = "pointer";
-reminderContainer.appendChild(createBtn);
-
-const reminderList = document.createElement("div");
-reminderList.style.display = "flex";
-reminderList.style.flexDirection = "column";
-reminderList.style.gap = "5px";
-reminderList.style.marginTop = "10px";
-reminderContainer.appendChild(reminderList);
-
-// Funkcija za shranjevanje v localStorage
-function saveReminders() {
-  localStorage.setItem("reminders", JSON.stringify(reminders));
-}
-
-// Funkcija za izris opomnikov
-function renderReminders() {
-  reminderList.innerHTML = "";
-  const now = Date.now();
-
-  reminders.forEach((r, i) => {
-    const div = document.createElement("div");
-    div.style.display = "flex";
-    div.style.justifyContent = "space-between";
-    div.style.alignItems = "center";
-    div.style.padding = "5px";
-    div.style.borderRadius = "5px";
-    div.style.backgroundColor = "rgba(255,255,255,0.2)";
-    div.style.backdropFilter = "blur(4px)";
-
-    // Opomnik - ime + čas
-    const label = document.createElement("span");
-    label.textContent = `${r.name} - ${new Date(r.time).toLocaleString()}`;
-    if (r.triggered) label.style.fontWeight = "bold";
-
-    div.appendChild(label);
-
-    const buttonsDiv = document.createElement("div");
-
-    // Gumb za potrditev (prikaže se samo če je sprožen opomnik)
-    if (r.triggered) {
-      const confirmBtn = document.createElement("button");
-      confirmBtn.textContent = "✅️";
-      confirmBtn.style.marginRight = "5px";
-      confirmBtn.style.cursor = "pointer";
-      confirmBtn.onclick = () => {
-        reminders.splice(i, 1);
-        saveReminders();
-        renderReminders();
-        checkAlerts();
-      };
-      buttonsDiv.appendChild(confirmBtn);
-    }
-
-    // Gumb za brisanje
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "❌️";
-    deleteBtn.style.cursor = "pointer";
-    deleteBtn.onclick = () => {
-      reminders.splice(i, 1);
-      saveReminders();
-      renderReminders();
-      checkAlerts();
-    };
-    buttonsDiv.appendChild(deleteBtn);
-
-    div.appendChild(buttonsDiv);
-    reminderList.appendChild(div);
-  });
-}
-
-// Funkcija za preverjanje ali so opomniki sproženi in prikaz znaka ‼️
-function checkAlerts() {
-  const now = Date.now();
-  let anyTriggered = false;
-
-  reminders.forEach(r => {
-    if (!r.triggered && now >= r.time) {
-      r.triggered = true;
-      anyTriggered = true;
-    } else if (r.triggered) {
-      anyTriggered = true;
-    }
-  });
-
-  saveReminders();
-  renderReminders();
-
-  alertIcon.style.display = anyTriggered ? "block" : "none";
-}
-
-// Dodajanje opomnika
-createBtn.addEventListener("click", () => {
-  const name = reminderInput.value.trim();
-  const time = new Date(datetimeInput.value).getTime();
-
-  if (!name) {
-    alert("Vpiši ime opomnika.");
-    return;
-  }
-  if (isNaN(time) || time < Date.now()) {
-    alert("Izberi veljaven prihodnji datum in čas.");
-    return;
-  }
-
-  reminders.push({ name, time, triggered: false });
-  saveReminders();
-  renderReminders();
-
-  reminderInput.value = "";
-  datetimeInput.value = "";
-});
-
-// Toggle odprtje/zaprtje opomnikov na klik ure
-clockSpan.addEventListener("click", () => {
-  remindersExpanded = !remindersExpanded;
-
-  if (remindersExpanded) {
-    reminderContainer.style.display = "flex";
-    topContainer.style.maxHeight = "300px";
-    topContainer.style.backdropFilter = "blur(8px)";
-    topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
-
-    activeUsersContainer.style.display = "none";
-    logoutContainer.style.display = "none";
-
-    alertIcon.style.display = "none"; // skrij opozorilo ko odpremo
-
-  } else {
-    reminderContainer.style.display = "none";
-    topContainer.style.maxHeight = "40px";
-    topContainer.style.backdropFilter = "none";
-    topContainer.style.backgroundColor = "transparent";
-
-    activeUsersContainer.style.display = "";
-    logoutContainer.style.display = "";
-
-    checkAlerts();
-  }
-});
-
-// Periodično preverjanje opomnikov
-setInterval(checkAlerts, 10 * 1000); // vsake 10 sekund
-
-// Inicialni izris in preverjanje
-renderReminders();
-checkAlerts();
-
-
-
-
-
-
-
-const chatId = "globalChat";
-const userId = "user_" + Math.floor(Math.random() * 10000);
-
-const inputField = document.getElementById('messageInput');
-const defaultPlaceholder = "Vpiši sporočilo...";
-
-let typingTimeout;
-
-// 🔹 Dodaj CSS za utripanje roba
-(function addBlinkCSS() {
-  if (document.getElementById('typing-blink-style')) return;
-  const style = document.createElement('style');
-  style.id = 'typing-blink-style';
-  style.textContent = `
-    @keyframes borderBlink {
-      0%, 100% { border-color: #4a90e2; }
-      50% { border-color: #e91e63; }
-    }
-    .typing-blink {
-      animation: borderBlink 1.2s infinite;
-      border-width: 2px !important;
-      border-style: solid !important;
-      outline: none !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-// 🔹 Nastavi onDisconnect, da se status pobriše ob izgubi povezave
-firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
-
-// 🔹 Pošlji status tipkanja ob vnosu
-inputField.addEventListener('input', () => {
-  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
-  }, 2000);
-});
-
-// 🔹 Resetiraj status ob zapiranju okna
-window.addEventListener('beforeunload', () => {
-  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
-});
-
-// 🔹 Pridobi prikazna imena uporabnikov
-async function getUserNames(userIds) {
-  const db = firebase.database();
-  const promises = userIds.map(id =>
-    db.ref(`users/${id}/displayName`).once('value').then(snap => snap.val())
-  );
-  return Promise.all(promises);
-}
-
-// 🔹 Spremljaj status tipkanja drugih uporabnikov
-firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
-  const typingUsers = snapshot.val() || {};
-  delete typingUsers[userId]; // odstrani sebe iz prikaza
-
-  const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
-
-  // 🔸 Prisilni reset po 10 sekundah za vsak "zataknjen" status
-  Object.entries(typingUsers).forEach(([uid, isTyping]) => {
-    if (isTyping) {
-      setTimeout(() => {
-        firebase.database().ref(`typingStatus/${chatId}/${uid}`).once('value').then(snap => {
-          if (snap.val() === true) {
-            firebase.database().ref(`typingStatus/${chatId}/${uid}`).set(false);
-          }
-        });
-      }, 10000);
-    }
-  });
-
-  if (usersTyping.length > 0) {
-    inputField.classList.add('typing-blink');
-
-    // Pridobi imena
-    const names = await getUserNames(usersTyping);
-    const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
-
-    if (cleanNames.length === 1) {
-      inputField.placeholder = `${cleanNames[0]} tipka...`;
-    } else if (cleanNames.length > 1) {
-      inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
-    } else {
-      inputField.placeholder = "Nekdo tipka...";
-    }
-  } else {
-    inputField.classList.remove('typing-blink');
-    inputField.placeholder = defaultPlaceholder;
-  }
-});
-
-
-
-
-
-
-
-
-
+} 
 
 
 </script>
