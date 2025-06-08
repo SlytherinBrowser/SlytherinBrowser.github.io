@@ -484,19 +484,13 @@ width: 100%;
       senderSpan.classList.add("sender");  
 
 
-
-      // Nastavi barvo in mavrično animacijo  
-
-      if (color === "rainbow") {  
-
-        senderSpan.classList.add("rainbow");  
-
-      } else if (color) {  
-
-        senderSpan.style.color = color;  
-
-      }  
-
+if (color === "none") {
+  senderSpan.style.display = "none"; // Skrije ime
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
 
 
       if (isOnline) {  
