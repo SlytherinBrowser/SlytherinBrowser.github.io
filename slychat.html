@@ -408,97 +408,194 @@ window.addEventListener("blur", () => { windowHasFocus = false; });
 
 
 
-db.ref("messages").on("child_added", snapshot => {
-  const msg = snapshot.val();
+db.ref("messages").on("child_added", snapshot => {  
 
-  // Sistemsko sporočilo samo zate
-  if (msg.system && msg.privateUid === currentUser.uid) {
-    const systemDiv = document.createElement("div");
-    systemDiv.style.fontStyle = "italic";
-    systemDiv.style.color = "#90ee90";
-    const senderName = userNamesCache[msg.uid] || "Uporabnik";
-    systemDiv.textContent = `${senderName} ${msg.text}`;
-    chatBox.appendChild(systemDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return;
-  }
+      const msg = snapshot.val();  
 
-  // Povabilo v zasebni klepet
-  if (msg.invite && msg.privateUid === currentUser.uid) {
-    const inviterName = userNamesCache[msg.uid] || "Anonimen";
-    const inviteDiv = document.createElement("div");
-    inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet. 
-      <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
-    chatBox.appendChild(inviteDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return;
-  }
 
-  // Prikaz pogojev za prikaz sporočila
-  const isPublic = !msg.privateUid;
-  const isPrivateToMe = msg.privateUid === currentUser.uid && msg.uid === currentChatPartner;
-  const isPrivateFromMe = msg.uid === currentUser.uid && msg.privateUid === currentChatPartner;
 
-  if (!(isPublic || isPrivateToMe || isPrivateFromMe)) return;
 
-  // Priprava prikaza imena
-  const displayName = userNamesCache[msg.uid] || "Anonimen";
-  const isOnline = userStatusCache[msg.uid]?.online;
-  const color = userColorsCache[msg.uid] || null;
 
-  const div = document.createElement("div");
-  const senderSpan = document.createElement("span");
-  senderSpan.classList.add("sender");
 
-  if (color === "none") {
-    senderSpan.style.display = "none";
-  } else if (color === "rainbow") {
-    senderSpan.classList.add("rainbow");
-  } else if (color) {
-    senderSpan.style.color = color;
-  }
+      if (msg.system && msg.privateUid === currentUser.uid) {  
 
-  if (isOnline) {
-    senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
-  } else {
-    senderSpan.textContent = displayName + ": ";
-  }
+        const systemDiv = document.createElement("div");  
 
-  const realText = document.createElement("span");
-  realText.classList.add("realText");
-  realText.textContent = msg.text;
+        systemDiv.style.fontStyle = "italic";  
 
-  if (msg.hidden) {
-    const hiddenText = document.createElement("span");
-    hiddenText.classList.add("hiddenText");
-    hiddenText.textContent = "Zasebno sporočilo";
-    div.classList.add("hiddenMessage");
-    div.appendChild(senderSpan);
-    div.appendChild(hiddenText);
-    div.appendChild(realText);
-  } else {
-    div.appendChild(senderSpan);
-    div.appendChild(realText);
-  }
+        systemDiv.style.color = "#90ee90";  
 
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
+        const senderName = userNamesCache[msg.uid] || "Uporabnik";  
 
-// Funkcija za sprejem povabila
-function acceptInvite(inviterUid) {
-  currentChatPartner = inviterUid;
-  chatBox.innerHTML = "";
-  alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");
+        systemDiv.textContent = `${senderName} ${msg.text}`;  
 
-  // Pošlješ sistemsko potrditev pošiljatelju
-  db.ref("messages").push({
-    uid: currentUser.uid,
-    text: "sprejel je tvoje povabilo v zasebni klepet.",
-    system: true,
-    privateUid: inviterUid
+        chatBox.appendChild(systemDiv);  
+
+        chatBox.scrollTop = chatBox.scrollHeight;  
+
+        return;  
+
+      }  
+
+
+
+      if (msg.invite && msg.privateUid === currentUser.uid) {  
+
+        const inviterName = userNamesCache[msg.uid] || "Anonimen";  
+
+        const inviteDiv = document.createElement("div");  
+
+        inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.   
+  
+          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
+
+        chatBox.appendChild(inviteDiv);  
+
+        chatBox.scrollTop = chatBox.scrollHeight;  
+
+        return;  
+
+      }  
+
+  // Prikaži obvestilo, če je nova poruka, dovoljenje podeljeno in okno ni v fokusu
+if (Notification.permission === "granted" && !windowHasFocus) {
+  const notification = new Notification(displayName, {
+    body: msg.text,
+    icon: "Slytherin.png" // Po želji nastavi svojo ikono
   });
+  // Klik na obvestilo aktivira okno in ga prinese v ospredje
+  notification.onclick = () => {
+    window.focus();
+    notification.close();
+  };
 }
+
+
+
+
+
+      if (currentChatPartner) {  
+
+        const isPrivateMatch =  
+
+          (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||  
+
+          (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);  
+
+        if (!isPrivateMatch) return;  
+
+      } else {  
+
+        if (msg.privateUid) return;  
+
+      }  
+
+
+
+      const displayName = userNamesCache[msg.uid] || "Anonimen";  
+
+      const isOnline = userStatusCache[msg.uid]?.online;  
+
+      const color = userColorsCache[msg.uid] || null;  
+
+
+
+      const div = document.createElement("div");  
+
+      const senderSpan = document.createElement("span");  
+
+      senderSpan.classList.add("sender");  
+
+
+
+      if (color === "none") {
+  senderSpan.style.display = "none"; // Skrije ime
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
+
+
+      if (isOnline) {  
+
+        senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;  
+
+      } else {  
+
+        senderSpan.textContent = displayName + ": ";  
+
+      }  
+
+
+
+      const realText = document.createElement("span");  
+
+      realText.classList.add("realText");  
+
+      realText.textContent = msg.text;  
+
+
+
+      if (msg.hidden) {  
+
+        const hiddenText = document.createElement("span");  
+
+        hiddenText.classList.add("hiddenText");  
+
+        hiddenText.textContent = "Zasebno sporočilo";  
+
+        div.classList.add("hiddenMessage");  
+
+        div.appendChild(senderSpan);  
+
+        div.appendChild(hiddenText);  
+
+        div.appendChild(realText);  
+
+      } else {  
+
+        div.appendChild(senderSpan);  
+
+        div.appendChild(realText);  
+
+      }  
+
+
+
+      chatBox.appendChild(div);  
+
+      chatBox.scrollTop = chatBox.scrollHeight;  
+
+    });  
+
+  });  
+
+
+
+  function acceptInvite(inviterUid) {  
+
+    currentChatPartner = inviterUid;  
+
+    chatBox.innerHTML = "";  
+
+    alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");  
+
+
+
+    db.ref("messages").push({  
+
+      uid: currentUser.uid,  
+
+      text: "sprejel je tvoje povabilo v zasebni klepet.",  
+
+      system: true,  
+
+      privateUid: inviterUid  
+
+    });  
+
+  }  
 
   async function sendMessage() {  
 
