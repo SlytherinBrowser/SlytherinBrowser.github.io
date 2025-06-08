@@ -221,8 +221,6 @@ width: 100%;
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
-<button class="btn" onclick="backToPublicChat()" id="backButton" style="display: none;">Nazaj</button>
-
 
     </div>
   </div>
@@ -862,22 +860,6 @@ if (Notification.permission === "granted" && !windowHasFocus) {
   });
 
 
-
-if (activePrivateChatUser) {
-    firebase.database().ref(`privateMessages/${currentUserId}_${activePrivateChatUser}`).push({
-      sender: currentUsername,
-      senderId: currentUserId,
-      text,
-      timestamp
-    });
-  } else {
-    firebase.database().ref("publicMessages").push({
-      sender: currentUsername,
-      senderId: currentUserId,
-      text,
-      timestamp
-    });
-  }
 
 
 
@@ -2072,77 +2054,7 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-function loadPublicMessages() {
-  const chatbox = document.getElementById('chatbox');
-  chatbox.innerHTML = '';
-  firebase.database().ref("publicMessages").on("child_added", snapshot => {
-    const msg = snapshot.val();
-    if (!activePrivateChatUser) appendMessage(msg);
-  });
-}
 
-function loadPrivateMessages(userId) {
-  const chatbox = document.getElementById('chatbox');
-  chatbox.innerHTML = '';
-  const path1 = `${currentUserId}_${userId}`;
-  const path2 = `${userId}_${currentUserId}`;
-
-  firebase.database().ref(`privateMessages/${path1}`).on("child_added", snap => {
-    if (activePrivateChatUser === userId) appendMessage(snap.val());
-  });
-
-  firebase.database().ref(`privateMessages/${path2}`).on("child_added", snap => {
-    if (activePrivateChatUser === userId) appendMessage(snap.val());
-  });
-}
-function startPrivateChat(userId, username) {
-  activePrivateChatUser = userId;
-  activePrivateChatUsername = username;
-
-  document.getElementById('chatTitle').textContent = `Zasebni klepet z ${username}`;
-  document.getElementById('backButton').style.display = 'inline-block';
-
-  document.getElementById('chatbox').innerHTML = '';
-  loadPrivateMessages(userId);
-  deleteOldPrivateMessages(userId);
-}
-
-function backToPublicChat() {
-  activePrivateChatUser = null;
-  activePrivateChatUsername = '';
-  document.getElementById('chatTitle').textContent = 'Javni klepet';
-  document.getElementById('backButton').style.display = 'none';
-
-  document.getElementById('chatbox').innerHTML = '';
-  loadPublicMessages();
-}
-
-
-
-function deleteOldPrivateMessages(userId) {
-  const path1 = `${currentUserId}_${userId}`;
-  const path2 = `${userId}_${currentUserId}`;
-  const oneMonthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-
-  [path1, path2].forEach(path => {
-    firebase.database().ref(`privateMessages/${path}`).once("value", snapshot => {
-      snapshot.forEach(child => {
-        if (child.val().timestamp < oneMonthAgo) {
-          firebase.database().ref(`privateMessages/${path}/${child.key}`).remove();
-        }
-      });
-    });
-  });
-}
-
-
-
-function appendMessage(msg) {
-  const div = document.createElement('div');
-  div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
-  document.getElementById('chatbox').appendChild(div);
-  document.getElementById('chatbox').scrollTop = document.getElementById('chatbox').scrollHeight;
-}
 </script>
 </body>
 </html>
