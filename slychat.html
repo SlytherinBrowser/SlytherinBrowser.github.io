@@ -408,9 +408,7 @@ window.addEventListener("blur", () => { windowHasFocus = false; });
 
 
 
-
-
-    db.ref("messages").on("child_added", snapshot => {
+db.ref("messages").on("child_added", snapshot => {
   const msg = snapshot.val();
 
   // Sistemsko sporočilo samo zate
@@ -487,32 +485,20 @@ window.addEventListener("blur", () => { windowHasFocus = false; });
   chatBox.scrollTop = chatBox.scrollHeight;
 });
 
+// Funkcija za sprejem povabila
+function acceptInvite(inviterUid) {
+  currentChatPartner = inviterUid;
+  chatBox.innerHTML = "";
+  alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");
 
-
-  function acceptInvite(inviterUid) {  
-
-    currentChatPartner = inviterUid;  
-
-    chatBox.innerHTML = "";  
-
-    alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");  
-
-
-
-    db.ref("messages").push({  
-
-      uid: currentUser.uid,  
-
-      text: "sprejel je tvoje povabilo v zasebni klepet.",  
-
-      system: true,  
-
-      privateUid: inviterUid  
-
-    });  
-
-  }  
-
+  // Pošlješ sistemsko potrditev pošiljatelju
+  db.ref("messages").push({
+    uid: currentUser.uid,
+    text: "sprejel je tvoje povabilo v zasebni klepet.",
+    system: true,
+    privateUid: inviterUid
+  });
+}
 
   async function sendMessage() {  
 
