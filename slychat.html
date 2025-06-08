@@ -795,6 +795,7 @@ if (Notification.permission === "granted" && !windowHasFocus) {
   }
 
 
+
   let notFoundUsers = [];
 
   let invitedUids = [];
@@ -861,10 +862,6 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
-
-
-
-
   if (invitedUids.length > 0) {
 
     currentChatPartner = invitedUids[0]; // nastavimo prvega kot trenutnega partnerja
@@ -911,7 +908,15 @@ if (Notification.permission === "granted" && !windowHasFocus) {
 
 
 
+  function logout() {  
 
+    auth.signOut().then(() => {  
+
+      window.location.href = "auth.html";  
+
+    });  
+
+  }  
 
 
 
