@@ -863,9 +863,6 @@ if (color === "none") {
 
 }
 
-
-
-    let hidden = isHiddenMode;  
 // Ukaz za kopiranje sporočila: /copy vsebina
 if (textRaw.startsWith("/copy")) {
   const copyText = textRaw.slice(5).trim();
@@ -886,6 +883,7 @@ if (textRaw.startsWith("/copy")) {
   return;
 }
 
+    let hidden = isHiddenMode;  
 
     let text = textRaw;  
 
