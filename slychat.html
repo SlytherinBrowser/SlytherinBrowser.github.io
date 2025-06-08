@@ -451,6 +451,30 @@ width: 100%;
 
 
 
+
+if (msg.copy) {
+  const copyEl = document.createElement("span");
+  copyEl.style.textDecoration = "underline";
+  copyEl.style.cursor = "pointer";
+  copyEl.textContent = msg.text;
+  copyEl.title = "Klikni za kopiranje";
+
+  copyEl.addEventListener("click", () => {
+    navigator.clipboard.writeText(msg.text).then(() => {
+      alert("Besedilo skopirano v odložišče!");
+    }).catch(() => {
+      alert("Kopiranje ni uspelo.");
+    });
+  });
+
+  messageDiv.appendChild(copyEl);
+  return;
+}
+
+
+
+
+
       if (currentChatPartner) {  
 
         const isPrivateMatch =  
@@ -842,6 +866,26 @@ if (color === "none") {
 
 
     let hidden = isHiddenMode;  
+// Ukaz za kopiranje sporočila: /copy vsebina
+if (textRaw.startsWith("/copy")) {
+  const copyText = textRaw.slice(5).trim();
+  if (!copyText) {
+    alert("Vpiši besedilo za kopiranje.");
+    messageInput.value = "";
+    return;
+  }
+
+  db.ref("messages").push({
+    uid: currentUser.uid,
+    text: copyText,
+    copy: true,
+    privateUid: currentChatPartner
+  });
+
+  messageInput.value = "";
+  return;
+}
+
 
     let text = textRaw;  
 
