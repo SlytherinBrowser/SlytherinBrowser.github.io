@@ -597,121 +597,7 @@ if (color === "none") {
 
   }  
 
-const replies = {
-  pozdrav: [
-    "Hej, kako gre?",
-    "Živjo, kaj je novega?",
-    "Čau, upam da je vse okej.",
-    "Ej, lepo te slišat!",
-    "Zdravo! Kako si danes?",
-    "Hej, upam da si v redu!",
-    "Čao, kaj dogaja?"
-  ],
-  kakoSi: [
-    "Fajn, hvala! Kaj pa pri tebi?",
-    "Dobro, hvala za vprašanje.",
-    "Ni slabo, upam da tudi ti.",
-    "Kar okej, hvala za skrb.",
-    "Lepo, kako pa pri tebi?",
-    "Hvala, vse super.",
-    "Zdaj je bolje, hvala!"
-  ],
-  hvala: [
-    "Ni problema!",
-    "Nič hudega.",
-    "Vedno z veseljem.",
-    "Seveda, z veseljem.",
-    "Ni za kaj, prijatelj.",
-    "Vedno tukaj za tebe!",
-    "Prosim, ni treba hvala."
-  ],
-  pomoc: [
-    "Povej, če rabiš kaj.",
-    "Tu sem, če kaj potrebuješ.",
-    "Kar povej, pomagal ti bom.",
-    "Če potrebuješ, samo povej.",
-    "Vedno sem tukaj zate.",
-    "Nič ni težko, če pomagava skupaj.",
-    "Pomagam ti, kolikor lahko."
-  ],
-  slovo: [
-    "Se slišiva kasneje!",
-    "Uživaj dan!",
-    "Čau, kmal nazaj.",
-    "Pazljivo, se vidiva.",
-    "Lepo bodi!",
-    "Do naslednjič!",
-    "Se beremo!"
-  ],
-  tezave: [
-    "Uf, to ni fajn. Če rabiš, sem tukaj.",
-    "Vsak ima kdaj slab dan, ne obupaj.",
-    "Vse bo v redu, samo vztrajaj.",
-    "Drži se, po težavah pride boljše.",
-    "Nisi sam, vedno imaš podporo.",
-    "Če rabiš, lahko poklepetava.",
-    "Skupaj bova našla rešitev."
-  ],
-  veselje: [
-    "Super, veseli me to slišat!",
-    "To je pa dobra novica!",
-    "Lepo je slišat nekaj pozitivnega.",
-    "Naj bo tako naprej!",
-    "Drži to dobro voljo!",
-    "Veselje je nalezljivo!"
-  ],
-  utrujenost: [
-    "Vzemi si čas zase.",
-    "Počitek je pomemben.",
-    "Ne pozabi na sprostitev.",
-    "Pomembno je, da se spočiješ.",
-    "Kmalu bo bolje, vztrajaj.",
-    "Tudi jaz kdaj potrebujem pavzo."
-  ],
-  pohvala: [
-    "Hvala, to mi veliko pomeni.",
-    "Res si prijazen/a.",
-    "Cenim to, hvala!",
-    "Vedno cenim takšne besede.",
-    "Hvala za podporo!",
-    "Ti si super!"
-  ],
-  strah: [
-    "Razumem, da te je strah.",
-    "Včasih je strah normalen.",
-    "Ne boj se, tukaj sem zate.",
-    "Skupaj bova našla pogum.",
-    "Pomembno je, da ne obupaš.",
-    "Vztrajaj, tudi strah mine."
-  ],
-  dolgočas: [
-    "Kaj bi rad počel?",
-    "Mogoče kakšno novo idejo?",
-    "Lahko klepetava malo.",
-    "Poskusi kaj zanimivega.",
-    "Včasih je dolgčas tudi dober počitek.",
-    "Kakšne hobije imaš?"
-  ],
-  hrepenenje: [
-    "Pogrešam tudi jaz dobre čase.",
-    "Upam, da se kmalu vidimo.",
-    "Vsak ima svoje hrepenenje.",
-    "Pomembno je vztrajati.",
-    "Upajmo na najboljše.",
-    "Spomini ostanejo za vedno."
-  ],
-  default: [
-    "Hm, to je zanimivo.",
-    "Povej še kaj!",
-    "Sem tukaj, poslušam.",
-    "Res? Zanimivo slišat.",
-    "Hvala, da si delil to z mano.",
-    "Okej, razumem.",
-    "Nadaljuj, prosim."
-  ]
-};
 
-let autoReplyEnabled = true;
 
 
 
@@ -725,39 +611,6 @@ let autoReplyEnabled = true;
 
 
 
-
-// Ukaz za vklop/izklop avtomatskih odgovorov
-  if (textRaw.startsWith("/autoReply")) {
-    const parts = textRaw.split(" ");
-    if (parts.length === 2) {
-      if (parts[1].toLowerCase() === "on") {
-        autoReplyEnabled = true;
-        await db.ref("messages").push({
-          uid: "bot",
-          text: "Avtomatski odgovori so zdaj VKLOPLJENI.",
-          hidden: false,
-          privateUid: currentChatPartner
-        });
-      } else if (parts[1].toLowerCase() === "off") {
-        autoReplyEnabled = false;
-        await db.ref("messages").push({
-          uid: "bot",
-          text: "Avtomatski odgovori so zdaj IZKLOPLJENI.",
-          hidden: false,
-          privateUid: currentChatPartner
-        });
-      } else {
-        await db.ref("messages").push({
-          uid: "bot",
-          text: "Neveljaven ukaz. Uporabi /autoReply on ali /autoReply off.",
-          hidden: false,
-          privateUid: currentChatPartner
-        });
-      }
-      messageInput.value = "";
-      return;
-    }
-  }
 
 
 
@@ -1064,44 +917,7 @@ if (textRaw.startsWith("/copy")) {
 
 
 
-function randomReply(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
 
-  const keywordMap = {
-    pozdrav: ["hej", "živjo", "čau", "zdravo", "ej", "cao"],
-    kakoSi: ["kako si", "kako gre", "kaj delaš", "kako pa"],
-    hvala: ["hvala", "najlepša hvala", "hvala lepa"],
-    pomoc: ["pomoč", "pomagaj", "rabim pomoč", "lahko pomagate"],
-    slovo: ["adijo", "nasvidenje", "se vidimo", "čau", "zbogom"],
-    tezave: ["težave", "problem", "slabo", "težko", "ne gre", "slab dan"],
-    veselje: ["vesel", "super", "odlično", "fantastično", "dobro"],
-    utrujenost: ["utrujen", "utrujena", "zelo utrujen", "počitek"],
-    pohvala: ["super", "odlično", "dobro delo", "čestitam", "hvala za"],
-    strah: ["strah", "bojim se", "straši me", "nervoz"],
-    dolgočas: ["dolgočasno", "dolgočas", "ni kaj za početi", "bored"],
-    hrepenenje: ["pogrešam", "hrepenim", "rada bi", "želim si"]
-  };
-
-  let matchedCategory = "default";
-
-  for (const [category, keywords] of Object.entries(keywordMap)) {
-    for (const kw of keywords) {
-      if (lowerText.includes(kw)) {
-        matchedCategory = category;
-        break;
-      }
-    }
-    if (matchedCategory !== "default") break;
-  }
-
-  await db.ref("messages").push({
-    uid: "bot",
-    text: randomReply(replies[matchedCategory]),
-    hidden: false,
-    privateUid: currentChatPartner
-  });
-}
 
   function logout() {  
 
