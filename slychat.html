@@ -1439,7 +1439,7 @@ logoutContainer.appendChild(userEmail);
 
 
 // Pridobi trenutno prijavljenega uporabnika
-let currentUser = null;
+
 firebase.auth().onAuthStateChanged(user => {
   currentUser = user;
   if (user) {
