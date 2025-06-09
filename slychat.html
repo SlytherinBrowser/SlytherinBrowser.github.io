@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
 <!-- Firebase -->
@@ -1434,140 +1431,19 @@ userEmail.style.opacity = "0.8";
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
 
-// Poišči container za gumbe
-const con101 = document.getElementById('buttonsContainer');
-if (!con101) throw new Error('Ni najden element z id="buttonsContainer"');
-
-// Nastavi stil kontejnerja (flex vrstica, da so vsi gumbi v eni vrsti)
-con101.style.display = 'flex';
-con101.style.alignItems = 'center';
-con101.style.gap = '8px';
-
-// Funkcija za ustvarjanje gumba z določenim id in tekstom + inline style
-function createButton(id, text) {
-  let btn = con101.querySelector(`#${id}`);
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = id;
-    btn.textContent = text;
-    // Inline stil za širino in margino
-    btn.style.width = '100px';
-    btn.style.flexShrink = '0';
-    btn.style.padding = '6px 8px';
-    btn.style.cursor = 'pointer';
-    con101.appendChild(btn);
-  }
-  return btn;
-}
-
-// Ustvari gumbe
-const logoutBtn = createButton('logoutBtn', 'Odjava');
-const btnMap = createButton('mapBtn', 'Zemljevid');
-const btnToggleActivity = createButton('toggleActiveBtn', 'Vidnost aktivnosti: ON');
-
-// Ustvari modal + overlay, če ne obstajata
-let mapModal = document.getElementById('mapModal');
-if (!mapModal) {
-  mapModal = document.createElement('div');
-  mapModal.id = 'mapModal';
-  Object.assign(mapModal.style, {
-    display: 'none',
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '600px',
-    height: '400px',
-    background: 'white',
-    border: '1px solid #ccc',
-    zIndex: '1000',
-    boxShadow: '0 0 15px rgba(0,0,0,0.3)',
-    paddingTop: '30px',
-    boxSizing: 'border-box',
+// Gumb za odjavo
+const logoutBtn = document.createElement("button");
+logoutBtn.className = "btn1";
+logoutBtn.textContent = "Odjavi se";
+logoutBtn.onclick = () => {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
   });
-
-  const closeBtn = document.createElement('div');
-  closeBtn.id = 'modalCloseBtn';
-  closeBtn.textContent = '×';
-  Object.assign(closeBtn.style, {
-    position: 'absolute',
-    top: '5px',
-    right: '10px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    fontSize: '18px',
-    userSelect: 'none',
-  });
-  mapModal.appendChild(closeBtn);
-
-  const mapDiv = document.createElement('div');
-  mapDiv.id = 'map';
-  Object.assign(mapDiv.style, {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    top: '30px',
-    left: '0',
-  });
-  mapModal.appendChild(mapDiv);
-
-  document.body.appendChild(mapModal);
-}
-
-let modalOverlay = document.getElementById('modalOverlay');
-if (!modalOverlay) {
-  modalOverlay = document.createElement('div');
-  modalOverlay.id = 'modalOverlay';
-  Object.assign(modalOverlay.style, {
-    display: 'none',
-    position: 'fixed',
-    top: '0', left: '0', right: '0', bottom: '0',
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    zIndex: '999',
-  });
-  document.body.appendChild(modalOverlay);
-}
-
-// funkciji za prikaz/skritje modala
-function openModal() {
-  mapModal.style.display = 'block';
-  modalOverlay.style.display = 'block';
-  initMap();
-}
-function closeModal() {
-  mapModal.style.display = 'none';
-  modalOverlay.style.display = 'none';
-}
-
-// Inicializacija Leaflet zemljevida (na Ljubljani)
-function initMap() {
-  if (mapModal._mapInitialized) return;
-  mapModal._mapInitialized = true;
-  const map = L.map('map').setView([46.0569, 14.5058], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-  L.marker([46.0569, 14.5058]).addTo(map)
-    .bindPopup('Lokacija: Ljubljana')
-    .openPopup();
-}
-
-// Dogodki
-btnMap.onclick = openModal;
-document.getElementById('modalCloseBtn').onclick = closeModal;
-modalOverlay.onclick = closeModal;
-
-let activityVisible = true;
-btnToggleActivity.onclick = () => {
-  activityVisible = !activityVisible;
-  btnToggleActivity.textContent = activityVisible ? 'Vidnost aktivnosti: ON' : 'Vidnost aktivnosti: OFF';
-  console.log('Vidnost aktivnosti:', activityVisible);
 };
+logoutContainer.appendChild(logoutBtn);
 
-
-  
-  
 // Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
 auth.onAuthStateChanged((user) => {
   if (user) {
