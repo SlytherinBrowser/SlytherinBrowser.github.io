@@ -2076,38 +2076,39 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-// Pop-up zemljevid ob kliku
+// Elementi za modal
+const mapModal = document.getElementById("mapModal");
+
+let map; // da ne ustvarimo večkrat
+
 batterySpan.addEventListener("click", () => {
-  document.getElementById("mapModal").style.display = "block";
+  mapModal.style.display = "block";
 
-  // Inicializiraj zemljevid (če še ni)
-  if (!window.map) {
-    window.map = L.map('map').setView([46.05, 14.5], 13); // začetna pozicija
-
+  // Inicializacija zemljevida samo enkrat
+  if (!map) {
+    map = L.map('map').setView([46.0569, 14.5058], 13); // začetni center
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
-    }).addTo(window.map);
+    }).addTo(map);
   }
 
-  // Počisti stare markerje
-  if (window.markers) {
-    window.markers.forEach(marker => window.map.removeLayer(marker));
-  }
-  window.markers = [];
+  // Počisti prejšnje markerje
+  map.eachLayer((layer) => {
+    if (layer instanceof L.Marker) map.removeLayer(layer);
+  });
 
-  // Preberi lokacije iz Firebase
+  // Pridobi podatke iz Firebase Realtime Database
   const db = firebase.database();
   db.ref("locations").once("value", (snapshot) => {
     const data = snapshot.val();
-    if (!data) return;
-
-    for (const [userId, loc] of Object.entries(data)) {
-      const marker = L.marker([loc.lat, loc.lng]).addTo(window.map)
-        .bindPopup(`Uporabnik: ${userId}`);
-      window.markers.push(marker);
+    if (data) {
+      Object.entries(data).forEach(([userId, loc]) => {
+        if (loc.lat && loc.lng) {
+          L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(`Uporabnik: ${userId}`);
+        }
+      });
     }
   });
-});
 
 
 
