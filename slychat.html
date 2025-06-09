@@ -1434,86 +1434,83 @@ userEmail.style.opacity = "0.8";
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
 
-// Dodaj stil za .btn1 in modal preko JS
-const style = document.createElement('style');
-style.textContent = `
-  .btn1 {
-    width: 100px !important;
-    margin-left: 8px;
-  }
-  #buttonsContainer {
-    display: flex;
-    align-items: center;
-  }
-  #mapModal {
-    display: none;
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px; height: 400px;
-    background: white;
-    border: 1px solid #ccc;
-    z-index: 1000;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-  }
-  #mapModal.show {
-    display: block;
-  }
-  #map {
-    height: 100%;
-    width: 100%;
-  }
-  #modalCloseBtn {
-    position: absolute;
-    top: 5px; right: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 18px;
-  }
-  #modalOverlay {
-    display: none;
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.4);
-    z-index: 999;
-  }
-  #modalOverlay.show {
-    display: block;
-  }
-`;
-document.head.appendChild(style);
-
 // Poišči container za gumbe
-const container = document.getElementById('buttonsContainer');
-if (!container) throw new Error('Ni najden element z id="buttonsContainer"');
+const con101 = document.getElementById('buttonsContainer');
+if (!con101) throw new Error('Ni najden element z id="buttonsContainer"');
 
-// Funkcija za ustvarjanje gumba z določenim id, tekstom in class
+// Nastavi stil kontejnerja (flex vrstica, da so vsi gumbi v eni vrsti)
+con101.style.display = 'flex';
+con101.style.alignItems = 'center';
+con101.style.gap = '8px';
+
+// Funkcija za ustvarjanje gumba z določenim id in tekstom + inline style
 function createButton(id, text) {
-  let btn = container.querySelector(`#${id}`);
+  let btn = con101.querySelector(`#${id}`);
   if (!btn) {
     btn = document.createElement('button');
     btn.id = id;
-    btn.classList.add('btn1');
     btn.textContent = text;
-    container.appendChild(btn);
+    // Inline stil za širino in margino
+    btn.style.width = '100px';
+    btn.style.flexShrink = '0';
+    btn.style.padding = '6px 8px';
+    btn.style.cursor = 'pointer';
+    con101.appendChild(btn);
   }
   return btn;
 }
 
 // Ustvari gumbe
 const logoutBtn = createButton('logoutBtn', 'Odjava');
-const mapBtn = createButton('mapBtn', 'Zemljevid');
-const toggleActiveBtn = createButton('toggleActiveBtn', 'Vidnost aktivnosti: ON');
+const btnMap = createButton('mapBtn', 'Zemljevid');
+const btnToggleActivity = createButton('toggleActiveBtn', 'Vidnost aktivnosti: ON');
 
 // Ustvari modal + overlay, če ne obstajata
 let mapModal = document.getElementById('mapModal');
 if (!mapModal) {
   mapModal = document.createElement('div');
   mapModal.id = 'mapModal';
-  mapModal.innerHTML = `
-    <div id="modalCloseBtn">×</div>
-    <div id="map"></div>
-  `;
+  Object.assign(mapModal.style, {
+    display: 'none',
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: '600px',
+    height: '400px',
+    background: 'white',
+    border: '1px solid #ccc',
+    zIndex: '1000',
+    boxShadow: '0 0 15px rgba(0,0,0,0.3)',
+    paddingTop: '30px',
+    boxSizing: 'border-box',
+  });
+
+  const closeBtn = document.createElement('div');
+  closeBtn.id = 'modalCloseBtn';
+  closeBtn.textContent = '×';
+  Object.assign(closeBtn.style, {
+    position: 'absolute',
+    top: '5px',
+    right: '10px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '18px',
+    userSelect: 'none',
+  });
+  mapModal.appendChild(closeBtn);
+
+  const mapDiv = document.createElement('div');
+  mapDiv.id = 'map';
+  Object.assign(mapDiv.style, {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: '30px',
+    left: '0',
+  });
+  mapModal.appendChild(mapDiv);
+
   document.body.appendChild(mapModal);
 }
 
@@ -1521,7 +1518,25 @@ let modalOverlay = document.getElementById('modalOverlay');
 if (!modalOverlay) {
   modalOverlay = document.createElement('div');
   modalOverlay.id = 'modalOverlay';
+  Object.assign(modalOverlay.style, {
+    display: 'none',
+    position: 'fixed',
+    top: '0', left: '0', right: '0', bottom: '0',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: '999',
+  });
   document.body.appendChild(modalOverlay);
+}
+
+// funkciji za prikaz/skritje modala
+function openModal() {
+  mapModal.style.display = 'block';
+  modalOverlay.style.display = 'block';
+  initMap();
+}
+function closeModal() {
+  mapModal.style.display = 'none';
+  modalOverlay.style.display = 'none';
 }
 
 // Inicializacija Leaflet zemljevida (na Ljubljani)
@@ -1538,31 +1553,20 @@ function initMap() {
     .openPopup();
 }
 
-// Odpri modal ob kliku na Zemljevid
-mapBtn.onclick = () => {
-  mapModal.classList.add('show');
-  modalOverlay.classList.add('show');
-  initMap();
-};
-
-// Zapri modal ob kliku na × ali overlay
+// Dogodki
+btnMap.onclick = openModal;
 document.getElementById('modalCloseBtn').onclick = closeModal;
 modalOverlay.onclick = closeModal;
-function closeModal() {
-  mapModal.classList.remove('show');
-  modalOverlay.classList.remove('show');
-}
 
-// Preklop vidnosti aktivnosti
 let activityVisible = true;
-toggleActiveBtn.onclick = () => {
+btnToggleActivity.onclick = () => {
   activityVisible = !activityVisible;
-  toggleActiveBtn.textContent = activityVisible ? 'Vidnost aktivnosti: ON' : 'Vidnost aktivnosti: OFF';
+  btnToggleActivity.textContent = activityVisible ? 'Vidnost aktivnosti: ON' : 'Vidnost aktivnosti: OFF';
   console.log('Vidnost aktivnosti:', activityVisible);
 };
 
 
-
+  
   
 // Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
 auth.onAuthStateChanged((user) => {
