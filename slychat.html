@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
 <!-- Firebase -->
@@ -1431,146 +1434,132 @@ userEmail.style.opacity = "0.8";
 logoutContainer.appendChild(userName);
 logoutContainer.appendChild(userEmail);
 
-// Poišči obstoječi gumb z id "btn1"
-const buttons = document.querySelectorAll('#btn1');
-
-// Če nimaš več gumbov z idjem btn1, naredi vsaj enega
-if (buttons.length === 0) {
-  console.error('Ni gumbov z id="btn1" v DOM-u.');
-}
-
-// Funkcija za nastavljanje enakega sloga za vse gumbke
-function setButtonStyle(btn) {
-  btn.style.width = '90px';
-  btn.style.marginRight = '8px';
-  btn.style.display = 'inline-block';
-  btn.style.cssText += 'width:90px !important; margin-right:8px !important; display:inline-block !important;';
-}
-
-// Skrajšaj obstoječe gumbke in dodaj dva nova
-buttons.forEach(btn => setButtonStyle(btn));
-
-// Če so samo obstoječi gumbi, dodamo dva nova ob prvem gumbu
-if (buttons.length > 0) {
-  const parent = buttons[0].parentNode;
-
-  // Ustvari gumb za zemljevid
-  const mapBtn = document.createElement('button');
-  mapBtn.id = 'btn1';
-  mapBtn.textContent = 'Zemljevid';
-  setButtonStyle(mapBtn);
-
-  // Ustvari gumb za vidljivost aktivnosti
-  const toggleActiveBtn = document.createElement('button');
-  toggleActiveBtn.id = 'btn1';
-  toggleActiveBtn.textContent = 'Vidnost aktivnosti';
-  setButtonStyle(toggleActiveBtn);
-
-  // Dodaj gumbe zraven obstoječega
-  parent.insertBefore(mapBtn, buttons[0].nextSibling);
-  parent.insertBefore(toggleActiveBtn, mapBtn.nextSibling);
-
-  // Nastavi display flex za parent, da so v vrstici
-  parent.style.display = 'flex';
-  parent.style.alignItems = 'center';
-
-  // Modal za zemljevid - ustvarimo enkrat v DOM
-  const modal = document.createElement('div');
-  modal.id = 'mapModal';
-  modal.style.cssText = `
-    display:none; 
-    position:fixed; 
-    top:0; left:0; right:0; bottom:0; 
-    background: rgba(0,0,0,0.6); 
-    justify-content:center; 
-    align-items:center; 
-    z-index:9999;
-  `;
-
-  const modalContent = document.createElement('div');
-  modalContent.style.cssText = `
-    position:relative; 
-    width:80vw; 
-    height:80vh; 
-    background:#fff; 
-    border-radius:8px; 
-    overflow:hidden;
-    display:flex; 
-    flex-direction:column;
-  `;
-
-  // Zapiralni gumb
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = 'Zapri';
-  closeBtn.style.cssText = `
-    align-self:flex-end; 
-    margin:10px; 
-    padding:5px 10px; 
-    font-size:16px;
-  `;
-
-  // Div za zemljevid
-  const mapDiv = document.createElement('div');
-  mapDiv.id = 'mapContainer';
-  mapDiv.style.cssText = 'flex:1 1 auto;';
-
-  modalContent.appendChild(closeBtn);
-  modalContent.appendChild(mapDiv);
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-
-  // Leaflet CSS in JS naloži, če še ni naložen
-  function loadLeaflet(callback) {
-    if (window.L) {
-      callback();
-      return;
-    }
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet/dist/leaflet.css';
-    document.head.appendChild(link);
-
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet/dist/leaflet.js';
-    script.onload = callback;
-    document.body.appendChild(script);
+// Dodaj stil za .btn1 in modal preko JS
+const style = document.createElement('style');
+style.textContent = `
+  .btn1 {
+    width: 100px !important;
+    margin-left: 8px;
   }
+  #buttonsContainer {
+    display: flex;
+    align-items: center;
+  }
+  #mapModal {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 400px;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  #mapModal.show {
+    display: block;
+  }
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+  #modalCloseBtn {
+    position: absolute;
+    top: 5px; right: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  #modalOverlay {
+    display: none;
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+  }
+  #modalOverlay.show {
+    display: block;
+  }
+`;
+document.head.appendChild(style);
 
-  let mapInstance = null;
+// Poišči container za gumbe
+const container = document.getElementById('buttonsContainer');
+if (!container) throw new Error('Ni najden element z id="buttonsContainer"');
 
-  mapBtn.onclick = () => {
-    modal.style.display = 'flex';
-    if (!mapInstance) {
-      loadLeaflet(() => {
-        mapInstance = L.map('mapContainer').setView([46.0569, 14.5058], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap'
-        }).addTo(mapInstance);
-        L.marker([46.0569, 14.5058]).addTo(mapInstance)
-          .bindPopup('Lokacija: Ljubljana')
-          .openPopup();
-      });
-    } else {
-      // Če je že naložen zemljevid, samo refresha viewport, da se pravilno prikaže
-      mapInstance.invalidateSize();
-    }
-  };
-
-  closeBtn.onclick = () => {
-    modal.style.display = 'none';
-  };
-
-  // Preklop vidljivosti aktivnosti
-  let activityVisible = true;
-  toggleActiveBtn.onclick = () => {
-    activityVisible = !activityVisible;
-    toggleActiveBtn.textContent = activityVisible ? 'Vidnost aktivnosti: ON' : 'Vidnost aktivnosti: OFF';
-    console.log('Vidnost aktivnosti je zdaj:', activityVisible);
-    // Tukaj lahko dodaš kodo za dejanski preklop vidnosti aktivnosti
-  };
+// Funkcija za ustvarjanje gumba z določenim id, tekstom in class
+function createButton(id, text) {
+  let btn = container.querySelector(`#${id}`);
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = id;
+    btn.classList.add('btn1');
+    btn.textContent = text;
+    container.appendChild(btn);
+  }
+  return btn;
 }
 
+// Ustvari gumbe
+const logoutBtn = createButton('logoutBtn', 'Odjava');
+const mapBtn = createButton('mapBtn', 'Zemljevid');
+const toggleActiveBtn = createButton('toggleActiveBtn', 'Vidnost aktivnosti: ON');
+
+// Ustvari modal + overlay, če ne obstajata
+let mapModal = document.getElementById('mapModal');
+if (!mapModal) {
+  mapModal = document.createElement('div');
+  mapModal.id = 'mapModal';
+  mapModal.innerHTML = `
+    <div id="modalCloseBtn">×</div>
+    <div id="map"></div>
+  `;
+  document.body.appendChild(mapModal);
+}
+
+let modalOverlay = document.getElementById('modalOverlay');
+if (!modalOverlay) {
+  modalOverlay = document.createElement('div');
+  modalOverlay.id = 'modalOverlay';
+  document.body.appendChild(modalOverlay);
+}
+
+// Inicializacija Leaflet zemljevida (na Ljubljani)
+function initMap() {
+  if (mapModal._mapInitialized) return;
+  mapModal._mapInitialized = true;
+  const map = L.map('map').setView([46.0569, 14.5058], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+  L.marker([46.0569, 14.5058]).addTo(map)
+    .bindPopup('Lokacija: Ljubljana')
+    .openPopup();
+}
+
+// Odpri modal ob kliku na Zemljevid
+mapBtn.onclick = () => {
+  mapModal.classList.add('show');
+  modalOverlay.classList.add('show');
+  initMap();
+};
+
+// Zapri modal ob kliku na × ali overlay
+document.getElementById('modalCloseBtn').onclick = closeModal;
+modalOverlay.onclick = closeModal;
+function closeModal() {
+  mapModal.classList.remove('show');
+  modalOverlay.classList.remove('show');
+}
+
+// Preklop vidnosti aktivnosti
+let activityVisible = true;
+toggleActiveBtn.onclick = () => {
+  activityVisible = !activityVisible;
+  toggleActiveBtn.textContent = activityVisible ? 'Vidnost aktivnosti: ON' : 'Vidnost aktivnosti: OFF';
+  console.log('Vidnost aktivnosti:', activityVisible);
+};
 
 
 
