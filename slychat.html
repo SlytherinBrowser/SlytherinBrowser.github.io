@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
 <!-- Firebase -->
@@ -224,6 +227,15 @@ width: 100%;
 
     </div>
   </div>
+
+
+
+
+  <div id="mapModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:#fff; border:2px solid #333; z-index:9999;">
+  <div id="map" style="width: 100%; height: 100%;"></div>
+    <button onclick="document.getElementById('mapModal').style.display='none'" style="position:absolute;top:5px;right:5px;z-index:10000;">Zapri</button>
+
+</div>
 
 <script>  
 
@@ -2064,7 +2076,38 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
+// Pop-up zemljevid ob kliku
+batterySpan.addEventListener("click", () => {
+  document.getElementById("mapModal").style.display = "block";
 
+  // Inicializiraj zemljevid (če še ni)
+  if (!window.map) {
+    window.map = L.map('map').setView([46.05, 14.5], 13); // začetna pozicija
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(window.map);
+  }
+
+  // Počisti stare markerje
+  if (window.markers) {
+    window.markers.forEach(marker => window.map.removeLayer(marker));
+  }
+  window.markers = [];
+
+  // Preberi lokacije iz Firebase
+  const db = firebase.database();
+  db.ref("locations").once("value", (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    for (const [userId, loc] of Object.entries(data)) {
+      const marker = L.marker([loc.lat, loc.lng]).addTo(window.map)
+        .bindPopup(`Uporabnik: ${userId}`);
+      window.markers.push(marker);
+    }
+  });
+});
 
 
 
