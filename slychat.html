@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <title>Slychat</title>
   <link id="favicon" rel="icon" href="Slytherin.ico">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
 <!-- Firebase -->
@@ -227,15 +224,6 @@ width: 100%;
 
     </div>
   </div>
-
-
-
-
-  <div id="mapModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:#fff; border:2px solid #333; z-index:9999;">
-  <div id="map" style="width: 100%; height: 100%;"></div>
-    <button onclick="document.getElementById('mapModal').style.display='none'" style="position:absolute;top:5px;right:5px;z-index:10000;">Zapri</button>
-
-</div>
 
 <script>  
 
@@ -2076,39 +2064,7 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-// Elementi za modal
-const mapModal = document.getElementById("mapModal");
 
-let map; // da ne ustvarimo večkrat
-
-batterySpan.addEventListener("click", () => {
-  mapModal.style.display = "block";
-
-  // Inicializacija zemljevida samo enkrat
-  if (!map) {
-    map = L.map('map').setView([46.0569, 14.5058], 13); // začetni center
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-  }
-
-  // Počisti prejšnje markerje
-  map.eachLayer((layer) => {
-    if (layer instanceof L.Marker) map.removeLayer(layer);
-  });
-
-  // Pridobi podatke iz Firebase Realtime Database
-  const db = firebase.database();
-  db.ref("locations").once("value", (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      Object.entries(data).forEach(([userId, loc]) => {
-        if (loc.lat && loc.lng) {
-          L.marker([loc.lat, loc.lng]).addTo(map).bindPopup(`Uporabnik: ${userId}`);
-        }
-      });
-    }
-  });
 
 
 
