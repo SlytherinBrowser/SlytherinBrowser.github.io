@@ -1462,15 +1462,7 @@ logoutContainer.appendChild(logoutBtn);
 auth.onAuthStateChanged((user) => {
   
 
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(position => {
-    firebase.database().ref("locations/" + user.uid).set({
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-      timestamp: Date.now()
-    });
-  });
-}
+
 
 
 if (user) {
@@ -1492,6 +1484,17 @@ if (navigator.getBattery) {
     battery.addEventListener("levelchange", sendBatteryStatus);
     battery.addEventListener("chargingchange", sendBatteryStatus);
   });
+
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(position => {
+    firebase.database().ref("locations/" + user.uid).set({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      timestamp: Date.now()
+    });
+  });
+}
 }
     userName.textContent = ime;
     userEmail.textContent = mail;
