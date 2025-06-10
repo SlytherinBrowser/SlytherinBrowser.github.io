@@ -15,8 +15,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -1484,17 +1482,6 @@ if (navigator.getBattery) {
     battery.addEventListener("levelchange", sendBatteryStatus);
     battery.addEventListener("chargingchange", sendBatteryStatus);
   });
-
-
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(position => {
-    firebase.database().ref("locations/" + user.uid).set({
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-      timestamp: Date.now()
-    });
-  });
-}
 }
     userName.textContent = ime;
     userEmail.textContent = mail;
@@ -2095,87 +2082,6 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-let lastShake = 0;
-window.addEventListener("devicemotion", (event) => {
-  const acc = event.accelerationIncludingGravity;
-  const totalAcc = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
-
-  const now = Date.now();
-  if (totalAcc > 20 && now - lastShake > 2000) {  // prag & debounce
-    lastShake = now;
-    showUserMapPopup();
-  }
-});
-function showUserMapPopup() {
-  // Ustvari ozadje (modal)
-  const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.top = 0;
-  overlay.style.left = 0;
-  overlay.style.width = "100vw";
-  overlay.style.height = "100vh";
-  overlay.style.backgroundColor = "rgba(0,0,0,0.7)";
-  overlay.style.display = "flex";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
-  overlay.style.zIndex = 9999;
-
-  // Ustvari vsebino (mapa)
-  const mapContainer = document.createElement("div");
-  mapContainer.style.width = "90vw";
-  mapContainer.style.height = "80vh";
-  mapContainer.style.backgroundColor = "white";
-  mapContainer.style.borderRadius = "12px";
-  mapContainer.style.overflow = "hidden";
-  mapContainer.style.position = "relative";
-
-  const closeBtn = document.createElement("button");
-  closeBtn.textContent = "✖";
-  closeBtn.style.position = "absolute";
-  closeBtn.style.top = "10px";
-  closeBtn.style.right = "10px";
-  closeBtn.style.zIndex = 2;
-  closeBtn.style.background = "transparent";
-  closeBtn.style.border = "none";
-  closeBtn.style.fontSize = "20px";
-  closeBtn.style.cursor = "pointer";
-  closeBtn.addEventListener("click", () => overlay.remove());
-
-  mapContainer.appendChild(closeBtn);
-
-  const mapDiv = document.createElement("div");
-  mapDiv.id = "userMap";
-  mapDiv.style.width = "100%";
-  mapDiv.style.height = "100%";
-  mapContainer.appendChild(mapDiv);
-
-  overlay.appendChild(mapContainer);
-  document.body.appendChild(overlay);
-
-  initUserMap(); // inicializiraj zemljevid
-}
-
-function initUserMap() {
-  const map = L.map('userMap').setView([46.05, 14.5], 7); // Slovenija
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(map);
-
-  // Povleci lokacije aktivnih uporabnikov
-  const active = Object.entries(userStatusCache)
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
-
-  active.forEach(([uid]) => {
-    firebase.database().ref("locations/" + uid).once("value").then(snapshot => {
-      const loc = snapshot.val();
-      if (loc && loc.lat && loc.lng) {
-        const name = userNamesCache[uid] || "Uporabnik";
-        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        marker.bindPopup(`<b>${name}</b>`).openPopup();
-      }
-    });
-  });
-}
 
 
 
