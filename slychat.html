@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <title>Slychat</title>
 
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <link id="favicon" rel="icon" href="Slytherin.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1438,7 +1439,15 @@ logoutContainer.appendChild(logoutBtn);
 auth.onAuthStateChanged((user) => {
   
 
-
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(pos => {
+    firebase.database().ref("locations/" + user.uid).set({
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      timestamp: Date.now()
+    });
+  });
+}
 
 
 if (user) {
@@ -2060,10 +2069,105 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
+function loadActiveUsersOnMap(container) {
+  if (typeof L === 'undefined') {
+    alert("Zemljevid ni na voljo (Leaflet.js ni naložen).");
+    return;
+  }
+
+  const map = L.map(container).setView([46.0569, 14.5058], 8); // center Slovenija
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+  }).addTo(map);
+
+  // 🔄 Pridobi lokacije iz Firebase
+  firebase.database().ref("locations").once("value").then(snapshot => {
+    snapshot.forEach(child => {
+      const loc = child.val();
+      if (loc && loc.lat && loc.lng && child.key !== currentUser.uid) {
+        const name = userNamesCache[child.key] || "Anonimen";
+        L.marker([loc.lat, loc.lng])
+          .addTo(map)
+          .bindPopup(name);
+      }
+    });
+  });
+}
+
+function showActiveUserMapPopup() {
+  if (window.activeMapAlreadyShown) return; // prepreči spam
+
+  window.activeMapAlreadyShown = true;
+
+  // 📦 Okno za zemljevid
+  const mapPopup = document.createElement("div");
+  mapPopup.style.position = "fixed";
+  mapPopup.style.top = "50%";
+  mapPopup.style.left = "50%";
+  mapPopup.style.transform = "translate(-50%, -50%)";
+  mapPopup.style.width = "90vw";
+  mapPopup.style.height = "60vh";
+  mapPopup.style.zIndex = "9999";
+  mapPopup.style.background = "white";
+  mapPopup.style.border = "2px solid black";
+  mapPopup.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+  mapPopup.style.borderRadius = "16px";
+  mapPopup.style.overflow = "hidden";
+
+  // ❌ Gumb za zapiranje
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "Zapri";
+  closeBtn.style.position = "absolute";
+  closeBtn.style.top = "10px";
+  closeBtn.style.right = "10px";
+  closeBtn.style.zIndex = "10000";
+  closeBtn.style.padding = "5px 10px";
+  closeBtn.onclick = () => {
+    document.body.removeChild(mapPopup);
+    window.activeMapAlreadyShown = false;
+  };
+  mapPopup.appendChild(closeBtn);
+
+  // 🗺️ Element za zemljevid
+  const mapDiv = document.createElement("div");
+  mapDiv.style.width = "100%";
+  mapDiv.style.height = "100%";
+  mapPopup.appendChild(mapDiv);
+
+  document.body.appendChild(mapPopup);
+
+  // 🌍 Naloži zemljevid s prikazom aktivnih uporabnikov
+  loadActiveUsersOnMap(mapDiv);
+}
 
 
+// 🧠 Meja za zaznavanje tresenja miške (v px/s)
+const mouseShakeThreshold = 3000;
+let lastMouseTime = 0;
+let lastMouseX = 0;
+let lastMouseY = 0;
 
+// 🖱️ Detekcija hitrega premika miške
+document.addEventListener("mousemove", (e) => {
+  const now = Date.now();
+  const dt = now - lastMouseTime;
 
+  if (dt < 50) return; // preskoči zelo pogoste evente
+
+  const dx = e.screenX - lastMouseX;
+  const dy = e.screenY - lastMouseY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const speed = distance / dt * 1000; // px/s
+
+  if (speed > mouseShakeThreshold) {
+    showActiveUserMapPopup(); // 🔥 pokaži zemljevid kot pri tresenju
+  }
+
+  lastMouseTime = now;
+  lastMouseX = e.screenX;
+  lastMouseY = e.screenY;
+});
 
 </script>
 </body>
