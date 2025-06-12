@@ -229,6 +229,7 @@ width: 100%;
 
     <div class="actions">
       <button class="btn" onclick="sendMessage()">Pošlji</button>
+<button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
 
 
     </div>
@@ -2085,7 +2086,7 @@ window.addEventListener("devicemotion", (event) => {
   }
 });
 document.getElementById("openMapBtn").addEventListener("click", () => {
-  showActiveUserMapPopup();
+  showUserMapPopup();
 });
 function toggleMapButtonVisibility() {
   const btn = document.getElementById("openMapBtn");
@@ -2094,6 +2095,9 @@ function toggleMapButtonVisibility() {
 
 window.addEventListener("resize", toggleMapButtonVisibility);
 window.addEventListener("load", toggleMapButtonVisibility);
+
+
+
 
 
 
