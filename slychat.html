@@ -2079,7 +2079,32 @@ window.addEventListener("devicemotion", (event) => {
   }
 });
 
+// 🧠 Meja za zaznavanje tresenja miške (v px/s)
+const mouseShakeThreshold = 3000;
+let lastMouseTime = 0;
+let lastMouseX = 0;
+let lastMouseY = 0;
 
+// 🖱️ Detekcija hitrega premika miške
+document.addEventListener("mousemove", (e) => {
+  const now = Date.now();
+  const dt = now - lastMouseTime;
+
+  if (dt < 50) return; // preskoči zelo pogoste evente
+
+  const dx = e.screenX - lastMouseX;
+  const dy = e.screenY - lastMouseY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const speed = distance / dt * 1000; // px/s
+
+  if (speed > mouseShakeThreshold) {
+    showActiveUserMapPopup(); // 🔥 pokaži zemljevid kot pri tresenju
+  }
+
+  lastMouseTime = now;
+  lastMouseX = e.screenX;
+  lastMouseY = e.screenY;
+});
 function showUserMapPopup() {
   // Ustvari ozadje (modal)
   const overlay = document.createElement("div");
