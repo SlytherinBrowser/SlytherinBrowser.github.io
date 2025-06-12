@@ -2169,6 +2169,28 @@ document.addEventListener("mousemove", (e) => {
   lastMouseY = e.screenY;
 });
 
+
+function initUserMap() {
+  const map = L.map('userMap').setView([46.05, 14.5], 7); // Slovenija
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // Povleci lokacije aktivnih uporabnikov
+  const active = Object.entries(userStatusCache)
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+  active.forEach(([uid]) => {
+    firebase.database().ref("locations/" + uid).once("value").then(snapshot => {
+      const loc = snapshot.val();
+      if (loc && loc.lat && loc.lng) {
+        const name = userNamesCache[uid] || "Uporabnik";
+        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+        marker.bindPopup(`<b>${name}</b>`).openPopup();
+      }
+    });
+  });
+}
 </script>
 </body>
 </html>
