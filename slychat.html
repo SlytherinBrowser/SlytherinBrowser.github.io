@@ -605,11 +605,16 @@ if (color === "none") {
 
   async function sendMessage() {  
 
+
     if (!currentUser) return;  
 
     const textRaw = messageInput.value.trim();  
 
     if (!textRaw) return;  
+
+
+
+
 
 
 
@@ -641,13 +646,7 @@ if (color === "none") {
       return;  
 
     }  
- messageInput.value = "";
 
-  // Če so avtomatski odgovori izklopljeni, ne odgovarjaj
-  if (!autoReplyEnabled) return;
-
-  // Preveri ključno besedo v sporočilu
-  const lowerText = textRaw.toLowerCase();
 
 
     // Ukaz za spremembo imena: *name*novoime  
@@ -873,25 +872,7 @@ if (color === "none") {
 
 }
 
-// Ukaz za kopiranje sporočila: /copy vsebina
-if (textRaw.startsWith("/copy")) {
-  const copyText = textRaw.slice(5).trim();
-  if (!copyText) {
-    alert("Vpiši besedilo za kopiranje.");
-    messageInput.value = "";
-    return;
-  }
 
-  db.ref("messages").push({
-    uid: currentUser.uid,
-    text: copyText,
-    copy: true,
-    privateUid: currentChatPartner
-  });
-
-  messageInput.value = "";
-  return;
-}
 
     let hidden = isHiddenMode;  
 
@@ -919,8 +900,6 @@ if (textRaw.startsWith("/copy")) {
 
 
 
-
-
   function logout() {  
 
     auth.signOut().then(() => {  
@@ -942,7 +921,6 @@ if (textRaw.startsWith("/copy")) {
     }  
 
   });  
-
 
 
 
