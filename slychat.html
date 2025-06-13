@@ -2102,7 +2102,6 @@ window.addEventListener("load", toggleMapButtonVisibility);
 
 
 function showUserMapPopup() {
-  // Ustvari ozadje (modal)
   const overlay = document.createElement("div");
   overlay.style.position = "fixed";
   overlay.style.top = 0;
@@ -2115,7 +2114,6 @@ function showUserMapPopup() {
   overlay.style.alignItems = "center";
   overlay.style.zIndex = 9999;
 
-  // Ustvari vsebino (mapa)
   const mapContainer = document.createElement("div");
   mapContainer.style.width = "90vw";
   mapContainer.style.height = "80vh";
@@ -2138,6 +2136,49 @@ function showUserMapPopup() {
 
   mapContainer.appendChild(closeBtn);
 
+  // Tukaj bo container za izbiro ikone
+  const iconChooser = document.createElement("div");
+  iconChooser.style.position = "absolute";
+  iconChooser.style.top = "50%";
+  iconChooser.style.left = "50%";
+  iconChooser.style.transform = "translate(-50%, -50%)";
+  iconChooser.style.background = "white";
+  iconChooser.style.padding = "20px";
+  iconChooser.style.borderRadius = "12px";
+  iconChooser.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+  iconChooser.style.zIndex = 5;
+  iconChooser.style.textAlign = "center";
+  iconChooser.style.maxWidth = "300px";
+
+  iconChooser.innerHTML = `
+    <h3>Izberi svojo ikono</h3>
+   <div style="font-size: 30px; margin: 10px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
+  <button class="icon-btn" style="margin:5px;">🚗</button>
+  <button class="icon-btn" style="margin:5px;">🚀</button>
+  <button class="icon-btn" style="margin:5px;">🐱</button>
+  <button class="icon-btn" style="margin:5px;">🎯</button>
+  <button class="icon-btn" style="margin:5px;">🌟</button>
+  <button class="icon-btn" style="margin:5px;">🐉</button>
+  <button class="icon-btn" style="margin:5px;">🌈</button>
+  <button class="icon-btn" style="margin:5px;">🔥</button>
+  <button class="icon-btn" style="margin:5px;">🍀</button>
+  <button class="icon-btn" style="margin:5px;">⚡</button>
+  <button class="icon-btn" style="margin:5px;">🐢</button>
+  <button class="icon-btn" style="margin:5px;">🎵</button>
+  <button class="icon-btn" style="margin:5px;">🦄</button>
+  <button class="icon-btn" style="margin:5px;">🍎</button>
+  <button class="icon-btn" style="margin:5px;">🏀</button>
+  <button class="icon-btn" style="margin:5px;">💎</button>
+  <button class="icon-btn" style="margin:5px;">🌻</button>
+  <button class="icon-btn" style="margin:5px;">🚴</button>
+  <button class="icon-btn" style="margin:5px;">🎮</button>
+  <button class="icon-btn" style="margin:5px;">🌙</button>
+</div>
+    <button id="iconSaveBtn" disabled style="margin-top:10px; padding: 5px 10px;">Shrani</button>
+  `;
+
+  mapContainer.appendChild(iconChooser);
+
   const mapDiv = document.createElement("div");
   mapDiv.id = "userMap";
   mapDiv.style.width = "100%";
@@ -2147,33 +2188,87 @@ function showUserMapPopup() {
   overlay.appendChild(mapContainer);
   document.body.appendChild(overlay);
 
-  initUserMap(); // inicializiraj zemljevid
+  let selectedIcon = null;
+  const iconButtons = iconChooser.querySelectorAll(".icon-btn");
+  const saveBtn = iconChooser.querySelector("#iconSaveBtn");
+
+  iconButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedIcon = btn.textContent;
+      // Označi izbrano ikono (doda border)
+      iconButtons.forEach(b => b.style.border = "none");
+      btn.style.border = "2px solid blue";
+      saveBtn.disabled = false;
+    });
+  });
+
+  saveBtn.addEventListener("click", () => {
+    if (!selectedIcon) return;
+    // Shrani v Firebase pod userIcons/currentUser.uid
+    firebase.database().ref("userIcons/" + currentUser.uid).set(selectedIcon)
+      .then(() => {
+        iconChooser.style.display = "none";
+        initUserMap(selectedIcon); // Zdaj nariši zemljevid z izbrano ikono
+      })
+      .catch(err => {
+        alert("Napaka pri shranjevanju ikone: " + err.message);
+      });
+  });
+
+  // Preveri, če že ima uporabnik ikono v Firebase (enkratno)
+  firebase.database().ref("userIcons/" + currentUser.uid).once("value").then(snapshot => {
+    const icon = snapshot.val();
+    if (icon) {
+      selectedIcon = icon;
+      iconChooser.style.display = "none";
+      initUserMap(icon);
+    }
+    // Če nima, izbira ostane vidna in uporabnik mora izbrati
+  });
 }
 
-
-
-
-function initUserMap() {
-  const map = L.map('userMap').setView([46.05, 14.5], 7); // Slovenija
+function initUserMap(currentUserIcon) {
+  const map = L.map('userMap').setView([46.05, 14.5], 7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
   }).addTo(map);
 
-  // Povleci lokacije aktivnih uporabnikov
+  // Prikaži marker za trenutnega uporabnika s svojo ikono
+  firebase.database().ref("locations/" + currentUser.uid).once("value").then(snapshot => {
+    const loc = snapshot.val();
+    if (loc && loc.lat && loc.lng) {
+      const icon = L.divIcon({
+        html: `<div style="font-size: 36px;">${currentUserIcon || '📍'}</div>`,
+        className: ""
+      });
+      L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup("<b>Tvoja lokacija</b>");
+    }
+  });
+
+  // Prikaži markerje za ostale uporabnike
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
   active.forEach(([uid]) => {
-    firebase.database().ref("locations/" + uid).once("value").then(snapshot => {
-      const loc = snapshot.val();
+    // Najprej pridobi lokacijo in ikono uporabnika
+    Promise.all([
+      firebase.database().ref("locations/" + uid).once("value"),
+      firebase.database().ref("userIcons/" + uid).once("value")
+    ]).then(([locSnap, iconSnap]) => {
+      const loc = locSnap.val();
+      const iconEmoji = iconSnap.val() || '📍'; // privzeta ikona če ni shranjene
       if (loc && loc.lat && loc.lng) {
+        const icon = L.divIcon({
+          html: `<div style="font-size: 36px;">${iconEmoji}</div>`,
+          className: ""
+        });
         const name = userNamesCache[uid] || "Uporabnik";
-        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-        marker.bindPopup(`<b>${name}</b>`).openPopup();
+        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup(`<b>${name}</b>`);
       }
     });
   });
 }
+
 
 
 
