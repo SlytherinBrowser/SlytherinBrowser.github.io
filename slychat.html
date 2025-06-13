@@ -2080,7 +2080,7 @@ window.addEventListener("devicemotion", (event) => {
   const totalAcc = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
 
   const now = Date.now();
-  if (totalAcc > 20 && now - lastShake > 2000) {  // prag & debounce
+  if (totalAcc > 30 && now - lastShake > 2000) {  // prag & debounce
     lastShake = now;
     showUserMapPopup();
   }
