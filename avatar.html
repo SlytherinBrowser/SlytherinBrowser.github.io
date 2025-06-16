@@ -128,155 +128,187 @@ button:active {
   <button id="saveAvatarBtn">💾 Shrani avatar</button>
 
   <script>
-  // Firebase konfiguracija
-  const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+ // Firebase konfiguracija
+const firebaseConfig = {
+  apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+  authDomain: "chater-cf682.firebaseapp.com",
+  databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+  projectId: "chater-cf682",
+  storageBucket: "chater-cf682.appspot.com",
+  messagingSenderId: "233632075480",
+  appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+// Dummy prijava (za test)
+auth.signInAnonymously().catch(e => console.error(e));
+
+// Razširjene možnosti za avatar
+const avatarOptions = {
+  topType: [
+    "ShortHairShortFlat", "LongHairStraight", "Hat", "NoHair", "Turban", "WinterHat1",
+    "WinterHat2", "WinterHat3", "WinterHat4", "LongHairCurly", "LongHairCurvy", "LongHairDreads",
+    "LongHairFrida", "LongHairFro", "LongHairFroBand", "LongHairNotTooLong", "LongHairShavedSides",
+    "LongHairMiaWallace", "LongHairStraight2", "LongHairStraightStrand"
+  ],
+  accessoriesType: [
+    "Blank", "PrescriptionGlasses", "Kurt", "Wayfarers",
+    "Round", "Sunglasses", "Prescription02", "Prescription01", "Glasses01", "Glasses02"
+  ],
+  hairColor: [
+    "Black", "Blonde", "Brown", "Red", "SilverGray",
+    "Auburn", "PastelPink", "Platinum", "Pink", "Blue", "Purple", "PastelBlue", "PastelGreen"
+  ],
+  facialHairType: [
+    "Blank", "BeardMedium", "MoustacheFancy",
+    "BeardLight", "BeardMajestic", "MoustacheMagnum"
+  ],
+  clotheType: [
+    "Hoodie", "ShirtCrewNeck", "BlazerShirt", "GraphicShirt",
+    "Overall", "ShirtScoopNeck", "ShirtVNeck"
+  ],
+  eyeType: [
+    "Default", "Happy", "Squint", "Surprised", "Wink", "WinkWacky", "Cry", "Close", "EyeRoll", "HappySquint"
+  ],
+  eyebrowType: [
+    "Default", "RaisedExcited", "Angry", "SadConcerned", "UnibrowNatural", "UpDown", "UpDownNatural"
+  ],
+  mouthType: [
+    "Smile", "Serious", "Sad", "Disbelief", "Eating", "Grimace", "SadConcerned", "Smirk", "Tongue", "Twinkle"
+  ],
+  skinColor: [
+    "Light", "Brown", "DarkBrown", "Black", "Tanned", "Yellow", "Pale", "Dark"
+  ]
+};
+
+// Trenutno stanje izbranih vrednosti
+let state = {
+  topType: "ShortHairShortFlat",
+  accessoriesType: "Blank",
+  hairColor: "Black",
+  facialHairType: "Blank",
+  clotheType: "Hoodie",
+  eyeType: "Default",
+  eyebrowType: "Default",
+  mouthType: "Smile",
+  skinColor: "Light"
+};
+
+const avatarImg = document.getElementById("avatar");
+const controlsDiv = document.getElementById("controls");
+const saveBtn = document.getElementById("saveAvatarBtn");
+
+// Generiranje URL avatarja glede na izbrano stanje
+function getAvatarUrl() {
+  return "https://avataaars.io/?" + Object.entries(state).map(([k, v]) => `${k}=${v}`).join("&");
+}
+
+// Posodobi avatar sliko
+function updateAvatar() {
+  avatarImg.src = getAvatarUrl();
+}
+
+// Ustvari dropdown meni za posamezno kategorijo
+function createDropdown(category, options) {
+  const container = document.createElement("div");
+  container.style.marginBottom = "10px";
+
+  const label = document.createElement("label");
+  label.htmlFor = category;
+  label.textContent = category + ": ";
+  label.style.fontWeight = "bold";
+  container.appendChild(label);
+
+  const select = document.createElement("select");
+  select.id = category;
+
+  options.forEach(option => {
+    const opt = document.createElement("option");
+    opt.value = option;
+    opt.textContent = option;
+    select.appendChild(opt);
+  });
+
+  select.value = state[category]; // nastavi trenutno vrednost
+
+  select.onchange = () => {
+    state[category] = select.value;
+    updateAvatar();
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+  container.appendChild(select);
+  controlsDiv.appendChild(container);
+}
 
-  // Dummy prijava (za test)
-  auth.signInAnonymously().catch(e => console.error(e));
+// Ustvari dropdown menije za vse kategorije
+for (const [cat, opts] of Object.entries(avatarOptions)) {
+  createDropdown(cat, opts);
+}
 
-  // Razširjene možnosti za avatar
-  const avatarOptions = {
-    topType: [
-      "ShortHairShortFlat", "LongHairStraight", "Hat", "NoHair", "Turban", "WinterHat1",
-      "WinterHat2", "WinterHat3", "WinterHat4", "LongHairCurly", "LongHairCurvy", "LongHairDreads",
-      "LongHairFrida", "LongHairFro", "LongHairFroBand", "LongHairNotTooLong", "LongHairShavedSides",
-      "LongHairMiaWallace", "LongHairStraight2", "LongHairStraightStrand"
-    ],
-    accessoriesType: [
-      "Blank", "PrescriptionGlasses", "Kurt", "Wayfarers",
-      "Round", "Sunglasses", "Prescription02", "Prescription01", "Glasses01", "Glasses02"
-    ],
-    hairColor: [
-      "Black", "Blonde", "Brown", "Red", "SilverGray",
-      "Auburn", "PastelPink", "Platinum", "Pink", "Blue", "Purple", "PastelBlue", "PastelGreen"
-    ],
-    facialHairType: [
-      "Blank", "BeardMedium", "MoustacheFancy",
-      "BeardLight", "BeardMajestic", "MoustacheMagnum"
-    ],
-    clotheType: [
-      "Hoodie", "ShirtCrewNeck", "BlazerShirt", "GraphicShirt",
-      "Overall", "ShirtScoopNeck", "ShirtVNeck"
-    ],
-    eyeType: [
-      "Default", "Happy", "Squint", "Surprised", "Wink", "WinkWacky", "Cry", "Close", "EyeRoll", "HappySquint"
-    ],
-    eyebrowType: [
-      "Default", "RaisedExcited", "Angry", "SadConcerned", "UnibrowNatural", "UpDown", "UpDownNatural"
-    ],
-    mouthType: [
-      "Smile", "Serious", "Sad", "Disbelief", "Eating", "Grimace", "SadConcerned", "Smirk", "Tongue", "Twinkle"
-    ],
-    skinColor: [
-      "Light", "Brown", "DarkBrown", "Black", "Tanned", "Yellow", "Pale", "Dark"
-    ]
-  };
+updateAvatar();
 
-  // Trenutno stanje izbranih vrednosti
-  let state = {
-    topType: "ShortHairShortFlat",
-    accessoriesType: "Blank",
-    hairColor: "Black",
-    facialHairType: "Blank",
-    clotheType: "Hoodie",
-    eyeType: "Default",
-    eyebrowType: "Default",
-    mouthType: "Smile",
-    skinColor: "Light"
-  };
+// Funkcija za animacijo dvignjene roke in pomežika
+function animateThumbsUpAndWink() {
+  const originalAccessories = state.accessoriesType;
+  const originalEyeType = state.eyeType;
 
-  const avatarImg = document.getElementById("avatar");
-  const controlsDiv = document.getElementById("controls");
-  const saveBtn = document.getElementById("saveAvatarBtn");
-
-  // Generiranje URL avatarja glede na izbrano stanje
-  function getAvatarUrl() {
-    return "https://avataaars.io/?" + Object.entries(state).map(([k, v]) => `${k}=${v}`).join("&");
-  }
-
-  // Posodobi avatar sliko
-  function updateAvatar() {
-    avatarImg.src = getAvatarUrl();
-  }
-
-  // Ustvari dropdown meni za posamezno kategorijo
-  function createDropdown(category, options) {
-    const container = document.createElement("div");
-    container.style.marginBottom = "10px";
-
-    const label = document.createElement("label");
-    label.for = category;
-    label.textContent = category + ": ";
-    label.style.fontWeight = "bold";
-    container.appendChild(label);
-
-    const select = document.createElement("select");
-    select.id = category;
-
-    options.forEach(option => {
-      const opt = document.createElement("option");
-      opt.value = option;
-      opt.textContent = option;
-      select.appendChild(opt);
-    });
-
-    select.value = state[category]; // nastavi trenutno vrednost
-
-    select.onchange = () => {
-      state[category] = select.value;
-      updateAvatar();
-    };
-
-    container.appendChild(select);
-    controlsDiv.appendChild(container);
-  }
-
-  // Ustvari dropdown menije za vse kategorije
-  for (const [cat, opts] of Object.entries(avatarOptions)) {
-    createDropdown(cat, opts);
-  }
-
+  // Za animacijo dvigne roko in pomežikne
+  state.accessoriesType = "Wayfarers"; // lahko izbereš drugo opcijo za boljšo simulacijo roke
+  state.eyeType = "Wink";
   updateAvatar();
 
-  // Funkcija za shranjevanje avatarja v Firebase
-  function saveAvatarToFirebase() {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Najprej se prijavi!");
-      return;
-    }
-    const avatarUrl = getAvatarUrl();
-    db.ref("users/" + user.uid + "/avatarUrl").set(avatarUrl)
-      .then(() => alert("Avatar uspešno shranjen v Firebase!"))
-      .catch(err => alert("Napaka pri shranjevanju: " + err.message));
+  setTimeout(() => {
+    state.accessoriesType = originalAccessories;
+    state.eyeType = originalEyeType;
+    updateAvatar();
+  }, 1500);
+}
+
+// Funkcija za shranjevanje avatarja v Firebase
+function saveAvatarToFirebase() {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Najprej se prijavi!");
+    return;
   }
+  const avatarUrl = getAvatarUrl();
+  db.ref("users/" + user.uid + "/avatarUrl").set(avatarUrl)
+    .then(() => {
+      alert("Avatar uspešno shranjen v Firebase!");
+      animateThumbsUpAndWink(); // animacija ob uspešnem shranjevanju
+    })
+    .catch(err => alert("Napaka pri shranjevanju: " + err.message));
+}
 
-  saveBtn.onclick = saveAvatarToFirebase;
+saveBtn.onclick = saveAvatarToFirebase;
 
-  // Ob prijavi naloži avatar iz Firebase
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
-        const url = snapshot.val();
-        if (url) {
-          avatarImg.src = url;
-          // Če želiš tudi nastaviti dropdown glede na shranjen URL, je potrebno dodatno parsirati URL
-        }
-      });
-    }
-  });
+// Ob prijavi naloži avatar iz Firebase
+auth.onAuthStateChanged(user => {
+  if (user) {
+    db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
+      const url = snapshot.val();
+      if (url) {
+        avatarImg.src = url;
+        // Če želiš nastaviti dropdown glede na shranjen URL, moraš URL parsirati
+      }
+    });
+  }
+});
+
+// Samodejno pomežikanje oči na vsakih 10 sekund
+setInterval(() => {
+  const originalEyeType = state.eyeType;
+  state.eyeType = "Wink";
+  updateAvatar();
+  setTimeout(() => {
+    state.eyeType = originalEyeType;
+    updateAvatar();
+  }, 1000);
+}, 10000);
+
 </script>
 </body>
 </html>
