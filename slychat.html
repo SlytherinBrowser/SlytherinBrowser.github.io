@@ -355,32 +355,34 @@ width: 100%;
 
 
   auth.onAuthStateChanged(async user => {  
+  if (!user) {  
+    window.location.href = "auth.html";  
+    return;  
+  }  
 
-    if (!user) {  
+  currentUser = user;  
 
-      window.location.href = "auth.html";  
+  // Nastavi online status
+  const userStatusRef = db.ref("status/" + user.uid);  
+  userStatusRef.set({ online: true });  
+  userStatusRef.onDisconnect().set({ online: false });  
 
-      return;  
+  // Naloži statuse vseh uporabnikov
+  db.ref("status").on("value", snapshot => {  
+    userStatusCache = snapshot.val() || {};  
+  });
 
-    }  
+  // --- Tukaj dodaj nalaganje avatarja za currentUser ---
+  const avatarSnapshot = await db.ref("users/" + user.uid + "/avatarUrl").once("value");
+  const avatarUrl = avatarSnapshot.val() || "default-avatar.png";
 
+  userAvatarsCache[user.uid] = avatarUrl;
 
+  // Po potrebi naloži avatarje tudi za druge uporabnike (če jih imaš seznam)  
+  // npr. ko naložiš userNamesCache, lahko istočasno napolniš userAvatarsCache
 
-    currentUser = user;  
-
-
-
-    const userStatusRef = db.ref("status/" + user.uid);  
-
-    userStatusRef.set({ online: true });  
-
-    userStatusRef.onDisconnect().set({ online: false });  
-
-       db.ref("status").on("value", snapshot => {  
-
-      userStatusCache = snapshot.val() || {};  
-
-    });  
+  // ... ostala koda ...
+});
 
 
 
@@ -402,173 +404,82 @@ width: 100%;
 
     }  
    
-    db.ref("messages").on("child_added", snapshot => {  
-
-      const msg = snapshot.val();  
-
-
-
-      if (msg.system && msg.privateUid === currentUser.uid) {  
-
-        const systemDiv = document.createElement("div");  
-
-        systemDiv.style.fontStyle = "italic";  
-
-        systemDiv.style.color = "#90ee90";  
-
-        const senderName = userNamesCache[msg.uid] || "Uporabnik";  
-
-        systemDiv.textContent = `${senderName} ${msg.text}`;  
-
-        chatBox.appendChild(systemDiv);  
-
-        chatBox.scrollTop = chatBox.scrollHeight;  
-
-        return;  
-
-      }  
-
-
-
-      if (msg.invite && msg.privateUid === currentUser.uid) {  
-
-        const inviterName = userNamesCache[msg.uid] || "Anonimen";  
-
-        const inviteDiv = document.createElement("div");  
-
-        inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.   
-  
-          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
-
-        chatBox.appendChild(inviteDiv);  
-
-        chatBox.scrollTop = chatBox.scrollHeight;  
-
-        return;  
-
-      }  
-
-
-
-
-if (msg.copy) {
-  const copyEl = document.createElement("span");
-  copyEl.style.textDecoration = "underline";
-  copyEl.style.cursor = "pointer";
-  copyEl.textContent = msg.text;
-  copyEl.title = "Klikni za kopiranje";
-
-  copyEl.addEventListener("click", () => {
-    navigator.clipboard.writeText(msg.text).then(() => {
-      alert("Besedilo skopirano v odložišče!");
-    }).catch(() => {
-      alert("Kopiranje ni uspelo.");
-    });
-  });
-
-  messageDiv.appendChild(copyEl);
-  return;
-}
-
-
-
-
-
-      if (currentChatPartner) {  
-
-        const isPrivateMatch =  
-
-          (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||  
-
-          (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);  
-
-        if (!isPrivateMatch) return;  
-
-      } else {  
-
-        if (msg.privateUid) return;  
-
-      }  
-
-
-
-      const displayName = userNamesCache[msg.uid] || "Anonimen";  
-
-      const isOnline = userStatusCache[msg.uid]?.online;  
-
-      const color = userColorsCache[msg.uid] || null;  
-
-
-
-      const div = document.createElement("div");  
-
-      const senderSpan = document.createElement("span");  
-
-      senderSpan.classList.add("sender");  
-
-
-if (color === "none") {
-  senderSpan.style.display = "none"; // Skrije ime
-} else if (color === "rainbow") {
-  senderSpan.classList.add("rainbow");
-} else if (color) {
-  senderSpan.style.color = color;
-}
-
-
-      if (isOnline) {  
-
-        senderSpan.innerHTML = `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;  
-
-      } else {  
-
-        senderSpan.textContent = displayName + ": ";  
-
-      }  
-
-
-
-      const realText = document.createElement("span");  
-
-      realText.classList.add("realText");  
-
-      realText.textContent = msg.text;  
-
-
-
-      if (msg.hidden) {  
-
-        const hiddenText = document.createElement("span");  
-
-        hiddenText.classList.add("hiddenText");  
-
-        hiddenText.textContent = "Zasebno sporočilo";  
-
-        div.classList.add("hiddenMessage");  
-
-        div.appendChild(senderSpan);  
-
-        div.appendChild(hiddenText);  
-
-        div.appendChild(realText);  
-
-      } else {  
-
-        div.appendChild(senderSpan);  
-
-        div.appendChild(realText);  
-
-      }  
-
-
-
-      chatBox.appendChild(div);  
-
-      chatBox.scrollTop = chatBox.scrollHeight;  
-
-    });  
-
-  });  
+    // Predpostavimo, da imamo nek objekt za avatarje uporabnikov:
+const userAvatarsCache = {};
+
+// Naloži avatarje uporabnikov ob prijavi / podatkih (to narediš ločeno, ni prikazano tukaj)
+
+// ...
+
+db.ref("messages").on("child_added", snapshot => {  
+  const msg = snapshot.val();  
+
+  // Odstranimo celoten blok za msg.copy (torej ne potrebujemo)
+
+  if (currentChatPartner) {  
+    const isPrivateMatch =  
+      (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||  
+      (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);  
+    if (!isPrivateMatch) return;  
+  } else {  
+    if (msg.privateUid) return;  
+  }  
+
+  const displayName = userNamesCache[msg.uid] || "Anonimen";  
+  const isOnline = userStatusCache[msg.uid]?.online;  
+  const color = userColorsCache[msg.uid] || null;  
+  const avatarUrl = userAvatarsCache[msg.uid] || "default-avatar.png"; // Lahko default avatar
+
+  const div = document.createElement("div");  
+  const senderSpan = document.createElement("span");  
+  senderSpan.classList.add("sender");  
+
+  // Barvo imena prilagodimo, če je določena (npr. none, rainbow, barva)
+  if (color === "none") {
+    senderSpan.style.display = "none"; // Skrije ime
+  } else if (color === "rainbow") {
+    senderSpan.classList.add("rainbow");
+  } else if (color) {
+    senderSpan.style.color = color;
+  }
+
+  // Namesto zelene pike prikažemo avatar z okvirjem, če je online
+  const avatarImg = document.createElement("img");
+  avatarImg.src = avatarUrl;
+  avatarImg.alt = displayName + " avatar";
+  avatarImg.style.width = "24px";
+  avatarImg.style.height = "24px";
+  avatarImg.style.borderRadius = "50%";
+  avatarImg.style.verticalAlign = "middle";
+  avatarImg.style.marginRight = "6px";
+  avatarImg.style.objectFit = "cover";
+  avatarImg.style.border = isOnline ? "2px solid green" : "2px solid transparent";
+
+  senderSpan.appendChild(avatarImg);
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = displayName + ": ";
+  senderSpan.appendChild(nameSpan);
+
+  const realText = document.createElement("span");  
+  realText.classList.add("realText");  
+  realText.textContent = msg.text;  
+
+  if (msg.hidden) {  
+    const hiddenText = document.createElement("span");  
+    hiddenText.classList.add("hiddenText");  
+    hiddenText.textContent = "Zasebno sporočilo";  
+    div.classList.add("hiddenMessage");  
+    div.appendChild(senderSpan);  
+    div.appendChild(hiddenText);  
+    div.appendChild(realText);  
+  } else {  
+    div.appendChild(senderSpan);  
+    div.appendChild(realText);  
+  }  
+
+  chatBox.appendChild(div);  
+  chatBox.scrollTop = chatBox.scrollHeight;  
+});
 
 
 
