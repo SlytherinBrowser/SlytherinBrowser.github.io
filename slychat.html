@@ -372,7 +372,7 @@ width: 100%;
        // Cache za avatarje
 let userAvatarsCache = {};
 
-// Nalaganje avatarjev iz Firebase users node
+// Naloži avatarje iz Firebase /users
 db.ref("users").on("value", snapshot => {
   const usersData = snapshot.val() || {};
   for (const uid in usersData) {
@@ -380,15 +380,16 @@ db.ref("users").on("value", snapshot => {
   }
 });
 
-// Poslušanje statusov uporabnikov (online/offline)
-db.ref("status").on("value", snapshot => {  
-  userStatusCache = snapshot.val() || {};  
+// Naloži statuse uporabnikov
+db.ref("status").on("value", snapshot => {
+  userStatusCache = snapshot.val() || {};
 });
 
-// Pridobivanje sporočil in prikaz v chatBox
+// Poslušaj nova sporočila
 db.ref("messages").on("child_added", snapshot => {
   const msg = snapshot.val();
 
+  // Obvladaj sistemska sporočila za trenutnega uporabnika
   if (msg.system && msg.privateUid === currentUser.uid) {
     const systemDiv = document.createElement("div");
     systemDiv.style.fontStyle = "italic";
@@ -400,6 +401,7 @@ db.ref("messages").on("child_added", snapshot => {
     return;
   }
 
+  // Obvladaj povabila v zasebni klepet
   if (msg.invite && msg.privateUid === currentUser.uid) {
     const inviterName = userNamesCache[msg.uid] || "Anonimen";
     const inviteDiv = document.createElement("div");
@@ -410,6 +412,7 @@ db.ref("messages").on("child_added", snapshot => {
     return;
   }
 
+  // Obvladaj sporočila, ki jih je treba kopirati
   if (msg.copy) {
     const copyEl = document.createElement("span");
     copyEl.style.textDecoration = "underline";
@@ -425,11 +428,11 @@ db.ref("messages").on("child_added", snapshot => {
       });
     });
 
-    chatBox.appendChild(copyEl);
+    chatBox.appendChild(copyEl);  // Tukaj dodajamo v chatBox, ne v messageDiv
     return;
   }
 
-  // Filtriranje zasebnih sporočil glede na trenutni klepet
+  // Filtriraj zasebna sporočila glede na trenutni klepet
   if (currentChatPartner) {
     const isPrivateMatch =
       (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -443,23 +446,20 @@ db.ref("messages").on("child_added", snapshot => {
   const isOnline = userStatusCache[msg.uid]?.online;
   const color = userColorsCache[msg.uid] || null;
 
-  // Ustvari div za sporočilo
   const div = document.createElement("div");
 
   // Ustvari sender span z avatarjem
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
 
-  // Pridobi avatar iz cache ali uporabi placeholder
   const avatarUrl = userAvatarsCache[msg.uid] || "https://via.placeholder.com/40?text=?";
 
-  // Ustvari img za avatar
   const avatarImg = document.createElement("img");
   avatarImg.src = avatarUrl;
   avatarImg.alt = displayName;
   avatarImg.style.width = "32px";
   avatarImg.style.height = "32px";
-  avatarImg.style.borderRadius = "50%"; // okrogel avatar
+  avatarImg.style.borderRadius = "50%";
   avatarImg.style.verticalAlign = "middle";
   avatarImg.style.marginRight = "8px";
   avatarImg.style.objectFit = "cover";
@@ -468,19 +468,17 @@ db.ref("messages").on("child_added", snapshot => {
   senderSpan.appendChild(avatarImg);
 
   if (color === "none") {
-    senderSpan.style.display = "none"; // Skrije ime
+    senderSpan.style.display = "none";
   } else if (color === "rainbow") {
     senderSpan.classList.add("rainbow");
   } else if (color) {
     senderSpan.style.color = color;
   }
 
-  // Dodaj ime uporabnika zraven avatarja
   const nameSpan = document.createElement("span");
   nameSpan.textContent = displayName + ": ";
   senderSpan.appendChild(nameSpan);
 
-  // Ustvari span za pravo besedilo
   const realText = document.createElement("span");
   realText.classList.add("realText");
   realText.textContent = msg.text;
