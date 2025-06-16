@@ -383,7 +383,6 @@ auth.onAuthStateChanged(async user => {
   // Posodobi lokalni cache statusov uporabnikov
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
-    updateActiveUsersList();  // OSVEŽI SEZNAM AKTIVNIH UPORABNIKOV
   });
 
   // Naloži uporabnike iz Firebase (pomembno, da to narediš pred uporabo users)
@@ -391,12 +390,6 @@ auth.onAuthStateChanged(async user => {
   await db.ref("users").once("value").then(snapshot => {
     users = snapshot.val() || {};
   });
-
-  // Posodobi cache imen uporabnikov
-  userNamesCache = {};
-  for (const uid in users) {
-    userNamesCache[uid] = users[uid]?.displayName || "Anonimen";
-  }
 
   // Preveri potrditev imena
   const userData = users?.[currentUser.uid];
@@ -509,7 +502,7 @@ auth.onAuthStateChanged(async user => {
   });
 });
 
-function updateActiveUsersList() {
+  function updateActiveUsersList() {
   const activeUsersDiv = document.getElementById("activeUsers");
   activeUsersDiv.innerHTML = "";
 
@@ -517,19 +510,13 @@ function updateActiveUsersList() {
     if (userStatusCache[uid]?.online) {
       const userDiv = document.createElement("div");
       userDiv.textContent = userNamesCache[uid] || "Anonimen";
-      const color = userColorsCache[uid];
-      if (color && color !== "none") {
-        if (color === "rainbow") {
-          userDiv.classList.add("rainbow");
-        } else {
-          userDiv.style.color = color;
-        }
+      if (userColorsCache[uid] && userColorsCache[uid] !== "none") {
+        userDiv.style.color = userColorsCache[uid];
       }
       activeUsersDiv.appendChild(userDiv);
     }
   }
 }
-
 
 
 
