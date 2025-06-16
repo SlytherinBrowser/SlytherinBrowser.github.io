@@ -2035,7 +2035,7 @@ firebase.database().ref("userStatus").on("value", snap => {
 });
 
 // Spremljaj typing status
-firebase.database().ref(`typingStatus/${chatId}`).on("value", snapshot => {
+firebase.database().ref("typingStatus/public").on("value", snapshot => {
   const typingData = snapshot.val() || {};
   const usersTyping = Object.entries(typingData)
     .filter(([_, v]) => v === true)
