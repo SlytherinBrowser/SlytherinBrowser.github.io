@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Avatar z Firebase shranjevanjem</title>
+  <style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #fff);
+  padding: 30px 20px;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #333;
+}
+
+h2 {
+  text-align: center;
+  font-weight: 700;
+  font-size: 2rem;
+  margin-bottom: 25px;
+  color: #00796b;
+  text-shadow: 1px 1px 2px #b2dfdb;
+}
+
+#avatar {
+  display: block;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 6px solid #00796b;
+  box-shadow: 0 8px 15px rgba(0, 121, 107, 0.3);
+  transition: transform 0.3s ease;
+  max-width: 90vw;
+  height: auto;
+}
+
+#avatar:hover {
+  transform: scale(1.05);
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 40px;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.section {
+  background: white;
+  padding: 20px 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  flex: 1 1 220px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section h3 {
+  margin-top: 0;
+  font-size: 1.15rem;
+  margin-bottom: 15px;
+  color: #004d40;
+  font-weight: 600;
+  text-transform: capitalize;
+  user-select: none;
+}
+
+button {
+  margin: 5px 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #00796b;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.15s ease;
+  user-select: none;
+  min-width: 90px;
+  box-shadow: 0 3px 8px rgba(0, 121, 107, 0.3);
+}
+
+button:hover, button:focus {
+  background-color: #004d40;
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 77, 64, 0.5);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 121, 107, 0.3);
+}
+
+@media (max-width: 700px) {
+  #controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  .section {
+    max-width: 90vw;
+    flex: none;
+    margin-bottom: 25px;
+  }
+  button {
+    min-width: 100%;
+    padding: 12px 0;
+  }
+}
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <img id="avatar" src="" alt="Tvoj avatar" />
+  <div id="controls"></div>
+  <button id="saveAvatarBtn">💾 Shrani avatar</button>
+
+  <script>
+    // Firebase konfiguracija
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // Dummy prijava (za test) - v praksi uporabi svoj login sistem!
+    auth.signInAnonymously().catch(e => console.error(e));
+
+    // Avatar parametri (več možnosti)
+    const avatarOptions = {
+      topType: ["ShortHairShortFlat", "LongHairStraight", "Hat", "NoHair", "Turban", "WinterHat1"],
+      accessoriesType: ["Blank", "PrescriptionGlasses", "Kurt", "Wayfarers"],
+      hairColor: ["Black", "Blonde", "Brown", "Red", "SilverGray"],
+      facialHairType: ["Blank", "BeardMedium", "MoustacheFancy"],
+      clotheType: ["Hoodie", "ShirtCrewNeck", "BlazerShirt", "GraphicShirt"],
+      eyeType: ["Default", "Happy", "Squint"],
+      eyebrowType: ["Default", "RaisedExcited", "Angry"],
+      mouthType: ["Smile", "Serious", "Sad"],
+      skinColor: ["Light", "Brown", "DarkBrown", "Black"]
+    };
+
+    // Trenutni izbrani parametri avatarja
+    let state = {
+      topType: "ShortHairShortFlat",
+      accessoriesType: "Blank",
+      hairColor: "Black",
+      facialHairType: "Blank",
+      clotheType: "Hoodie",
+      eyeType: "Default",
+      eyebrowType: "Default",
+      mouthType: "Smile",
+      skinColor: "Light"
+    };
+
+    const avatarImg = document.getElementById("avatar");
+    const controlsDiv = document.getElementById("controls");
+    const saveBtn = document.getElementById("saveAvatarBtn");
+
+    // Funkcija za generiranje URL avatarja iz stanja
+    function getAvatarUrl() {
+      return "https://avataaars.io/?" + Object.entries(state).map(([k, v]) => `${k}=${v}`).join("&");
+    }
+
+    // Posodobi prikaz avatarja
+    function updateAvatar() {
+      avatarImg.src = getAvatarUrl();
+    }
+
+    // Funkcija za ustvarjanje gumbov za izbiro možnosti za posamezno kategorijo
+    function createOptionButtons(category, options) {
+      const container = document.createElement("div");
+      container.style.marginBottom = "10px";
+      container.innerHTML = `<strong>${category}:</strong> `;
+
+      options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.style.fontSize = "0.8rem";
+        btn.style.margin = "0 3px";
+        btn.onclick = () => {
+          state[category] = option;
+          updateAvatar();
+        };
+        container.appendChild(btn);
+      });
+
+      controlsDiv.appendChild(container);
+    }
+
+    // Ustvari gumbe za vse kategorije
+    for (const [cat, opts] of Object.entries(avatarOptions)) {
+      createOptionButtons(cat, opts);
+    }
+
+    updateAvatar();
+
+    // Shrani avatar URL v Firebase za prijavljenega uporabnika
+    function saveAvatarToFirebase() {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Najprej se prijavi!");
+        return;
+      }
+      const avatarUrl = getAvatarUrl();
+      db.ref("users/" + user.uid + "/avatarUrl").set(avatarUrl)
+        .then(() => alert("Avatar uspešno shranjen v Firebase!"))
+        .catch(err => alert("Napaka pri shranjevanju: " + err.message));
+    }
+
+    saveBtn.onclick = saveAvatarToFirebase;
+
+    // Ob prijavi naloži avatar iz Firebase
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
+          const url = snapshot.val();
+          if (url) {
+            avatarImg.src = url;
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
