@@ -410,13 +410,10 @@ width: 100%;
       messageInput.placeholder = "Vnesi sporočilo...";  
 
     }  
-
-
-
-    db.ref("messages").on("child_added", snapshot => {
+db.ref("messages").on("child_added", snapshot => {
   const msg = snapshot.val();
 
-  // SYSTEMSKO SPOROČILO (samo za tega uporabnika)
+  // SYSTEMSKO SPOROČILO
   if (msg.system && msg.privateUid === currentUser.uid) {
     const systemDiv = document.createElement("div");
     systemDiv.style.fontStyle = "italic";
@@ -428,7 +425,7 @@ width: 100%;
     return;
   }
 
-  // POVABILO V ZASEBNI KLEPET (samo za tega uporabnika)
+  // POVABILO V ZASEBNI KLEPET
   if (msg.invite && msg.privateUid === currentUser.uid) {
     const inviterName = userNamesCache[msg.uid] || "Anonimen";
     const inviteDiv = document.createElement("div");
@@ -439,7 +436,7 @@ width: 100%;
     return;
   }
 
-  // FILTRIRANJE GLEDE NA POGOVOR (zasebni ali javni)
+  // FILTRIRAJ NEUSTREZNA SPOROČILA
   if (currentChatPartner) {
     const isPrivateMatch =
       (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -449,61 +446,65 @@ width: 100%;
     if (msg.privateUid) return;
   }
 
-  // PRIDOBI PODATKE O POŠILJATELJU
+  // Uporabniški podatki
   const displayName = userNamesCache[msg.uid] || "Anonimen";
   const isOnline = userStatusCache[msg.uid]?.online;
   const color = userColorsCache[msg.uid] || null;
-  const avatarUrl = userAvatarsCache[msg.uid]; // AVATAR
+  const avatarUrl = userAvatarsCache[msg.uid] || "default-avatar.png"; // zamenjaj z dejansko potjo do default avatarja
 
+  // DOM elementi
   const div = document.createElement("div");
+  div.classList.add("message");
 
+  const senderContainer = document.createElement("div");
+  senderContainer.classList.add("sender-container");
+  senderContainer.style.display = "flex";
+  senderContainer.style.alignItems = "center";
+  senderContainer.style.gap = "0.4em";
+
+  // Avatar
+  const avatar = document.createElement("img");
+  avatar.src = avatarUrl;
+  avatar.alt = "avatar";
+  avatar.style.width = "28px";
+  avatar.style.height = "28px";
+  avatar.style.borderRadius = "50%";
+  avatar.style.border = isOnline ? "2px solid green" : "2px solid transparent";
+
+  // Ime pošiljatelja
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
 
-  // PRIKAZ IMENA POŠILJATELJA Z BARVO ALI MAVRICO
   if (color === "none") {
-    senderSpan.style.display = "none"; // Skrije ime
+    senderSpan.style.display = "none";
   } else if (color === "rainbow") {
     senderSpan.classList.add("rainbow");
+    senderSpan.textContent = `${displayName}:`;
   } else if (color) {
     senderSpan.style.color = color;
-  }
-
-  // VSTAVI AVATAR, ČE OBSTOJA
-  if (avatarUrl) {
-    const avatarImg = document.createElement("img");
-    avatarImg.src = avatarUrl;
-    avatarImg.alt = "avatar";
-    avatarImg.style.width = "22px";
-    avatarImg.style.height = "22px";
-    avatarImg.style.borderRadius = "50%";
-    avatarImg.style.marginRight = "6px";
-    avatarImg.style.verticalAlign = "middle";
-    senderSpan.prepend(avatarImg);
-  }
-
-  // ONLINE STATUS IKONA
-  if (isOnline) {
-    senderSpan.innerHTML += `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
+    senderSpan.textContent = `${displayName}:`;
   } else {
-    senderSpan.innerHTML += displayName + ": ";
+    senderSpan.textContent = `${displayName}:`;
   }
+
+  senderContainer.appendChild(avatar);
+  senderContainer.appendChild(senderSpan);
 
   const realText = document.createElement("span");
   realText.classList.add("realText");
   realText.textContent = msg.text;
 
-  // SKRITO SPOROČILO
   if (msg.hidden) {
     const hiddenText = document.createElement("span");
     hiddenText.classList.add("hiddenText");
     hiddenText.textContent = "Zasebno sporočilo";
     div.classList.add("hiddenMessage");
-    div.appendChild(senderSpan);
+
+    div.appendChild(senderContainer);
     div.appendChild(hiddenText);
     div.appendChild(realText);
   } else {
-    div.appendChild(senderSpan);
+    div.appendChild(senderContainer);
     div.appendChild(realText);
   }
 
