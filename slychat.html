@@ -447,8 +447,9 @@ auth.onAuthStateChanged(async user => {
     const div = document.createElement("div");
     div.classList.add("messageContainer");
 
-    // Ustvari avatar sliko (uporabi avatarUrl)
-    const avatarUrl = users[msg.uid]?.avatarUrl || "default-avatar.png";
+    // Uporabi avatarUrl ali default sliko če ni avatarja
+    const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+    const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
     const avatarImg = document.createElement("img");
     avatarImg.src = avatarUrl;
     avatarImg.alt = "Avatar";
@@ -501,6 +502,7 @@ auth.onAuthStateChanged(async user => {
   });
 });
 
+  
 
 
 
