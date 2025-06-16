@@ -229,6 +229,35 @@ width: 100%;
   object-fit: cover;
 }
 
+.typing-avatars {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.typing-avatars .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  object-fit: cover;
+  flex-shrink: 0;
+  cursor: default;
+  transition: border-color 0.3s ease;
+}
+
+.typing-avatars .avatar.active {
+  border-color: #4caf50;
+  animation: borderBlinkColors 1.5s infinite;
+}
+
+@keyframes borderBlinkColors {
+  0%, 100% { border-color: #4caf50; }
+  50% { border-color: #81c784; }
+}
 
 
   </style>
@@ -239,6 +268,7 @@ width: 100%;
     <div id="chatBox"></div>
 
    <div class="message-input-container" style="position: relative;">
+  <div id="typingAvatars" class="typing-avatars" style="display:none;"></div>
   <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
   <div class="message-input-btn-container">
   <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
@@ -1925,100 +1955,66 @@ checkAlerts();
 
 
 
+const typingAvatarsDiv = document.getElementById('typingAvatars');
 const chatId = "globalChat";
 const userId = "user_" + Math.floor(Math.random() * 10000);
 
 const inputField = document.getElementById('messageInput');
-const defaultPlaceholder = "Vpiši sporočilo...";
 
-let typingTimeout;
-
-// 🔹 Dodaj CSS za utripanje roba
-(function addBlinkCSS() {
-  if (document.getElementById('typing-blink-style')) return;
-  const style = document.createElement('style');
-  style.id = 'typing-blink-style';
-  style.textContent = `
-    @keyframes borderBlink {
-      0%, 100% { border-color: #4a90e2; }
-      50% { border-color: #e91e63; }
-    }
-    .typing-blink {
-      animation: borderBlink 1.2s infinite;
-      border-width: 2px !important;
-      border-style: solid !important;
-      outline: none !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-// 🔹 Nastavi onDisconnect, da se status pobriše ob izgubi povezave
-firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
-
-// 🔹 Pošlji status tipkanja ob vnosu
-inputField.addEventListener('input', () => {
-  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
-
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
-  }, 2000);
-});
-
-// 🔹 Resetiraj status ob zapiranju okna
-window.addEventListener('beforeunload', () => {
-  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
-});
-
-// 🔹 Pridobi prikazna imena uporabnikov
-async function getUserNames(userIds) {
-  const db = firebase.database();
-  const promises = userIds.map(id =>
-    db.ref(`users/${id}/displayName`).once('value').then(snap => snap.val())
-  );
-  return Promise.all(promises);
+async function getUserData(userId) {
+  const snapshot = await firebase.database().ref(`users/${userId}`).once('value');
+  return snapshot.val();
 }
 
-// 🔹 Spremljaj status tipkanja drugih uporabnikov
 firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
   const typingUsers = snapshot.val() || {};
   delete typingUsers[userId]; // odstrani sebe iz prikaza
 
-  const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
+  const activeTypingUsers = Object.entries(typingUsers)
+    .filter(([uid, isTyping]) => isTyping)
+    .map(([uid]) => uid);
 
-  // 🔸 Prisilni reset po 10 sekundah za vsak "zataknjen" status
-  Object.entries(typingUsers).forEach(([uid, isTyping]) => {
-    if (isTyping) {
-      setTimeout(() => {
-        firebase.database().ref(`typingStatus/${chatId}/${uid}`).once('value').then(snap => {
-          if (snap.val() === true) {
-            firebase.database().ref(`typingStatus/${chatId}/${uid}`).set(false);
-          }
-        });
-      }, 10000);
-    }
+  if (activeTypingUsers.length === 0) {
+    typingAvatarsDiv.style.display = 'none';
+    return;
+  }
+
+  // Pridobi podatke o uporabnikih (avatar, online status)
+  const usersData = await Promise.all(
+    activeTypingUsers.map(uid => getUserData(uid))
+  );
+
+  // Filtriraj samo uporabnike, ki so online (če je online polje false ali undefined → izpusti)
+  const filteredUsers = activeTypingUsers.filter((uid, i) => {
+    const userData = usersData[i];
+    return userData?.online === true;
   });
 
-  if (usersTyping.length > 0) {
-    inputField.classList.add('typing-blink');
-
-    // Pridobi imena
-    const names = await getUserNames(usersTyping);
-    const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
-
-    if (cleanNames.length === 1) {
-      inputField.placeholder = `${cleanNames[0]} tipka...`;
-    } else if (cleanNames.length > 1) {
-      inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
-    } else {
-      inputField.placeholder = "Nekdo tipka...";
-    }
-  } else {
-    inputField.classList.remove('typing-blink');
-    inputField.placeholder = defaultPlaceholder;
+  if (filteredUsers.length === 0) {
+    typingAvatarsDiv.style.display = 'none';
+    return;
   }
+
+  typingAvatarsDiv.style.display = 'flex';
+  typingAvatarsDiv.innerHTML = '';
+
+  filteredUsers.forEach((uid, i) => {
+    const userData = usersData[activeTypingUsers.indexOf(uid)];
+    const avatarUrl = userData?.avatar || "default-avatar.png";
+
+    const avatarImg = document.createElement("img");
+    avatarImg.src = avatarUrl;
+    avatarImg.alt = "Avatar";
+    avatarImg.classList.add("avatar", "active");
+
+    // Naključna zamuda animacije za neusklajeno utripanje
+    const randomDelay = (Math.random() * 1.5).toFixed(2) + 's';
+    avatarImg.style.animationDelay = randomDelay;
+
+    typingAvatarsDiv.appendChild(avatarImg);
+  });
 });
+
 
 
 
