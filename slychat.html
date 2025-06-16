@@ -447,17 +447,17 @@ width: 100%;
     const div = document.createElement("div");
     div.classList.add("messageContainer");
 
-    // Ustvari avatar sliko (če ni, uporabi default)
-    const avatarUrl = users[msg.uid]?.avatar || "default-avatar.png";
+    // Ustvari avatar sliko (uporabi avatarUrl)
+    const avatarUrl = users[msg.uid]?.avatarUrl || "default-avatar.png";
     const avatarImg = document.createElement("img");
     avatarImg.src = avatarUrl;
-    avatarImg.alt = displayName + " avatar";
+    avatarImg.alt = "Avatar";
     avatarImg.classList.add("avatar");
 
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
 
-    // Barva imena in okvirček, če je online
+    // Barva imena in prikaz okvirčka, če je online
     if (color === "none") {
       senderSpan.style.display = "none";
     } else if (color === "rainbow") {
@@ -474,7 +474,7 @@ width: 100%;
 
     senderSpan.textContent = displayName + ": ";
 
-    // Dodaj avatar in ime v container
+    // Sestavi sporočilo z avatarjem in imenom
     div.appendChild(avatarImg);
     div.appendChild(senderSpan);
 
@@ -497,6 +497,7 @@ width: 100%;
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 });
+
 
 
 
