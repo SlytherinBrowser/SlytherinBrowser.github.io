@@ -354,7 +354,7 @@ width: 100%;
 
 
 
-  auth.onAuthStateChanged(async user => {
+ auth.onAuthStateChanged(async user => {
   if (!user) {
     window.location.href = "auth.html";
     return;
@@ -362,16 +362,17 @@ width: 100%;
 
   currentUser = user;
 
+  // Nastavi status online in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
-
   userStatusRef.set({ online: true });
   userStatusRef.onDisconnect().set({ online: false });
 
+  // Posodobi lokalni cache statusov uporabnikov
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
   });
 
-  // Potrditev imena
+  // Preveri potrditev imena
   const userData = users[currentUser.uid];
   if (!userData || !userData.displayName) {
     messageInput.placeholder = "Potrdi ime";
@@ -379,11 +380,14 @@ width: 100%;
     return;
   } else {
     messageInput.placeholder = "Vnesi sporočilo...";
+    messageInput.dataset.nameConfirm = "0";
   }
 
+  // Poslušaj nova sporočila
   db.ref("messages").on("child_added", snapshot => {
     const msg = snapshot.val();
 
+    // Sistemko sporočilo za tebe (zasebno)
     if (msg.system && msg.privateUid === currentUser.uid) {
       const systemDiv = document.createElement("div");
       systemDiv.style.fontStyle = "italic";
@@ -395,6 +399,7 @@ width: 100%;
       return;
     }
 
+    // Povabilo v zasebni klepet (za tebe)
     if (msg.invite && msg.privateUid === currentUser.uid) {
       const inviterName = userNamesCache[msg.uid] || "Anonimen";
       const inviteDiv = document.createElement("div");
@@ -405,14 +410,14 @@ width: 100%;
       return;
     }
 
-    // Odstranjen del za kopiranje sporočila
-
+    // Če smo v zasebnem klepetu, prikaži samo relevantna sporočila
     if (currentChatPartner) {
       const isPrivateMatch =
         (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
         (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
       if (!isPrivateMatch) return;
     } else {
+      // Če smo v javnem klepetu, ne prikazuj zasebnih sporočil
       if (msg.privateUid) return;
     }
 
@@ -424,33 +429,23 @@ width: 100%;
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
 
+    // Če je barva 'none', skrij ime
     if (color === "none") {
-      senderSpan.style.display = "none"; // Skrije ime
+      senderSpan.style.display = "none";
     } else if (color === "rainbow") {
       senderSpan.classList.add("rainbow");
     } else if (color) {
       senderSpan.style.color = color;
     }
 
-    // Namesto zelene pike prikažemo avatar s statusnim okvirjem
-    const avatarImg = document.createElement("img");
-    avatarImg.src = users[msg.uid]?.avatarUrl || "default-avatar.png"; // privzeti avatar, če ni na voljo
-    avatarImg.alt = "avatar";
-    avatarImg.style.width = "24px";
-    avatarImg.style.height = "24px";
-    avatarImg.style.borderRadius = "50%";
-    avatarImg.style.verticalAlign = "middle";
-    avatarImg.style.marginRight = "6px";
-    avatarImg.style.border = isOnline ? "2px solid green" : "2px solid transparent";
-
-    // Vstavimo avatar pred ime pošiljatelja
-    senderSpan.appendChild(avatarImg);
-
+    // Namesto zelene pike prikaži okvirček okoli imena, če je online
     if (isOnline) {
-      // brez zelene pike, ker je avatar že z zelenim robom
-      senderSpan.appendChild(document.createTextNode(displayName + ": "));
+      senderSpan.style.border = "2px solid green";
+      senderSpan.style.borderRadius = "4px";
+      senderSpan.style.padding = "0 4px";
+      senderSpan.textContent = displayName + ": ";
     } else {
-      senderSpan.appendChild(document.createTextNode(displayName + ": "));
+      senderSpan.textContent = displayName + ": ";
     }
 
     const realText = document.createElement("span");
