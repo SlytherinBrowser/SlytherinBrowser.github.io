@@ -385,31 +385,34 @@ width: 100%;
 
 
 
-    db.ref("status").on("value", snapshot => {  
+  
+const userAvatarsCache = {};
 
-      userStatusCache = snapshot.val() || {};  
+async function initChat() {
+  // 1. Naloži uporabnike
+  const usersSnapshot = await db.ref('users').once('value');
+  const users = usersSnapshot.val() || {};
 
-    });  
+  for (const uid in users) {
+    userNamesCache[uid] = users[uid].displayName || "Anonimen";
+    userColorsCache[uid] = users[uid].color || null;
+    userAvatarsCache[uid] = users[uid].avatarUrl || "default-avatar.png"; // privzeti avatar
+  }
 
+  // 2. Poslušaj stanje uporabnikov (online/offline)
+  db.ref("status").on("value", snapshot => {
+    userStatusCache = snapshot.val() || {};
+  });
 
-
-    // Potrditev imena  
-
-    const userData = users[currentUser.uid];  
-
-    if (!userData || !userData.displayName) {  
-
-      messageInput.placeholder = "Potrdi ime";  
-
-      messageInput.dataset.nameConfirm = "1";  
-
-      return;  
-
-    } else {  
-
-      messageInput.placeholder = "Vnesi sporočilo...";  
-
-    }  
+  // 3. Potrditev imena
+  const userData = users[currentUser.uid];
+  if (!userData || !userData.displayName) {
+    messageInput.placeholder = "Potrdi ime";
+    messageInput.dataset.nameConfirm = "1";
+    return;
+  } else {
+    messageInput.placeholder = "Vnesi sporočilo...";
+  }
 db.ref("messages").on("child_added", snapshot => {
   const msg = snapshot.val();
 
