@@ -413,10 +413,10 @@ width: 100%;
 
 
 
-    db.ref("messages").on("child_added", async (snapshot) => {
+    db.ref("messages").on("child_added", snapshot => {
   const msg = snapshot.val();
 
-  // Sistemsko sporočilo
+  // SYSTEMSKO SPOROČILO (samo za tega uporabnika)
   if (msg.system && msg.privateUid === currentUser.uid) {
     const systemDiv = document.createElement("div");
     systemDiv.style.fontStyle = "italic";
@@ -428,35 +428,18 @@ width: 100%;
     return;
   }
 
-  // Povabilo v zasebni klepet
+  // POVABILO V ZASEBNI KLEPET (samo za tega uporabnika)
   if (msg.invite && msg.privateUid === currentUser.uid) {
     const inviterName = userNamesCache[msg.uid] || "Anonimen";
     const inviteDiv = document.createElement("div");
-    inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet. <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
+    inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet. 
+      <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
     chatBox.appendChild(inviteDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
     return;
   }
 
-  // Klik za kopiranje
-  if (msg.copy) {
-    const copyEl = document.createElement("span");
-    copyEl.style.textDecoration = "underline";
-    copyEl.style.cursor = "pointer";
-    copyEl.textContent = msg.text;
-    copyEl.title = "Klikni za kopiranje";
-    copyEl.addEventListener("click", () => {
-      navigator.clipboard.writeText(msg.text)
-        .then(() => alert("Besedilo skopirano v odložišče!"))
-        .catch(() => alert("Kopiranje ni uspelo."));
-    });
-    const copyContainer = document.createElement("div");
-    copyContainer.appendChild(copyEl);
-    chatBox.appendChild(copyContainer);
-    return;
-  }
-
-  // Filtriraj sporočila glede na pogovor (zasebni / javni)
+  // FILTRIRANJE GLEDE NA POGOVOR (zasebni ali javni)
   if (currentChatPartner) {
     const isPrivateMatch =
       (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -466,67 +449,61 @@ width: 100%;
     if (msg.privateUid) return;
   }
 
+  // PRIDOBI PODATKE O POŠILJATELJU
   const displayName = userNamesCache[msg.uid] || "Anonimen";
   const isOnline = userStatusCache[msg.uid]?.online;
   const color = userColorsCache[msg.uid] || null;
+  const avatarUrl = userAvatarsCache[msg.uid]; // AVATAR
 
   const div = document.createElement("div");
-  div.classList.add("message");
-
-  // Ustvari avatar
-  const avatarImg = document.createElement("img");
-  avatarImg.classList.add("avatar");
-
-  // Pridobi avatar URL iz Firebase
-  try {
-    const avatarSnap = await db.ref("users/" + msg.uid + "/avatarUrl").once("value");
-    const avatarUrl = avatarSnap.val();
-    if (avatarUrl) {
-      avatarImg.src = avatarUrl;
-    } else {
-      avatarImg.src = "default-avatar.png"; // Pot do privzetega avatarja
-    }
-  } catch (err) {
-    console.error("Napaka pri pridobivanju avatarja:", err);
-    avatarImg.src = "default-avatar.png";
-  }
-
-  avatarImg.style.width = "32px";
-  avatarImg.style.height = "32px";
-  avatarImg.style.borderRadius = "50%";
-  avatarImg.style.marginRight = "8px";
-  avatarImg.style.border = isOnline ? "2px solid green" : "2px solid gray";
 
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
 
-  // Barva imena
+  // PRIKAZ IMENA POŠILJATELJA Z BARVO ALI MAVRICO
   if (color === "none") {
-    senderSpan.style.display = "none";
+    senderSpan.style.display = "none"; // Skrije ime
   } else if (color === "rainbow") {
     senderSpan.classList.add("rainbow");
   } else if (color) {
     senderSpan.style.color = color;
   }
 
-  senderSpan.textContent = `${displayName}: `;
+  // VSTAVI AVATAR, ČE OBSTOJA
+  if (avatarUrl) {
+    const avatarImg = document.createElement("img");
+    avatarImg.src = avatarUrl;
+    avatarImg.alt = "avatar";
+    avatarImg.style.width = "22px";
+    avatarImg.style.height = "22px";
+    avatarImg.style.borderRadius = "50%";
+    avatarImg.style.marginRight = "6px";
+    avatarImg.style.verticalAlign = "middle";
+    senderSpan.prepend(avatarImg);
+  }
+
+  // ONLINE STATUS IKONA
+  if (isOnline) {
+    senderSpan.innerHTML += `<span style="color: green; font-size: 1.2em;">●</span> ${displayName}: `;
+  } else {
+    senderSpan.innerHTML += displayName + ": ";
+  }
 
   const realText = document.createElement("span");
   realText.classList.add("realText");
   realText.textContent = msg.text;
 
-  // Dodajanje v div
-  div.appendChild(avatarImg);
-  div.appendChild(senderSpan);
-
+  // SKRITO SPOROČILO
   if (msg.hidden) {
     const hiddenText = document.createElement("span");
     hiddenText.classList.add("hiddenText");
     hiddenText.textContent = "Zasebno sporočilo";
     div.classList.add("hiddenMessage");
+    div.appendChild(senderSpan);
     div.appendChild(hiddenText);
     div.appendChild(realText);
   } else {
+    div.appendChild(senderSpan);
     div.appendChild(realText);
   }
 
