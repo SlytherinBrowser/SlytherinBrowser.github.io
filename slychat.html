@@ -1367,8 +1367,17 @@ logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "center";
+logoutContainer.style.height = "220px";  // večja višina
 
 topContainer.appendChild(logoutContainer);
+// Avatar - slika uporabnika
+const userAvatar = document.createElement("img");
+userAvatar.style.width = "80px";
+userAvatar.style.height = "80px";
+userAvatar.style.borderRadius = "50%";
+userAvatar.style.objectFit = "cover";
+userAvatar.style.marginBottom = "8px";
+userAvatar.alt = "Avatar uporabnika";
 
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
