@@ -372,8 +372,14 @@ width: 100%;
     userStatusCache = snapshot.val() || {};
   });
 
+  // Naloži uporabnike iz Firebase (pomembno, da to narediš pred uporabo users)
+  let users = {};
+  await db.ref("users").once("value").then(snapshot => {
+    users = snapshot.val() || {};
+  });
+
   // Preveri potrditev imena
-  const userData = users[currentUser.uid];
+  const userData = users?.[currentUser.uid];
   if (!userData || !userData.displayName) {
     messageInput.placeholder = "Potrdi ime";
     messageInput.dataset.nameConfirm = "1";
@@ -469,6 +475,7 @@ width: 100%;
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 });
+
 
 
   function acceptInvite(inviterUid) {  
