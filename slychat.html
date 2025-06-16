@@ -1336,13 +1336,7 @@ const batterySpan = document.createElement("span");
 batterySpan.style.fontWeight = "bold";
 batterySpan.style.fontSize = "1.2em";
 topRow.appendChild(batterySpan);
-// Nastavi URL kamor naj vodi klik
-const targetURL = "avatar.html"; // <-- zamenjaj s svojo povezavo
 
-batterySpan.style.cursor = "pointer";
-batterySpan.addEventListener("click", () => {
-  window.location.href = targetURL;
-});
 
 // Aktivni uporabniki
 const activeUsersContainer = document.createElement("div");
