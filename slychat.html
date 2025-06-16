@@ -502,7 +502,21 @@ auth.onAuthStateChanged(async user => {
   });
 });
 
-  
+  function updateActiveUsersList() {
+  const activeUsersDiv = document.getElementById("activeUsers");
+  activeUsersDiv.innerHTML = "";
+
+  for (const uid in userStatusCache) {
+    if (userStatusCache[uid]?.online) {
+      const userDiv = document.createElement("div");
+      userDiv.textContent = userNamesCache[uid] || "Anonimen";
+      if (userColorsCache[uid] && userColorsCache[uid] !== "none") {
+        userDiv.style.color = userColorsCache[uid];
+      }
+      activeUsersDiv.appendChild(userDiv);
+    }
+  }
+}
 
 
 
