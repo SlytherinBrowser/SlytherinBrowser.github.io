@@ -147,17 +147,42 @@ button:active {
     auth.signInAnonymously().catch(e => console.error(e));
 
     // Avatar parametri (več možnosti)
-    const avatarOptions = {
-      topType: ["ShortHairShortFlat", "LongHairStraight", "Hat", "NoHair", "Turban", "WinterHat1"],
-      accessoriesType: ["Blank", "PrescriptionGlasses", "Kurt", "Wayfarers"],
-      hairColor: ["Black", "Blonde", "Brown", "Red", "SilverGray"],
-      facialHairType: ["Blank", "BeardMedium", "MoustacheFancy"],
-      clotheType: ["Hoodie", "ShirtCrewNeck", "BlazerShirt", "GraphicShirt"],
-      eyeType: ["Default", "Happy", "Squint"],
-      eyebrowType: ["Default", "RaisedExcited", "Angry"],
-      mouthType: ["Smile", "Serious", "Sad"],
-      skinColor: ["Light", "Brown", "DarkBrown", "Black"]
-    };
+   const avatarOptions = {
+  topType: [
+    "ShortHairShortFlat", "LongHairStraight", "Hat", "NoHair", "Turban", "WinterHat1",
+    "WinterHat2", "WinterHat3", "WinterHat4", "LongHairCurly", "LongHairCurvy", "LongHairDreads",
+    "LongHairFrida", "LongHairFro", "LongHairFroBand", "LongHairNotTooLong", "LongHairShavedSides",
+    "LongHairMiaWallace", "LongHairStraight2", "LongHairStraightStrand"
+  ],
+  accessoriesType: [
+    "Blank", "PrescriptionGlasses", "Kurt", "Wayfarers",
+    "Round", "Sunglasses", "Prescription02", "Prescription01", "Glasses01", "Glasses02"
+  ],
+  hairColor: [
+    "Black", "Blonde", "Brown", "Red", "SilverGray",
+    "Auburn", "PastelPink", "Platinum", "Pink", "Blue", "Purple", "PastelBlue", "PastelGreen"
+  ],
+  facialHairType: [
+    "Blank", "BeardMedium", "MoustacheFancy",
+    "BeardLight", "BeardMajestic", "MoustacheMagnum"
+  ],
+  clotheType: [
+    "Hoodie", "ShirtCrewNeck", "BlazerShirt", "GraphicShirt",
+    "Overall", "ShirtScoopNeck", "ShirtVNeck", "Hoodie", "GraphicShirt"
+  ],
+  eyeType: [
+    "Default", "Happy", "Squint", "Surprised", "Wink", "WinkWacky", "Cry", "Close", "EyeRoll", "HappySquint"
+  ],
+  eyebrowType: [
+    "Default", "RaisedExcited", "Angry", "SadConcerned", "UnibrowNatural", "UpDown", "UpDownNatural"
+  ],
+  mouthType: [
+    "Smile", "Serious", "Sad", "Disbelief", "Eating", "Grimace", "SadConcerned", "Smirk", "Tongue", "Twinkle"
+  ],
+  skinColor: [
+    "Light", "Brown", "DarkBrown", "Black", "Tanned", "Yellow", "Pale", "Dark"
+  ]
+};
 
     // Trenutni izbrani parametri avatarja
     let state = {
