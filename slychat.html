@@ -236,6 +236,16 @@ width: 100%;
   margin-bottom: 6px;
   overflow-x: auto;
   padding: 2px 0;
+  height: 48px;             /* fiksna višina, da prostor ostane enak */
+  border: 2px solid transparent;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+}
+
+/* Utripanje obrobe, ko ni uporabnikov */
+.typing-avatars.blink-border {
+  animation: borderBlinkColors 1.5s infinite;
+  border-color: #4caf50;
 }
 
 .typing-avatars .avatar {
@@ -249,6 +259,7 @@ width: 100%;
   transition: border-color 0.3s ease;
 }
 
+/* Aktivni uporabniki imajo utripajoč zelen okvir */
 .typing-avatars .avatar.active {
   border-color: #4caf50;
   animation: borderBlinkColors 1.5s infinite;
@@ -260,6 +271,7 @@ width: 100%;
 }
 
 
+
   </style>
 </head>
 <body>
@@ -268,7 +280,7 @@ width: 100%;
     <div id="chatBox"></div>
 
    <div class="message-input-container" style="position: relative;">
-  <div id="typingAvatars" class="typing-avatars" style="display:none;"></div>
+<div id="typingAvatars" class="typing-avatars"></div>
   <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
   <div class="message-input-btn-container">
   <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
@@ -1975,9 +1987,14 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
     .map(([uid]) => uid);
 
   if (activeTypingUsers.length === 0) {
-    typingAvatarsDiv.style.display = 'none';
+    // Ni uporabnikov, prikaži prazen div z utripajočo obrobo
+    typingAvatarsDiv.innerHTML = '';           // ni avatarjev
+    typingAvatarsDiv.classList.add('blink-border');
     return;
   }
+
+  // Ima tipkajoče uporabnike - odstrani utripanje obrobe, da avatarji utripajo sami
+  typingAvatarsDiv.classList.remove('blink-border');
 
   // Pridobi podatke o uporabnikih (avatar, online status)
   const usersData = await Promise.all(
@@ -1991,7 +2008,9 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
   });
 
   if (filteredUsers.length === 0) {
-    typingAvatarsDiv.style.display = 'none';
+    // Če nobeden ni online, pokaži prazno z utripajočo obrobo
+    typingAvatarsDiv.innerHTML = '';
+    typingAvatarsDiv.classList.add('blink-border');
     return;
   }
 
