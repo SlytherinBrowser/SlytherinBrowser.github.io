@@ -238,9 +238,7 @@ width: 100%;
 <body>
   <div class="container">
     <h2>Slychat</h2>
-
     <div id="chatBox"></div>
-
    <div class="message-input-container" style="position: relative;">
   <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
   <div class="message-input-btn-container">
@@ -382,17 +380,23 @@ auth.onAuthStateChanged(async user => {
   const userStatusRef = db.ref("status/" + user.uid);
   userStatusRef.set({ online: true });
   userStatusRef.onDisconnect().set({ online: false });
-
+const usersSnapshot = await db.ref('users').once('value');  
+  
+    const users = usersSnapshot.val() || {};  
+  
+    for (const uid in users) {  
+  
+      userNamesCache[uid] = users[uid].displayName || "Anonimen";  
+  
+      userColorsCache[uid] = users[uid].color || null;  
+  
+    }  
   // Posodobi lokalni cache statusov uporabnikov
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
   });
 
-  // Naloži uporabnike iz Firebase (pomembno, da to narediš pred uporabo users)
-  let users = {};
-  await db.ref("users").once("value").then(snapshot => {
-    users = snapshot.val() || {};
-  });
+  
 
   // Preveri potrditev imena
   const userData = users?.[currentUser.uid];
@@ -443,7 +447,7 @@ auth.onAuthStateChanged(async user => {
       if (msg.privateUid) return;
     }
 
-    const displayName = users[msg.uid]?.displayName || "Anonimen";
+    const displayName = userNamesCache[msg.uid] || "Anonimen";
     const isOnline = userStatusCache[msg.uid]?.online;
     const color = userColorsCache[msg.uid] || null;
 
@@ -1535,9 +1539,9 @@ if (active.length === 0) {
         batterySpan.textContent = "–";  
       }  
     });  
-
+    
     div.appendChild(nameSpan);  
-    div.appendChild(batterySpan);  
+    div.appendChild(batterySpan); 
     activeUsersContainer.appendChild(div);  
   });  
 }
