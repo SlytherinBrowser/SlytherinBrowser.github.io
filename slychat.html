@@ -2274,26 +2274,34 @@ function initUserMap(currentUserIcon) {
 
 
 
-// Klik na gumb "+"
+// Gumb "+" sproži izbor slike
 document.getElementById("imageUploadBtn").addEventListener("click", function () {
   document.getElementById("imageInput").click();
 });
 
-// Po izbiri slike
+// Ko je slika izbrana
 document.getElementById("imageInput").addEventListener("change", function () {
   const file = this.files[0];
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = function (e) {
-    const base64Image = e.target.result;
+    let base64Image = e.target.result;
+
+    // Dodatna zaščita: preverimo prefix
+    if (!base64Image.startsWith("data:image")) {
+      base64Image = "data:image/jpeg;base64," + base64Image;
+    }
+
     const textComment = document.getElementById("messageInput").value.trim();
     sendImageToFirebase(base64Image, textComment);
     document.getElementById("messageInput").value = ""; // Počisti vnos
   };
-  reader.readAsDataURL(file);
+
+  reader.readAsDataURL(file); // Nujno DataURL (base64)
 });
 
+// Pošlji v Firebase
 function sendImageToFirebase(base64, comment) {
   const user = firebase.auth().currentUser;
   if (!user) {
@@ -2313,32 +2321,35 @@ function sendImageToFirebase(base64, comment) {
   firebase.database().ref("messages").push(messageData)
     .then(() => {
       console.log("Slika poslana.");
-      appendImageMessage("Jaz", base64, comment); // Prikažemo lokalno
+      appendImageMessage("Jaz", base64, comment); // Lokalni prikaz
     })
     .catch(error => {
       console.error("Napaka pri pošiljanju slike:", error);
     });
 }
 
+// Prikaz slike v klepetu
 function appendImageMessage(sender, base64, comment) {
   const chatBox = document.getElementById("chatBox");
   const messageElement = document.createElement("div");
 
-  const image = document.createElement("img");
-  image.src = base64;
-  image.style.maxWidth = "200px";
-  image.style.maxHeight = "200px";
-
   const senderElem = document.createElement("strong");
   senderElem.innerText = sender + ":";
 
+  const img = document.createElement("img");
+  img.src = base64;
+  img.style.maxWidth = "200px";
+  img.style.maxHeight = "200px";
+  img.style.display = "block";
+  img.style.marginTop = "4px";
+
   messageElement.appendChild(senderElem);
-  messageElement.appendChild(document.createElement("br"));
-  messageElement.appendChild(image);
+  messageElement.appendChild(img);
+
   if (comment) {
-    messageElement.appendChild(document.createElement("br"));
     const commentElem = document.createElement("em");
     commentElem.innerText = comment;
+    messageElement.appendChild(document.createElement("br"));
     messageElement.appendChild(commentElem);
   }
 
