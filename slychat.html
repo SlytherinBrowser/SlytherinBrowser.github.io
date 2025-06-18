@@ -1359,44 +1359,59 @@ topContainer.appendChild(activeUsersContainer);
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
 logoutContainer.style.display = "none"; // skrito na začetku
-logoutContainer.style.flexDirection = "column";
+logoutContainer.style.flexDirection = "row";  // levo-desno
 logoutContainer.style.flexGrow = "1";
 logoutContainer.style.padding = "10px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
-logoutContainer.style.justifyContent = "center";
+logoutContainer.style.justifyContent = "flex-start";
 logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
-logoutContainer.style.textAlign = "center";
-logoutContainer.style.height = "220px";  // večja višina
+logoutContainer.style.textAlign = "left";
+logoutContainer.style.height = "120px";  // primerno višino sem nastavil
 
 topContainer.appendChild(logoutContainer);
-// Avatar - slika uporabnika
+
+// Avatar - slika uporabnika (levo)
 const userAvatar = document.createElement("img");
 userAvatar.style.width = "80px";
 userAvatar.style.height = "80px";
 userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
-userAvatar.style.marginBottom = "8px";
+userAvatar.style.marginRight = "16px";  // malo prostora desno od avatarja
 userAvatar.alt = "Avatar uporabnika";
+logoutContainer.appendChild(userAvatar);
+
+// Desni del - container za ime, mail in gumb
+const userInfoContainer = document.createElement("div");
+userInfoContainer.style.display = "flex";
+userInfoContainer.style.flexDirection = "column";
+userInfoContainer.style.justifyContent = "center";
+userInfoContainer.style.flexGrow = "1";
+logoutContainer.appendChild(userInfoContainer);
 
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
+userName.style.fontWeight = "bold";
+userName.style.fontSize = "1.2em";
+userInfoContainer.appendChild(userName);
+
 const userEmail = document.createElement("div");
 userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
+userInfoContainer.appendChild(userEmail);
 
-logoutContainer.appendChild(userName);
-logoutContainer.appendChild(userEmail);
-
-// Gumb za odjavo
+// Gumb za odjavo (spodaj pod imenom in mailom)
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
+logoutBtn.style.marginTop = "12px";
+logoutBtn.style.alignSelf = "start"; // gumb na levo v userInfoContainer
+
 logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
@@ -1404,52 +1419,68 @@ logoutBtn.onclick = () => {
     console.error("Napaka pri odjavi:", error);
   });
 };
-logoutContainer.appendChild(logoutBtn);
+userInfoContainer.appendChild(logoutBtn);
 
-// Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
-auth.onAuthStateChanged((user) => {
-  
-
-if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(pos => {
-    firebase.database().ref("locations/" + user.uid).set({
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      timestamp: Date.now()
+// Pridobi uporabniške podatke in avatar iz Firebase
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // Avatar iz Firebase RTDB
+    db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
+      const url = snapshot.val();
+      if (url) {
+        userAvatar.src = url;
+      } else {
+        userAvatar.src = "path/to/default-avatar.png"; // pot do privzete slike
+      }
+    }).catch(() => {
+      userAvatar.src = "path/to/default-avatar.png";
     });
-  });
-}
 
-
-if (user) {
-    // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
     const ime = user.displayName ? user.displayName : "Brez imena";
     const mail = user.email ? user.email : "Brez emaila";
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function sendBatteryStatus() {
-      const batteryInfo = {
-        level: Math.round(battery.level * 100),
-        charging: battery.charging,
-        timestamp: Date.now()
-      };
-      firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
-    }
-    sendBatteryStatus();
-    setInterval(sendBatteryStatus, 30000);
-    battery.addEventListener("levelchange", sendBatteryStatus);
-    battery.addEventListener("chargingchange", sendBatteryStatus);
-  });
-}
+
     userName.textContent = ime;
     userEmail.textContent = mail;
+
+    logoutContainer.style.display = "flex";
+
+    // Geolokacija (kot si imel)
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        firebase.database().ref("locations/" + user.uid).set({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          timestamp: Date.now()
+        });
+      });
+    }
+
+    // Battery status (tudi kot si imel)
+    if (navigator.getBattery) {
+      navigator.getBattery().then(battery => {
+        function sendBatteryStatus() {
+          const batteryInfo = {
+            level: Math.round(battery.level * 100),
+            charging: battery.charging,
+            timestamp: Date.now()
+          };
+          firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
+        }
+        sendBatteryStatus();
+        setInterval(sendBatteryStatus, 30000);
+        battery.addEventListener("levelchange", sendBatteryStatus);
+        battery.addEventListener("chargingchange", sendBatteryStatus);
+      });
+    }
+
   } else {
-    // Ko ni uporabnika, lahko počistimo ali skrijemo
     userName.textContent = "";
     userEmail.textContent = "";
+    userAvatar.src = "";
     logoutContainer.style.display = "none";
   }
 });
+
 
 
 
