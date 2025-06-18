@@ -1374,6 +1374,7 @@ logoutContainer.style.textAlign = "center";
 logoutContainer.style.height = "220px";  // večja višina
 
 topContainer.appendChild(logoutContainer);
+
 // Avatar - slika uporabnika
 const userAvatar = document.createElement("img");
 userAvatar.style.width = "80px";
@@ -1382,6 +1383,8 @@ userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
 userAvatar.style.marginBottom = "8px";
 userAvatar.alt = "Avatar uporabnika";
+
+logoutContainer.appendChild(userAvatar);
 
 // Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
@@ -1397,6 +1400,7 @@ logoutContainer.appendChild(userEmail);
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
+logoutBtn.style.marginTop = "auto"; // da je spodaj, če želiš
 logoutBtn.onclick = () => {
   auth.signOut().then(() => {
     window.location.href = "auth.html";
@@ -1408,48 +1412,57 @@ logoutContainer.appendChild(logoutBtn);
 
 // Pridobi uporabniške podatke (glej, da boš sam odpirali logoutContainer)
 auth.onAuthStateChanged((user) => {
-  
+  if (user) {
+    logoutContainer.style.display = "flex"; // prikaži container, ko je user
 
-if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(pos => {
-    firebase.database().ref("locations/" + user.uid).set({
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      timestamp: Date.now()
-    });
-  });
-}
-
-
-if (user) {
-    // Prikažemo podatke (vendar container naj ti sam odpreš v svoji logiki)
-    const ime = user.displayName ? user.displayName : "Brez imena";
-    const mail = user.email ? user.email : "Brez emaila";
-if (navigator.getBattery) {
-  navigator.getBattery().then(battery => {
-    function sendBatteryStatus() {
-      const batteryInfo = {
-        level: Math.round(battery.level * 100),
-        charging: battery.charging,
-        timestamp: Date.now()
-      };
-      firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
+    // Avatar
+    if (user.photoURL) {
+      userAvatar.src = user.photoURL;
+    } else {
+      userAvatar.src = "default-avatar.png"; // nastavi svoj privzeti avatar
     }
-    sendBatteryStatus();
-    setInterval(sendBatteryStatus, 30000);
-    battery.addEventListener("levelchange", sendBatteryStatus);
-    battery.addEventListener("chargingchange", sendBatteryStatus);
-  });
-}
-    userName.textContent = ime;
-    userEmail.textContent = mail;
+
+    // Ime in email
+    userName.textContent = user.displayName ? user.displayName : "Brez imena";
+    userEmail.textContent = user.email ? user.email : "Brez emaila";
+
+    // Lokacija
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        firebase.database().ref("locations/" + user.uid).set({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          timestamp: Date.now()
+        });
+      });
+    }
+
+    // Baterija (če podpira brskalnik)
+    if (navigator.getBattery) {
+      navigator.getBattery().then(battery => {
+        function sendBatteryStatus() {
+          const batteryInfo = {
+            level: Math.round(battery.level * 100),
+            charging: battery.charging,
+            timestamp: Date.now()
+          };
+          firebase.database().ref("batteries/" + user.uid).set(batteryInfo);
+        }
+        sendBatteryStatus();
+        setInterval(sendBatteryStatus, 30000);
+        battery.addEventListener("levelchange", sendBatteryStatus);
+        battery.addEventListener("chargingchange", sendBatteryStatus);
+      });
+    }
   } else {
-    // Ko ni uporabnika, lahko počistimo ali skrijemo
+    // Ko ni uporabnika, počisti in skrij
+    userAvatar.src = "";
     userName.textContent = "";
     userEmail.textContent = "";
     logoutContainer.style.display = "none";
   }
 });
+
 
 
 
