@@ -2102,7 +2102,22 @@ function showUserMapPopup() {
 
   mapContainer.appendChild(closeBtn);
 
-  // Tukaj bo container za izbiro ikone
+ // Funkcija za izračun razdalje med dvema koordinatama (Haversine formula)
+function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000; // Zemeljski radij v metrih
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+  ;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// --- IZBIRA IKONE ---
+
 const iconChooser = document.createElement("div");
 iconChooser.style.position = "absolute";
 iconChooser.style.top = "50%";
@@ -2160,6 +2175,7 @@ iconChooser.innerHTML = `
     <button class="icon-btn" style="margin:4px;">🌌</button>
     <button class="icon-btn" style="margin:4px;">🥑</button>
   </div>
+
   <button id="iconSaveBtn" disabled style="margin-top:10px; padding: 5px 10px;">Shrani</button>
 `;
 
@@ -2181,6 +2197,7 @@ const saveBtn = iconChooser.querySelector("#iconSaveBtn");
 iconButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     selectedIcon = btn.textContent;
+    // Označi izbrano ikono (doda border)
     iconButtons.forEach(b => b.style.border = "none");
     btn.style.border = "2px solid blue";
     saveBtn.disabled = false;
@@ -2189,16 +2206,18 @@ iconButtons.forEach(btn => {
 
 saveBtn.addEventListener("click", () => {
   if (!selectedIcon) return;
+  // Shrani v Firebase pod userIcons/currentUser.uid
   firebase.database().ref("userIcons/" + currentUser.uid).set(selectedIcon)
     .then(() => {
       iconChooser.style.display = "none";
-      initUserMap(selectedIcon);
+      initUserMap(selectedIcon); // Zdaj nariši zemljevid z izbrano ikono
     })
     .catch(err => {
       alert("Napaka pri shranjevanju ikone: " + err.message);
     });
 });
 
+// Preveri, če že ima uporabnik ikono v Firebase (enkratno)
 firebase.database().ref("userIcons/" + currentUser.uid).once("value").then(snapshot => {
   const icon = snapshot.val();
   if (icon) {
@@ -2206,7 +2225,11 @@ firebase.database().ref("userIcons/" + currentUser.uid).once("value").then(snaps
     iconChooser.style.display = "none";
     initUserMap(icon);
   }
+  // Če nima, izbira ostane vidna in uporabnik mora izbrati
 });
+
+
+// --- PRIKAZ ZEMLJEVIDA Z MARKERJI IN RAZDALJAMI ---
 
 function initUserMap(currentUserIcon) {
   const map = L.map('userMap').setView([46.05, 14.5], 7);
@@ -2214,6 +2237,7 @@ function initUserMap(currentUserIcon) {
     maxZoom: 19
   }).addTo(map);
 
+  // Najprej pridobi lokacijo trenutnega uporabnika (za izračun razdalj)
   firebase.database().ref("locations/" + currentUser.uid).once("value").then(snapshot => {
     const loc = snapshot.val();
     if (loc && loc.lat && loc.lng) {
@@ -2221,47 +2245,47 @@ function initUserMap(currentUserIcon) {
         html: `<div style="font-size: 36px;">${currentUserIcon || '📍'}</div>`,
         className: ""
       });
-      L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup("<b>Tvoja lokacija</b>");
+      L.marker([loc.lat, loc.lng], { icon })
+        .addTo(map)
+        .bindPopup("<b>Tvoja lokacija</b>");
+
+      // Sedaj nariši markerje za ostale uporabnike z izračunom razdalje
+      drawOtherUsersMarkers(map, loc.lat, loc.lng);
+    } else {
+      alert("Ni najdene tvoje lokacije v bazi!");
     }
   });
+}
 
+function drawOtherUsersMarkers(map, currentLat, currentLng) {
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
   active.forEach(([uid]) => {
     Promise.all([
       firebase.database().ref("locations/" + uid).once("value"),
-      firebase.database().ref("userIcons/" + uid).once("value"),
-      firebase.database().ref("avatars/" + uid).once("value")
-    ]).then(([locSnap, iconSnap, avatarSnap]) => {
+      firebase.database().ref("userIcons/" + uid).once("value")
+    ]).then(([locSnap, iconSnap]) => {
       const loc = locSnap.val();
-      const iconEmoji = iconSnap.val() || '📍';
-      const avatarURL = avatarSnap.val();
+      const iconEmoji = iconSnap.val() || '📍'; // privzeta ikona če ni shranjene
       if (loc && loc.lat && loc.lng) {
-        const distance = getDistance(currentUserLocation.lat, currentUserLocation.lng, loc.lat, loc.lng).toFixed(2);
-        const html = avatarURL
-          ? `<div style="text-align:center"><img src="${avatarURL}" style="width:40px;height:40px;border-radius:50%;"><br>${iconEmoji}</div>`
-          : `<div style="font-size: 36px;">${iconEmoji}</div>`;
-        const icon = L.divIcon({ html, className: "" });
+        const distance = getDistanceFromLatLonInMeters(currentLat, currentLng, loc.lat, loc.lng);
+        const distanceStr = distance > 1000 ?
+          (distance / 1000).toFixed(2) + " km" :
+          Math.round(distance) + " m";
+
+        const icon = L.divIcon({
+          html: `<div style="font-size: 36px;">${iconEmoji}</div>`,
+          className: ""
+        });
+
         const name = userNamesCache[uid] || "Uporabnik";
         L.marker([loc.lat, loc.lng], { icon })
           .addTo(map)
-          .bindPopup(`<b>${name}</b><br>Razdalja: ${distance} km`);
+          .bindPopup(`<b>${name}</b><br>Razdalja: ${distanceStr}`);
       }
     });
   });
-};
-
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
 }
 
 
