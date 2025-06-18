@@ -2286,19 +2286,14 @@ document.getElementById("imageInput").addEventListener("change", function () {
 
   const reader = new FileReader();
   reader.onload = function (e) {
-    let base64Image = e.target.result;
-
-    // Dodatna zaščita: preverimo prefix
-    if (!base64Image.startsWith("data:image")) {
-      base64Image = "data:image/jpeg;base64," + base64Image;
-    }
+    const base64Image = e.target.result; // že vsebuje "data:image/...;base64,..."
 
     const textComment = document.getElementById("messageInput").value.trim();
     sendImageToFirebase(base64Image, textComment);
     document.getElementById("messageInput").value = ""; // Počisti vnos
   };
 
-  reader.readAsDataURL(file); // Nujno DataURL (base64)
+  reader.readAsDataURL(file); // prebere kot base64 z vsemi potrebnimi podatki
 });
 
 // Pošlji v Firebase
@@ -2314,7 +2309,7 @@ function sendImageToFirebase(base64, comment) {
     uid: user.uid,
     timestamp: Date.now(),
     type: "image",
-    image: base64,
+    image: base64,  // že popoln data URL
     comment: comment || null,
   };
 
@@ -2332,12 +2327,14 @@ function sendImageToFirebase(base64, comment) {
 function appendImageMessage(sender, base64, comment) {
   const chatBox = document.getElementById("chatBox");
   const messageElement = document.createElement("div");
+  messageElement.classList.add("chat-message"); // po želji stil
 
   const senderElem = document.createElement("strong");
   senderElem.innerText = sender + ":";
 
   const img = document.createElement("img");
-  img.src = base64;
+  img.src = base64; // popolnoma veljaven `data:image/...` URL
+  img.alt = "Slika";
   img.style.maxWidth = "200px";
   img.style.maxHeight = "200px";
   img.style.display = "block";
