@@ -247,8 +247,6 @@ width: 100%;
     <div class="message-input-btn-container">
       <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
       <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
-      <button id="imageUploadBtn" title="Pošlji sliko">+</button>
-      <input type="file" id="imageInput" accept="image/*" style="display: none;" />
     </div>
   </div>
 
@@ -2274,85 +2272,6 @@ function initUserMap(currentUserIcon) {
 
 
 
-// Gumb "+" sproži izbor slike
-document.getElementById("imageUploadBtn").addEventListener("click", function () {
-  document.getElementById("imageInput").click();
-});
-
-// Ko je slika izbrana
-document.getElementById("imageInput").addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const base64Image = e.target.result; // že vsebuje "data:image/...;base64,..."
-
-    const textComment = document.getElementById("messageInput").value.trim();
-    sendImageToFirebase(base64Image, textComment);
-    document.getElementById("messageInput").value = ""; // Počisti vnos
-  };
-
-  reader.readAsDataURL(file); // prebere kot base64 z vsemi potrebnimi podatki
-});
-
-// Pošlji v Firebase
-function sendImageToFirebase(base64, comment) {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("Najprej se prijavi.");
-    return;
-  }
-
-  const messageData = {
-    sender: user.displayName || "Neznanec",
-    uid: user.uid,
-    timestamp: Date.now(),
-    type: "image",
-    image: base64,  // že popoln data URL
-    comment: comment || null,
-  };
-
-  firebase.database().ref("messages").push(messageData)
-    .then(() => {
-      console.log("Slika poslana.");
-      appendImageMessage("Jaz", base64, comment); // Lokalni prikaz
-    })
-    .catch(error => {
-      console.error("Napaka pri pošiljanju slike:", error);
-    });
-}
-
-// Prikaz slike v klepetu
-function appendImageMessage(sender, base64, comment) {
-  const chatBox = document.getElementById("chatBox");
-  const messageElement = document.createElement("div");
-  messageElement.classList.add("chat-message"); // po želji stil
-
-  const senderElem = document.createElement("strong");
-  senderElem.innerText = sender + ":";
-
-  const img = document.createElement("img");
-  img.src = base64; // popolnoma veljaven `data:image/...` URL
-  img.alt = "Slika";
-  img.style.maxWidth = "200px";
-  img.style.maxHeight = "200px";
-  img.style.display = "block";
-  img.style.marginTop = "4px";
-
-  messageElement.appendChild(senderElem);
-  messageElement.appendChild(img);
-
-  if (comment) {
-    const commentElem = document.createElement("em");
-    commentElem.innerText = comment;
-    messageElement.appendChild(document.createElement("br"));
-    messageElement.appendChild(commentElem);
-  }
-
-  chatBox.appendChild(messageElement);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
 
 
 
