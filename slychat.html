@@ -2274,10 +2274,12 @@ function initUserMap(currentUserIcon) {
 
 
 
+// Klik na gumb "+"
 document.getElementById("imageUploadBtn").addEventListener("click", function () {
   document.getElementById("imageInput").click();
 });
 
+// Po izbiri slike
 document.getElementById("imageInput").addEventListener("change", function () {
   const file = this.files[0];
   if (!file) return;
@@ -2285,26 +2287,50 @@ document.getElementById("imageInput").addEventListener("change", function () {
   const reader = new FileReader();
   reader.onload = function (e) {
     const base64Image = e.target.result;
-    sendImageMessage(base64Image);
+    const textComment = document.getElementById("messageInput").value.trim();
+    sendImageToFirebase(base64Image, textComment);
+    document.getElementById("messageInput").value = ""; // Počisti vnos
   };
   reader.readAsDataURL(file);
 });
 
-function sendImageMessage(base64) {
-  const message = `<img src="${base64}" alt="Slika" style="max-width: 200px; max-height: 200px;" />`;
-  appendMessage("Jaz", message); // Primer lokalnega prikaza
-  // TODO: Tu pokliči funkcijo za pošiljanje v bazo, npr. pošlji v Firebase
+function sendImageToFirebase(base64, comment) {
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("Najprej se prijavi.");
+    return;
+  }
+
+  const messageData = {
+    sender: user.displayName || "Neznanec",
+    uid: user.uid,
+    timestamp: Date.now(),
+    type: "image",
+    image: base64,
+    comment: comment || null,
+  };
+
+  firebase.database().ref("messages").push(messageData)
+    .then(() => {
+      console.log("Slika poslana.");
+      appendImageMessage("Jaz", base64, comment); // Prikažemo lokalno
+    })
+    .catch(error => {
+      console.error("Napaka pri pošiljanju slike:", error);
+    });
 }
 
-
-
-function appendMessage(sender, message) {
+// Lokalni prikaz slike in komentarja
+function appendImageMessage(sender, base64, comment) {
   const chatBox = document.getElementById("chatBox");
   const messageElement = document.createElement("div");
-  messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+  messageElement.innerHTML = `<strong>${sender}:</strong><br>
+    <img src="${base64}" style="max-width: 200px; max-height: 200px;" /><br>
+    ${comment ? `<em>${comment}</em>` : ""}`;
   chatBox.appendChild(messageElement);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
+
 
 
 
