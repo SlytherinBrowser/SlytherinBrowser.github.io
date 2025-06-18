@@ -414,7 +414,13 @@ const usersSnapshot = await db.ref('users').once('value');
   // Poslušaj nova sporočila
   db.ref("messages").on("child_added", snapshot => {
     const msg = snapshot.val();
-
+    
+if (msg.type === "image") {
+    appendImageMessage(msg.sender, msg.image, msg.comment);
+  } else {
+    appendTextMessage(msg.sender, msg.text);
+  }
+});
     // Sistemko sporočilo za tebe (zasebno)
     if (msg.system && msg.privateUid === currentUser.uid) {
       const systemDiv = document.createElement("div");
