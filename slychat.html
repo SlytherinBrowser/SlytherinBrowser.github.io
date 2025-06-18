@@ -305,7 +305,7 @@ width: 100%;
   let userColorsCache = {}; // Za shranjevanje barv uporabnikov  
 
 
-
+let friends = {};
   // DODANO: animacija mavrične barve (rainbow)  
 
   const style = document.createElement('style');  
@@ -375,6 +375,13 @@ auth.onAuthStateChanged(async user => {
   }
 
   currentUser = user;
+
+  // Počakaj, da se naložijo prijatelji, preden poslušaš povabila in sporočila
+  await loadFriends();
+
+  listenForFriendRequests();
+  listenForMessages();
+});
 
   // Nastavi status online in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
@@ -2273,7 +2280,155 @@ function initUserMap(currentUserIcon) {
 
 
 
+function loadFriends() {
+  return new Promise((resolve) => {
+    db.ref(`friends/${currentUser.uid}`).on('value', snapshot => {
+      friends = snapshot.val() || {};
+      console.log("Prijatelji:", friends);
+      resolve();
+    });
+  });
+}
 
+// Pošlji povabilo za prijateljstvo (ukaz /friendAdd*ime)
+function sendFriendRequest(friendName) {
+  if (!friendName || !currentUser) return;
+
+  if(friendName === currentUser.displayName){
+    alert("Ne moreš biti prijatelj sam s seboj.");
+    return;
+  }
+
+  db.ref('users').orderByChild('displayName').equalTo(friendName).once('value', snapshot => {
+    if(snapshot.exists()){
+      const usersData = snapshot.val();
+      const friendUid = Object.keys(usersData)[0];
+
+      if(friends[friendUid]){
+        alert(`${friendName} je že tvoj prijatelj.`);
+        return;
+      }
+
+      const newRequestRef = db.ref(`friendRequests/${friendUid}`).push();
+      newRequestRef.set({
+        fromUid: currentUser.uid,
+        fromName: currentUser.displayName,
+        timestamp: Date.now()
+      });
+
+      alert(`Povabilo za prijateljstvo poslano uporabniku ${friendName}.`);
+
+    } else {
+      alert(`Uporabnik ${friendName} ne obstaja.`);
+    }
+  });
+}
+
+// Poslušaj povabila za prijateljstvo in prikaz popup za sprejem ali zavrnitev
+function listenForFriendRequests() {
+  if(!currentUser) return;
+
+  db.ref(`friendRequests/${currentUser.uid}`).on('child_added', snapshot => {
+    const req = snapshot.val();
+    const requestId = snapshot.key;
+
+    const accept = confirm(`Uporabnik ${req.fromName} želi biti tvoj prijatelj. Sprejmeš?`);
+
+    if(accept){
+      const updates = {};
+      updates[`friends/${currentUser.uid}/${req.fromUid}`] = true;
+      updates[`friends/${req.fromUid}/${currentUser.uid}`] = true;
+
+      db.ref().update(updates).then(() => {
+        alert(`Prijateljstvo s ${req.fromName} potrjeno.`);
+      });
+    } else {
+      alert(`Zavrnil si povabilo od ${req.fromName}.`);
+    }
+
+    db.ref(`friendRequests/${currentUser.uid}/${requestId}`).remove();
+  });
+}
+
+// Pošlji sporočilo (javna ali zasebna)
+function sendMessage(toUid, text) {
+  if(!currentUser || !text) return;
+
+  const msgRef = db.ref('messages').push();
+  msgRef.set({
+    fromUid: currentUser.uid,
+    toUid: toUid || "all",
+    text: text,
+    timestamp: Date.now()
+  });
+}
+
+let chatFilter = "full";
+
+function listenForMessages() {
+  db.ref('messages').on('value', snapshot => {
+    const data = snapshot.val() || {};
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '';
+
+    const msgs = Object.values(data).sort((a,b) => a.timestamp - b.timestamp);
+
+    msgs.forEach(msg => {
+      if(chatFilter === "friendChat"){
+        const fromFriend = friends[msg.fromUid];
+        const toFriend = friends[msg.toUid];
+        const fromIsMe = (msg.fromUid === currentUser.uid);
+        const toIsMe = (msg.toUid === currentUser.uid);
+
+        if(!((fromIsMe && toFriend) || (toIsMe && fromFriend))){
+          return;
+        }
+      }
+
+      getUserName(msg.fromUid).then(fromName => {
+        getUserName(msg.toUid).then(toName => {
+          const div = document.createElement('div');
+          div.textContent = `${fromName} → ${toName}: ${msg.text}`;
+          chatBox.appendChild(div);
+        });
+      });
+    });
+  });
+}
+
+const userCache = {};
+function getUserName(uid) {
+  return new Promise((resolve) => {
+    if(uid === "all") {
+      resolve("Vsi");
+      return;
+    }
+    if(userCache[uid]){
+      resolve(userCache[uid]);
+      return;
+    }
+    db.ref(`users/${uid}/displayName`).once('value').then(snap => {
+      userCache[uid] = snap.val() || "Neznan";
+      resolve(userCache[uid]);
+    });
+  });
+}
+
+// Obdelaj ukaze in sporočila
+function processCommand(input) {
+  if(input.startsWith("/friendAdd*")){
+    const friendName = input.substring(11).trim();
+    sendFriendRequest(friendName);
+  } else if(input === "/friendChat") {
+    chatFilter = "friendChat";
+    listenForMessages();
+  } else if(input === "/fullChat") {
+    chatFilter = "full";
+    listenForMessages();
+  } else {
+    sendMessage("all", input);
+  }
+}
 
 
 
