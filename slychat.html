@@ -2320,13 +2320,28 @@ function sendImageToFirebase(base64, comment) {
     });
 }
 
-// Lokalni prikaz slike in komentarja
 function appendImageMessage(sender, base64, comment) {
   const chatBox = document.getElementById("chatBox");
   const messageElement = document.createElement("div");
-  messageElement.innerHTML = `<strong>${sender}:</strong><br>
-    <img src="${base64}" style="max-width: 200px; max-height: 200px;" /><br>
-    ${comment ? `<em>${comment}</em>` : ""}`;
+
+  const image = document.createElement("img");
+  image.src = base64;
+  image.style.maxWidth = "200px";
+  image.style.maxHeight = "200px";
+
+  const senderElem = document.createElement("strong");
+  senderElem.innerText = sender + ":";
+
+  messageElement.appendChild(senderElem);
+  messageElement.appendChild(document.createElement("br"));
+  messageElement.appendChild(image);
+  if (comment) {
+    messageElement.appendChild(document.createElement("br"));
+    const commentElem = document.createElement("em");
+    commentElem.innerText = comment;
+    messageElement.appendChild(commentElem);
+  }
+
   chatBox.appendChild(messageElement);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
