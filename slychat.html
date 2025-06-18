@@ -2220,30 +2220,45 @@ function initUserMap(currentUserIcon) {
     maxZoom: 19
   }).addTo(map);
 
-  // Prikaži marker za trenutnega uporabnika s svojo ikono
-  firebase.database().ref("locations/" + currentUser.uid).once("value").then(snapshot => {
-    const loc = snapshot.val();
+  // Prikaži marker za trenutnega uporabnika s svojo ikono ALI avatarjem, če obstaja
+  Promise.all([
+    firebase.database().ref("locations/" + currentUser.uid).once("value"),
+    firebase.database().ref("users/" + currentUser.uid + "/avatarUrl").once("value")
+  ]).then(([locSnap, avatarSnap]) => {
+    const loc = locSnap.val();
+    const avatarUrl = avatarSnap.val();
     if (loc && loc.lat && loc.lng) {
-      const icon = L.divIcon({
-        html: `<div style="font-size: 36px;">${currentUserIcon || '📍'}</div>`,
-        className: ""
-      });
-      L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup("<b>Tvoja lokacija</b>");
+      if (avatarUrl) {
+        // Uporabi sliko avatarja kot marker
+        const avatarIcon = L.icon({
+          iconUrl: avatarUrl,
+          iconSize: [40, 40], // prilagodi velikost avatarja
+          iconAnchor: [20, 40], // točka sidrišča pod sliko
+          popupAnchor: [0, -40]
+        });
+        L.marker([loc.lat, loc.lng], { icon: avatarIcon }).addTo(map).bindPopup("<b>Tvoja lokacija (avatar)</b>");
+      } else {
+        // Uporabi emoji ikono, če ni avatarja
+        const icon = L.divIcon({
+          html: `<div style="font-size: 36px;">${currentUserIcon || '📍'}</div>`,
+          className: ""
+        });
+        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup("<b>Tvoja lokacija</b>");
+      }
     }
   });
 
-  // Prikaži markerje za ostale uporabnike
+  // Prikaži markerje za ostale uporabnike z emoji ikonami (kot prej)
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
   active.forEach(([uid]) => {
-    // Najprej pridobi lokacijo in ikono uporabnika
     Promise.all([
       firebase.database().ref("locations/" + uid).once("value"),
       firebase.database().ref("userIcons/" + uid).once("value")
     ]).then(([locSnap, iconSnap]) => {
       const loc = locSnap.val();
-      const iconEmoji = iconSnap.val() || '📍'; // privzeta ikona če ni shranjene
+      const iconEmoji = iconSnap.val() || '📍'; 
       if (loc && loc.lat && loc.lng) {
         const icon = L.divIcon({
           html: `<div style="font-size: 36px;">${iconEmoji}</div>`,
@@ -2254,7 +2269,6 @@ function initUserMap(currentUserIcon) {
       }
     });
   });
-
 };
 
 
