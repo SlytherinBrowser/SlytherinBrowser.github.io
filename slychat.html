@@ -236,25 +236,26 @@ width: 100%;
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Slychat</h2>
-    <div id="chatBox"></div>
-   <div class="message-input-container" style="position: relative;">
-  <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
-  <div class="message-input-btn-container">
-  <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
-  <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
-</div>
-</div>
+<div class="container">
+  <h2>Slychat</h2>
+  <div id="chatBox"></div>
 
-
-    <div class="actions">
-      <button class="btn" onclick="sendMessage()">Pošlji</button>
-<button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
-
-
+  <div class="message-input-container" style="position: relative;">
+    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
+    
+    <div class="message-input-btn-container">
+      <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
+      <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+      <button id="imageUploadBtn" title="Pošlji sliko">+</button>
+      <input type="file" id="imageInput" accept="image/*" style="display: none;" />
     </div>
   </div>
+
+  <div class="actions">
+    <button class="btn" onclick="sendMessage()">Pošlji</button>
+    <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
+  </div>
+</div>
 
 <script>  
 
@@ -2272,8 +2273,37 @@ function initUserMap(currentUserIcon) {
 
 
 
+document.getElementById("imageUploadBtn").addEventListener("click", function () {
+  document.getElementById("imageInput").click();
+});
+
+document.getElementById("imageInput").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const base64Image = e.target.result;
+    sendImageMessage(base64Image);
+  };
+  reader.readAsDataURL(file);
+});
+
+function sendImageMessage(base64) {
+  const message = `<img src="${base64}" alt="Slika" style="max-width: 200px; max-height: 200px;" />`;
+  appendMessage("Jaz", message); // Primer lokalnega prikaza
+  // TODO: Tu pokliči funkcijo za pošiljanje v bazo, npr. pošlji v Firebase
+}
 
 
+
+function appendMessage(sender, message) {
+  const chatBox = document.getElementById("chatBox");
+  const messageElement = document.createElement("div");
+  messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+  chatBox.appendChild(messageElement);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 
 
