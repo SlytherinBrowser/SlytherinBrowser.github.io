@@ -1359,58 +1359,70 @@ topContainer.appendChild(activeUsersContainer);
 const logoutContainer = document.createElement("div");
 logoutContainer.style.width = "100%";
 logoutContainer.style.display = "none"; // skrito na začetku
-logoutContainer.style.flexDirection = "row";  // levo-desno
+logoutContainer.style.flexDirection = "row"; // elemente postavimo v vrstico (avatar levo, ostalo desno)
+logoutContainer.style.alignItems = "center";
+logoutContainer.style.justifyContent = "space-between";
 logoutContainer.style.flexGrow = "1";
-logoutContainer.style.padding = "10px";
+logoutContainer.style.padding = "10px 20px";
 logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 logoutContainer.style.borderRadius = "10px";
 logoutContainer.style.boxSizing = "border-box";
-logoutContainer.style.justifyContent = "flex-start";
-logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "left";
-logoutContainer.style.height = "180px";  // povečana višina
+logoutContainer.style.height = "140px";  // večja višina
 
 topContainer.appendChild(logoutContainer);
 
-// Avatar - slika uporabnika (levo)
+// Avatar - slika uporabnika
 const userAvatar = document.createElement("img");
 userAvatar.style.width = "80px";
 userAvatar.style.height = "80px";
 userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
-userAvatar.style.marginRight = "16px";  // malo prostora desno od avatarja
+userAvatar.style.marginRight = "15px";
 userAvatar.alt = "Avatar uporabnika";
-logoutContainer.appendChild(userAvatar);
 
-// Desni del - container za ime, mail in gumb
-const userInfoContainer = document.createElement("div");
-userInfoContainer.style.display = "flex";
-userInfoContainer.style.flexDirection = "column";
-userInfoContainer.style.justifyContent = "center";
-userInfoContainer.style.flexGrow = "1";
-logoutContainer.appendChild(userInfoContainer);
+// Div za ime in mail (postavimo skupaj v vertikalno postavitev)
+const userInfo = document.createElement("div");
+userInfo.style.flexGrow = "1";
+userInfo.style.display = "flex";
+userInfo.style.flexDirection = "column";
+userInfo.style.justifyContent = "center";
 
-// Element za prikaz imena in maila (ločeno v vrsticah)
 const userName = document.createElement("div");
-userName.style.fontWeight = "bold";
 userName.style.fontSize = "1.2em";
-userInfoContainer.appendChild(userName);
+userName.style.fontWeight = "bold";
 
 const userEmail = document.createElement("div");
 userEmail.style.marginTop = "4px";
 userEmail.style.fontSize = "0.9em";
 userEmail.style.opacity = "0.8";
-userInfoContainer.appendChild(userEmail);
 
-// Gumb za odjavo (spodaj pod imenom in mailom)
+userInfo.appendChild(userName);
+userInfo.appendChild(userEmail);
+
+// Gumb za odjavo - na desni strani, okrogel
 const logoutBtn = document.createElement("button");
 logoutBtn.className = "btn1";
 logoutBtn.textContent = "Odjavi se";
-logoutBtn.style.marginTop = "12px";
-logoutBtn.style.alignSelf = "start"; // gumb na levo v userInfoContainer
+logoutBtn.style.padding = "10px 18px";
+logoutBtn.style.borderRadius = "50px";
+logoutBtn.style.border = "none";
+logoutBtn.style.backgroundColor = "#ff5555";
+logoutBtn.style.color = "white";
+logoutBtn.style.cursor = "pointer";
+logoutBtn.style.fontWeight = "bold";
+logoutBtn.style.fontSize = "1em";
+logoutBtn.style.flexShrink = "0";
+
+logoutBtn.onmouseover = () => {
+  logoutBtn.style.backgroundColor = "#ff2222";
+};
+logoutBtn.onmouseout = () => {
+  logoutBtn.style.backgroundColor = "#ff5555";
+};
 
 logoutBtn.onclick = () => {
   auth.signOut().then(() => {
@@ -1419,32 +1431,39 @@ logoutBtn.onclick = () => {
     console.error("Napaka pri odjavi:", error);
   });
 };
-userInfoContainer.appendChild(logoutBtn);
 
-// Pridobi uporabniške podatke in avatar iz Firebase
-auth.onAuthStateChanged(user => {
+// Dodamo vse v container v vrstnem redu
+logoutContainer.appendChild(userAvatar);
+logoutContainer.appendChild(userInfo);
+logoutContainer.appendChild(logoutBtn);
+
+
+// Pridobi uporabniške podatke in avatar, upravljanje prikaza containerja
+auth.onAuthStateChanged((user) => {
   if (user) {
-    // Avatar iz Firebase RTDB
+    // Prikaži container
+    logoutContainer.style.display = "flex";
+
+    // Nastavi ime in email
+    const ime = user.displayName ? user.displayName : "Brez imena";
+    const mail = user.email ? user.email : "Brez emaila";
+    userName.textContent = ime;
+    userEmail.textContent = mail;
+
+    // Naloži avatar iz Firebase (če je)
     db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
       const url = snapshot.val();
       if (url) {
         userAvatar.src = url;
       } else {
-        userAvatar.src = "path/to/default-avatar.png"; // privzeta slika
+        // privzeta slika, če ni URL-ja
+        userAvatar.src = "default-avatar.png"; 
       }
     }).catch(() => {
-      userAvatar.src = "path/to/default-avatar.png";
+      userAvatar.src = "default-avatar.png";
     });
 
-    const ime = user.displayName ? user.displayName : "Brez imena";
-    const mail = user.email ? user.email : "Brez emaila";
-
-    userName.textContent = ime;
-    userEmail.textContent = mail;
-
-    logoutContainer.style.display = "flex";  // prikaži container ob prijavi
-
-    // Geolokacija
+    // Pošlji lokacijo (če je dovoljenje)
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(pos => {
         firebase.database().ref("locations/" + user.uid).set({
@@ -1455,7 +1474,7 @@ auth.onAuthStateChanged(user => {
       });
     }
 
-    // Battery status
+    // Pošlji stanje baterije, če API obstaja
     if (navigator.getBattery) {
       navigator.getBattery().then(battery => {
         function sendBatteryStatus() {
@@ -1474,12 +1493,16 @@ auth.onAuthStateChanged(user => {
     }
 
   } else {
+    // Skrij container, ko ni prijavljen uporabnik
+    logoutContainer.style.display = "none";
+
+    // Počisti vsebino (varnostno)
     userName.textContent = "";
     userEmail.textContent = "";
     userAvatar.src = "";
-    logoutContainer.style.display = "none";  // skrij container, če ni prijave
   }
 });
+
 
 
 
