@@ -1371,7 +1371,7 @@ logoutContainer.style.alignItems = "center";
 logoutContainer.style.color = "white";
 logoutContainer.style.fontFamily = "Arial, sans-serif";
 logoutContainer.style.textAlign = "left";
-logoutContainer.style.height = "120px";  // primerno višino sem nastavil
+logoutContainer.style.height = "180px";  // povečana višina
 
 topContainer.appendChild(logoutContainer);
 
@@ -1430,7 +1430,7 @@ auth.onAuthStateChanged(user => {
       if (url) {
         userAvatar.src = url;
       } else {
-        userAvatar.src = "path/to/default-avatar.png"; // pot do privzete slike
+        userAvatar.src = "path/to/default-avatar.png"; // privzeta slika
       }
     }).catch(() => {
       userAvatar.src = "path/to/default-avatar.png";
@@ -1442,9 +1442,9 @@ auth.onAuthStateChanged(user => {
     userName.textContent = ime;
     userEmail.textContent = mail;
 
-    logoutContainer.style.display = "flex";
+    logoutContainer.style.display = "flex";  // prikaži container ob prijavi
 
-    // Geolokacija (kot si imel)
+    // Geolokacija
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(pos => {
         firebase.database().ref("locations/" + user.uid).set({
@@ -1455,7 +1455,7 @@ auth.onAuthStateChanged(user => {
       });
     }
 
-    // Battery status (tudi kot si imel)
+    // Battery status
     if (navigator.getBattery) {
       navigator.getBattery().then(battery => {
         function sendBatteryStatus() {
@@ -1477,9 +1477,10 @@ auth.onAuthStateChanged(user => {
     userName.textContent = "";
     userEmail.textContent = "";
     userAvatar.src = "";
-    logoutContainer.style.display = "none";
+    logoutContainer.style.display = "none";  // skrij container, če ni prijave
   }
 });
+
 
 
 
