@@ -231,7 +231,10 @@ width: 100%;
 }
 
 
-
+.coin {
+position: fixed;
+bottom: 0;
+left: 50%;}
 
 
   </style>
@@ -255,7 +258,7 @@ width: 100%;
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
   </div>
 </div>
-
+ <p class="coin" id="coinsDisplay">Tvoji kovanci: nalagam...</p>
 <script>  
 
   const firebaseConfig = {  
@@ -1381,7 +1384,9 @@ userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
 userAvatar.style.marginRight = "15px";
 userAvatar.alt = "Avatar uporabnika";
-
+userAvatar.addEventListener("click", () => {
+  window.location.href = "store.html";
+});
 const userInfo = document.createElement("div");
 userInfo.style.flexGrow = "1";
 userInfo.style.display = "flex";
@@ -2290,7 +2295,42 @@ function initUserMap(currentUserIcon) {
 
 
 
+auth.signInAnonymously().then(() => {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user.uid;
+          handleDailyCoins();
+          loadCoins();
+        }
+      });
+    });
 
+    function handleDailyCoins() {
+      const today = new Date().toISOString().split('T')[0];
+      const userRef = db.ref("users/" + currentUser);
+
+      userRef.once("value").then(snapshot => {
+        const data = snapshot.val() || {};
+        const lastDaily = data.lastDaily || "";
+        const currentCoins = data.coins || 0;
+
+        if (lastDaily !== today) {
+          const bonus = Math.floor(Math.random() * 10) + 1;
+          userRef.update({
+            coins: currentCoins + bonus,
+            lastDaily: today
+          });
+          console.log(`Dodal ${bonus} kovancev ob prvi prijavi danes.`);
+        }
+      });
+    }
+
+    function loadCoins() {
+      db.ref("users/" + currentUser + "/coins").on("value", snapshot => {
+        const coins = snapshot.val() || 0;
+        document.getElementById("coinsDisplay").textContent = "Tvoji kovanci: " + coins;
+      });
+    }
 
 
 
