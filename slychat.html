@@ -2369,6 +2369,17 @@ function initUserMap(currentUserIcon) {
 
 
 let userFeatures = {};
+let currentCoins = 0;
+
+// Toast obvestilo (prijazno)
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.visibility = "visible";
+  setTimeout(() => {
+    toast.style.visibility = "hidden";
+  }, 3000);
+}
 
 // Prijava anonimno in nalaganje podatkov
 auth.signInAnonymously()
@@ -2378,15 +2389,16 @@ auth.signInAnonymously()
         uid = user.uid;
         loadCoins();
         loadUserFeatures();
+        checkDailyBonus();
       }
     });
   });
 
-// Naloži kovance in jih prikaži
+// Naloži kovance in prikaži
 function loadCoins() {
   db.ref("users/" + uid + "/coins").on("value", snapshot => {
-    const coins = snapshot.val() || 0;
-    document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + coins;
+    currentCoins = snapshot.val() || 0;
+    document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + currentCoins;
   });
 }
 
@@ -2395,6 +2407,30 @@ function loadUserFeatures() {
   db.ref("users/" + uid + "/features").on("value", snapshot => {
     userFeatures = snapshot.val() || {};
     console.log("Naložene funkcije:", userFeatures);
+  });
+}
+
+// Dnevni bonus
+function checkDailyBonus() {
+  const userRef = db.ref("users/" + uid);
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  userRef.once("value").then(snapshot => {
+    const data = snapshot.val() || {};
+    const lastBonusDate = data.lastBonusDate || null;
+    let coins = data.coins || 0;
+
+    if (lastBonusDate !== today) {
+      const dailyCoins = Math.floor(Math.random() * 10) + 1;
+      coins += dailyCoins;
+
+      userRef.update({
+        coins: coins,
+        lastBonusDate: today
+      }).then(() => {
+        showToast(`Prejel si ${dailyCoins} kovancev za današnjo prijavo!`);
+      });
+    }
   });
 }
 
@@ -2408,7 +2444,7 @@ function buyItem(itemKey, cost) {
 
     if (coins >= cost) {
       if (features[itemKey]) {
-        alert("To funkcijo že imaš!");
+        showToast("To funkcijo že imaš!");
         return;
       }
 
@@ -2416,10 +2452,10 @@ function buyItem(itemKey, cost) {
       features[itemKey] = true;
 
       userRef.update({ coins: coins, features: features }).then(() => {
-        alert("Kupil si: " + itemKey.replace(/_/g, " "));
+        showToast("Kupil si: " + itemKey.replace(/_/g, " "));
       });
     } else {
-      alert("Nimaš dovolj kovancev!");
+      showToast("Nimaš dovolj kovancev!");
     }
   });
 }
@@ -2457,8 +2493,6 @@ function prikaziSporocilo(username, text, avatarUrl) {
 
   document.getElementById("chat").appendChild(messageDiv);
 }
-
-
 
 
 
