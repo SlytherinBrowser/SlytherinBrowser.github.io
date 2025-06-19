@@ -52,63 +52,101 @@
 </body>
 
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, update, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
 
-    let uid = null;
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth();
 
-    auth.signInAnonymously()
-      .then(() => {
-        auth.onAuthStateChanged(user => {
-          if (user) {
-            uid = user.uid;
-            loadCoins();
-          }
-        });
-      });
+  let uid;
 
-    function loadCoins() {
-      db.ref("users/" + uid + "/coins").on("value", snapshot => {
-        const coins = snapshot.val() || 0;
-        document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + coins;
-      });
-    }
-
-    function buyItem(itemKey, cost) {
-      const userRef = db.ref("users/" + uid);
-      userRef.once("value").then(snapshot => {
-        const data = snapshot.val() || {};
-        let coins = data.coins || 0;
-        let features = data.features || {};
-
-        if (coins >= cost) {
-          if (features[itemKey]) {
-            alert("To funkcijo že imaš!");
-            return;
-          }
-
-          coins -= cost;
-          features[itemKey] = true;
-
-          userRef.update({ coins: coins, features: features });
-          alert("Kupil si: " + itemKey.replace(/_/g, " "));
-        } else {
-          alert("Nimaš dovolj kovancev!");
+  signInAnonymously(auth)
+    .then(() => {
+      onAuthStateChanged(auth, user => {
+        if (user) {
+          uid = user.uid;
+          loadCoins();
+          collectDailyCoins();
         }
       });
-    }
-  </script>
+    });
+
+  function loadCoins() {
+    const coinRef = ref(db, "users/" + uid + "/coins");
+    onValue(coinRef, snapshot => {
+      const coins = snapshot.val() || 0;
+      document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + coins;
+    });
+  }
+
+  function collectDailyCoins() {
+    const userRef = ref(db, "users/" + uid);
+    const today = new Date().toLocaleDateString();
+
+    get(userRef).then(snapshot => {
+      const userData = snapshot.val() || {};
+      const lastDaily = userData.lastDaily || "";
+
+      if (lastDaily === today) {
+        console.log("Kovanci že zbrani danes.");
+        return;
+      }
+
+      const coinsEarned = Math.floor(Math.random() * 10) + 1;
+      const newCoins = (userData.coins || 0) + coinsEarned;
+
+      update(userRef, {
+        coins: newCoins,
+        lastDaily: today
+      }).then(() => {
+        alert("Dobil si " + coinsEarned + " kovancev!");
+      }).catch(err => {
+        console.error("Napaka pri shranjevanju kovancev:", err);
+      });
+    });
+  }
+
+  window.buyItem = function (itemKey, cost) {
+    const userRef = ref(db, "users/" + uid);
+    get(userRef).then(snapshot => {
+      const data = snapshot.val() || {};
+      let coins = data.coins || 0;
+      let features = data.features || {};
+
+      if (coins >= cost) {
+        if (features[itemKey]) {
+          alert("To funkcijo že imaš!");
+          return;
+        }
+
+        coins -= cost;
+        features[itemKey] = true;
+
+        update(userRef, {
+          coins: coins,
+          features: features
+        }).then(() => {
+          alert("Kupil si: " + itemKey.replace(/_/g, " "));
+        });
+      } else {
+        alert("Nimaš dovolj kovancev!");
+      }
+    });
+  };
+</script>
+
 </body>
 </html>
