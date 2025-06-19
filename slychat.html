@@ -305,6 +305,7 @@ width: 100%;
   let userColorsCache = {}; // Za shranjevanje barv uporabnikov  
 
 
+
   // DODANO: animacija mavrične barve (rainbow)  
 
   const style = document.createElement('style');  
@@ -1290,8 +1291,6 @@ window.addEventListener('load', () => {
 
 
 
-// Prilepi v DOM (npr. v body ali glavo strani)
-document.body.appendChild(avatarWrapper);
 
 
 
@@ -1376,43 +1375,12 @@ logoutContainer.style.height = "140px";
 topContainer.appendChild(logoutContainer);
 
 const userAvatar = document.createElement("img");
-userAvatar.src = "https://www.gravatar.com/avatar/?d=mp"; // nadomesti z dejansko sliko po želji
 userAvatar.style.width = "80px";
 userAvatar.style.height = "80px";
 userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
 userAvatar.style.marginRight = "15px";
-userAvatar.style.cursor = "pointer";
 userAvatar.alt = "Avatar uporabnika";
-
-// Kovančki pod avatarjem
-const coinDisplay = document.createElement("div");
-coinDisplay.id = "avatarCoins";
-coinDisplay.style.textAlign = "center";
-coinDisplay.style.fontSize = "18px";
-coinDisplay.style.fontWeight = "bold";
-coinDisplay.style.marginTop = "5px";
-coinDisplay.style.cursor = "pointer";
-
-// Ob kliku avatarja ali kovančkov odpri trgovino
-userAvatar.addEventListener("click", () => {
-  window.location.href = "store.html";
-});
-coinDisplay.addEventListener("click", () => {
-  window.location.href = "store.html";
-});
-
-// Ovitek za avatar in kovančke
-const avatarWrapper = document.createElement("div");
-avatarWrapper.style.display = "flex";
-avatarWrapper.style.flexDirection = "column";
-avatarWrapper.style.alignItems = "center";
-avatarWrapper.appendChild(userAvatar);
-avatarWrapper.appendChild(coinDisplay);
-
-
-
-
 
 const userInfo = document.createElement("div");
 userInfo.style.flexGrow = "1";
@@ -1472,13 +1440,6 @@ logoutContainer.appendChild(logoutBtn);
 // Ob prijavi naloži podatke in avatar, vendar **NE prikaže** logoutContainer, ker boš ti to naredil sam
 auth.onAuthStateChanged((user) => {
   if (user) {
-    currentUser = user.uid;
-
-    // dodeli dnevne kovance, če je prvič danes
-    handleDailyCoins();
-    loadCoins();
-    updateAvatarCoins(); // dodamo kovance pod avatarjem
-
     const ime = user.displayName ? user.displayName : "Brez imena";
     const mail = user.email ? user.email : "Brez emaila";
     userName.textContent = ime;
@@ -1486,15 +1447,18 @@ auth.onAuthStateChanged((user) => {
 
     db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
       const url = snapshot.val();
-      userAvatar.src = url ? url : "default-avatar.png";
+      if (url) {
+        userAvatar.src = url;
+      } else {
+        userAvatar.src = "default-avatar.png"; // po potrebi rezervna slika
+      }
     });
-
   } else {
-    // reset podatkov
+    // ko ni userja, resetiraj podatke
     userName.textContent = "";
     userEmail.textContent = "";
     userAvatar.src = "";
-    logoutContainer.style.display = "none";
+    logoutContainer.style.display = "none"; // naj bo skrit
   }
 });
 
@@ -2324,31 +2288,7 @@ function initUserMap(currentUserIcon) {
 
 
 
-function updateAvatarCoins() {
-  const coinDisplay = document.createElement("div");
-  coinDisplay.id = "avatarCoins";
-  coinDisplay.style.textAlign = "center";
-  coinDisplay.style.fontSize = "16px";
-  coinDisplay.style.fontWeight = "bold";
-  coinDisplay.style.marginTop = "8px";
-  coinDisplay.style.cursor = "pointer";
 
-  // Posodobi kovance ob spremembah v bazi
-  db.ref("users/" + currentUser + "/coins").on("value", (snapshot) => {
-    const coins = snapshot.val() || 0;
-    coinDisplay.textContent = coins;
-  });
-
-  // Klik na avatar ali številko za trgovino
-  userAvatar.style.cursor = "pointer";
-  userAvatar.onclick = () => window.location.href = "store.html";
-  coinDisplay.onclick = () => window.location.href = "store.html";
-
-  // Doda element pod avatar, če še ni dodan
-  if (!document.getElementById("avatarCoins")) {
-    userAvatar.parentNode.insertBefore(coinDisplay, userAvatar.nextSibling);
-  }
-}
 
 
 
