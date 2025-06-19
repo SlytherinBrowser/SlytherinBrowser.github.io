@@ -450,6 +450,30 @@ auth.onAuthStateChanged(async user => {
   }
 
   currentUser = user;
+  const userId = user.uid;
+
+  // Naloži kovance iz baze
+  const userRef = ref(db, 'users/' + userId);
+  const snapshot = await get(userRef);
+
+  if (snapshot.exists()) {
+    const data = snapshot.val();
+    const coins = data.coins || 0;
+
+    // Recimo, da imaš gumb z id="dailyCoinsBtn"
+    const btn = document.getElementById('dailyCoinsBtn');
+    if (btn) {
+      btn.textContent = `Dobi dnevne kovance (${coins})`;
+    }
+  } else {
+    // Če ni podatkov o uporabniku v bazi, jih ustvari z 0 kovanci
+    await update(userRef, { coins: 0, lastClaimDate: null, items: {} });
+
+    const btn = document.getElementById('dailyCoinsBtn');
+    if (btn) {
+      btn.textContent = `Dobi dnevne kovance (0)`;
+    }
+  }
 
   // Nastavi status online in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
@@ -2373,15 +2397,7 @@ const btn = document.getElementById('dailyCoinsBtn');
   
   let userCoins = 0;
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      userId = user.uid;
-      await loadUserCoins();
-    } else {
-      btn.textContent = 'Za uporabo se morate prijaviti.';
-      btn.disabled = true;
-    }
-  });
+  
 
   async function loadUserCoins() {
     const userRef = ref(db, 'users/' + userId);
