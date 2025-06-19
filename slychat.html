@@ -327,7 +327,7 @@ left: 50%;}
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
-    <button class="btn" id="getCoinsBtn">Dobite kovance</button>
+  <button id="dailyCoinsBtn">Dobi dnevne kovance (0)</button>
   </div>
 </div>
  
@@ -2368,100 +2368,65 @@ function initUserMap(currentUserIcon) {
 
 
 
-// Firebase inicializacija (predpostavljam, da je že vključena)
+const btn = document.getElementById('dailyCoinsBtn');
 
+  
+  let userCoins = 0;
 
- let currentCoins = 0;
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      userId = user.uid;
+      await loadUserCoins();
+    } else {
+      btn.textContent = 'Za uporabo se morate prijaviti.';
+      btn.disabled = true;
+    }
+  });
 
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.style.visibility = "visible";
-      setTimeout(() => {
-        toast.style.visibility = "hidden";
-      }, 3000);
+  async function loadUserCoins() {
+    const userRef = ref(db, 'users/' + userId);
+    const snapshot = await get(userRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      userCoins = data.coins || 0;
+      updateButtonText();
+    } else {
+      await update(ref(db, 'users/' + userId), { coins: 0, lastClaimDate: null, items: {} });
+      userCoins = 0;
+      updateButtonText();
+    }
+  }
+
+  function updateButtonText() {
+    btn.textContent = `Dobi dnevne kovance (${userCoins})`;
+  }
+
+  btn.addEventListener('click', async () => {
+    if (!userId) return;
+
+    const userRef = ref(db, 'users/' + userId);
+    const snapshot = await get(userRef);
+    const data = snapshot.val() || { coins: 0, lastClaimDate: null };
+
+    const lastClaim = data.lastClaimDate ? new Date(data.lastClaimDate) : null;
+    const now = new Date();
+
+    if (lastClaim && now.toDateString() === lastClaim.toDateString()) {
+      alert('Žal ste že danes prejeli dnevne kovance. Poizkusite jutri.');
+      return;
     }
 
-    // Prijava anonimno in nalaganje kovancev
-    auth.signInAnonymously()
-      .then(() => {
-        auth.onAuthStateChanged(user => {
-          if (user) {
-            uid = user.uid;
-            loadCoins();
-            checkDailyBonus();
-          }
-        });
-      })
-      .catch(error => {
-        console.error("Napaka pri prijavi:", error);
-      });
+    const newCoins = Math.floor(Math.random() * 10) + 1;
+    userCoins = (data.coins || 0) + newCoins;
 
-    // Naloži kovance in prikaži
-    function loadCoins() {
-      db.ref("users/" + uid + "/coins").on("value", snapshot => {
-        currentCoins = snapshot.val() || 0;
-        document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + currentCoins;
-      });
-    }
-
-    // Dnevni bonus (neobvezno, lahko odstraniš)
-    function checkDailyBonus() {
-      const userRef = db.ref("users/" + uid);
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-      userRef.once("value").then(snapshot => {
-        const data = snapshot.val() || {};
-        const lastBonusDate = data.lastBonusDate || null;
-        let coins = data.coins || 0;
-
-        if (lastBonusDate !== today) {
-          const dailyCoins = Math.floor(Math.random() * 10) + 1;
-          coins += dailyCoins;
-
-          userRef.update({
-            coins: coins,
-            lastBonusDate: today
-          }).then(() => {
-            showToast(`Prejel si ${dailyCoins} kovancev za današnjo prijavo!`);
-          });
-        }
-      });
-    }
-
-    // Funkcija za dodajanje kovancev
-    function dodajKovance(dodatek = 5) {
-      if (!uid) {
-        showToast("Še nisi prijavljen!");
-        return;
-      }
-
-      const userRef = db.ref("users/" + uid);
-
-      userRef.transaction(userData => {
-        if (userData) {
-          userData.coins = (userData.coins || 0) + dodatek;
-        } else {
-          userData = { coins: dodatek };
-        }
-        return userData;
-      }).then(() => {
-        showToast(`Prejel si ${dodatek} kovancev!`);
-      }).catch(error => {
-        showToast("Napaka pri dodajanju kovancev.");
-        console.error(error);
-      });
-    }
-
-    // Poveži gumb po naložitvi DOM
-    document.addEventListener("DOMContentLoaded", () => {
-      const btn = document.getElementById("getCoinsBtn");
-      if (btn) {
-        btn.addEventListener("click", () => {
-          dodajKovance(5);
-        });
-      }
+    await update(userRef, {
+      coins: userCoins,
+      lastClaimDate: now.toISOString()
     });
+
+    updateButtonText();
+    alert(`Prejeli ste ${newCoins} kovancev!`);
+  });
 
 
 
