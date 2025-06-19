@@ -2371,164 +2371,97 @@ function initUserMap(currentUserIcon) {
 // Firebase inicializacija (predpostavljam, da je že vključena)
 
 
-let userFeatures = {};
-let currentCoins = 0;
+ let currentCoins = 0;
 
-// Toast obvestilo (prijazno)
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.style.visibility = "visible";
-  setTimeout(() => {
-    toast.style.visibility = "hidden";
-  }, 3000);
-}
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.visibility = "visible";
+      setTimeout(() => {
+        toast.style.visibility = "hidden";
+      }, 3000);
+    }
 
-// Prijava anonimno in nalaganje podatkov
-auth.signInAnonymously()
-  .then(() => {
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        uid = user.uid;
-        loadCoins();
-        loadUserFeatures();
-        checkDailyBonus();
-      }
-    });
-  });
+    // Prijava anonimno in nalaganje kovancev
+    auth.signInAnonymously()
+      .then(() => {
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            uid = user.uid;
+            loadCoins();
+            checkDailyBonus();
+          }
+        });
+      })
+      .catch(error => {
+        console.error("Napaka pri prijavi:", error);
+      });
 
-// Naloži kovance in prikaži
-function loadCoins() {
-  db.ref("users/" + uid + "/coins").on("value", snapshot => {
-    currentCoins = snapshot.val() || 0;
-    document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + currentCoins;
-  });
-}
-
-// Naloži kupljene funkcije
-function loadUserFeatures() {
-  db.ref("users/" + uid + "/features").on("value", snapshot => {
-    userFeatures = snapshot.val() || {};
-    console.log("Naložene funkcije:", userFeatures);
-  });
-}
-
-// Dnevni bonus
-function checkDailyBonus() {
-  const userRef = db.ref("users/" + uid);
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-  userRef.once("value").then(snapshot => {
-    const data = snapshot.val() || {};
-    const lastBonusDate = data.lastBonusDate || null;
-    let coins = data.coins || 0;
-
-    if (lastBonusDate !== today) {
-      const dailyCoins = Math.floor(Math.random() * 10) + 1;
-      coins += dailyCoins;
-
-      userRef.update({
-        coins: coins,
-        lastBonusDate: today
-      }).then(() => {
-        showToast(`Prejel si ${dailyCoins} kovancev za današnjo prijavo!`);
+    // Naloži kovance in prikaži
+    function loadCoins() {
+      db.ref("users/" + uid + "/coins").on("value", snapshot => {
+        currentCoins = snapshot.val() || 0;
+        document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + currentCoins;
       });
     }
-  });
-}
 
-// Nakup funkcije
-function buyItem(itemKey, cost) {
-  const userRef = db.ref("users/" + uid);
-  userRef.once("value").then(snapshot => {
-    const data = snapshot.val() || {};
-    let coins = data.coins || 0;
-    let features = data.features || {};
+    // Dnevni bonus (neobvezno, lahko odstraniš)
+    function checkDailyBonus() {
+      const userRef = db.ref("users/" + uid);
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-    if (coins >= cost) {
-      if (features[itemKey]) {
-        showToast("To funkcijo že imaš!");
+      userRef.once("value").then(snapshot => {
+        const data = snapshot.val() || {};
+        const lastBonusDate = data.lastBonusDate || null;
+        let coins = data.coins || 0;
+
+        if (lastBonusDate !== today) {
+          const dailyCoins = Math.floor(Math.random() * 10) + 1;
+          coins += dailyCoins;
+
+          userRef.update({
+            coins: coins,
+            lastBonusDate: today
+          }).then(() => {
+            showToast(`Prejel si ${dailyCoins} kovancev za današnjo prijavo!`);
+          });
+        }
+      });
+    }
+
+    // Funkcija za dodajanje kovancev
+    function dodajKovance(dodatek = 5) {
+      if (!uid) {
+        showToast("Še nisi prijavljen!");
         return;
       }
 
-      coins -= cost;
-      features[itemKey] = true;
+      const userRef = db.ref("users/" + uid);
 
-      userRef.update({ coins: coins, features: features }).then(() => {
-        showToast("Kupil si: " + itemKey.replace(/_/g, " "));
+      userRef.transaction(userData => {
+        if (userData) {
+          userData.coins = (userData.coins || 0) + dodatek;
+        } else {
+          userData = { coins: dodatek };
+        }
+        return userData;
+      }).then(() => {
+        showToast(`Prejel si ${dodatek} kovancev!`);
+      }).catch(error => {
+        showToast("Napaka pri dodajanju kovancev.");
+        console.error(error);
       });
-    } else {
-      showToast("Nimaš dovolj kovancev!");
     }
-  });
-}
 
-// Prikaz sporočila z uporabo funkcij
-function prikaziSporocilo(username, text, avatarUrl) {
-  const messageDiv = document.createElement("div");
-  messageDiv.classList.add("message");
-
-  // Animacije
-  if (userFeatures["fade_in_animacija"]) {
-    messageDiv.classList.add("fade-in");
-  }
-  if (userFeatures["zoom_animacija"]) {
-    messageDiv.classList.add("zoom");
-  }
-  if (userFeatures["mavrica_animacija"]) {
-    messageDiv.classList.add("rainbow");
-  }
-
-  // Avatar okvir
-  const avatarDiv = document.createElement("div");
-  avatarDiv.classList.add("avatar");
-
-  if (userFeatures["zlati_okvir"]) avatarDiv.classList.add("gold-frame");
-  if (userFeatures["neon_okvir"]) avatarDiv.classList.add("neon-frame");
-  if (userFeatures["ognjeni_okvir"]) avatarDiv.classList.add("fire-frame");
-
-  const avatarImg = document.createElement("img");
-  avatarImg.src = avatarUrl || "default.png";
-  avatarDiv.appendChild(avatarImg);
-
-  messageDiv.appendChild(avatarDiv);
-  messageDiv.appendChild(document.createTextNode(username + ": " + text));
-
-  document.getElementById("chat").appendChild(messageDiv);
-}
-
-// NOVO: Funkcija za dodajanje kovancev (npr. +5 kovancev)
-function dodajKovance(dodatek = 5) {
-  if (!uid) {
-    showToast("Še nisi prijavljen!");
-    return;
-  }
-
-  const userRef = db.ref("users/" + uid);
-
-  userRef.transaction(userData => {
-    if (userData) {
-      userData.coins = (userData.coins || 0) + dodatek;
-    }
-    return userData;
-  }).then(() => {
-    showToast(`Prejel si ${dodatek} kovancev!`);
-  }).catch(error => {
-    showToast("Napaka pri dodajanju kovancev.");
-    console.error(error);
-  });
-}
-
-// Poveži gumb z dogodkom (po tem, ko je DOM pripravljen)
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("getCoinsBtn");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      dodajKovance(5);
+    // Poveži gumb po naložitvi DOM
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("getCoinsBtn");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          dodajKovance(5);
+        });
+      }
     });
-  }
-});
-
 
 
 
