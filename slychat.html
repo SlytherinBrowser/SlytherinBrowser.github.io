@@ -231,81 +231,7 @@ width: 100%;
 }
 
 
-.coin {
-position: fixed;
-bottom: 0;
-left: 50%;}
 
-
-
-
-
-
-
-
-
-    /* ==== ANIMACIJE SPOROČIL ==== */
-.fade-in {
-  animation: fadeIn 0.8s ease forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.zoom {
-  animation: zoomIn 0.5s ease forwards;
-}
-
-@keyframes zoomIn {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.rainbow-text {
-  background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-  background-size: 400% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rainbow 3s linear infinite;
-}
-
-@keyframes rainbow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
-}
-
-/* ==== OKVIRJI ZA AVATARJE ==== */
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-/* Zlati okvir */
-.gold-frame {
-  box-shadow: 0 0 8px gold, 0 0 16px goldenrod;
-  border: 2px solid gold;
-}
-
-/* Neon okvir */
-.neon-frame {
-  box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
-  border: 2px solid #00f0ff;
-}
-
-/* Ognjeni okvir */
-.fire-frame {
-  animation: fireGlow 1s infinite alternate;
-  border: 2px solid orangered;
-}
-
-@keyframes fireGlow {
-  0% { box-shadow: 0 0 6px orange, 0 0 12px red; }
-  100% { box-shadow: 0 0 10px yellow, 0 0 20px orangered; }
-}
 
 
   </style>
@@ -327,10 +253,9 @@ left: 50%;}
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
-  <button id="dailyCoinsBtn">Dobi dnevne kovance (0)</button>
   </div>
 </div>
- 
+
 <script>  
 
   const firebaseConfig = {  
@@ -450,30 +375,6 @@ auth.onAuthStateChanged(async user => {
   }
 
   currentUser = user;
-  const userId = user.uid;
-
-  // Naloži kovance iz baze
-  const userRef = ref(db, 'users/' + userId);
-  const snapshot = await get(userRef);
-
-  if (snapshot.exists()) {
-    const data = snapshot.val();
-    const coins = data.coins || 0;
-
-    // Recimo, da imaš gumb z id="dailyCoinsBtn"
-    const btn = document.getElementById('dailyCoinsBtn');
-    if (btn) {
-      btn.textContent = `Dobi dnevne kovance (${coins})`;
-    }
-  } else {
-    // Če ni podatkov o uporabniku v bazi, jih ustvari z 0 kovanci
-    await update(userRef, { coins: 0, lastClaimDate: null, items: {} });
-
-    const btn = document.getElementById('dailyCoinsBtn');
-    if (btn) {
-      btn.textContent = `Dobi dnevne kovance (0)`;
-    }
-  }
 
   // Nastavi status online in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
@@ -1480,9 +1381,7 @@ userAvatar.style.borderRadius = "50%";
 userAvatar.style.objectFit = "cover";
 userAvatar.style.marginRight = "15px";
 userAvatar.alt = "Avatar uporabnika";
-userAvatar.addEventListener("click", () => {
-  window.location.href = "store.html";
-});
+
 const userInfo = document.createElement("div");
 userInfo.style.flexGrow = "1";
 userInfo.style.display = "flex";
@@ -2392,57 +2291,6 @@ function initUserMap(currentUserIcon) {
 
 
 
-const btn = document.getElementById('dailyCoinsBtn');
-
-  
-  let userCoins = 0;
-
-  
-
-  async function loadUserCoins() {
-    const userRef = ref(db, 'users/' + userId);
-    const snapshot = await get(userRef);
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      userCoins = data.coins || 0;
-      updateButtonText();
-    } else {
-      await update(ref(db, 'users/' + userId), { coins: 0, lastClaimDate: null, items: {} });
-      userCoins = 0;
-      updateButtonText();
-    }
-  }
-
-  function updateButtonText() {
-    btn.textContent = `Dobi dnevne kovance (${userCoins})`;
-  }
-
-  btn.addEventListener('click', async () => {
-    if (!userId) return;
-
-    const userRef = ref(db, 'users/' + userId);
-    const snapshot = await get(userRef);
-    const data = snapshot.val() || { coins: 0, lastClaimDate: null };
-
-    const lastClaim = data.lastClaimDate ? new Date(data.lastClaimDate) : null;
-    const now = new Date();
-
-    if (lastClaim && now.toDateString() === lastClaim.toDateString()) {
-      alert('Žal ste že danes prejeli dnevne kovance. Poizkusite jutri.');
-      return;
-    }
-
-    const newCoins = Math.floor(Math.random() * 10) + 1;
-    userCoins = (data.coins || 0) + newCoins;
-
-    await update(userRef, {
-      coins: userCoins,
-      lastClaimDate: now.toISOString()
-    });
-
-    updateButtonText();
-    alert(`Prejeli ste ${newCoins} kovancev!`);
-  });
 
 
 
