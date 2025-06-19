@@ -2368,41 +2368,95 @@ function initUserMap(currentUserIcon) {
 
 
 
-function collectDailyCoins() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("Uporabnik ni prijavljen!");
-    return;
-  }
+let userFeatures = {};
 
-  const uid = user.uid;
-  const userRef = firebase.database().ref("users/" + uid);
-
-  userRef.once("value").then(snapshot => {
-    const userData = snapshot.val() || {};
-    const lastLogin = userData.lastDaily || "";
-    const today = new Date().toLocaleDateString();
-
-    if (lastLogin === today) {
-      alert("Kovanci že pobrani danes.");
-      return;
-    }
-
-    const coinsEarned = Math.floor(Math.random() * 10) + 1;
-    const newCoins = (userData.coins || 0) + coinsEarned;
-
-    userRef.update({
-      coins: newCoins,
-      lastDaily: today
-    }).then(() => {
-      alert("Dobil si " + coinsEarned + " kovancev!");
-      document.getElementById("coin-count").textContent = newCoins;
-    }).catch(error => {
-      console.error("Napaka pri shranjevanju:", error);
+// Prijava anonimno in nalaganje podatkov
+auth.signInAnonymously()
+  .then(() => {
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        uid = user.uid;
+        loadCoins();
+        loadUserFeatures();
+      }
     });
+  });
+
+// Naloži kovance in jih prikaži
+function loadCoins() {
+  db.ref("users/" + uid + "/coins").on("value", snapshot => {
+    const coins = snapshot.val() || 0;
+    document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + coins;
   });
 }
 
+// Naloži kupljene funkcije
+function loadUserFeatures() {
+  db.ref("users/" + uid + "/features").on("value", snapshot => {
+    userFeatures = snapshot.val() || {};
+    console.log("Naložene funkcije:", userFeatures);
+  });
+}
+
+// Nakup funkcije
+function buyItem(itemKey, cost) {
+  const userRef = db.ref("users/" + uid);
+  userRef.once("value").then(snapshot => {
+    const data = snapshot.val() || {};
+    let coins = data.coins || 0;
+    let features = data.features || {};
+
+    if (coins >= cost) {
+      if (features[itemKey]) {
+        alert("To funkcijo že imaš!");
+        return;
+      }
+
+      coins -= cost;
+      features[itemKey] = true;
+
+      userRef.update({ coins: coins, features: features }).then(() => {
+        alert("Kupil si: " + itemKey.replace(/_/g, " "));
+      });
+    } else {
+      alert("Nimaš dovolj kovancev!");
+    }
+  });
+}
+
+// Prikaz sporočila z uporabo funkcij
+function prikaziSporocilo(username, text, avatarUrl) {
+  const messageDiv = document.createElement("div");
+  messageDiv.classList.add("message");
+
+  // Animacije
+  if (userFeatures["fade_in_animacija"]) {
+    messageDiv.classList.add("fade-in");
+  }
+  if (userFeatures["zoom_animacija"]) {
+    messageDiv.classList.add("zoom");
+  }
+  if (userFeatures["mavrica_animacija"]) {
+    messageDiv.classList.add("rainbow");
+  }
+
+  // Avatar okvir
+  const avatarDiv = document.createElement("div");
+  avatarDiv.classList.add("avatar");
+
+  if (userFeatures["zlati_okvir"]) avatarDiv.classList.add("gold-frame");
+  if (userFeatures["neon_okvir"]) avatarDiv.classList.add("neon-frame");
+  if (userFeatures["ognjeni_okvir"]) avatarDiv.classList.add("fire-frame");
+
+  const avatarImg = document.createElement("img");
+  avatarImg.src = avatarUrl || "default.png";
+  avatarDiv.appendChild(avatarImg);
+
+  messageDiv.appendChild(avatarDiv);
+  messageDiv.appendChild(document.createTextNode(username + ": " + text));
+
+  document.getElementById("chat").appendChild(messageDiv);
+}
 
 
 
