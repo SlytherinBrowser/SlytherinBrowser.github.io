@@ -2295,42 +2295,43 @@ function initUserMap(currentUserIcon) {
 
 
 
-auth.signInAnonymously().then(() => {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          currentUser = user.uid;
-          handleDailyCoins();
-          loadCoins();
-        }
+auth.signInAnonymously()
+      .then(() => {
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            const uid = user.uid;
+            const userRef = db.ref("users/" + uid);
+            const today = new Date().toISOString().split("T")[0];
+
+            userRef.once("value").then(snapshot => {
+              const data = snapshot.val() || {};
+              const lastDaily = data.lastDaily || "";
+              let coins = data.coins || 0;
+
+              if (lastDaily !== today) {
+                const dailyBonus = Math.floor(Math.random() * 10) + 1;
+                coins += dailyBonus;
+
+                userRef.update({
+                  coins: coins,
+                  lastDaily: today
+                });
+
+                alert("Danes si prejel " + dailyBonus + " kovancev!");
+              }
+
+              // Naloži kovance
+              db.ref("users/" + uid + "/coins").on("value", snap => {
+                const c = snap.val() || 0;
+                document.getElementById("coinsDisplay").textContent = "Tvoji kovanci: " + c;
+              });
+            });
+          }
+        });
+      })
+      .catch(error => {
+        console.error("Napaka pri prijavi:", error);
       });
-    });
-
-    function handleDailyCoins() {
-      const today = new Date().toISOString().split('T')[0];
-      const userRef = db.ref("users/" + currentUser);
-
-      userRef.once("value").then(snapshot => {
-        const data = snapshot.val() || {};
-        const lastDaily = data.lastDaily || "";
-        const currentCoins = data.coins || 0;
-
-        if (lastDaily !== today) {
-          const bonus = Math.floor(Math.random() * 10) + 1;
-          userRef.update({
-            coins: currentCoins + bonus,
-            lastDaily: today
-          });
-          console.log(`Dodal ${bonus} kovancev ob prvi prijavi danes.`);
-        }
-      });
-    }
-
-    function loadCoins() {
-      db.ref("users/" + currentUser + "/coins").on("value", snapshot => {
-        const coins = snapshot.val() || 0;
-        document.getElementById("coinsDisplay").textContent = "Tvoji kovanci: " + coins;
-      });
-    }
 
 
 
