@@ -237,6 +237,77 @@ bottom: 0;
 left: 50%;}
 
 
+
+
+
+
+
+
+
+    /* ==== ANIMACIJE SPOROČIL ==== */
+.fade-in {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.zoom {
+  animation: zoomIn 0.5s ease forwards;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.rainbow-text {
+  background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow 3s linear infinite;
+}
+
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* ==== OKVIRJI ZA AVATARJE ==== */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Zlati okvir */
+.gold-frame {
+  box-shadow: 0 0 8px gold, 0 0 16px goldenrod;
+  border: 2px solid gold;
+}
+
+/* Neon okvir */
+.neon-frame {
+  box-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
+  border: 2px solid #00f0ff;
+}
+
+/* Ognjeni okvir */
+.fire-frame {
+  animation: fireGlow 1s infinite alternate;
+  border: 2px solid orangered;
+}
+
+@keyframes fireGlow {
+  0% { box-shadow: 0 0 6px orange, 0 0 12px red; }
+  100% { box-shadow: 0 0 10px yellow, 0 0 20px orangered; }
+}
+
+
   </style>
 </head>
 <body>
