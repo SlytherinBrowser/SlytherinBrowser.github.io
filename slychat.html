@@ -327,6 +327,7 @@ left: 50%;}
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
+    <button class="btn" onclick="collectDailyCoins()">Kovanci</button>
   </div>
 </div>
  
@@ -2366,8 +2367,16 @@ function initUserMap(currentUserIcon) {
 
 
 
+
 function collectDailyCoins() {
-  const userRef = db.ref("users/" + uid);
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("Uporabnik ni prijavljen!");
+    return;
+  }
+
+  const uid = user.uid;
+  const userRef = firebase.database().ref("users/" + uid);
 
   userRef.once("value").then(snapshot => {
     const userData = snapshot.val() || {};
@@ -2387,12 +2396,14 @@ function collectDailyCoins() {
       lastDaily: today
     }).then(() => {
       alert("Dobil si " + coinsEarned + " kovancev!");
-      updateCoinDisplay();
+      document.getElementById("coin-count").textContent = newCoins;
     }).catch(error => {
-      console.error("Napaka pri shranjevanju kovancev:", error);
+      console.error("Napaka pri shranjevanju:", error);
     });
   });
 }
+
+
 
 
 
