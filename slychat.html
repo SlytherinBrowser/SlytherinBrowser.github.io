@@ -327,6 +327,7 @@ left: 50%;}
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
+    <button class="btn" id="getCoinsBtn">Dobite kovance</button>
   </div>
 </div>
  
@@ -2367,6 +2368,9 @@ function initUserMap(currentUserIcon) {
 
 
 
+// Firebase inicializacija (predpostavljam, da je že vključena)
+
+
 let userFeatures = {};
 let currentCoins = 0;
 
@@ -2492,6 +2496,39 @@ function prikaziSporocilo(username, text, avatarUrl) {
 
   document.getElementById("chat").appendChild(messageDiv);
 }
+
+// NOVO: Funkcija za dodajanje kovancev (npr. +5 kovancev)
+function dodajKovance(dodatek = 5) {
+  if (!uid) {
+    showToast("Še nisi prijavljen!");
+    return;
+  }
+
+  const userRef = db.ref("users/" + uid);
+
+  userRef.transaction(userData => {
+    if (userData) {
+      userData.coins = (userData.coins || 0) + dodatek;
+    }
+    return userData;
+  }).then(() => {
+    showToast(`Prejel si ${dodatek} kovancev!`);
+  }).catch(error => {
+    showToast("Napaka pri dodajanju kovancev.");
+    console.error(error);
+  });
+}
+
+// Poveži gumb z dogodkom (po tem, ko je DOM pripravljen)
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("getCoinsBtn");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      dodajKovance(5);
+    });
+  }
+});
+
 
 
 
