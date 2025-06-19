@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <title>Trgovina</title>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .item { margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 8px; max-width: 300px; }
+    .item button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Trgovina</h2>
+  <p id="coinDisplay">Nalagam kovance...</p>
+
+  <h3>🎬 Animacije sporočil</h3>
+  <div class="item">
+    <h4>Fade-in animacija</h4>
+    <p>Cena: 10 kovancev</p>
+    <button onclick="buyItem('fade_in_animacija', 10)">Kupi</button>
+  </div>
+  <div class="item">
+    <h4>Zoom animacija</h4>
+    <p>Cena: 15 kovancev</p>
+    <button onclick="buyItem('zoom_animacija', 15)">Kupi</button>
+  </div>
+  <div class="item">
+    <h4>Mavrica animacija</h4>
+    <p>Cena: 25 kovancev</p>
+    <button onclick="buyItem('mavrica_animacija', 25)">Kupi</button>
+  </div>
+
+  <h3>👤 Avatar okvirji</h3>
+  <div class="item">
+    <h4>Zlati okvir</h4>
+    <p>Cena: 30 kovancev</p>
+    <button onclick="buyItem('zlati_okvir', 30)">Kupi</button>
+  </div>
+  <div class="item">
+    <h4>Neon okvir</h4>
+    <p>Cena: 40 kovancev</p>
+    <button onclick="buyItem('neon_okvir', 40)">Kupi</button>
+  </div>
+  <div class="item">
+    <h4>Ognjeni okvir</h4>
+    <p>Cena: 50 kovancev</p>
+    <button onclick="buyItem('ognjeni_okvir', 50)">Kupi</button>
+  </div>
+</body>
+
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let uid = null;
+
+    auth.signInAnonymously()
+      .then(() => {
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            uid = user.uid;
+            loadCoins();
+          }
+        });
+      });
+
+    function loadCoins() {
+      db.ref("users/" + uid + "/coins").on("value", snapshot => {
+        const coins = snapshot.val() || 0;
+        document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + coins;
+      });
+    }
+
+    function buyItem(itemKey, cost) {
+      const userRef = db.ref("users/" + uid);
+      userRef.once("value").then(snapshot => {
+        const data = snapshot.val() || {};
+        let coins = data.coins || 0;
+        let features = data.features || {};
+
+        if (coins >= cost) {
+          if (features[itemKey]) {
+            alert("To funkcijo že imaš!");
+            return;
+          }
+
+          coins -= cost;
+          features[itemKey] = true;
+
+          userRef.update({ coins: coins, features: features });
+          alert("Kupil si: " + itemKey.replace(/_/g, " "));
+        } else {
+          alert("Nimaš dovolj kovancev!");
+        }
+      });
+    }
+  </script>
+</body>
+</html>
