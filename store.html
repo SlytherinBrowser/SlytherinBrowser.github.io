@@ -2,129 +2,70 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trgovina - Animacije in Okvirji</title>
+  <title>Store z nakupom funkcij</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f5f5f5;
+    #toast {
+      visibility: hidden;
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-family: sans-serif;
+      z-index: 1000;
+      transition: visibility 0.3s;
     }
-    #coinDisplay {
-      font-size: 1.2em;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-    h3 {
-      margin-top: 30px;
+    #store {
+      margin-top: 20px;
     }
     .item {
-      background: white;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      border: 1px solid #aaa;
+      padding: 10px;
+      margin-bottom: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .item h4 {
-      margin: 0;
+    .item button {
+      padding: 5px 10px;
     }
-    .item p {
-      margin: 0 15px 0 0;
-      color: #555;
-    }
-    button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:disabled {
-      background-color: #aaa;
-      cursor: default;
-    }
-    button:hover:not(:disabled) {
-      background-color: #0056b3;
-    }
-
-    /* Toast styling */
-    #toast {
-      visibility: hidden;
-      min-width: 200px;
-      background-color: #333;
-      color: #fff;
-      text-align: center;
-      border-radius: 4px;
-      padding: 10px;
-      position: fixed;
-      z-index: 1000;
-      left: 50%;
-      bottom: 30px;
-      font-size: 16px;
-      transform: translateX(-50%);
-      opacity: 0.9;
+    .bought {
+      color: green;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <div id="coinDisplay">Tvoji kovanci: 0</div>
+  <h2>Kovanci: <span id="coinDisplay">0</span></h2>
 
-  <h3>🎬 Animacije sporočil</h3>
-  <div class="item">
-    <h4>Fade-in animacija</h4>
-    <p>Cena: 10 kovancev</p>
-    <button data-item="fade_in_animacija" onclick="buyItem('fade_in_animacija', 10)">Kupi</button>
-  </div>
-  <div class="item">
-    <h4>Zoom animacija</h4>
-    <p>Cena: 15 kovancev</p>
-    <button data-item="zoom_animacija" onclick="buyItem('zoom_animacija', 15)">Kupi</button>
-  </div>
-  <div class="item">
-    <h4>Mavrica animacija</h4>
-    <p>Cena: 25 kovancev</p>
-    <button data-item="mavrica_animacija" onclick="buyItem('mavrica_animacija', 25)">Kupi</button>
-  </div>
-
-  <h3>👤 Avatar okvirji</h3>
-  <div class="item">
-    <h4>Zlati okvir</h4>
-    <p>Cena: 30 kovancev</p>
-    <button data-item="zlati_okvir" onclick="buyItem('zlati_okvir', 30)">Kupi</button>
-  </div>
-  <div class="item">
-    <h4>Neon okvir</h4>
-    <p>Cena: 40 kovancev</p>
-    <button data-item="neon_okvir" onclick="buyItem('neon_okvir', 40)">Kupi</button>
-  </div>
-  <div class="item">
-    <h4>Ognjeni okvir</h4>
-    <p>Cena: 50 kovancev</p>
-    <button data-item="ognjeni_okvir" onclick="buyItem('ognjeni_okvir', 50)">Kupi</button>
+  <div id="store">
+    <h3>Trgovina</h3>
+    <div id="itemsContainer"></div>
   </div>
 
   <div id="toast"></div>
 
-  <!-- Firebase SDK - nadomesti s svojo konfiguracijo -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <script>
+    // Firebase konfiguracija - zamenjaj s svojo
     const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
+      apiKey: "tvoja_api_key",
+      authDomain: "tvoj_project.firebaseapp.com",
+      databaseURL: "https://tvoj_project-default-rtdb.firebaseio.com",
+      projectId: "tvoj_project",
+      storageBucket: "tvoj_project.appspot.com",
+      messagingSenderId: "sender_id",
+      appId: "app_id"
+    };
+
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
@@ -134,6 +75,17 @@
     let currentCoins = 0;
     let userFeatures = {};
 
+    // Definicija funkcij za nakup
+    const storeItems = [
+      { key: "fade_in_animacija", name: "Fade In Animacija", cost: 10 },
+      { key: "zoom_animacija", name: "Zoom Animacija", cost: 15 },
+      { key: "mavrica_animacija", name: "Mavrica Animacija", cost: 20 },
+      { key: "zlati_okvir", name: "Zlati okvir", cost: 25 },
+      { key: "neon_okvir", name: "Neon okvir", cost: 30 },
+      { key: "ognjeni_okvir", name: "Ognjeni okvir", cost: 35 },
+    ];
+
+    // Toast obvestilo
     function showToast(message) {
       const toast = document.getElementById("toast");
       toast.textContent = message;
@@ -143,6 +95,7 @@
       }, 3000);
     }
 
+    // Prijava anonimno in nalaganje podatkov
     auth.signInAnonymously()
       .then(() => {
         auth.onAuthStateChanged(user => {
@@ -152,60 +105,89 @@
             loadUserFeatures();
           }
         });
-      }).catch(error => {
-        console.error("Napaka pri prijavi:", error);
-      });
+      })
+      .catch(err => console.error("Napaka pri prijavi:", err));
 
+    // Naloži kovance in prikaži
     function loadCoins() {
       db.ref("users/" + uid + "/coins").on("value", snapshot => {
         currentCoins = snapshot.val() || 0;
-        document.getElementById("coinDisplay").textContent = "Tvoji kovanci: " + currentCoins;
+        document.getElementById("coinDisplay").textContent = currentCoins;
+        renderStore();
       });
     }
 
+    // Naloži kupljene funkcije in prikaži
     function loadUserFeatures() {
       db.ref("users/" + uid + "/features").on("value", snapshot => {
         userFeatures = snapshot.val() || {};
-        updateStoreButtons();
+        renderStore();
       });
     }
 
-    function updateStoreButtons() {
-      document.querySelectorAll("button[data-item]").forEach(btn => {
-        const itemKey = btn.getAttribute("data-item");
-        if (userFeatures[itemKey]) {
-          btn.disabled = true;
+    // Prikaži store z gumbi
+    function renderStore() {
+      const container = document.getElementById("itemsContainer");
+      container.innerHTML = "";
+
+      storeItems.forEach(item => {
+        const div = document.createElement("div");
+        div.classList.add("item");
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = `${item.name} (${item.cost} kovancev)`;
+        div.appendChild(nameSpan);
+
+        const btn = document.createElement("button");
+        if (userFeatures[item.key]) {
           btn.textContent = "Kupljeno";
+          btn.disabled = true;
+          btn.classList.add("bought");
         } else {
-          btn.disabled = false;
           btn.textContent = "Kupi";
+          btn.disabled = currentCoins < item.cost;
+          btn.onclick = () => buyItem(item.key, item.cost);
         }
+
+        div.appendChild(btn);
+        container.appendChild(div);
       });
     }
 
+    // Nakup funkcije
     function buyItem(itemKey, cost) {
-      const userRef = db.ref("users/" + uid);
-      userRef.once("value").then(snapshot => {
-        const data = snapshot.val() || {};
-        let coins = data.coins || 0;
-        let features = data.features || {};
+      if (currentCoins < cost) {
+        showToast("Nimaš dovolj kovancev!");
+        return;
+      }
 
-        if (coins >= cost) {
-          if (features[itemKey]) {
-            showToast("To funkcijo že imaš!");
+      const userRef = db.ref("users/" + uid);
+
+      userRef.transaction(userData => {
+        if (!userData) {
+          userData = { coins: 0, features: {} };
+        }
+        if (!userData.features) {
+          userData.features = {};
+        }
+        if (userData.coins >= cost) {
+          if (userData.features[itemKey]) {
+            // Funkcija že kupljena
             return;
           }
-
-          coins -= cost;
-          features[itemKey] = true;
-
-          userRef.update({ coins: coins, features: features }).then(() => {
-            showToast("Kupil si: " + itemKey.replace(/_/g, " "));
-            loadCoins();
-            loadUserFeatures();
-          });
-        } else {
+          userData.coins -= cost;
+          userData.features[itemKey] = true;
+          return userData;
+        }
+        return; // prekini transakcijo, ker ni dovolj kovancev
+      }, (error, committed, snapshot) => {
+        if (error) {
+          showToast("Napaka pri nakupu!");
+          console.error(error);
+        } else if (!committed) {
           showToast("Nimaš dovolj kovancev!");
+        } else {
+          showToast(`Uspešno kupljeno: ${itemKey.replace(/_/g, " ")}`);
         }
       });
     }
