@@ -2366,43 +2366,34 @@ function initUserMap(currentUserIcon) {
 
 
 
-auth.signInAnonymously()
-      .then(() => {
-        auth.onAuthStateChanged(user => {
-          if (user) {
-            const uid = user.uid;
-            const userRef = db.ref("users/" + uid);
-            const today = new Date().toISOString().split("T")[0];
+function collectDailyCoins() {
+  const userRef = db.ref("users/" + uid);
 
-            userRef.once("value").then(snapshot => {
-              const data = snapshot.val() || {};
-              const lastDaily = data.lastDaily || "";
-              let coins = data.coins || 0;
+  userRef.once("value").then(snapshot => {
+    const userData = snapshot.val() || {};
+    const lastLogin = userData.lastDaily || "";
+    const today = new Date().toLocaleDateString();
 
-              if (lastDaily !== today) {
-                const dailyBonus = Math.floor(Math.random() * 10) + 1;
-                coins += dailyBonus;
+    if (lastLogin === today) {
+      alert("Kovanci že pobrani danes.");
+      return;
+    }
 
-                userRef.update({
-                  coins: coins,
-                  lastDaily: today
-                });
+    const coinsEarned = Math.floor(Math.random() * 10) + 1;
+    const newCoins = (userData.coins || 0) + coinsEarned;
 
-                alert("Danes si prejel " + dailyBonus + " kovancev!");
-              }
+    userRef.update({
+      coins: newCoins,
+      lastDaily: today
+    }).then(() => {
+      alert("Dobil si " + coinsEarned + " kovancev!");
+      updateCoinDisplay();
+    }).catch(error => {
+      console.error("Napaka pri shranjevanju kovancev:", error);
+    });
+  });
+}
 
-              // Naloži kovance
-              db.ref("users/" + uid + "/coins").on("value", snap => {
-                const c = snap.val() || 0;
-                document.getElementById("coinsDisplay").textContent = "Tvoji kovanci: " + c;
-              });
-            });
-          }
-        });
-      })
-      .catch(error => {
-        console.error("Napaka pri prijavi:", error);
-      });
 
 
 
