@@ -445,25 +445,29 @@ auth.onAuthStateChanged(async user => {
     alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
   });
 
-  // Online status
+   // Nastavi status online in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
   userStatusRef.set({ online: true });
   userStatusRef.onDisconnect().set({ online: false });
+const usersSnapshot = await db.ref('users').once('value');  
 
-  // Cache uporabnikov
-  const usersSnapshot = await db.ref('users').once('value');
-  const users = usersSnapshot.val() || {};
+    const users = usersSnapshot.val() || {};  
 
-  for (const uid in users) {
-    userNamesCache[uid] = users[uid].displayName || "Anonimen";
-    userColorsCache[uid] = users[uid].color || null;
-  }
+
+ for (const uid in users) {  
+
+      userNamesCache[uid] = users[uid].displayName || "Anonimen";  
+
+      userColorsCache[uid] = users[uid].color || null;  
+
+    }  
+
 
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
   });
 
-  // Potrditev imena
+ // Preveri potrditev imena
   const userData = users?.[currentUser.uid];
   if (!userData || !userData.displayName) {
     messageInput.placeholder = "Potrdi ime";
@@ -474,11 +478,13 @@ auth.onAuthStateChanged(async user => {
     messageInput.dataset.nameConfirm = "0";
   }
 
-  // 🎯 Poslušaj sporočila po vrstnem redu
-  db.ref("messages").orderByChild("timestamp").on("child_added", async snapshot => {
+
+  // Poslušaj nova sporočila
+  db.ref("messages").on("child_added", snapshot => {
     const msg = snapshot.val();
 
-    // 💬 Sistem
+
+   // Sistemko sporočilo za tebe (zasebno)
     if (msg.system && msg.privateUid === currentUser.uid) {
       const systemDiv = document.createElement("div");
       systemDiv.style.fontStyle = "italic";
@@ -490,7 +496,8 @@ auth.onAuthStateChanged(async user => {
       return;
     }
 
-    // 📨 Povabilo
+
+   // Povabilo v zasebni klepet (za tebe)
     if (msg.invite && msg.privateUid === currentUser.uid) {
       const inviterName = users[msg.uid]?.displayName || "Anonimen";
       const inviteDiv = document.createElement("div");
@@ -501,15 +508,17 @@ auth.onAuthStateChanged(async user => {
       return;
     }
 
-    // 🔒 Zasebna sporočila
+    // Če smo v zasebnem klepetu, prikaži samo relevantna sporočila
     if (currentChatPartner) {
       const isPrivateMatch =
         (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
         (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
       if (!isPrivateMatch) return;
     } else {
+      // Če smo v javnem klepetu, ne prikazuj zasebnih sporočil
       if (msg.privateUid) return;
     }
+
 
     // 🎁 Avtor dobi dodaten kovanec
     if (msg.uid === currentUser.uid) {
@@ -543,6 +552,7 @@ auth.onAuthStateChanged(async user => {
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
 
+    // Barva imena
     if (color === "none") {
       senderSpan.style.display = "none";
     } else if (color === "rainbow") {
@@ -552,10 +562,12 @@ auth.onAuthStateChanged(async user => {
     }
 
     senderSpan.textContent = displayName + ": ";
+
+    // Sestavi sporočilo z avatarjem in imenom
     div.appendChild(avatarImg);
     div.appendChild(senderSpan);
 
-    const realText = document.createElement("span");
+   const realText = document.createElement("span");
     realText.classList.add("realText");
     realText.textContent = msg.text;
 
@@ -574,7 +586,6 @@ auth.onAuthStateChanged(async user => {
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 });
-
 
 
   function updateActiveUsersList() {
