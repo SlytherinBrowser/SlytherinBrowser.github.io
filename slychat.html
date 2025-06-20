@@ -230,8 +230,26 @@ width: 100%;
   object-fit: cover;
 }
 
+  .sparkle-effect {
+      animation: sparkle 1s ease-in-out;
+    }
 
+    .zoom-effect {
+      animation: zoomIn 0.3s ease;
+    }
 
+    @keyframes sparkle {
+      0% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.5; transform: scale(1); }
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .gold { border: 3px solid gold; }
+    .neon { border: 3px solid #0ff; box-shadow: 0 0 10px #0ff; }
 
 
   </style>
@@ -253,6 +271,8 @@ width: 100%;
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
+    <button class="btn"  id="getCoinsBtn">💰</button>
+
   </div>
 </div>
 
@@ -375,6 +395,23 @@ auth.onAuthStateChanged(async user => {
   }
 
   currentUser = user;
+  
+document.getElementById("getCoinsBtn").addEventListener("click", async () => {
+  const userRef = db.ref("users/" + currentUser.uid);
+
+  // Pridobi trenutne kovance
+  const snapshot = await userRef.once("value");
+  const userData = snapshot.val();
+  const currentCoins = userData?.coins || 0;
+
+  // Doda 10 kovancev
+  const newCoins = currentCoins + 10;
+
+  // Posodobi v Firebase
+  await userRef.update({ coins: newCoins });
+
+  alert(`Dobil si 10 kovancev! Skupaj: ${newCoins}`);
+});
 
   // Nastavi online status in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
