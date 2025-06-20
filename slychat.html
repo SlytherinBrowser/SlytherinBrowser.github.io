@@ -1455,6 +1455,11 @@ userAvatar.style.objectFit = "cover";
 userAvatar.style.marginRight = "15px";
 userAvatar.alt = "Avatar uporabnika";
 
+// Dodaj event listener za klik
+userAvatar.addEventListener("click", () => {
+  window.location.href = "store.html";
+});
+
 const userInfo = document.createElement("div");
 userInfo.style.flexGrow = "1";
 userInfo.style.display = "flex";
