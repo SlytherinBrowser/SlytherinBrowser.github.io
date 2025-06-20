@@ -426,48 +426,20 @@ auth.onAuthStateChanged(async user => {
 
   currentUser = user;
 
-  document.getElementById("getCoinsBtn").addEventListener("click", async () => {
-    const userRef = db.ref("users/" + currentUser.uid);
-    const snapshot = await userRef.once("value");
-    const userData = snapshot.val() || {};
-
-    const today = new Date().toISOString().split("T")[0];
-    const lastClaim = userData.lastCoinClaim || null;
-
-    if (lastClaim === today) {
-      alert("Danes si že dobil kovance. Poskusi znova jutri!");
-      return;
-    }
-
-    const currentCoins = userData.coins || 0;
-    const newCoins = currentCoins + Math.floor(Math.random() * 10) + 1;
-
-    await userRef.update({
-      coins: newCoins,
-      lastCoinClaim: today
-    });
-
-    alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
-  });
-
-  // Nastavi online status
-  const userStatusRef = db.ref("status/" + user.uid);
-  userStatusRef.set({ online: true });
-  userStatusRef.onDisconnect().set({ online: false });
-
-  // Naloži vse uporabnike + cache
+  // Naloži vse uporabnike + cache za ime, barve in efekte
   const usersSnapshot = await db.ref('users').once('value');
   const users = usersSnapshot.val() || {};
 
   for (const uid in users) {
     userNamesCache[uid] = users[uid].displayName || "Anonimen";
     userColorsCache[uid] = users[uid].color || null;
-    userEffectsCache[uid] = users[uid].effects || null; // 🎯 Shrani učinke
+    userEffectsCache[uid] = users[uid].effects || {}; // 🎯 pravilen bralni del za efekte
   }
 
-  // Posodobi online status cache
+  // Posodobi online status cache in seznam aktivnih uporabnikov
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
+    updateActiveUsersList();
   });
 
   // Preveri potrditev imena
@@ -481,10 +453,11 @@ auth.onAuthStateChanged(async user => {
     messageInput.dataset.nameConfirm = "0";
   }
 
-  // 🎯 Poslušaj nova sporočila kronološko
+  // Poslušaj nova sporočila kronološko
   db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     const msg = snapshot.val();
 
+    // Sistem in povabila filtriraj (kot prej)
     if (msg.system && msg.privateUid === currentUser.uid) {
       const systemDiv = document.createElement("div");
       systemDiv.style.fontStyle = "italic";
@@ -506,7 +479,7 @@ auth.onAuthStateChanged(async user => {
       return;
     }
 
-    // Zasebna sporočila
+    // Filtriraj zasebna sporočila glede na trenutnega partnerja
     if (currentChatPartner) {
       const isPrivateMatch =
         (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -516,7 +489,7 @@ auth.onAuthStateChanged(async user => {
       if (msg.privateUid) return;
     }
 
-    // Dobi kovance ob pošiljanju
+    // Povečaj kovance, če je sporočilo od trenutnega uporabnika
     if (msg.uid === currentUser.uid) {
       const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
       userCoinsRef.once('value').then(snapshot => {
@@ -525,14 +498,27 @@ auth.onAuthStateChanged(async user => {
       });
     }
 
+    // Pridobi podatke za prikaz
     const displayName = userNamesCache[msg.uid] || "Anonimen";
     const isOnline = userStatusCache[msg.uid]?.online;
     const color = userColorsCache[msg.uid] || null;
-    const effects = userEffectsCache[msg.uid] || null;
+    const effects = userEffectsCache[msg.uid] || {}; // 🎯 tukaj so tvoji efekti
 
+    // Uporabi efektne vrednosti iz effects objekta
+    const avatarFrame = effects.avatarFrame || null;
+    const sendAnimation = effects.sendAnimation || null;
+    const nameEffect = effects.nameEffect || null;
+
+    // Ustvari element sporočila
     const div = document.createElement("div");
     div.classList.add("messageContainer");
 
+    // Če je efekt sendAnimation in sporočilo je tvoje, dodaj class
+    if (sendAnimation && msg.uid === currentUser.uid) {
+      div.classList.add(`sendAnimation-${sendAnimation}`);
+    }
+
+    // Avatar
     const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
     const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
     const avatarImg = document.createElement("img");
@@ -540,11 +526,16 @@ auth.onAuthStateChanged(async user => {
     avatarImg.alt = "Avatar";
     avatarImg.classList.add("avatar");
 
+    if (avatarFrame) {
+      avatarImg.classList.add(`avatarFrame-${avatarFrame}`);
+    }
+
     if (isOnline) {
       avatarImg.style.border = "2px solid green";
       avatarImg.style.borderRadius = "50%";
     }
 
+    // Ime pošiljatelja
     const senderSpan = document.createElement("span");
     senderSpan.classList.add("sender");
 
@@ -556,22 +547,22 @@ auth.onAuthStateChanged(async user => {
       senderSpan.style.color = color;
     }
 
-    // 🎯 Efekti pošiljatelja (npr. hacker typing)
-    if (effects === "hacker") {
-      senderSpan.classList.add("hackerEffect");
+    if (nameEffect) {
+      senderSpan.classList.add(`nameEffect-${nameEffect}`);
     }
 
     senderSpan.textContent = displayName + ": ";
+
     div.appendChild(avatarImg);
     div.appendChild(senderSpan);
 
+    // Besedilo sporočila
     const realText = document.createElement("span");
     realText.classList.add("realText");
     realText.textContent = msg.text;
 
-    // Efekti na sporočilu
-    if (effects === "hacker") {
-      realText.classList.add("hackerEffect");
+    if (effects.messageEffect) {
+      realText.classList.add(`messageEffect-${effects.messageEffect}`);
     }
 
     if (msg.hidden) {
@@ -589,7 +580,6 @@ auth.onAuthStateChanged(async user => {
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 });
-
 
 // Posodobi seznam aktivnih uporabnikov
 function updateActiveUsersList() {
