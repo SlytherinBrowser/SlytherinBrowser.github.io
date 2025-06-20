@@ -419,167 +419,182 @@ let userEffectsCache = {}; // 🎯 Dodano
 
 
 auth.onAuthStateChanged(async user => {
-  if (!user) {
-    window.location.href = "auth.html";
-    return;
-  }
+if (!user) {
+window.location.href = "auth.html";
+return;
+}
 
-  currentUser = user;
+currentUser = user;
 
-  // Naloži vse uporabnike + cache za ime, barve in efekte
-  const usersSnapshot = await db.ref('users').once('value');
-  const users = usersSnapshot.val() || {};
+document.getElementById("getCoinsBtn").addEventListener("click", async () => {
+const userRef = db.ref("users/" + currentUser.uid);
+const snapshot = await userRef.once("value");
+const userData = snapshot.val() || {};
 
-  for (const uid in users) {
-    userNamesCache[uid] = users[uid].displayName || "Anonimen";
-    userColorsCache[uid] = users[uid].color || null;
-    userEffectsCache[uid] = users[uid].effects || {}; // 🎯 pravilen bralni del za efekte
-  }
+const today = new Date().toISOString().split("T")[0];  
+const lastClaim = userData.lastCoinClaim || null;  
 
-  // Posodobi online status cache in seznam aktivnih uporabnikov
-  db.ref("status").on("value", snapshot => {
-    userStatusCache = snapshot.val() || {};
-    updateActiveUsersList();
-  });
+if (lastClaim === today) {  
+  alert("Danes si že dobil kovance. Poskusi znova jutri!");  
+  return;  
+}  
 
-  // Preveri potrditev imena
-  const userData = users?.[currentUser.uid];
-  if (!userData || !userData.displayName) {
-    messageInput.placeholder = "Potrdi ime";
-    messageInput.dataset.nameConfirm = "1";
-    return;
-  } else {
-    messageInput.placeholder = "Vnesi sporočilo...";
-    messageInput.dataset.nameConfirm = "0";
-  }
+const currentCoins = userData.coins || 0;  
+const newCoins = currentCoins + Math.floor(Math.random() * 10) + 1;  
 
-  // Poslušaj nova sporočila kronološko
-  db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
-    const msg = snapshot.val();
+await userRef.update({  
+  coins: newCoins,  
+  lastCoinClaim: today  
+});  
 
-    // Sistem in povabila filtriraj (kot prej)
-    if (msg.system && msg.privateUid === currentUser.uid) {
-      const systemDiv = document.createElement("div");
-      systemDiv.style.fontStyle = "italic";
-      systemDiv.style.color = "#90ee90";
-      const senderName = users[msg.uid]?.displayName || "Uporabnik";
-      systemDiv.textContent = `${senderName} ${msg.text}`;
-      chatBox.appendChild(systemDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return;
-    }
+alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
 
-    if (msg.invite && msg.privateUid === currentUser.uid) {
-      const inviterName = users[msg.uid]?.displayName || "Anonimen";
-      const inviteDiv = document.createElement("div");
-      inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.
-        <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
-      chatBox.appendChild(inviteDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return;
-    }
-
-    // Filtriraj zasebna sporočila glede na trenutnega partnerja
-    if (currentChatPartner) {
-      const isPrivateMatch =
-        (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
-        (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
-      if (!isPrivateMatch) return;
-    } else {
-      if (msg.privateUid) return;
-    }
-
-    // Povečaj kovance, če je sporočilo od trenutnega uporabnika
-    if (msg.uid === currentUser.uid) {
-      const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
-      userCoinsRef.once('value').then(snapshot => {
-        const currentCoins = snapshot.val() || 0;
-        userCoinsRef.set(currentCoins + 1);
-      });
-    }
-
-    // Pridobi podatke za prikaz
-    const displayName = userNamesCache[msg.uid] || "Anonimen";
-    const isOnline = userStatusCache[msg.uid]?.online;
-    const color = userColorsCache[msg.uid] || null;
-    const effects = userEffectsCache[msg.uid] || {}; // 🎯 tukaj so tvoji efekti
-
-    // Uporabi efektne vrednosti iz effects objekta
-    const avatarFrame = effects.avatarFrame || null;
-    const sendAnimation = effects.sendAnimation || null;
-    const nameEffect = effects.nameEffect || null;
-
-    // Ustvari element sporočila
-    const div = document.createElement("div");
-    div.classList.add("messageContainer");
-
-    // Če je efekt sendAnimation in sporočilo je tvoje, dodaj class
-    if (sendAnimation && msg.uid === currentUser.uid) {
-      div.classList.add(`sendAnimation-${sendAnimation}`);
-    }
-
-    // Avatar
-    const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-    const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
-    const avatarImg = document.createElement("img");
-    avatarImg.src = avatarUrl;
-    avatarImg.alt = "Avatar";
-    avatarImg.classList.add("avatar");
-
-    if (avatarFrame) {
-      avatarImg.classList.add(`avatarFrame-${avatarFrame}`);
-    }
-
-    if (isOnline) {
-      avatarImg.style.border = "2px solid green";
-      avatarImg.style.borderRadius = "50%";
-    }
-
-    // Ime pošiljatelja
-    const senderSpan = document.createElement("span");
-    senderSpan.classList.add("sender");
-
-    if (color === "none") {
-      senderSpan.style.display = "none";
-    } else if (color === "rainbow") {
-      senderSpan.classList.add("rainbow");
-    } else if (color) {
-      senderSpan.style.color = color;
-    }
-
-    if (nameEffect) {
-      senderSpan.classList.add(`nameEffect-${nameEffect}`);
-    }
-
-    senderSpan.textContent = displayName + ": ";
-
-    div.appendChild(avatarImg);
-    div.appendChild(senderSpan);
-
-    // Besedilo sporočila
-    const realText = document.createElement("span");
-    realText.classList.add("realText");
-    realText.textContent = msg.text;
-
-    if (effects.messageEffect) {
-      realText.classList.add(`messageEffect-${effects.messageEffect}`);
-    }
-
-    if (msg.hidden) {
-      const hiddenText = document.createElement("span");
-      hiddenText.classList.add("hiddenText");
-      hiddenText.textContent = "Zasebno sporočilo";
-      div.classList.add("hiddenMessage");
-      div.appendChild(hiddenText);
-      div.appendChild(realText);
-    } else {
-      div.appendChild(realText);
-    }
-
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
 });
+
+// Nastavi online status
+const userStatusRef = db.ref("status/" + user.uid);
+userStatusRef.set({ online: true });
+userStatusRef.onDisconnect().set({ online: false });
+
+// Naloži vse uporabnike + cache
+const usersSnapshot = await db.ref('users').once('value');
+const users = usersSnapshot.val() || {};
+
+for (const uid in users) {
+userNamesCache[uid] = users[uid].displayName || "Anonimen";
+userColorsCache[uid] = users[uid].color || null;
+userEffectsCache[uid] = users[uid].effects || null; // 🎯 Shrani učinke
+}
+
+// Posodobi online status cache
+db.ref("status").on("value", snapshot => {
+userStatusCache = snapshot.val() || {};
+});
+
+// Preveri potrditev imena
+const userData = users?.[currentUser.uid];
+if (!userData || !userData.displayName) {
+messageInput.placeholder = "Potrdi ime";
+messageInput.dataset.nameConfirm = "1";
+return;
+} else {
+messageInput.placeholder = "Vnesi sporočilo...";
+messageInput.dataset.nameConfirm = "0";
+}
+
+// 🎯 Poslušaj nova sporočila kronološko
+db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
+const msg = snapshot.val();
+
+if (msg.system && msg.privateUid === currentUser.uid) {  
+  const systemDiv = document.createElement("div");  
+  systemDiv.style.fontStyle = "italic";  
+  systemDiv.style.color = "#90ee90";  
+  const senderName = users[msg.uid]?.displayName || "Uporabnik";  
+  systemDiv.textContent = `${senderName} ${msg.text}`;  
+  chatBox.appendChild(systemDiv);  
+  chatBox.scrollTop = chatBox.scrollHeight;  
+  return;  
+}  
+
+if (msg.invite && msg.privateUid === currentUser.uid) {  
+  const inviterName = users[msg.uid]?.displayName || "Anonimen";  
+  const inviteDiv = document.createElement("div");  
+  inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.  
+    <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;  
+  chatBox.appendChild(inviteDiv);  
+  chatBox.scrollTop = chatBox.scrollHeight;  
+  return;  
+}  
+
+// Zasebna sporočila  
+if (currentChatPartner) {  
+  const isPrivateMatch =  
+    (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||  
+    (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);  
+  if (!isPrivateMatch) return;  
+} else {  
+  if (msg.privateUid) return;  
+}  
+
+// Dobi kovance ob pošiljanju  
+if (msg.uid === currentUser.uid) {  
+  const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);  
+  userCoinsRef.once('value').then(snapshot => {  
+    const currentCoins = snapshot.val() || 0;  
+    userCoinsRef.set(currentCoins + 1);  
+  });  
+}  
+
+const displayName = userNamesCache[msg.uid] || "Anonimen";  
+const isOnline = userStatusCache[msg.uid]?.online;  
+const color = userColorsCache[msg.uid] || null;  
+const effects = userEffectsCache[msg.uid] || null;  
+
+const div = document.createElement("div");  
+div.classList.add("messageContainer");  
+
+const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";  
+const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;  
+const avatarImg = document.createElement("img");  
+avatarImg.src = avatarUrl;  
+avatarImg.alt = "Avatar";  
+avatarImg.classList.add("avatar");  
+
+if (isOnline) {  
+  avatarImg.style.border = "2px solid green";  
+  avatarImg.style.borderRadius = "50%";  
+}  
+
+const senderSpan = document.createElement("span");  
+senderSpan.classList.add("sender");  
+
+if (color === "none") {  
+  senderSpan.style.display = "none";  
+} else if (color === "rainbow") {  
+  senderSpan.classList.add("rainbow");  
+} else if (color) {  
+  senderSpan.style.color = color;  
+}  
+
+// 🎯 Efekti pošiljatelja (npr. hacker typing)  
+if (effects === "hacker") {  
+  senderSpan.classList.add("hackerEffect");  
+}  
+
+senderSpan.textContent = displayName + ": ";  
+div.appendChild(avatarImg);  
+div.appendChild(senderSpan);  
+
+const realText = document.createElement("span");  
+realText.classList.add("realText");  
+realText.textContent = msg.text;  
+
+// Efekti na sporočilu  
+if (effects === "hacker") {  
+  realText.classList.add("hackerEffect");  
+}  
+
+if (msg.hidden) {  
+  const hiddenText = document.createElement("span");  
+  hiddenText.classList.add("hiddenText");  
+  hiddenText.textContent = "Zasebno sporočilo";  
+  div.classList.add("hiddenMessage");  
+  div.appendChild(hiddenText);  
+  div.appendChild(realText);  
+} else {  
+  div.appendChild(realText);  
+}  
+
+chatBox.appendChild(div);  
+chatBox.scrollTop = chatBox.scrollHeight;
+
+});
+});
+
+
+
+
 
 // Posodobi seznam aktivnih uporabnikov
 function updateActiveUsersList() {
