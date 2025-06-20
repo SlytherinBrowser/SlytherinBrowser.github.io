@@ -1,145 +1,79 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Trgovina</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-    #coinDisplay { font-size: 1.2em; margin-bottom: 20px; }
-    .item {
-      background: white;
-      padding: 10px 15px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    button.buyBtn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button.buyBtn:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
+    button { margin: 5px; padding: 8px 12px; }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
+  <h2>Tvoji kovanci: <span id="coinDisplay">...</span></h2>
 
-  <div id="coinDisplay">Kovanci: <span id="coinCount">0</span></div>
+  <div id="storeItems">
+    <h3>Efekti pošiljanja</h3>
+    <button onclick="buyEffect('sendAnimation', 'sparkle', 50)">Iskrice ✨ (50 kovancev)</button>
+    <button onclick="buyEffect('sendAnimation', 'zoom', 30)">Zoom 🔍 (30 kovancev)</button>
 
-  <div id="storeItems"></div>
+    <h3>Okvirji avatarjev</h3>
+    <button onclick="buyEffect('avatarFrame', 'gold', 40)">Zlati okvir 🏅 (40 kovancev)</button>
+    <button onclick="buyEffect('avatarFrame', 'neon', 60)">Neon okvir 💡 (60 kovancev)</button>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
+  <p id="storeStatus"></p>
 
+  <script>
     const firebaseConfig = {
-      apiKey: "tvoj-api-key",
-      authDomain: "tvoj-auth-domain",
-      databaseURL: "tvoj-database-url",
-      projectId: "tvoj-project-id",
-      storageBucket: "tvoj-storage-bucket",
-      messagingSenderId: "tvoj-messaging-sender-id",
-      appId: "tvoj-app-id"
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const database = firebase.database();
 
-    const coinCount = document.getElementById('coinCount');
-    const storeItems = document.getElementById('storeItems');
+    const coinDisplay = document.getElementById('coinDisplay');
+    const storeStatus = document.getElementById('storeStatus');
 
-    let userId;
-    let userData = null;
-
-    const itemsForSale = [
-      { id: 'frame_red', name: 'Rdeči okvir za avatar', price: 15, type: 'frame' },
-      { id: 'frame_blue', name: 'Modri okvir za avatar', price: 15, type: 'frame' },
-      { id: 'anim_send', name: 'Animacija ob pošiljanju sporočila', price: 20, type: 'animation' },
-      { id: 'anim_show', name: 'Animacija ob prikazu sporočila', price: 20, type: 'animation' }
-    ];
-
-    onAuthStateChanged(auth, async (user) => {
+    auth.onAuthStateChanged(user => {
       if (user) {
-        userId = user.uid;
-        await loadUserData();
-        renderStore();
-      } else {
-        coinCount.textContent = 'Za dostop do trgovine se morate prijaviti.';
-        storeItems.innerHTML = '';
+        const coinsRef = database.ref('users/' + user.uid + '/coins');
+        coinsRef.on('value', snapshot => {
+          coinDisplay.textContent = snapshot.val() || 0;
+        });
       }
     });
 
-    async function loadUserData() {
-      const userRef = ref(db, 'users/' + userId);
-      const snapshot = await get(userRef);
-      if (snapshot.exists()) {
-        userData = snapshot.val();
-        if (!userData.coins) userData.coins = 0;
-        if (!userData.items) userData.items = {};
-        coinCount.textContent = userData.coins;
-      } else {
-        // ustvari uporabnika z začetnimi podatki, če še ne obstaja
-        userData = { coins: 0, lastClaimDate: null, items: {} };
-        await update(ref(db, 'users/' + userId), userData);
-        coinCount.textContent = 0;
-      }
-    }
+    function buyEffect(type, value, cost) {
+      const user = auth.currentUser;
+      if (!user) return alert("Prijavi se najprej");
 
-    function renderStore() {
-      storeItems.innerHTML = '';
+      const userRef = database.ref('users/' + user.uid);
+      const coinsRef = userRef.child('coins');
+      const effectRef = userRef.child('effects/' + type);
 
-      itemsForSale.forEach(item => {
-        const owned = userData.items[item.id] || false;
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'item';
-
-        itemDiv.innerHTML = `
-          <span>${item.name} - ${item.price} kovancev</span>
-          <button class="buyBtn" ${owned ? 'disabled' : ''} data-id="${item.id}">
-            ${owned ? 'Kupljeno' : 'Kupi'}
-          </button>
-        `;
-
-        storeItems.appendChild(itemDiv);
-      });
-
-      document.querySelectorAll('.buyBtn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
-          await buyItem(id);
-        });
+      coinsRef.once('value').then(snapshot => {
+        const currentCoins = snapshot.val() || 0;
+        if (currentCoins >= cost) {
+          coinsRef.set(currentCoins - cost);
+          effectRef.set(value);
+          storeStatus.textContent = `Kupil si ${type === 'sendAnimation' ? 'efekt' : 'okvir'}: ${value}`;
+        } else {
+          storeStatus.textContent = "Premalo kovancev!";
+        }
       });
     }
 
-    async function buyItem(id) {
-      const item = itemsForSale.find(i => i.id === id);
-      if (!item) return alert('Artikel ne obstaja.');
-      if (userData.items[id]) return alert('Artikel je že kupljen.');
-      if (userData.coins < item.price) return alert('Nimate dovolj kovancev.');
-
-      userData.coins -= item.price;
-      userData.items[id] = true;
-
-      await update(ref(db, 'users/' + userId), {
-        coins: userData.coins,
-        items: userData.items
-      });
-
-      coinCount.textContent = userData.coins;
-      renderStore();
-
-      alert(`Uspešno ste kupili: ${item.name}`);
-    }
+    // Za testiranje: anonimna prijava
+    auth.signInAnonymously().catch(console.error);
   </script>
 </body>
 </html>
