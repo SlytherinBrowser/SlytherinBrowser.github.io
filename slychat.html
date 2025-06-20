@@ -426,7 +426,7 @@ auth.onAuthStateChanged(async user => {
     const snapshot = await userRef.once("value");
     const userData = snapshot.val() || {};
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0]; // npr. "2025-06-20"
     const lastClaim = userData.lastCoinClaim || null;
 
     if (lastClaim === today) {
@@ -445,12 +445,12 @@ auth.onAuthStateChanged(async user => {
     alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
   });
 
-  // Online status
+  // Nastavi online status in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
   userStatusRef.set({ online: true });
   userStatusRef.onDisconnect().set({ online: false });
 
-  // Cache uporabnikov
+  // Naloži vse uporabnike in cache
   const usersSnapshot = await db.ref('users').once('value');
   const users = usersSnapshot.val() || {};
 
@@ -459,11 +459,12 @@ auth.onAuthStateChanged(async user => {
     userColorsCache[uid] = users[uid].color || null;
   }
 
+  // Posodobi lokalni status cache
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
   });
 
-  // Potrditev imena
+  // Preveri potrditev imena
   const userData = users?.[currentUser.uid];
   if (!userData || !userData.displayName) {
     messageInput.placeholder = "Potrdi ime";
@@ -474,11 +475,11 @@ auth.onAuthStateChanged(async user => {
     messageInput.dataset.nameConfirm = "0";
   }
 
-  // 🎯 Poslušaj sporočila po vrstnem redu
-  db.ref("messages").orderByChild("timestamp").on("child_added", async snapshot => {
+  // 🎯 Poslušaj nova sporočila kronološko (po timestamp)
+  db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     const msg = snapshot.val();
 
-    // 💬 Sistem
+    // SYSTEMSKO SPOROČILO
     if (msg.system && msg.privateUid === currentUser.uid) {
       const systemDiv = document.createElement("div");
       systemDiv.style.fontStyle = "italic";
@@ -490,7 +491,7 @@ auth.onAuthStateChanged(async user => {
       return;
     }
 
-    // 📨 Povabilo
+    // POVABILO
     if (msg.invite && msg.privateUid === currentUser.uid) {
       const inviterName = users[msg.uid]?.displayName || "Anonimen";
       const inviteDiv = document.createElement("div");
@@ -511,15 +512,16 @@ auth.onAuthStateChanged(async user => {
       if (msg.privateUid) return;
     }
 
-    // 🎁 Avtor dobi dodaten kovanec
+    // Asinhrono poveča kovanec, ne blokira prikaza
     if (msg.uid === currentUser.uid) {
       const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
-      const coinsSnapshot = await userCoinsRef.once('value');
-      const currentCoins = coinsSnapshot.val() || 0;
-      userCoinsRef.set(currentCoins + 1);
+      userCoinsRef.once('value').then(snapshot => {
+        const currentCoins = snapshot.val() || 0;
+        userCoinsRef.set(currentCoins + 1);
+      });
     }
 
-    // 🖼️ Avatar, barva, prikaz
+    // Prikaz sporočila
     const displayName = userNamesCache[msg.uid] || "Anonimen";
     const isOnline = userStatusCache[msg.uid]?.online;
     const color = userColorsCache[msg.uid] || null;
@@ -536,6 +538,7 @@ auth.onAuthStateChanged(async user => {
     if (isOnline) {
       avatarImg.style.border = "2px solid green";
       avatarImg.style.borderRadius = "50%";
+      avatarImg.style.padding = "0";
     } else {
       avatarImg.style.border = "none";
     }
