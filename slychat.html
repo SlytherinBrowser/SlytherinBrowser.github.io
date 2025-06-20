@@ -423,20 +423,28 @@ auth.onAuthStateChanged(async user => {
   
 document.getElementById("getCoinsBtn").addEventListener("click", async () => {
   const userRef = db.ref("users/" + currentUser.uid);
-
-  // Pridobi trenutne kovance
   const snapshot = await userRef.once("value");
-  const userData = snapshot.val();
-  const currentCoins = userData?.coins || 0;
+  const userData = snapshot.val() || {};
 
-  // Doda 10 kovancev
-  const newCoins = currentCoins + 10;
+  const today = new Date().toISOString().split("T")[0]; // npr. "2025-06-20"
+  const lastClaim = userData.lastCoinClaim || null;
 
-  // Posodobi v Firebase
-  await userRef.update({ coins: newCoins });
+  if (lastClaim === today) {
+    alert("Danes si že dobil kovance. Poskusi znova jutri!");
+    return;
+  }
 
-  alert(`Dobil si 10 kovancev! Skupaj: ${newCoins}`);
+  const currentCoins = userData.coins || 0;
+  const newCoins = currentCoins + Math.floor(Math.random() * 10) + 1;
+
+  await userRef.update({
+    coins: newCoins,
+    lastCoinClaim: today
+  });
+
+  alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
 });
+
 
   // Nastavi online status in onDisconnect
   const userStatusRef = db.ref("status/" + user.uid);
