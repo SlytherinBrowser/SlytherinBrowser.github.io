@@ -380,20 +380,23 @@ auth.onAuthStateChanged(async user => {
   const userStatusRef = db.ref("status/" + user.uid);
   userStatusRef.set({ online: true });
   userStatusRef.onDisconnect().set({ online: false });
+const usersSnapshot = await db.ref('users').once('value');  
 
-  const usersSnapshot = await db.ref('users').once('value');  
-  const users = usersSnapshot.val() || {};  
+    const users = usersSnapshot.val() || {};  
 
-  for (const uid in users) {  
-    userNamesCache[uid] = users[uid].displayName || "Anonimen";  
-    userColorsCache[uid] = users[uid].color || null;  
-  }  
+    for (const uid in users) {  
 
+      userNamesCache[uid] = users[uid].displayName || "Anonimen";  
+
+      userColorsCache[uid] = users[uid].color || null;  
+
+    }  
   // Posodobi lokalni cache statusov uporabnikov
   db.ref("status").on("value", snapshot => {
     userStatusCache = snapshot.val() || {};
-    updateActiveUsersList();
   });
+
+
 
   // Preveri potrditev imena
   const userData = users?.[currentUser.uid];
@@ -451,18 +454,9 @@ auth.onAuthStateChanged(async user => {
     const div = document.createElement("div");
     div.classList.add("messageContainer");
 
-    // --- Prilagojena podpora za readyplayer.me avatarje ---
+    // Uporabi avatarUrl ali default sliko če ni avatarja
     const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-    const avatarUrlRaw = users[msg.uid]?.avatarUrl || "";
-
-    let avatarUrl = defaultAvatar;
-
-    if (avatarUrlRaw.startsWith("https://readyplayer.me/avatar/")) {
-      avatarUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrlRaw)}&scene=full-body-portrait-v1-transparent`;
-    } else if (avatarUrlRaw) {
-      avatarUrl = avatarUrlRaw;
-    }
-
+    const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
     const avatarImg = document.createElement("img");
     avatarImg.src = avatarUrl;
     avatarImg.alt = "Avatar";
@@ -515,7 +509,7 @@ auth.onAuthStateChanged(async user => {
   });
 });
 
-function updateActiveUsersList() {
+  function updateActiveUsersList() {
   const activeUsersDiv = document.getElementById("activeUsers");
   activeUsersDiv.innerHTML = "";
 
@@ -530,6 +524,8 @@ function updateActiveUsersList() {
     }
   }
 }
+
+
 
 
 
