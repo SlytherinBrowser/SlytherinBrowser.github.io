@@ -148,26 +148,7 @@ window.addEventListener("error", function(event) {
 }
 
 
-#hiddenToggleBtn,
-#privateToggleBtn,
-#getCoinsBtn
-     {
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
 
-#hiddenToggleBtn.active,
-#privateToggleBtn.active {
-  background-color: rgba(255, 255, 255, 0.6);
-  color: black;
-}
 
 
     .btn {
@@ -353,9 +334,9 @@ height: 20px;
 </div>
 <div class="containerDown">
  <button class="btn" id="modeToggle">Preklopi način</button>
-<button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
-<button  id="getCoinsBtn">💰</button>
-<button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
+<button class="btn" id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+<button class="btn" id="getCoinsBtn">💰</button>
+<button class="btn" id="privateToggleBtn" title="Funkcijski gumb">Z</button>
 </div>
 <script>  
 
