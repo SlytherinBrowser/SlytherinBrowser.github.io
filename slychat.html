@@ -2462,7 +2462,6 @@ function initUserMap(currentUserIcon) {
   // Dodaj postBox v container, pod chatBox
   document.querySelector('.container').insertBefore(postBox, chatBox.nextSibling);
 
-  // Testne slike
   const testPosts = [
   {
     src: 'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=600&q=80',
@@ -2541,30 +2540,55 @@ function initUserMap(currentUserIcon) {
     };
   }
 
-  // Navigacijski gumbi
-  const prevBtn = document.createElement('button');
-  prevBtn.id = 'prevBtn';
-  prevBtn.className = 'navBtn';
-  prevBtn.textContent = '‹';
-  prevBtn.onclick = () => {
-    if(currentIndex > 0){
-      currentIndex--;
-      updatePostBox();
+  // Funkcija za menjavo slike gor/dol glede na smer scrolla
+  function changeImageByScroll(delta) {
+    if (delta > 0) { // scroll dol - naslednja slika
+      if (currentIndex < testPosts.length - 1) {
+        currentIndex++;
+        updatePostBox();
+      }
+    } else if (delta < 0) { // scroll gor - prejšnja slika
+      if (currentIndex > 0) {
+        currentIndex--;
+        updatePostBox();
+      }
     }
-  };
-  postBox.appendChild(prevBtn);
+  }
 
-  const nextBtn = document.createElement('button');
-  nextBtn.id = 'nextBtn';
-  nextBtn.className = 'navBtn';
-  nextBtn.textContent = '›';
-  nextBtn.onclick = () => {
-    if(currentIndex < testPosts.length - 1){
-      currentIndex++;
-      updatePostBox();
+  // Dodaj poslušalca na postImageContainer za scroll z miškino kolesce
+  postImageContainer.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    changeImageByScroll(e.deltaY);
+  }, { passive: false });
+
+  // Za touch events (podrs gor/dol)
+  let touchStartY = null;
+  postImageContainer.addEventListener('touchstart', e => {
+    touchStartY = e.changedTouches[0].clientY;
+  });
+
+  postImageContainer.addEventListener('touchend', e => {
+    if (touchStartY === null) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diff = touchStartY - touchEndY;
+
+    if (Math.abs(diff) > 30) { // prag, da ne reagira na mikropremike
+      if (diff > 0) {
+        // podrs gor - naslednja slika
+        if (currentIndex < testPosts.length - 1) {
+          currentIndex++;
+          updatePostBox();
+        }
+      } else {
+        // podrs dol - prejšnja slika
+        if (currentIndex > 0) {
+          currentIndex--;
+          updatePostBox();
+        }
+      }
     }
-  };
-  postBox.appendChild(nextBtn);
+    touchStartY = null;
+  });
 
   // Začinimo z načinom chatMode kot privzeto
   let postModeActive = false;
