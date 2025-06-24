@@ -281,44 +281,31 @@ width: 100%;
 
 
 
-  #postStatus {
+  #postBox {
+    display: none; /* skrit po defaultu */
+  }
+  .postStatus {
     position: sticky;
     bottom: 0;
-    background: #fff;
-    padding: 10px;
-    border-top: 1px solid #ccc;
-    display: none;
+    background: #222;
+    color: white;
+    padding: 8px 12px;
+    border-top: 1px solid #444;
+    display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 0 0 10px 10px;
   }
-
-  #imagesContainer img {
-    display: block;
+  .postStatus button {
+    margin-left: 10px;
+    cursor: pointer;
+  }
+  #postBox img {
     width: 100%;
-    max-height: 300px;
-    object-fit: cover;
-    margin-bottom: 10px;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: 10px;
   }
-
-  .post-mode #messagesContainer {
-    display: none;
-  }
-
-  .chat-mode #imagesContainer,
-  .chat-mode #postStatus,
-  .chat-mode #imageUpload {
-    display: none;
-  }
-
-  .post-mode #messageInput {
-    display: none;
-  }
-
-  .post-mode #imageUpload,
-  .post-mode #postStatus {
-    display: flex;
-  }
-
   </style>
 </head>
 <body>
@@ -341,7 +328,7 @@ width: 100%;
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
-    
+    <button class="btn" id="modeToggle">Preklopi način</button>
 
   </div>
 </div>
@@ -2433,6 +2420,92 @@ function initUserMap(currentUserIcon) {
 
 
 
+
+
+// Ustvarim postBox programatsko
+  const postBox = document.createElement('div');
+  postBox.id = 'postBox';
+  document.querySelector('.container').insertBefore(postBox, chatBox.nextSibling);
+
+  // Par testnih slik z metapodatki (pošiljatelj, všečki)
+  const testPosts = [
+    {
+      src: 'https://via.placeholder.com/600x300?text=Slika+1',
+      sender: 'Ana',
+      likes: 3,
+    },
+    {
+      src: 'https://via.placeholder.com/600x300?text=Slika+2',
+      sender: 'Bine',
+      likes: 5,
+    },
+    {
+      src: 'https://via.placeholder.com/600x300?text=Slika+3',
+      sender: 'Cilka',
+      likes: 0,
+    }
+  ];
+
+  function createPost(postData) {
+    const postContainer = document.createElement('div');
+    postContainer.style.position = 'relative';
+    postContainer.style.display = 'flex';
+    postContainer.style.flexDirection = 'column';
+    postContainer.style.gap = '5px';
+
+    const img = document.createElement('img');
+    img.src = postData.src;
+    postContainer.appendChild(img);
+
+    const postStatus = document.createElement('div');
+    postStatus.className = 'postStatus';
+
+    const senderSpan = document.createElement('span');
+    senderSpan.textContent = postData.sender;
+
+    const likeBtn = document.createElement('button');
+    likeBtn.textContent = `♥ ${postData.likes}`;
+    likeBtn.onclick = () => {
+      postData.likes++;
+      likeBtn.textContent = `♥ ${postData.likes}`;
+    };
+
+    const downloadBtn = document.createElement('button');
+    downloadBtn.textContent = 'Prenesi';
+    downloadBtn.onclick = () => {
+      const link = document.createElement('a');
+      link.href = postData.src;
+      link.download = 'slika.jpg';
+      link.click();
+    };
+
+    postStatus.appendChild(senderSpan);
+    postStatus.appendChild(likeBtn);
+    postStatus.appendChild(downloadBtn);
+
+    postContainer.appendChild(postStatus);
+
+    return postContainer;
+  }
+
+  // Dodaj vse slike v postBox
+  testPosts.forEach(post => {
+    postBox.appendChild(createPost(post));
+  });
+
+  // Preklop načinov
+  const modeToggle = document.getElementById('modeToggle');
+  modeToggle.onclick = () => {
+    if (chatBox.style.display !== 'none') {
+      chatBox.style.display = 'none';
+      postBox.style.display = 'flex';
+      document.getElementById('messageInput').type = 'file'; // za postMode input za slike
+    } else {
+      chatBox.style.display = 'flex';
+      postBox.style.display = 'none';
+      document.getElementById('messageInput').type = 'text'; // nazaj v chat mode
+    }
+  };
 
 
 
