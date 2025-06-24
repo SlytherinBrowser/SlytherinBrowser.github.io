@@ -2426,87 +2426,167 @@ function initUserMap(currentUserIcon) {
 // Ustvarim postBox programatsko
   const postBox = document.createElement('div');
   postBox.id = 'postBox';
+
+  // V postBox dam:
+  // 1) container za sliko
+  const postImageContainer = document.createElement('div');
+  postImageContainer.id = 'postImageContainer';
+  postBox.appendChild(postImageContainer);
+
+  // 2) spodnji fiksni postStatus
+  const postStatus = document.createElement('div');
+  postStatus.className = 'postStatus';
+
+  // levi del - ime pošiljatelja
+  const senderDiv = document.createElement('div');
+  senderDiv.id = 'senderName';
+  postStatus.appendChild(senderDiv);
+
+  // srednji del - všečki (gumb)
+  const likesDiv = document.createElement('div');
+  const likeBtn = document.createElement('button');
+  likeBtn.id = 'likeBtn';
+  likesDiv.appendChild(likeBtn);
+  postStatus.appendChild(likesDiv);
+
+  // desni del - gumb za prenos
+  const downloadDiv = document.createElement('div');
+  const downloadBtn = document.createElement('button');
+  downloadBtn.id = 'downloadBtn';
+  downloadBtn.textContent = 'Prenesi';
+  downloadDiv.appendChild(downloadBtn);
+  postStatus.appendChild(downloadDiv);
+
+  postBox.appendChild(postStatus);
+
+  // Dodaj postBox v container, pod chatBox
   document.querySelector('.container').insertBefore(postBox, chatBox.nextSibling);
 
-  // Par testnih slik z metapodatki (pošiljatelj, všečki)
+  // Testne slike
   const testPosts = [
-    {
-      src: 'https://via.placeholder.com/600x300?text=Slika+1',
-      sender: 'Ana',
-      likes: 3,
-    },
-    {
-      src: 'https://via.placeholder.com/600x300?text=Slika+2',
-      sender: 'Bine',
-      likes: 5,
-    },
-    {
-      src: 'https://via.placeholder.com/600x300?text=Slika+3',
-      sender: 'Cilka',
-      likes: 0,
-    }
-  ];
+  {
+    src: 'https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=600&q=80',
+    sender: 'Ana',
+    likes: 3,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1516116216624-53e697fedbe2?auto=format&fit=crop&w=600&q=80',
+    sender: 'Bine',
+    likes: 5,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=600&q=80',
+    sender: 'Cilka',
+    likes: 2,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80',
+    sender: 'David',
+    likes: 4,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80',
+    sender: 'Eva',
+    likes: 1,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1526045612212-70caf35c14df?auto=format&fit=crop&w=600&q=80',
+    sender: 'Feri',
+    likes: 0,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?auto=format&fit=crop&w=600&q=80',
+    sender: 'Gaja',
+    likes: 6,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=600&q=80',
+    sender: 'Hans',
+    likes: 7,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80',
+    sender: 'Ina',
+    likes: 2,
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1468071174046-657d9d351a40?auto=format&fit=crop&w=600&q=80',
+    sender: 'Jure',
+    likes: 9,
+  }
+];
 
-  function createPost(postData) {
-    const postContainer = document.createElement('div');
-    postContainer.style.position = 'relative';
-    postContainer.style.display = 'flex';
-    postContainer.style.flexDirection = 'column';
-    postContainer.style.gap = '5px';
+  let currentIndex = 0;
 
+  function updatePostBox() {
+    // Prikaži trenutno sliko
+    postImageContainer.innerHTML = ''; // počisti
     const img = document.createElement('img');
-    img.src = postData.src;
-    postContainer.appendChild(img);
+    img.src = testPosts[currentIndex].src;
+    postImageContainer.appendChild(img);
 
-    const postStatus = document.createElement('div');
-    postStatus.className = 'postStatus';
-
-    const senderSpan = document.createElement('span');
-    senderSpan.textContent = postData.sender;
-
-    const likeBtn = document.createElement('button');
-    likeBtn.textContent = `♥ ${postData.likes}`;
+    // Posodobi postStatus
+    senderDiv.textContent = testPosts[currentIndex].sender;
+    likeBtn.textContent = `♥ ${testPosts[currentIndex].likes}`;
     likeBtn.onclick = () => {
-      postData.likes++;
-      likeBtn.textContent = `♥ ${postData.likes}`;
+      testPosts[currentIndex].likes++;
+      likeBtn.textContent = `♥ ${testPosts[currentIndex].likes}`;
     };
 
-    const downloadBtn = document.createElement('button');
-    downloadBtn.textContent = 'Prenesi';
     downloadBtn.onclick = () => {
       const link = document.createElement('a');
-      link.href = postData.src;
+      link.href = testPosts[currentIndex].src;
       link.download = 'slika.jpg';
       link.click();
     };
-
-    postStatus.appendChild(senderSpan);
-    postStatus.appendChild(likeBtn);
-    postStatus.appendChild(downloadBtn);
-
-    postContainer.appendChild(postStatus);
-
-    return postContainer;
   }
 
-  // Dodaj vse slike v postBox
-  testPosts.forEach(post => {
-    postBox.appendChild(createPost(post));
-  });
+  // Navigacijski gumbi
+  const prevBtn = document.createElement('button');
+  prevBtn.id = 'prevBtn';
+  prevBtn.className = 'navBtn';
+  prevBtn.textContent = '‹';
+  prevBtn.onclick = () => {
+    if(currentIndex > 0){
+      currentIndex--;
+      updatePostBox();
+    }
+  };
+  postBox.appendChild(prevBtn);
 
-  // Preklop načinov
+  const nextBtn = document.createElement('button');
+  nextBtn.id = 'nextBtn';
+  nextBtn.className = 'navBtn';
+  nextBtn.textContent = '›';
+  nextBtn.onclick = () => {
+    if(currentIndex < testPosts.length - 1){
+      currentIndex++;
+      updatePostBox();
+    }
+  };
+  postBox.appendChild(nextBtn);
+
+  // Začinimo z načinom chatMode kot privzeto
+  let postModeActive = false;
+
   const modeToggle = document.getElementById('modeToggle');
   modeToggle.onclick = () => {
-    if (chatBox.style.display !== 'none') {
+    postModeActive = !postModeActive;
+    if(postModeActive){
       chatBox.style.display = 'none';
       postBox.style.display = 'flex';
-      document.getElementById('messageInput').type = 'file'; // za postMode input za slike
+      document.getElementById('messageInput').type = 'file';
+      updatePostBox();
     } else {
       chatBox.style.display = 'flex';
       postBox.style.display = 'none';
-      document.getElementById('messageInput').type = 'text'; // nazaj v chat mode
+      document.getElementById('messageInput').type = 'text';
     }
   };
+
+  // Inicialno je chatBox prikazan
+  chatBox.style.display = 'flex';
+  postBox.style.display = 'none';
 
 
 
