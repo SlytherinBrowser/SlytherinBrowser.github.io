@@ -146,9 +146,11 @@ window.addEventListener("error", function(event) {
   box-sizing: content-box;
 }
 
+
 #hiddenToggleBtn,
 #privateToggleBtn,
-    #imageUploadBtn {
+#getCoinsBtn
+     {
   width: 25px;
   height: 25px;
   border-radius: 50%;
@@ -290,13 +292,14 @@ width: 100%;
     <div class="message-input-btn-container">
       <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
       <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+<button  id="getCoinsBtn">💰</button>
     </div>
   </div>
 
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
-    <button class="btn"  id="getCoinsBtn">💰</button>
+    
 
   </div>
 </div>
