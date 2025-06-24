@@ -648,19 +648,38 @@ div.dataset.key = snapshot.key;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-// 🔁 Poslušaj spremembe sporočil (npr. popravljeno sporočilo)
+
+
+
+
 db.ref("messages").on("child_changed", snapshot => {
   const updatedMsg = snapshot.val();
   const msgKey = snapshot.key;
 
-  // Poišči in posodobi obstoječe sporočilo
+  // Poišči div s tem ključem
   const allMessages = chatBox.querySelectorAll(".messageContainer");
   allMessages.forEach(div => {
     if (div.dataset.key === msgKey) {
       const textSpan = div.querySelector(".realText");
-      if (textSpan) textSpan.textContent = updatedMsg.text;
+      if (textSpan) {
+        textSpan.textContent = updatedMsg.text;
 
-      // Če je sporočilo zdaj skrito
+        // Dodaj oznako " (urejeno)" če še ni dodana
+        let editedTag = div.querySelector(".editedTag");
+        if (updatedMsg.edited) {
+          if (!editedTag) {
+            editedTag = document.createElement("span");
+            editedTag.classList.add("editedTag");
+            editedTag.textContent = " (urejeno)";
+            textSpan.insertAdjacentElement("afterend", editedTag);
+          }
+        } else if (editedTag) {
+          // Odstrani oznako če ni več urejeno
+          editedTag.remove();
+        }
+      }
+
+      // Prikaz/skrivanje "hidden" sporočil
       if (updatedMsg.hidden) {
         if (!div.classList.contains("hiddenMessage")) {
           const hiddenText = document.createElement("span");
@@ -670,7 +689,6 @@ db.ref("messages").on("child_changed", snapshot => {
           div.classList.add("hiddenMessage");
         }
       } else {
-        // Odstrani skrito obnašanje če je bil odstranjen "hidden"
         const hiddenEl = div.querySelector(".hiddenText");
         if (hiddenEl) hiddenEl.remove();
         div.classList.remove("hiddenMessage");
