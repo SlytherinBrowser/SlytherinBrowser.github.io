@@ -279,6 +279,46 @@ width: 100%;
   100% { filter: hue-rotate(360deg); }
 }
 
+
+
+  #postStatus {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 10px;
+    border-top: 1px solid #ccc;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #imagesContainer img {
+    display: block;
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+
+  .post-mode #messagesContainer {
+    display: none;
+  }
+
+  .chat-mode #imagesContainer,
+  .chat-mode #postStatus,
+  .chat-mode #imageUpload {
+    display: none;
+  }
+
+  .post-mode #messageInput {
+    display: none;
+  }
+
+  .post-mode #imageUpload,
+  .post-mode #postStatus {
+    display: flex;
+  }
+
   </style>
 </head>
 <body>
@@ -358,6 +398,11 @@ width: 100%;
 
 
 let userEffectsCache = {}; // 🎯 Dodano
+
+
+
+
+
 
 
 
@@ -2388,10 +2433,58 @@ function initUserMap(currentUserIcon) {
 
 
 
+let mode = 'chat';
+  const modeToggle = document.getElementById('modeToggle');
 
 
+const imageUpload = document.getElementById('imageUpload');
+  const imagesContainer = document.getElementById('imagesContainer');
+  const messagesContainer = document.getElementById('messagesContainer');
+  const postStatus = document.getElementById('postStatus');
+  const likeButton = document.getElementById('likeButton');
+  const likeCount = document.getElementById('likeCount');
+  const downloadButton = document.getElementById('downloadButton');
 
+  let currentLikes = 0;
 
+  modeToggle.addEventListener('click', () => {
+    mode = mode === 'chat' ? 'post' : 'chat';
+    updateMode();
+  });
+
+  function updateMode() {
+    chatbox.className = mode === 'chat' ? 'chat-mode' : 'post-mode';
+  }
+
+  // Dodaj testne slike
+  const testSlike = [
+    'https://via.placeholder.com/600x300?text=Slika+1',
+    'https://via.placeholder.com/600x300?text=Slika+2',
+    'https://via.placeholder.com/600x300?text=Slika+3'
+  ];
+
+  testSlike.forEach(src => {
+    const img = document.createElement('img');
+    img.src = src;
+    imagesContainer.appendChild(img);
+  });
+
+  likeButton.addEventListener('click', () => {
+    currentLikes++;
+    likeCount.textContent = currentLikes;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const images = imagesContainer.getElementsByTagName('img');
+    if (images.length > 0) {
+      const link = document.createElement('a');
+      link.href = images[0].src;
+      link.download = 'slika.jpg';
+      link.click();
+    }
+  });
+
+  updateMode();
 
 
 </script>
