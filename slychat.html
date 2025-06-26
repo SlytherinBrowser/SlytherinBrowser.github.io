@@ -313,34 +313,35 @@ width: 100%;
 
 
 
-#navbar {
-width: 70%;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 20px 0;
-  }
-  .filter-btn {
-    font-size: 20px;
-    cursor: pointer;
-    padding: 10px 15px;
-    border-radius: 8px;
-    user-select: none;
-    transition: background-color 0.3s ease;
-    position: relative;
-  }
-  .filter-btn.active {
-    background-color: #007bff;
-    color: white;
-  }
-  /* Utripanje animacija za opozorila */
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  .filter-btn.blink {
-    animation: blink 1s infinite;
-  }
+#filterNavbar {
+  display: flex;
+  gap: 10px;
+  margin: 10px;
+}
+
+#filterNavbar button {
+  font-size: 24px;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#filterNavbar button.active {
+  background-color: #d0f0ff;
+  border-radius: 10px;
+}
+
+#filterNavbar button.blink {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
 
 
   </style>
@@ -367,11 +368,11 @@ width: 70%;
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
     <button class="btn" id="modeToggle">Preklopi način</button>
 <br>
-<div id="navbar">
-  <div class="filter-btn" data-filter="public" title="Javni 🌍">🌍</div>
-  <div class="filter-btn" data-filter="friends" title="Prijatelji 👥️">👥️</div>
-  <div class="filter-btn" data-filter="best" title="Najboljši prijatelji 🫂">🫂</div>
-  <div class="filter-btn" data-filter="love" title="Ljubezen ❤️">❤️</div>
+<div id="filterNavbar">
+  <button id="filterPublic" data-status="public">🌍</button>
+  <button id="filterFriends" data-status="friends">👥️</button>
+  <button id="filterBesties" data-status="besties">🫂</button>
+  <button id="filterLove" data-status="love">❤️</button>
 </div>
 
   </div>
@@ -579,6 +580,20 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     return;
   }
 
+
+
+// ⛔️ Ignoriraj sporočila, ki niso za trenutno izbrani filter
+if (msg.status && msg.status !== currentStatusFilter) {
+  // Shrani si da obstaja novo sporočilo v drugem filtru
+  const btnToBlink = document.querySelector(`#filterNavbar button[data-status="${msg.status}"]`);
+  if (btnToBlink && !btnToBlink.classList.contains("active")) {
+    btnToBlink.classList.add("blink");
+  }
+  return;
+}
+
+
+
   // 🟠 Povabilo v klepet
   if (msg.invite && msg.privateUid === currentUser.uid) {
     const inviterName = users[msg.uid]?.displayName || "Anonimen";
@@ -721,6 +736,20 @@ db.ref("messages").on("child_changed", snapshot => {
   });
 });
 });
+
+
+
+
+function renderAllMessagesAgain() {
+  chatBox.innerHTML = ""; // pobriši vse
+  db.ref("messages").once("value", snapshot => {
+    snapshot.forEach(child => {
+      const msg = child.val();
+      // Simuliramo kot da je bil dodan na novo
+      showMessage(child.key, msg);
+    });
+  });
+}
 
 
 
@@ -2586,56 +2615,22 @@ function initUserMap(currentUserIcon) {
 
 
 
-const buttons = document.querySelectorAll('.filter-btn');
-  let activeFilter = 'public'; // privzeti filter
+let currentStatusFilter = "public";
+const navbarButtons = document.querySelectorAll("#filterNavbar button");
 
-  function setActiveFilter(filter) {
-    activeFilter = filter;
-    buttons.forEach(btn => {
-      if (btn.dataset.filter === filter) {
-        btn.classList.add('active');
-        btn.classList.remove('blink');
-      } else {
-        btn.classList.remove('active');
-      }
-    });
-    console.log('Aktivni filter:', filter);
-    // TODO: tukaj bo klic za prikaz sporočil glede na filter
-  }
+navbarButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentStatusFilter = btn.dataset.status;
+    navbarButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
 
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      setActiveFilter(btn.dataset.filter);
-    });
+    // Odstrani blink, ker je uporabnik zdaj preklopil v ta filter
+    btn.classList.remove("blink");
+
+    // Po menjavi filtra osveži prikazane stare že prebrane
+    renderAllMessagesAgain();
   });
-
-  // Nastavimo začetni aktivni filter
-  setActiveFilter(activeFilter);
-
-  // Funkcija za utripanje ikone (ko pride novo sporočilo v neaktivnem filtru)
-  function startBlinking(filter) {
-    buttons.forEach(btn => {
-      if (btn.dataset.filter === filter && filter !== activeFilter) {
-        btn.classList.add('blink');
-      }
-    });
-  }
-
-  // Funkcija za ustavitev utripanja
-  function stopBlinking(filter) {
-    buttons.forEach(btn => {
-      if (btn.dataset.filter === filter) {
-        btn.classList.remove('blink');
-      }
-    });
-  }
-
-  // Primer: simuliraj novo sporočilo v filtru "love" po 5 sekundah
-  setTimeout(() => {
-    startBlinking('love');
-  }, 5000);
-
-  // Ko kliknemo na ta filter, utripanje se ustavi (to je že v setActiveFilter)
+});
 
 
 
