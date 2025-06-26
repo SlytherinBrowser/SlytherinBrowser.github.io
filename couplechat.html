@@ -1,98 +1,50 @@
 <!DOCTYPE html>
-<html lang="sl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Koda Chat</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <title>Code Chat</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f1f1f1;
-    }
-    .centered {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      width: 250px;
-    }
-    #chatContainer {
-      display: none;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-    .message {
-      max-width: 60%;
-      margin-bottom: 10px;
-      padding: 10px;
-      border-radius: 15px;
-      word-wrap: break-word;
-    }
-    .me {
-      align-self: flex-end;
-      background-color: #d1e7dd;
-    }
-    .partner {
-      align-self: flex-start;
-      background-color: #f8d7da;
-    }
-    #messageInput {
-      padding: 15px;
-      border: none;
-      width: 100%;
-      font-size: 16px;
-      border-top: 1px solid #ccc;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+    #login, #codeArea, #chatArea { display: none; max-width: 600px; margin: 40px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    #chatBox { height: 400px; overflow-y: auto; border: 1px solid #ccc; margin-top: 10px; padding: 10px; background: #fafafa; border-radius: 5px; }
+    .message { margin: 10px 0; padding: 10px; border-radius: 10px; max-width: 70%; }
+    .me { background-color: #d1e7dd; align-self: flex-end; text-align: right; margin-left: auto; }
+    .partner { background-color: #f8d7da; align-self: flex-start; text-align: left; margin-right: auto; }
+    #chatMessages { display: flex; flex-direction: column; }
+    input[type=email], input[type=password], input[type=text] { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
+    button { padding: 10px 20px; margin-top: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
   </style>
 </head>
 <body>
 
-<div class="centered" id="authSection">
+<div id="login">
   <h2>Registracija / Prijava</h2>
-  <input type="text" id="name" placeholder="Ime" />
   <input type="email" id="email" placeholder="Email" />
   <input type="password" id="password" placeholder="Geslo" />
+  <input type="text" id="username" placeholder="Ime" />
   <button onclick="register()">Registracija</button>
   <button onclick="login()">Prijava</button>
 </div>
 
-<div class="centered" id="codeSection" style="display:none">
-  <h2>Tvoja koda:</h2>
-  <div id="yourCode" style="font-size: 24px; font-weight: bold;"></div>
-  <input type="text" id="partnerCode" placeholder="Vnesi kodo partnerja" />
-  <button onclick="requestPartner()">Poveži</button>
+<div id="codeArea">
+  <h2>Tvoja koda: <span id="myCode"></span></h2>
+  <input type="text" id="partnerCode" placeholder="Vpiši kodo partnerja" />
+  <button onclick="sendRequest()">Poveži se</button>
 </div>
 
-<div class="centered" id="confirmRequestSection" style="display:none">
-  <p>Uporabnik s kodo <span id="incomingCode"></span> te želi povezati. Sprejmeš?</p>
-  <button onclick="acceptPartner()">Sprejmi</button>
+<div id="chatArea">
+  <h2>Klepet</h2>
+  <div id="chatBox">
+    <div id="chatMessages"></div>
+  </div>
+  <input type="text" id="chatInput" placeholder="Vnesi sporočilo in pritisni Enter" onkeydown="handleKey(event)" />
 </div>
 
-<div id="chatContainer">
-  <div id="messages"></div>
-  <input type="text" id="messageInput" placeholder="Napiši sporočilo..." onkeydown="handleKey(event)" />
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 <script>
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -108,101 +60,97 @@ const firebaseConfig = {
   const auth = firebase.auth();
   const db = firebase.database();
 
-  let currentUser = {};
-  let partnerCode = null;
+  let myUid, myCode, partnerCode = null;
 
   function generateCode() {
     return Math.floor(10000000 + Math.random() * 90000000).toString();
   }
 
   function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const name = document.getElementById('name').value;
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(res => {
-        const code = generateCode();
-        currentUser = { uid: res.user.uid, name, code };
-        db.ref('users/' + currentUser.uid).set({ name, code });
-        showCodeSection(code);
-      })
-      .catch(alert);
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const username = document.getElementById("username").value;
+
+    auth.createUserWithEmailAndPassword(email, password).then(cred => {
+      myUid = cred.user.uid;
+      myCode = generateCode();
+      db.ref("users/" + myUid).set({ code: myCode, username });
+      showCode();
+    });
   }
 
   function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    auth.signInWithEmailAndPassword(email, password)
-      .then(res => {
-        currentUser.uid = res.user.uid;
-        db.ref('users/' + currentUser.uid).once('value', snap => {
-          currentUser.name = snap.val().name;
-          currentUser.code = snap.val().code;
-          showCodeSection(currentUser.code);
-        });
-      })
-      .catch(alert);
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    auth.signInWithEmailAndPassword(email, password).then(cred => {
+      myUid = cred.user.uid;
+      db.ref("users/" + myUid).once("value", snap => {
+        myCode = snap.val().code;
+        showCode();
+      });
+    });
   }
 
-  function showCodeSection(code) {
-    document.getElementById('authSection').style.display = 'none';
-    document.getElementById('codeSection').style.display = 'flex';
-    document.getElementById('yourCode').textContent = code;
+  function showCode() {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("codeArea").style.display = "block";
+    document.getElementById("myCode").textContent = myCode;
 
-    // Listen for requests
-    db.ref('requests/' + currentUser.code).on('value', snap => {
-      if (snap.exists()) {
-        document.getElementById('codeSection').style.display = 'none';
-        document.getElementById('confirmRequestSection').style.display = 'flex';
-        document.getElementById('incomingCode').textContent = snap.val();
+    // Spremljaj prošnje
+    db.ref("requests/" + myCode).on("value", snap => {
+      const request = snap.val();
+      if (request && confirm("Uporabnik s kodo " + request + " želi klepetati. Sprejmeš?")) {
+        startChat(request);
+        db.ref("requests/" + myCode).remove();
       }
     });
   }
 
-  function requestPartner() {
-    const code = document.getElementById('partnerCode').value;
-    if (!code) return;
-    db.ref('requests/' + code).set(currentUser.code);
+  function sendRequest() {
+    const code = document.getElementById("partnerCode").value;
+    db.ref("requests/" + code).set(myCode);
   }
 
-  function acceptPartner() {
-    partnerCode = document.getElementById('incomingCode').textContent;
-    db.ref('requests/' + currentUser.code).remove();
-    document.getElementById('confirmRequestSection').style.display = 'none';
-    document.getElementById('chatContainer').style.display = 'flex';
+  function startChat(code) {
+    partnerCode = code;
+    document.getElementById("chatArea").style.display = "block";
+    document.getElementById("codeArea").style.display = "none";
 
-    // Listen for messages
-    db.ref('chats/' + chatId()).on('child_added', snap => {
+    const chatId = myCode < partnerCode ? myCode + "_" + partnerCode : partnerCode + "_" + myCode;
+
+    db.ref("chats/" + chatId).on("child_added", snap => {
       const msg = snap.val();
-      appendMessage(msg);
+      const div = document.createElement("div");
+      div.className = "message " + (msg.sender === myCode ? "me" : "partner");
+      div.textContent = msg.text;
+      document.getElementById("chatMessages").appendChild(div);
+      document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
     });
   }
 
   function handleKey(e) {
-    if (e.key === 'Enter') sendMessage();
+    if (e.key === "Enter") {
+      const text = document.getElementById("chatInput").value;
+      if (!text.trim()) return;
+
+      const chatId = myCode < partnerCode ? myCode + "_" + partnerCode : partnerCode + "_" + myCode;
+      db.ref("chats/" + chatId).push({ text, sender: myCode });
+      document.getElementById("chatInput").value = "";
+    }
   }
 
-  function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-    if (!text) return;
-    const msg = { from: currentUser.code, text, timestamp: Date.now() };
-    db.ref('chats/' + chatId()).push(msg);
-    input.value = '';
-  }
-
-  function appendMessage(msg) {
-    const box = document.getElementById('messages');
-    const div = document.createElement('div');
-    div.className = 'message ' + (msg.from === currentUser.code ? 'me' : 'partner');
-    div.textContent = msg.text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
-  }
-
-  function chatId() {
-    return [currentUser.code, partnerCode].sort().join('_');
-  }
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      myUid = user.uid;
+      db.ref("users/" + myUid).once("value", snap => {
+        myCode = snap.val().code;
+        showCode();
+      });
+    } else {
+      document.getElementById("login").style.display = "block";
+    }
+  });
 </script>
 
 </body>
