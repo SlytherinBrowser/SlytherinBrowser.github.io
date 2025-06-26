@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat za pare</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f6f6f6; }
+    .center { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
+    .hidden { display: none; }
+    input, button { padding: 10px; margin: 10px; font-size: 16px; }
+    .navbar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: white; border-top: 1px solid #ccc; }
+    .chat, .plant, .level { padding: 20px; display: none; }
+    .chatbox { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fff; }
+    .msg.me { text-align: right; color: blue; }
+    .msg.partner { text-align: left; color: green; }
+    .plant svg { width: 100px; height: 100px; }
+  </style>
+</head>
+<body>
+
+<div class="center" id="register">
+  <h2>Tvoja koda: <span id="myCode"></span></h2>
+  <input id="partnerCode" placeholder="Vnesi partnerjevo kodo">
+  <button onclick="connect()">Poveži se</button>
+</div>
+
+<div class="chat" id="chat">
+  <div class="chatbox" id="chatbox"></div>
+  <input id="msg" placeholder="Napiši sporočilo">
+  <button onclick="sendMsg()">Pošlji</button>
+</div>
+
+<div class="plant" id="plant">
+  <h3>Skupaj zalivajta svojo rastlino</h3>
+  <svg id="plantSvg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />
+  </svg>
+  <button onclick="waterPlant()">Zalij rastlino</button>
+</div>
+
+<div class="level" id="level">
+  <h3>Nivo zveze: <span id="loveLevel">1</span></h3>
+  <p>Višji nivo pridobita z rednim pisanjem.</p>
+</div>
+
+<div class="navbar hidden" id="navbar">
+  <button onclick="show('chat')">Chat</button>
+  <button onclick="show('plant')">Rastlina</button>
+  <button onclick="show('level')">Nivo</button>
+</div>
+
+<script>
+  let myCode = Math.floor(100000 + Math.random() * 900000);
+  let partnerConnected = false;
+  let messages = [];
+  let messageCount = 0;
+  let loveLevel = 1;
+
+  document.getElementById("myCode").textContent = myCode;
+
+  function connect() {
+    const partnerCode = document.getElementById("partnerCode").value;
+    if (partnerCode.length === 6 && !isNaN(partnerCode)) {
+      partnerConnected = true;
+      document.getElementById("register").classList.add("hidden");
+      document.getElementById("navbar").classList.remove("hidden");
+      show('chat');
+    } else {
+      alert("Neveljavna koda partnerja.");
+    }
+  }
+
+  function show(id) {
+    ["chat", "plant", "level"].forEach(p => document.getElementById(p).style.display = "none");
+    document.getElementById(id).style.display = "block";
+  }
+
+  function sendMsg() {
+    const msgInput = document.getElementById("msg");
+    const msg = msgInput.value.trim();
+    if (msg !== '') {
+      messages.push({ from: 'me', text: msg });
+      updateChat();
+      msgInput.value = '';
+      messageCount++;
+      if (messageCount % 10 === 0) updateLoveLevel();
+    }
+  }
+
+  function updateChat() {
+    const chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML = '';
+    messages.forEach(msg => {
+      const div = document.createElement("div");
+      div.className = 'msg ' + msg.from;
+      div.textContent = msg.text;
+      chatbox.appendChild(div);
+    });
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  function updateLoveLevel() {
+    loveLevel++;
+    document.getElementById("loveLevel").textContent = loveLevel;
+  }
+
+  function waterPlant() {
+    const plant = document.getElementById("plantSvg");
+    plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lime" />';
+    setTimeout(() => {
+      plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />';
+    }, 1000);
+    messageCount++;
+    if (messageCount % 10 === 0) updateLoveLevel();
+  }
+</script>
+
+</body>
+</html>
