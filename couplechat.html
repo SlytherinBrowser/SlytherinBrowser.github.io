@@ -1,142 +1,220 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat za pare</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat za Pare</title>
   <style>
-    body { margin: 0; font-family: sans-serif; background: #f6f6f6; }
-    .center { display: flex; flex-direction: column; align-items: center; margin-top: 50px; }
-    .hidden { display: none; }
-    input, button { padding: 10px; margin: 10px; font-size: 16px; }
-    .navbar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: white; border-top: 1px solid #ccc; }
-    .chat, .plant, .level { padding: 20px; display: none; }
-    .chatbox { max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fff; }
-    .msg.me { text-align: right; color: blue; }
-    .msg.partner { text-align: left; color: green; }
-    .plant svg { width: 100px; height: 100px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    body {
+      background: #fefefe;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+    }
+    #register-section, #connect-section {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    #code-display {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #chat {
+      flex: 1;
+      width: 100%;
+      max-width: 500px;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .message {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 12px;
+    }
+    .me {
+      background: #d1e7dd;
+      align-self: flex-end;
+    }
+    .partner {
+      background: #f8d7da;
+      align-self: flex-start;
+    }
+    #message-input {
+      display: flex;
+      width: 100%;
+      max-width: 500px;
+      padding: 10px;
+    }
+    #message-input input {
+      flex: 1;
+      margin-right: 10px;
+    }
+    #navbar {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      position: fixed;
+      bottom: 0;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+    #navbar button {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+    }
+    #status-level {
+      padding: 20px;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    #plant {
+      width: 60px;
+      height: 60px;
+      transition: transform 0.3s;
+    }
+    #plant.watering {
+      transform: scale(1.2);
+    }
   </style>
-  <script type="module">
-    // Firebase konfiguracija
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, push, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCaKT0CCg1xNJanG4-6Pox2UaH_1rSL3M0",
-  authDomain: "chater2-fc480.firebaseapp.com",
-  projectId: "chater2-fc480",
-  storageBucket: "chater2-fc480.firebasestorage.app",
-  messagingSenderId: "623092508370",
-  appId: "1:623092508370:web:08cf5d58c6edcfac096f0b",
-  measurementId: "G-5W40WP5YEG"
-};
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    let myCode = Math.floor(100000 + Math.random() * 900000).toString();
-    let partnerCode = "";
-    let chatRoom = "";
-    let loveLevel = 1;
-    let messageCount = 0;
-
-    window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("myCode").textContent = myCode;
-      set(ref(db, 'users/' + myCode), { online: true });
-    });
-
-    window.connect = function() {
-      partnerCode = document.getElementById("partnerCode").value;
-      if (partnerCode.length === 6 && !isNaN(partnerCode)) {
-        chatRoom = [myCode, partnerCode].sort().join("_");
-        document.getElementById("register").classList.add("hidden");
-        document.getElementById("navbar").classList.remove("hidden");
-        show('chat');
-        listenForMessages();
-      } else {
-        alert("Neveljavna koda partnerja.");
-      }
-    }
-
-    window.sendMsg = function() {
-      const msg = document.getElementById("msg").value.trim();
-      if (msg !== '') {
-        const msgRef = push(ref(db, 'chats/' + chatRoom));
-        set(msgRef, {
-          from: myCode,
-          text: msg,
-          timestamp: Date.now()
-        });
-        document.getElementById("msg").value = '';
-        messageCount++;
-        if (messageCount % 10 === 0) updateLoveLevel();
-      }
-    }
-
-    function listenForMessages() {
-      const chatbox = document.getElementById("chatbox");
-      onChildAdded(ref(db, 'chats/' + chatRoom), (snapshot) => {
-        const msg = snapshot.val();
-        const div = document.createElement("div");
-        div.className = 'msg ' + (msg.from === myCode ? 'me' : 'partner');
-        div.textContent = msg.text;
-        chatbox.appendChild(div);
-        chatbox.scrollTop = chatbox.scrollHeight;
-      });
-    }
-
-    window.show = function(id) {
-      ["chat", "plant", "level"].forEach(p => document.getElementById(p).style.display = "none");
-      document.getElementById(id).style.display = "block";
-    }
-
-    function updateLoveLevel() {
-      loveLevel++;
-      document.getElementById("loveLevel").textContent = loveLevel;
-    }
-
-    window.waterPlant = function() {
-      const plant = document.getElementById("plantSvg");
-      plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lime" />';
-      setTimeout(() => {
-        plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />';
-      }, 1000);
-      messageCount++;
-      if (messageCount % 10 === 0) updateLoveLevel();
-    }
-  </script>
 </head>
 <body>
-  <div class="center" id="register">
-    <h2>Tvoja koda: <span id="myCode"></span></h2>
-    <input id="partnerCode" placeholder="Vnesi partnerjevo kodo">
+  <div id="register-section">
+    <button onclick="register()">Registriraj se</button>
+    <div id="code-display"></div>
+  </div>
+
+  <div id="connect-section" style="display: none;">
+    <input type="number" id="partner-code" placeholder="Vnesi partnerjevo kodo" />
     <button onclick="connect()">Poveži se</button>
   </div>
 
-  <div class="chat" id="chat">
-    <div class="chatbox" id="chatbox"></div>
-    <input id="msg" placeholder="Napiši sporočilo">
-    <button onclick="sendMsg()">Pošlji</button>
+  <div id="chat-section" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+    <div id="chat"></div>
+    <div id="message-input">
+      <input type="text" id="msg" placeholder="Napiši sporočilo..." />
+      <button onclick="sendMessage()">Pošlji</button>
+    </div>
   </div>
 
-  <div class="plant" id="plant">
-    <h3>Skupaj zalivajta svojo rastlino</h3>
-    <svg id="plantSvg" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />
-    </svg>
-    <button onclick="waterPlant()">Zalij rastlino</button>
+  <div id="status-level" style="display: none;">🌱 Nivo zveze: <span id="level">1</span></div>
+
+  <div id="navbar">
+    <button onclick="showChat()">💬</button>
+    <button onclick="waterPlant()">🌿</button>
+    <button onclick="showLevel()">❤️</button>
   </div>
 
-  <div class="level" id="level">
-    <h3>Nivo zveze: <span id="loveLevel">1</span></h3>
-    <p>Višji nivo pridobita z rednim pisanjem.</p>
-  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  <div class="navbar hidden" id="navbar">
-    <button onclick="show('chat')">Chat</button>
-    <button onclick="show('plant')">Rastlina</button>
-    <button onclick="show('level')">Nivo</button>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let myCode = null;
+    let chatId = null;
+    let myId = Math.floor(Math.random() * 1000000);
+
+    function register() {
+      myCode = Math.floor(100000 + Math.random() * 900000).toString();
+      set(ref(db, 'codes/' + myCode), myId);
+      document.getElementById("code-display").innerText = "Tvoja koda: " + myCode;
+      document.getElementById("connect-section").style.display = 'flex';
+    }
+
+    function connect() {
+      const partnerCode = document.getElementById("partner-code").value;
+      const combined = [myCode, partnerCode].sort().join('-');
+      chatId = combined;
+      startChat();
+    }
+
+    function startChat() {
+      document.getElementById("register-section").style.display = 'none';
+      document.getElementById("connect-section").style.display = 'none';
+      document.getElementById("chat-section").style.display = 'flex';
+      document.getElementById("status-level").style.display = 'block';
+      document.getElementById("navbar").style.display = 'flex';
+
+      const chatRef = ref(db, 'chats/' + chatId);
+      onChildAdded(chatRef, (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.className = 'message ' + (msg.sender === myId ? 'me' : 'partner');
+        div.innerText = msg.text;
+        document.getElementById("chat").appendChild(div);
+        updateLevel();
+      });
+    }
+
+    function sendMessage() {
+      const text = document.getElementById("msg").value;
+      if (!text) return;
+      const chatRef = ref(db, 'chats/' + chatId);
+      push(chatRef, { sender: myId, text });
+      document.getElementById("msg").value = '';
+    }
+
+    let actionCount = 0;
+
+    function updateLevel() {
+      actionCount++;
+      const level = Math.floor(actionCount / 5) + 1;
+      document.getElementById("level").innerText = level;
+    }
+
+    function waterPlant() {
+      const plant = document.createElement("div");
+      plant.id = 'plant';
+      plant.innerHTML = '🌿';
+      plant.classList.add('watering');
+      document.getElementById("chat").appendChild(plant);
+      setTimeout(() => plant.classList.remove('watering'), 300);
+      updateLevel();
+    }
+
+    function showChat() {
+      document.getElementById("chat-section").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showLevel() {
+      alert("Trenutni nivo vajine zveze: " + document.getElementById("level").innerText);
+    }
+  </script>
 </body>
 </html>
