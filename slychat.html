@@ -312,38 +312,6 @@ width: 100%;
 
 
 
-
-#filterNavbar {
-  display: flex;
-  gap: 10px;
-  margin: 10px;
-}
-
-#filterNavbar button {
-  font-size: 24px;
-  padding: 5px 10px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-#filterNavbar button.active {
-  background-color: #d0f0ff;
-  border-radius: 10px;
-}
-
-#filterNavbar button.blink {
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-
   </style>
 </head>
 <body>
@@ -367,13 +335,6 @@ width: 100%;
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
     <button class="btn" id="modeToggle">Preklopi način</button>
-<br>
-<div id="filterNavbar">
-  <button id="filterPublic" data-status="public">🌍</button>
-  <button id="filterFriends" data-status="friends">👥️</button>
-  <button id="filterBesties" data-status="besties">🫂</button>
-  <button id="filterLove" data-status="love">❤️</button>
-</div>
 
   </div>
 </div>
@@ -580,20 +541,6 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     return;
   }
 
-
-
-// ⛔️ Ignoriraj sporočila, ki niso za trenutno izbrani filter
-if (msg.status && msg.status !== currentStatusFilter) {
-  // Shrani si da obstaja novo sporočilo v drugem filtru
-  const btnToBlink = document.querySelector(`#filterNavbar button[data-status="${msg.status}"]`);
-  if (btnToBlink && !btnToBlink.classList.contains("active")) {
-    btnToBlink.classList.add("blink");
-  }
-  return;
-}
-
-
-
   // 🟠 Povabilo v klepet
   if (msg.invite && msg.privateUid === currentUser.uid) {
     const inviterName = users[msg.uid]?.displayName || "Anonimen";
@@ -736,20 +683,6 @@ db.ref("messages").on("child_changed", snapshot => {
   });
 });
 });
-
-
-
-
-function renderAllMessagesAgain() {
-  chatBox.innerHTML = ""; // pobriši vse
-  db.ref("messages").once("value", snapshot => {
-    snapshot.forEach(child => {
-      const msg = child.val();
-      // Simuliramo kot da je bil dodan na novo
-      showMessage(child.key, msg);
-    });
-  });
-}
 
 
 
@@ -2605,32 +2538,6 @@ function initUserMap(currentUserIcon) {
   // Inicialno je chatBox prikazan
   chatBox.style.display = 'flex';
   postBox.style.display = 'none';
-
-
-
-
-
-
-
-
-
-
-let currentStatusFilter = "public";
-const navbarButtons = document.querySelectorAll("#filterNavbar button");
-
-navbarButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentStatusFilter = btn.dataset.status;
-    navbarButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    // Odstrani blink, ker je uporabnik zdaj preklopil v ta filter
-    btn.classList.remove("blink");
-
-    // Po menjavi filtra osveži prikazane stare že prebrane
-    renderAllMessagesAgain();
-  });
-});
 
 
 
