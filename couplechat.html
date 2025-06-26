@@ -16,105 +16,127 @@
     .msg.partner { text-align: left; color: green; }
     .plant svg { width: 100px; height: 100px; }
   </style>
-</head>
-<body>
+  <script type="module">
+    // Firebase konfiguracija
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, push, onChildAdded, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-<div class="center" id="register">
-  <h2>Tvoja koda: <span id="myCode"></span></h2>
-  <input id="partnerCode" placeholder="Vnesi partnerjevo kodo">
-  <button onclick="connect()">Poveži se</button>
-</div>
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCaKT0CCg1xNJanG4-6Pox2UaH_1rSL3M0",
+  authDomain: "chater2-fc480.firebaseapp.com",
+  projectId: "chater2-fc480",
+  storageBucket: "chater2-fc480.firebasestorage.app",
+  messagingSenderId: "623092508370",
+  appId: "1:623092508370:web:08cf5d58c6edcfac096f0b",
+  measurementId: "G-5W40WP5YEG"
+};
 
-<div class="chat" id="chat">
-  <div class="chatbox" id="chatbox"></div>
-  <input id="msg" placeholder="Napiši sporočilo">
-  <button onclick="sendMsg()">Pošlji</button>
-</div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-<div class="plant" id="plant">
-  <h3>Skupaj zalivajta svojo rastlino</h3>
-  <svg id="plantSvg" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />
-  </svg>
-  <button onclick="waterPlant()">Zalij rastlino</button>
-</div>
+    let myCode = Math.floor(100000 + Math.random() * 900000).toString();
+    let partnerCode = "";
+    let chatRoom = "";
+    let loveLevel = 1;
+    let messageCount = 0;
 
-<div class="level" id="level">
-  <h3>Nivo zveze: <span id="loveLevel">1</span></h3>
-  <p>Višji nivo pridobita z rednim pisanjem.</p>
-</div>
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("myCode").textContent = myCode;
+      set(ref(db, 'users/' + myCode), { online: true });
+    });
 
-<div class="navbar hidden" id="navbar">
-  <button onclick="show('chat')">Chat</button>
-  <button onclick="show('plant')">Rastlina</button>
-  <button onclick="show('level')">Nivo</button>
-</div>
-
-<script>
-  let myCode = Math.floor(100000 + Math.random() * 900000);
-  let partnerConnected = false;
-  let messages = [];
-  let messageCount = 0;
-  let loveLevel = 1;
-
-  document.getElementById("myCode").textContent = myCode;
-
-  function connect() {
-    const partnerCode = document.getElementById("partnerCode").value;
-    if (partnerCode.length === 6 && !isNaN(partnerCode)) {
-      partnerConnected = true;
-      document.getElementById("register").classList.add("hidden");
-      document.getElementById("navbar").classList.remove("hidden");
-      show('chat');
-    } else {
-      alert("Neveljavna koda partnerja.");
+    window.connect = function() {
+      partnerCode = document.getElementById("partnerCode").value;
+      if (partnerCode.length === 6 && !isNaN(partnerCode)) {
+        chatRoom = [myCode, partnerCode].sort().join("_");
+        document.getElementById("register").classList.add("hidden");
+        document.getElementById("navbar").classList.remove("hidden");
+        show('chat');
+        listenForMessages();
+      } else {
+        alert("Neveljavna koda partnerja.");
+      }
     }
-  }
 
-  function show(id) {
-    ["chat", "plant", "level"].forEach(p => document.getElementById(p).style.display = "none");
-    document.getElementById(id).style.display = "block";
-  }
+    window.sendMsg = function() {
+      const msg = document.getElementById("msg").value.trim();
+      if (msg !== '') {
+        const msgRef = push(ref(db, 'chats/' + chatRoom));
+        set(msgRef, {
+          from: myCode,
+          text: msg,
+          timestamp: Date.now()
+        });
+        document.getElementById("msg").value = '';
+        messageCount++;
+        if (messageCount % 10 === 0) updateLoveLevel();
+      }
+    }
 
-  function sendMsg() {
-    const msgInput = document.getElementById("msg");
-    const msg = msgInput.value.trim();
-    if (msg !== '') {
-      messages.push({ from: 'me', text: msg });
-      updateChat();
-      msgInput.value = '';
+    function listenForMessages() {
+      const chatbox = document.getElementById("chatbox");
+      onChildAdded(ref(db, 'chats/' + chatRoom), (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.className = 'msg ' + (msg.from === myCode ? 'me' : 'partner');
+        div.textContent = msg.text;
+        chatbox.appendChild(div);
+        chatbox.scrollTop = chatbox.scrollHeight;
+      });
+    }
+
+    window.show = function(id) {
+      ["chat", "plant", "level"].forEach(p => document.getElementById(p).style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+
+    function updateLoveLevel() {
+      loveLevel++;
+      document.getElementById("loveLevel").textContent = loveLevel;
+    }
+
+    window.waterPlant = function() {
+      const plant = document.getElementById("plantSvg");
+      plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lime" />';
+      setTimeout(() => {
+        plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />';
+      }, 1000);
       messageCount++;
       if (messageCount % 10 === 0) updateLoveLevel();
     }
-  }
+  </script>
+</head>
+<body>
+  <div class="center" id="register">
+    <h2>Tvoja koda: <span id="myCode"></span></h2>
+    <input id="partnerCode" placeholder="Vnesi partnerjevo kodo">
+    <button onclick="connect()">Poveži se</button>
+  </div>
 
-  function updateChat() {
-    const chatbox = document.getElementById("chatbox");
-    chatbox.innerHTML = '';
-    messages.forEach(msg => {
-      const div = document.createElement("div");
-      div.className = 'msg ' + msg.from;
-      div.textContent = msg.text;
-      chatbox.appendChild(div);
-    });
-    chatbox.scrollTop = chatbox.scrollHeight;
-  }
+  <div class="chat" id="chat">
+    <div class="chatbox" id="chatbox"></div>
+    <input id="msg" placeholder="Napiši sporočilo">
+    <button onclick="sendMsg()">Pošlji</button>
+  </div>
 
-  function updateLoveLevel() {
-    loveLevel++;
-    document.getElementById("loveLevel").textContent = loveLevel;
-  }
+  <div class="plant" id="plant">
+    <h3>Skupaj zalivajta svojo rastlino</h3>
+    <svg id="plantSvg" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />
+    </svg>
+    <button onclick="waterPlant()">Zalij rastlino</button>
+  </div>
 
-  function waterPlant() {
-    const plant = document.getElementById("plantSvg");
-    plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lime" />';
-    setTimeout(() => {
-      plant.innerHTML = '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="lightgreen" />';
-    }, 1000);
-    messageCount++;
-    if (messageCount % 10 === 0) updateLoveLevel();
-  }
-</script>
+  <div class="level" id="level">
+    <h3>Nivo zveze: <span id="loveLevel">1</span></h3>
+    <p>Višji nivo pridobita z rednim pisanjem.</p>
+  </div>
 
+  <div class="navbar hidden" id="navbar">
+    <button onclick="show('chat')">Chat</button>
+    <button onclick="show('plant')">Rastlina</button>
+    <button onclick="show('level')">Nivo</button>
+  </div>
 </body>
 </html>
