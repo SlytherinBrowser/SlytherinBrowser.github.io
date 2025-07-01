@@ -2350,6 +2350,73 @@ function initUserMap(currentUserIcon) {
 
 
 
+function openPrivateChatWith(uid, name) {
+  currentPrivateChatUser = uid;
+  
+  // Prikaži naslov zasebnega klepeta (lahko prilagodiš DOM element za naslov)
+  chatTitle.textContent = `Zasebni klepet z ${name}`;
+
+  // Izprazni chatbox pred nalaganjem
+  chatBox.innerHTML = "";
+
+  // Naloži zasebna sporočila iz Firebase
+  // Predpostavimo, da so sporočila shranjena v bazi pod 'privateMessages/{user1}_{user2}'
+  // da je ključ urejen po abecedi, da ni duplikatov v različnih vrstah uporabnikov
+
+  const chatId = [currentUser.uid, uid].sort().join("_");
+
+  firebase.database().ref(`privateMessages/${chatId}`).off();  // odjavi prejšnje listenerje, če obstajajo
+
+  firebase.database().ref(`privateMessages/${chatId}`).on("child_added", snapshot => {
+    const message = snapshot.val();
+    displayMessage(message, false); // false = ni javno sporočilo, ampak zasebno
+  });
+}
+
+
+
+
+
+function displayMessage(message, isPublic = true) {
+  const div = document.createElement("div");
+  div.textContent = `${message.senderName}: ${message.text}`;
+  if (!isPublic) {
+    div.style.backgroundColor = "#eef";  // drugačen stil za zasebna sporočila
+    div.style.borderRadius = "6px";
+    div.style.padding = "4px 8px";
+    div.style.margin = "4px 0";
+  }
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+
+chatForm.addEventListener("submit", e => {
+  e.preventDefault();
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  if (currentPrivateChatUser) {
+    // Pošlji zasebno sporočilo
+    const chatId = [currentUser.uid, currentPrivateChatUser].sort().join("_");
+    const messageData = {
+      senderId: currentUser.uid,
+      senderName: userNamesCache[currentUser.uid] || "Jaz",
+      text,
+      timestamp: Date.now()
+    };
+
+    firebase.database().ref(`privateMessages/${chatId}`).push(messageData);
+  } else {
+    // Pošlji javno sporočilo (tvoja že obstoječa koda)
+  }
+
+  chatInput.value = "";
+});
+
+
+
 </script>
 </body>
 </html>
