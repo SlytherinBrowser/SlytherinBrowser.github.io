@@ -1575,6 +1575,11 @@ function showActiveUsers() {
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
 
+        // DODAJ DOGODEK KLIKA TUKAJ
+        div.addEventListener("click", () => {
+          openPrivateChatWith(uid, userNamesCache[uid] || "Anonimen");
+        });
+
         const nameSpan = document.createElement("span");
         nameSpan.textContent = userNamesCache[uid] || "Anonimen";
 
@@ -1626,6 +1631,11 @@ function showActiveUsers() {
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
 
+        // DODAJ DOGODEK KLIKA TUKAJ
+        div.addEventListener("click", () => {
+          openPrivateChatWith(uid, name || "Anonimen");
+        });
+
         const nameSpan = document.createElement("span");
         nameSpan.textContent = name || "Anonimen";
 
@@ -1649,6 +1659,7 @@ function showActiveUsers() {
       });
     }
   }
+
 
 
 // Višina
