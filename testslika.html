@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Slika Base64 + Firebase</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      margin-top: 10px;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Naloži sliko in shrani v Firebase</h1>
+  <input type="file" id="fileInput" accept="image/*" />
+  
+  <h2>Base64 koda slike:</h2>
+  <textarea id="base64Output" placeholder="Base64 koda se bo prikazala tukaj..."></textarea>
+  
+  <h2>Prikaz slike iz base64:</h2>
+  <img id="imagePreview" alt="Prikaz slike" />
+
+  <script>
+    // TODO: Zamenjaj spodaj s svojo Firebase konfiguracijo
+    const firebaseConfig = {
+      apiKey: "TUKAJ_API_KEY",
+      authDomain: "TUKAJ_AUTH_DOMAIN",
+      databaseURL: "TUKAJ_DATABASE_URL",
+      projectId: "TUKAJ_PROJECT_ID",
+      storageBucket: "TUKAJ_STORAGE_BUCKET",
+      messagingSenderId: "TUKAJ_MESSAGING_SENDER_ID",
+      appId: "TUKAJ_APP_ID"
+    };
+
+    // Inicializiraj Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    const fileInput = document.getElementById('fileInput');
+    const base64Output = document.getElementById('base64Output');
+    const imagePreview = document.getElementById('imagePreview');
+
+    // Ko uporabnik naloži datoteko, pretvori v base64 in shrani v Firebase
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64data = reader.result;
+        base64Output.value = base64data;
+        imagePreview.src = base64data;
+
+        // Shrani v Firebase pod vozlišče "slikaBase64"
+        database.ref('slikaBase64').set(base64data)
+          .then(() => {
+            console.log('Slika je shranjena v Firebase.');
+          })
+          .catch(err => {
+            console.error('Napaka pri shranjevanju:', err);
+          });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Ob spreminjanju base64 besedila lahko tudi ročno shraniš v Firebase
+    base64Output.addEventListener('input', () => {
+      const base64 = base64Output.value.trim();
+      if (base64.startsWith('data:image')) {
+        imagePreview.src = base64;
+        database.ref('slikaBase64').set(base64)
+          .catch(err => console.error('Napaka pri shranjevanju:', err));
+      } else {
+        imagePreview.src = '';
+      }
+    });
+
+    // Ob zagonu poslušaj Firebase in sproti osvežuj sliko
+    database.ref('slikaBase64').on('value', snapshot => {
+      const base64 = snapshot.val();
+      if (base64 && base64.startsWith('data:image')) {
+        base64Output.value = base64;
+        imagePreview.src = base64;
+      } else {
+        base64Output.value = '';
+        imagePreview.src = '';
+      }
+    });
+  </script>
+</body>
+</html>
