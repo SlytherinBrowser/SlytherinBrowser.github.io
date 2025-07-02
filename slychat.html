@@ -2405,6 +2405,187 @@ function returnToPublicChat() {
   notice.textContent = `Nazaj v javni klepet`;
   chatBox.appendChild(notice);
 }
+
+
+
+
+
+
+
+
+// Gumb za preklop
+const toggleBtn = document.createElement('button');
+toggleBtn.textContent = 'Pokaži PostBox';
+body.appendChild(toggleBtn);
+
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = 'image/*';
+chatbox.appendChild(fileInput);
+
+const sendBtn = document.createElement('button');
+sendBtn.textContent = 'Pošlji';
+sendBtn.style.marginLeft = '5px';
+chatbox.appendChild(sendBtn);
+
+// Container za postBox (prikaz ene slike naenkrat)
+const postBox = document.createElement('div');
+postBox.style.display = 'none';
+postBox.style.marginTop = '10px';
+postBox.style.border = '1px solid #ccc';
+postBox.style.width = '300px';
+postBox.style.height = '300px';
+postBox.style.position = 'relative';
+postBox.style.overflow = 'hidden';
+postBox.style.userSelect = 'none'; // za swipe, da ne izbere tekst
+body.appendChild(postBox);
+
+// Slika v postBox
+const imageDisplay = document.createElement('img');
+imageDisplay.style.maxWidth = '100%';
+imageDisplay.style.maxHeight = '100%';
+imageDisplay.style.position = 'absolute';
+imageDisplay.style.top = '50%';
+imageDisplay.style.left = '50%';
+imageDisplay.style.transform = 'translate(-50%, -50%)';
+postBox.appendChild(imageDisplay);
+
+// Indikator, kateri indeks slike je trenutno prikazan
+const indicator = document.createElement('div');
+indicator.style.position = 'absolute';
+indicator.style.bottom = '5px';
+indicator.style.right = '10px';
+indicator.style.backgroundColor = 'rgba(0,0,0,0.5)';
+indicator.style.color = 'white';
+indicator.style.padding = '2px 6px';
+indicator.style.borderRadius = '12px';
+indicator.style.fontSize = '12px';
+postBox.appendChild(indicator);
+
+// Spremenljivke za shranjevanje slik in trenutno sliko
+let images = [];
+let currentIndex = 0;
+let currentBase64 = null;
+
+// Funkcija za prikaz trenutne slike
+function showCurrentImage() {
+  if (images.length === 0) {
+    imageDisplay.src = '';
+    indicator.textContent = 'Ni slik';
+  } else {
+    imageDisplay.src = images[currentIndex];
+    indicator.textContent = `${currentIndex + 1} / ${images.length}`;
+  }
+}
+
+// Funkcija za menjavo slike naprej
+function nextImage() {
+  if (images.length === 0) return;
+  currentIndex = (currentIndex + 1) % images.length;
+  showCurrentImage();
+}
+
+// Funkcija za menjavo slike nazaj
+function prevImage() {
+  if (images.length === 0) return;
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  showCurrentImage();
+}
+
+// Toggle med chatbox in postBox
+toggleBtn.addEventListener('click', () => {
+  if (chatbox.style.display === 'none') {
+    // Prikaži chatbox, skrij postBox
+    chatbox.style.display = 'block';
+    postBox.style.display = 'none';
+    toggleBtn.textContent = 'Pokaži PostBox';
+  } else {
+    // Prikaži postBox, skrij chatbox
+    chatbox.style.display = 'none';
+    postBox.style.display = 'block';
+    toggleBtn.textContent = 'Pokaži Chatbox';
+  }
+});
+
+// Pošiljanje slike v Firebase (dodaj v seznam)
+sendBtn.addEventListener('click', () => {
+  const file = fileInput.files[0];
+  if (!file) {
+    alert('Izberi sliko za pošiljanje!');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64data = reader.result;
+
+    // Najprej preberi trenutno stanje v bazi in dodaj novo sliko
+    database.ref('slike').once('value').then(snapshot => {
+      let slike = snapshot.val() || [];
+      slike.push(base64data);
+      database.ref('slike').set(slike)
+        .then(() => {
+          alert('Slika je shranjena v Firebase.');
+          fileInput.value = ''; // resetiraj input
+        })
+        .catch(err => {
+          alert('Napaka pri shranjevanju slike.');
+          console.error(err);
+        });
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+// Poslušaj Firebase na spremembe v 'slike'
+database.ref('slike').on('value', snapshot => {
+  images = snapshot.val() || [];
+  currentIndex = 0;
+  showCurrentImage();
+});
+
+// ** Menjava slik s koleščkom miške na postBox **
+postBox.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (e.deltaY < 0) {
+    prevImage();
+  } else if (e.deltaY > 0) {
+    nextImage();
+  }
+});
+
+// ** Swipe za mobile (levo/desno) **
+let touchStartX = 0;
+let touchEndX = 0;
+
+postBox.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+
+postBox.addEventListener('touchend', (e) => {
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipeGesture();
+});
+
+function handleSwipeGesture() {
+  const deltaX = touchEndX - touchStartX;
+  if (Math.abs(deltaX) < 30) return; // premajhen premik, ignoriraj
+  if (deltaX > 0) {
+    // swipe desno -> prejšnja slika
+    prevImage();
+  } else {
+    // swipe levo -> naslednja slika
+    nextImage();
+  }
+}
+
+// Na začetku pokaži chatbox, skrij postBox
+chatbox.style.display = 'block';
+postBox.style.display = 'none';
+toggleBtn.textContent = 'Pokaži PostBox';
+
+
+
 </script>
 </body>
 </html>
