@@ -432,7 +432,35 @@ let userEffectsCache = {}; // 🎯 Dodano
     }  
 
   }  
+let messagesRef = null;
 
+function loadMessages() {
+  if (messagesRef) messagesRef.off(); // Odstrani starega listenerja, če obstaja
+
+  messagesRef = db.ref("messages");
+  messagesRef.on("value", snapshot => {
+    chatBox.innerHTML = ""; // počisti chat
+
+    snapshot.forEach(child => {
+      const msg = child.val();
+
+      const isPublic = !msg.privateUid;
+      const isRelevantPrivate = currentChatPartner && (
+        (msg.privateUid === currentUser.uid && msg.uid === currentChatPartner) ||
+        (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner)
+      );
+
+      if ((!currentChatPartner && isPublic) || isRelevantPrivate) {
+        const name = userNamesCache[msg.uid] || "Uporabnik";
+        const div = document.createElement("div");
+        div.textContent = name + ": " + msg.text + (msg.edited ? " (popravljeno)" : "");
+        chatBox.appendChild(div);
+      }
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
 
 
 auth.onAuthStateChanged(async user => {
