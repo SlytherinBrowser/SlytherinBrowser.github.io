@@ -309,6 +309,7 @@ width: 100%;
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
    <button class="btn" onclick="returnToPublicChat()">Javni klepet</button>
+<button class="btn" id="toggleBtn">Pokaži PostBox</button>
 
   </div>
 </div>
@@ -2414,10 +2415,11 @@ function returnToPublicChat() {
 
 
 // Gumb za preklop
-const toggleBtn = document.createElement('button');
-toggleBtn.textContent = 'Pokaži PostBox';
-body.appendChild(toggleBtn);
+const toggleBtn = document.getElementById('toggleBtn');
 
+toggleBtn.addEventListener('click', () => {
+  // Tvoja logika za preklop
+});
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.accept = 'image/*';
