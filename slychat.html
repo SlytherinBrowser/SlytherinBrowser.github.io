@@ -2366,7 +2366,31 @@ function returnToPublicChat() {
 
 
 
-// Poslušaj tipkanje drugih (samo enkrat!)
+
+let typingTimeout = null;
+
+// Funkcija za zaznavanje tipkanja
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("messageInput"); // predvidevam, da obstaja
+  if (input) {
+    input.addEventListener("input", () => {
+      setTypingStatus(true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        setTypingStatus(false);
+      }, 2000);
+    });
+  }
+});
+
+function setTypingStatus(isTyping) {
+  const user = auth.currentUser;
+  if (!user) return;
+  db.ref("typingStatus/" + user.uid).set({
+    isTyping: isTyping,
+    timestamp: Date.now()
+  });
+}
 let typingListenerSet = false;
 
 function listenToTypingStatus() {
@@ -2377,14 +2401,21 @@ function listenToTypingStatus() {
     const data = snapshot.val();
     const chatBox = document.getElementById("chatBox");
 
+    // 🧹 Odstrani stare avatarje (če obstajajo)
+    let existingTypingDiv = document.getElementById("typingUsers");
+    if (existingTypingDiv) existingTypingDiv.remove();
+
     if (!data) return;
+
+    const typingDiv = document.createElement("div");
+    typingDiv.id = "typingUsers";
+    typingDiv.classList.add("typing-container");
 
     const promises = Object.entries(data).map(async ([uid, status]) => {
       if (uid === auth.currentUser.uid || !status.isTyping) return null;
 
       const userSnap = await db.ref("users/" + uid).once("value");
       const userData = userSnap.val();
-
       if (!userData) return null;
 
       const wrapper = document.createElement("div");
@@ -2405,11 +2436,22 @@ function listenToTypingStatus() {
 
     const results = await Promise.all(promises);
     results.forEach(wrapper => {
-      if (wrapper) container.appendChild(wrapper);
+      if (wrapper) typingDiv.appendChild(wrapper);
     });
+
+    // Dodaj avatarje v chatBox
+    if (typingDiv.children.length > 0) {
+      chatBox.appendChild(typingDiv);
+    }
   });
 }
 
+// Aktiviraj listener po prijavi
+auth.onAuthStateChanged(user => {
+  if (user) {
+    listenToTypingStatus();
+  }
+});
 
 </script>
 </body>
