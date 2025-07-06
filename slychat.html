@@ -2635,15 +2635,6 @@ function cancelReply() {
 
 
 
-// V event listenerju za klik na replyBox
-const original = document.querySelector(`[data-message-key="${msg.replyTo.messageKey}"]`);
-if (original) {
-  original.scrollIntoView({ behavior: "smooth", block: "center" });
-  original.classList.add("blink");
-  setTimeout(() => {
-    original.classList.remove("blink");
-  }, 1500);
-}
 
 
 </script>
