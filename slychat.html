@@ -837,11 +837,25 @@ async function sendMessage() {
     return;
   }
 
+if (!text) return; // brez vsebine ne pošljemo
+
+  const messageData = {
+    uid: currentUser.uid,
+    text: text,
+    timestamp: Date.now(),
+  };
+
+  // Če odgovarjamo na sporočilo
+  if (currentReply) {
+    messageData.replyTo = {
+      toUid: currentReply.toUid,
+      messageKey: currentReply.messageKey,
+      preview: currentReply.preview,
+      name: currentReply.name
+    };
+  }
 
 
-if (currentReply) {
-  messageData.replyTo = currentReply;
-}
 
 
   // Ukaz za spremembo imena: *name*novoime
