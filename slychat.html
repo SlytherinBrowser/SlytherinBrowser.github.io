@@ -551,6 +551,9 @@ userColorsCache[uid] = users[uid].color || null;
 userEffectsCache[uid] = users[uid].effects || null; // 🎯 Shrani učinke
 }
 
+
+const users = {};
+
 // Posodobi online status cache
 db.ref("status").on("value", snapshot => {
 userStatusCache = snapshot.val() || {};
