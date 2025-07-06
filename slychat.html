@@ -407,7 +407,7 @@ width: 100%;
 let userEffectsCache = {}; // 🎯 Dodano
 
 
-
+let currentReply = null;
 
 
 
@@ -2503,7 +2503,7 @@ function prepareReply(msg, messageKey, messageDiv) {
   replyIndicator.style.marginBottom = "4px";
   replyIndicator.style.background = "#f0f0f0";
 
-  const senderName = userNamesCache[msg.uid] || "Uporabnik";
+  const sender = users[msg.uid]?.displayName || "Anonimen";
   const preview = msg.text.length > 50 ? msg.text.slice(0, 50) + "..." : msg.text;
 
   replyIndicator.innerHTML = `
