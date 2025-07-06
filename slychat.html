@@ -837,23 +837,26 @@ async function sendMessage() {
     return;
   }
 
-if (!text) return; // brez vsebine ne pošljemo
+const replyInput = document.getElementById("replyInput");
+  const odgovor = replyInput ? replyInput.value.trim() : "";
 
+  if (!odgovor) {
+    alert("Prosim, vpiši sporočilo za odgovor.");
+    return;
+  }
+
+  // Pripravi podatke za pošiljanje, vključno z reply podatki:
   const messageData = {
     uid: currentUser.uid,
-    text: text,
+    text: odgovor,
     timestamp: Date.now(),
-  };
-
-  // Če odgovarjamo na sporočilo
-  if (currentReply) {
-    messageData.replyTo = {
+    replyTo: {
       toUid: currentReply.toUid,
       messageKey: currentReply.messageKey,
       preview: currentReply.preview,
-      name: currentReply.name
-    };
-  }
+      name: currentReply.name,
+    }
+  };
 
 
 
@@ -2521,79 +2524,90 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
 
 
-
-
-   
-function prepareReply(msg, messageKey, messageDiv) {
-  if (replyPreviewDiv) {
-    replyPreviewDiv.remove();
-    replyPreviewDiv = null;
-  }
-
-  currentReply = {
-    toUid: msg.uid,
-    messageKey: messageKey,
-    preview: msg.text.length > 100 ? msg.text.slice(0, 100) + "..." : msg.text,
-    name: users[msg.uid]?.displayName || "Anonimen"
-  };
-
-  replyPreviewDiv = document.createElement("div");
-  replyPreviewDiv.classList.add("replyPreviewMessage");
-  replyPreviewDiv.style.background = "#f1f1f1";
-  replyPreviewDiv.style.border = "1px solid #ccc";
-  replyPreviewDiv.style.padding = "10px";
-  replyPreviewDiv.style.margin = "10px 0";
-  replyPreviewDiv.style.borderRadius = "10px";
-  replyPreviewDiv.style.width = "100%";
-  replyPreviewDiv.style.boxSizing = "border-box";
-
-  // Vsebina
-  const content = document.createElement("div");
-  content.innerHTML = `
-    <strong>Odgovarjaš:</strong> ${currentReply.name}<br>
-    <em>${currentReply.preview}</em>
-  `;
-  replyPreviewDiv.appendChild(content);
-
-  // Gumbi spodaj
-  const buttonRow = document.createElement("div");
-  buttonRow.style.marginTop = "10px";
-  buttonRow.style.display = "flex";
-  buttonRow.style.gap = "10px";
-
-  const cancelBtn = document.createElement("button");
-  cancelBtn.textContent = "✖ Prekliči";
-  cancelBtn.style.flex = "1";
-  cancelBtn.style.padding = "6px 12px";
-  cancelBtn.style.border = "none";
-  cancelBtn.style.borderRadius = "6px";
-  cancelBtn.style.backgroundColor = "#ccc";
-  cancelBtn.style.cursor = "pointer";
-  cancelBtn.onclick = cancelReply;
-
-  const confirmBtn = document.createElement("button");
-  confirmBtn.textContent = "✔ Potrdi odgovor";
-  confirmBtn.style.flex = "2";
-  confirmBtn.style.padding = "6px 12px";
-  confirmBtn.style.border = "none";
-  confirmBtn.style.borderRadius = "6px";
-  confirmBtn.style.backgroundColor = "#4CAF50";
-  confirmBtn.style.color = "white";
-  confirmBtn.style.cursor = "pointer";
-  confirmBtn.onclick = () => {
-    sendMessage(); // pošlje sporočilo z odgovorom
-    cancelReply(); // počisti reply UI
-  };
-
-  buttonRow.appendChild(cancelBtn);
-  buttonRow.appendChild(confirmBtn);
-  replyPreviewDiv.appendChild(buttonRow);
-
-  // Dodamo pod originalno sporočilo
-  messageDiv.insertAdjacentElement("afterend", replyPreviewDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
+function prepareReply(msg, messageKey, messageDiv) {  
+  if (replyPreviewDiv) {  
+    replyPreviewDiv.remove();  
+    replyPreviewDiv = null;  
+  }  
+  
+  currentReply = {  
+    toUid: msg.uid,  
+    messageKey: messageKey,  
+    preview: msg.text.length > 100 ? msg.text.slice(0, 100) + "..." : msg.text,  
+    name: users[msg.uid]?.displayName || "Anonimen"  
+  };  
+  
+  replyPreviewDiv = document.createElement("div");  
+  replyPreviewDiv.classList.add("replyPreviewMessage");  
+  replyPreviewDiv.style.background = "#f1f1f1";  
+  replyPreviewDiv.style.border = "1px solid #ccc";  
+  replyPreviewDiv.style.padding = "10px";  
+  replyPreviewDiv.style.margin = "10px 0";  
+  replyPreviewDiv.style.borderRadius = "10px";  
+  replyPreviewDiv.style.width = "100%";  
+  replyPreviewDiv.style.boxSizing = "border-box";  
+  
+  // Vsebina originalnega sporočila  
+  const content = document.createElement("div");  
+  content.innerHTML = `  
+    <strong>Odgovarjaš:</strong> ${currentReply.name}<br>  
+    <em>${currentReply.preview}</em>  
+  `;  
+  replyPreviewDiv.appendChild(content);  
+  
+  // Input za odgovor  
+  const replyInput = document.createElement("input");  
+  replyInput.type = "text";  
+  replyInput.id = "replyInput";  
+  replyInput.placeholder = "Napiši odgovor...";  
+  replyInput.style.width = "100%";  
+  replyInput.style.padding = "6px";  
+  replyInput.style.margin = "10px 0 0 0";  
+  replyInput.style.borderRadius = "6px";  
+  replyInput.style.border = "1px solid #ccc";  
+  replyPreviewDiv.appendChild(replyInput);  
+  
+  // Gumbi spodaj  
+  const buttonRow = document.createElement("div");  
+  buttonRow.style.marginTop = "10px";  
+  buttonRow.style.display = "flex";  
+  buttonRow.style.gap = "10px";  
+  
+  const cancelBtn = document.createElement("button");  
+  cancelBtn.textContent = "✖ Prekliči";  
+  cancelBtn.style.flex = "1";  
+  cancelBtn.style.padding = "6px 12px";  
+  cancelBtn.style.border = "none";  
+  cancelBtn.style.borderRadius = "6px";  
+  cancelBtn.style.backgroundColor = "#ccc";  
+  cancelBtn.style.cursor = "pointer";  
+  cancelBtn.onclick = cancelReply;  
+  
+  const confirmBtn = document.createElement("button");  
+  confirmBtn.textContent = "✔ Potrdi odgovor";  
+  confirmBtn.style.flex = "2";  
+  confirmBtn.style.padding = "6px 12px";  
+  confirmBtn.style.border = "none";  
+  confirmBtn.style.borderRadius = "6px";  
+  confirmBtn.style.backgroundColor = "#4CAF50";  
+  confirmBtn.style.color = "white";  
+  confirmBtn.style.cursor = "pointer";  
+  confirmBtn.onclick = () => {  
+    sendMessage(); // Funkcija sendMessage naj prebere vsebino iz inputa 'replyInput'  
+    cancelReply(); // počisti reply UI  
+  };  
+  
+  buttonRow.appendChild(cancelBtn);  
+  buttonRow.appendChild(confirmBtn);  
+  replyPreviewDiv.appendChild(buttonRow);  
+  
+  // Dodamo pod originalno sporočilo  
+  messageDiv.insertAdjacentElement("afterend", replyPreviewDiv);  
+  chatBox.scrollTop = chatBox.scrollHeight;  
+  
+  // Fokus na input za odgovor  
+  replyInput.focus();
 }
-
 
 function cancelReply() {
   if (replyPreviewDiv) {
