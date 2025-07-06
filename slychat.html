@@ -575,9 +575,6 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
 
 
-div.dataset.messageKey = messageKey;
-
-
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
     const systemDiv = document.createElement("div");
