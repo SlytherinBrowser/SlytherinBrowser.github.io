@@ -84,7 +84,14 @@ window.addEventListener("error", function(event) {
 
 
 
+@keyframes blinkHighlight {
+  0%, 100% { background-color: #ffeeba; }
+  50% { background-color: #fff; }
+}
 
+.messageContainer.blink {
+  animation: blinkHighlight 1.5s ease;
+}
 
 
 
@@ -2625,6 +2632,18 @@ function cancelReply() {
     replyPreviewDiv = null;
   }
   currentReply = null;
+}
+
+
+
+// V event listenerju za klik na replyBox
+const original = document.querySelector(`[data-message-key="${msg.replyTo.messageKey}"]`);
+if (original) {
+  original.scrollIntoView({ behavior: "smooth", block: "center" });
+  original.classList.add("blink");
+  setTimeout(() => {
+    original.classList.remove("blink");
+  }, 1500);
 }
 
 
