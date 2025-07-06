@@ -824,14 +824,23 @@ function updateActiveUsersList() {
 
 
 
-async function sendMessage() {
+async function sendMessage(isReply = false) {
   if (!currentUser) return;
 
-  const textRaw = messageInput.value.trim();
+  // Če je reply, beremo vrednost iz reply inputa
+  let textRaw;
+  if (isReply) {
+    const replyInput = document.getElementById("replyInput");
+    if (!replyInput) return; // reply input ni prisoten
+    textRaw = replyInput.value.trim();
+  } else {
+    textRaw = messageInput.value.trim();
+  }
+
   if (!textRaw) return;
 
   // Če še nima imena - potrdi
-  if (messageInput.dataset.nameConfirm === "1") {
+  if (!isReply && messageInput.dataset.nameConfirm === "1") {
     await db.ref("users/" + currentUser.uid).update({
       displayName: textRaw
     });
@@ -843,31 +852,27 @@ async function sendMessage() {
     return;
   }
 
-
-
-
-
   // Ukaz za spremembo imena: *name*novoime
-  if (textRaw.startsWith("*name*")) {
+  if (!isReply && textRaw.startsWith("*name*")) {
     const newName = textRaw.slice(6).trim();
     if (!newName) {
       alert("Vpiši novo ime za spremembo.");
-      messageInput.value = "";
+      if (!isReply) messageInput.value = "";
       return;
     }
     await db.ref("users/" + currentUser.uid).update({ displayName: newName });
     userNamesCache[currentUser.uid] = newName;
     alert("Ime je bilo spremenjeno na: " + newName);
-    messageInput.value = "";
+    if (!isReply) messageInput.value = "";
     return;
   }
 
   // Ukaz za spremembo barve imena: *color*barva
-  if (textRaw.startsWith("*color*")) {
+  if (!isReply && textRaw.startsWith("*color*")) {
     const colorVal = textRaw.slice(7).trim().toLowerCase();
     if (!colorVal) {
       alert("Vpiši barvo ali 'rainbow' za mavrično animacijo.");
-      messageInput.value = "";
+      if (!isReply) messageInput.value = "";
       return;
     }
     if (colorVal === "rainbow") {
@@ -883,18 +888,18 @@ async function sendMessage() {
       s.color = colorVal;
       if (s.color === "") {
         alert("Neveljavna barva.");
-        messageInput.value = "";
+        if (!isReply) messageInput.value = "";
         return;
       }
       await db.ref("users/" + currentUser.uid).update({ color: colorVal });
       userColorsCache[currentUser.uid] = colorVal;
       alert("Barva imena nastavljena na: " + colorVal);
     }
-    messageInput.value = "";
+    if (!isReply) messageInput.value = "";
     return;
   }
 
-  if (textRaw === "/public") {
+  if (!isReply && textRaw === "/public") {
     currentChatPartner = null;
     chatBox.innerHTML = "";
     messageInput.value = "";
@@ -903,7 +908,7 @@ async function sendMessage() {
     return;
   }
 
-  if (textRaw === "/clearchat") {
+  if (!isReply && textRaw === "/clearchat") {
     db.ref("messages").remove().then(() => {
       alert("Klepetalnica je bila pobrisana.");
       location.reload();
@@ -912,7 +917,7 @@ async function sendMessage() {
     return;
   }
 
-  if (textRaw.startsWith("/@")) {
+  if (!isReply && textRaw.startsWith("/@")) {
     const invitesText = textRaw.slice(1).trim();
     const inviteNames = invitesText.split(" ").filter(n => n.startsWith("@")).map(n => n.slice(1).toLowerCase());
     if (inviteNames.length === 0) {
@@ -956,7 +961,7 @@ async function sendMessage() {
     return;
   }
 
-  // ✅ POPRAVLJANJE ZADNJEGA SPOROČILA
+  // Popravljanje zadnjega sporočila
   const isEdit = textRaw.endsWith("**");
   if (isEdit) {
     const newText = textRaw.slice(0, -2).trim();
@@ -966,7 +971,7 @@ async function sendMessage() {
 
     if (!lastMsgId) {
       alert("Ni sporočila za popravek.");
-      messageInput.value = "";
+      if (!isReply) messageInput.value = "";
       return;
     }
 
@@ -975,28 +980,44 @@ async function sendMessage() {
       edited: true
     });
 
-    messageInput.value = "";
+    if (!isReply) messageInput.value = "";
     return;
   }
 
-  // ✅ SHRANJEVANJE NOVEGA SPOROČILA
+  // Priprava podatkov za novo sporočilo
   const hidden = isHiddenMode;
   const text = textRaw;
 
-  const messageRef = await db.ref("messages").push({
+  // Če je reply, dodamo reply metapodatke
+  const newMessageData = {
     uid: currentUser.uid,
     text: text,
     hidden: hidden,
-    privateUid: currentChatPartner
-  });
+    privateUid: currentChatPartner || null
+  };
 
-  // ✅ Shrani ID zadnjega sporočila uporabnika
+  if (isReply && currentReply) {
+    newMessageData.replyTo = {
+      toUid: currentReply.toUid,
+      messageKey: currentReply.messageKey,
+      preview: currentReply.preview,
+      name: currentReply.name
+    };
+  }
+
+  const messageRef = await db.ref("messages").push(newMessageData);
+
+  // Shrani ID zadnjega sporočila uporabnika
   await db.ref("users/" + currentUser.uid + "/lastMessageId").set(messageRef.key);
 
-  messageInput.value = "";
+  // Po pošiljanju očistimo ustrezni input
+  if (isReply) {
+    const replyInput = document.getElementById("replyInput");
+    if (replyInput) replyInput.value = "";
+  } else {
+    messageInput.value = "";
+  }
 }
-
-
 
 
   function logout() {  
