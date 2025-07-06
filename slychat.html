@@ -552,7 +552,6 @@ userEffectsCache[uid] = users[uid].effects || null; // 🎯 Shrani učinke
 }
 
 
-const users = {};
 
 // Posodobi online status cache
 db.ref("status").on("value", snapshot => {
@@ -2504,7 +2503,7 @@ function prepareReply(msg, messageKey, messageDiv) {
   replyIndicator.style.marginBottom = "4px";
   replyIndicator.style.background = "#f0f0f0";
 
-  const sender = users[msg.uid]?.displayName || "Anonimen";
+  const senderName = userNamesCache[msg.uid] || "Uporabnik";
   const preview = msg.text.length > 50 ? msg.text.slice(0, 50) + "..." : msg.text;
 
   replyIndicator.innerHTML = `
