@@ -283,8 +283,18 @@ width: 100%;
 
 
 
+.typing-container {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid #ccc;
+  margin-top: 5px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
 .typing-avatar-wrapper {
-position: fixed;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -292,23 +302,24 @@ position: fixed;
 }
 
 .typing-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 2px solid #4caf50;
+  object-fit: cover;
 }
 
 .typing-name {
+  font-size: 11px;
   margin-top: 2px;
-  padding: 1px 6px;
-  font-size: 12px;
   background: #eee;
+  padding: 1px 6px;
   border-radius: 6px;
   color: #333;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.8); }
+  from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -2364,8 +2375,7 @@ function listenToTypingStatus() {
 
   db.ref("typingStatus").on("value", async (snapshot) => {
     const data = snapshot.val();
-    const container = document.getElementById("typingIndicatorContainer");
-    container.innerHTML = ""; // 🔄 Počisti prejšnje avatarje
+    const chatBox = document.getElementById("chatBox");
 
     if (!data) return;
 
