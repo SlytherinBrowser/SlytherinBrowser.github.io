@@ -408,6 +408,7 @@ let userEffectsCache = {}; // 🎯 Dodano
 
 
 let currentReply = null;
+let replyPreviewDiv = null;
 
 
 let users = {};
@@ -665,9 +666,11 @@ avatarImg.onclick = () => {
 if (msg.replyTo) {
   const replyBox = document.createElement("div");
   replyBox.classList.add("replyBox");
-  replyBox.style.borderLeft = "2px solid #888";
-  replyBox.style.paddingLeft = "6px";
-  replyBox.style.marginBottom = "4px";
+  replyBox.style.borderLeft = "3px solid #888";
+  replyBox.style.background = "#f5f5f5";
+  replyBox.style.padding = "4px 8px";
+  replyBox.style.marginBottom = "6px";
+  replyBox.style.fontSize = "13px";
   replyBox.style.color = "#555";
   replyBox.innerHTML = `<strong>${msg.replyTo.name}:</strong> <em>${msg.replyTo.preview}</em>`;
   div.appendChild(replyBox);
@@ -2491,45 +2494,71 @@ firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => 
 
    
 function prepareReply(msg, messageKey, messageDiv) {
-  // Po potrebi očisti prejšnji reply UI
-  const existingReply = document.querySelector(".replyIndicator");
-  if (existingReply) existingReply.remove();
-
-  // Ustvari prikaz reply indikatorja (ime in izsek sporočila)
-  const replyIndicator = document.createElement("div");
-  replyIndicator.classList.add("replyIndicator");
-  replyIndicator.style.borderLeft = "3px solid #aaa";
-  replyIndicator.style.padding = "4px";
-  replyIndicator.style.marginBottom = "4px";
-  replyIndicator.style.background = "#f0f0f0";
-
-  const sender = users[msg.uid]?.displayName || "Anonimen";
-  const preview = msg.text.length > 50 ? msg.text.slice(0, 50) + "..." : msg.text;
-
-  replyIndicator.innerHTML = `
-    <strong>Odgovarjaš:</strong> ${sender}<br>
-    <em>${preview}</em>
-    <button onclick="cancelReply()">✖</button>
-  `;
-
-  document.getElementById("replyContainer")?.remove(); // Če obstaja star reply container
-  const chatInputArea = document.getElementById("inputArea") || document.body;
-  replyIndicator.id = "replyContainer";
-  chatInputArea.insertBefore(replyIndicator, chatInputArea.firstChild);
+  // Počistimo staro reply preview
+  if (replyPreviewDiv) {
+    replyPreviewDiv.remove();
+    replyPreviewDiv = null;
+  }
 
   // Shrani reply kontekst
   currentReply = {
     toUid: msg.uid,
     messageKey: messageKey,
-    preview: preview,
-    name: sender
+    preview: msg.text.length > 100 ? msg.text.slice(0, 100) + "..." : msg.text,
+    name: users[msg.uid]?.displayName || "Anonimen"
   };
+
+  // Ustvari reply preview div
+  replyPreviewDiv = document.createElement("div");
+  replyPreviewDiv.classList.add("replyPreviewMessage");
+  replyPreviewDiv.style.background = "#e0e0e0";
+  replyPreviewDiv.style.borderLeft = "4px solid #555";
+  replyPreviewDiv.style.margin = "6px 0";
+  replyPreviewDiv.style.padding = "8px 12px";
+  replyPreviewDiv.style.position = "relative";
+  replyPreviewDiv.style.borderRadius = "8px";
+  replyPreviewDiv.style.maxWidth = "75%";
+  replyPreviewDiv.style.marginLeft = "auto"; // desna stran
+  replyPreviewDiv.style.fontSize = "14px";
+  replyPreviewDiv.style.color = "#333";
+  replyPreviewDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+  
+  replyPreviewDiv.innerHTML = `
+    <strong>Odgovarjaš:</strong> ${currentReply.name}<br>
+    <em>${currentReply.preview}</em>
+  `;
+
+  // Dodaj gumb za preklic
+  const cancelBtn = document.createElement("button");
+  cancelBtn.innerHTML = "✖";
+  cancelBtn.style.position = "absolute";
+  cancelBtn.style.right = "-10px";
+  cancelBtn.style.top = "50%";
+  cancelBtn.style.transform = "translateY(-50%)";
+  cancelBtn.style.background = "#f44";
+  cancelBtn.style.border = "none";
+  cancelBtn.style.color = "white";
+  cancelBtn.style.width = "24px";
+  cancelBtn.style.height = "24px";
+  cancelBtn.style.borderRadius = "50%";
+  cancelBtn.style.cursor = "pointer";
+  cancelBtn.onclick = cancelReply;
+
+  replyPreviewDiv.appendChild(cancelBtn);
+
+  // Vstavi reply preview takoj za sporočilom, na katerega odgovarjamo
+  messageDiv.insertAdjacentElement("afterend", replyPreviewDiv);
+
+  // Scroll do novega predogleda
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 function cancelReply() {
-  document.getElementById("replyContainer")?.remove();
+  if (replyPreviewDiv) {
+    replyPreviewDiv.remove();
+    replyPreviewDiv = null;
+  }
   currentReply = null;
 }
-
 
 
 </script>
