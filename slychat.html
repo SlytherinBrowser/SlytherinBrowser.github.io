@@ -843,36 +843,6 @@ async function sendMessage() {
     return;
   }
 
-const replyInput = document.getElementById("replyInput");
-const odgovor = replyInput ? replyInput.value.trim() : "";
-
-if (!odgovor) {
-  alert("Prosim, vpiši sporočilo za odgovor.");
-  return;
-}
-
-// Če reply ni nastavljen, pošlji normalno sporočilo brez replyTo
-const messageData = {
-  uid: currentUser.uid,
-  text: odgovor,
-  timestamp: Date.now()
-};
-
-if (currentReply && currentReply.messageKey) {
-  messageData.replyTo = {
-    toUid: currentReply.toUid || null,
-    messageKey: currentReply.messageKey,
-    preview: currentReply.preview,
-    name: currentReply.name
-  };
-}
-
-// Pošlji v Firebase
-db.ref("messages").push(messageData);
-
-// Po pošiljanju lahko počistiš input in resetiraš currentReply
-replyInput.value = "";
-currentReply = null;
 
 
 
@@ -1052,7 +1022,34 @@ currentReply = null;
   });  
 
 
+function sendReplyMessage() {
+  const replyInput = document.getElementById("replyInput");
+  const odgovor = replyInput ? replyInput.value.trim() : "";
 
+  if (!odgovor) {
+    alert("Prosim, vpiši sporočilo za odgovor.");
+    return;
+  }
+
+  if (!currentReply) {
+    alert("Ni podatkov za odgovor.");
+    return;
+  }
+
+  const messageData = {
+    uid: currentUser.uid,
+    text: odgovor,
+    timestamp: Date.now(),
+    replyTo: {
+      toUid: currentReply.toUid,
+      messageKey: currentReply.messageKey,
+      preview: currentReply.preview,
+      name: currentReply.name,
+    }
+  };
+
+  firebase.database().ref("messages").push(messageData);
+}
 
 
 // === ELEMENTI ===
