@@ -2736,25 +2736,9 @@ function updateLang(index) {
 }
 
 async function translateText(text, targetLang) {
-  if (targetLang === "auto") return text; // brez prevoda
-
-  try {
-    const res = await fetch("https://libretranslate.de/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        q: text,
-        source: "auto",
-        target: targetLang,
-        format: "text"
-      })
-    });
-    const data = await res.json();
-    return data.translatedText || text;
-  } catch (err) {
-    console.warn("Napaka pri prevajanju:", err);
-    return text; // če je napaka, vrni original
-  }
+  const response = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLang + "&dt=t&q=" + encodeURIComponent(text));
+  const result = await response.json();
+  return result[0]?.map(t => t[0]).join("") || text;
 }
 </script>
 </body>
