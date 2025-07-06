@@ -283,7 +283,18 @@ width: 100%;
 
 
 
+.typing-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #4caf50;
+  animation: fadeIn 0.3s ease-in-out;
+}
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 
   </style>
@@ -291,7 +302,9 @@ width: 100%;
 <body>
 <div class="container">
   <h2>Slychat</h2>
-  <div id="chatBox"></div>
+  <div id="chatBox">
+<div id="typingIndicatorContainer" style="position: fixed; bottom: 10px; left: 10px; display: flex; gap: 10px;"></div>
+</div>
 
   <div class="message-input-container" style="position: relative;">
     <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
@@ -2409,6 +2422,50 @@ function returnToPublicChat() {
 
 
 
+
+
+
+const currentUserId = firebase.auth().currentUser.uid;
+const db = firebase.database();
+const typingRef = db.ref("typingStatus/" + currentUserId);
+let typingTimeout;
+
+// Poslušanje vnosa
+document.getElementById("messageInput").addEventListener("input", () => {
+  setTypingStatus(true);
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    setTypingStatus(false);
+  }, 2000); // po 2s neaktivnosti se šteje kot "neha tipkati"
+});
+
+function setTypingStatus(isTyping) {
+  typingRef.set({
+    isTyping,
+    avatarUrl: currentUserAvatarUrl, // shraniš URL avatarja ob prijavi
+    timestamp: Date.now()
+  });
+}
+
+// Poslušanje vseh typing statusov
+firebase.database().ref("typingStatus").on("value", (snapshot) => {
+  const data = snapshot.val();
+  const container = document.getElementById("typingIndicatorContainer");
+  container.innerHTML = "";
+
+  if (!data) return;
+
+  Object.entries(data).forEach(([uid, info]) => {
+    if (uid !== currentUserId && info.isTyping) {
+      const avatar = document.createElement("img");
+      avatar.src = info.avatarUrl;
+      avatar.classList.add("typing-avatar");
+      avatar.title = "Uporabnik tipka...";
+      container.appendChild(avatar);
+    }
+  });
+});
 
 
 </script>
