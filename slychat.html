@@ -496,7 +496,9 @@ if (!user) {
 window.location.href = "auth.html";
 return;
 }
-
+if (user) {
+    listenToTypingStatus(); // ⚠️ Samo enkrat
+  }
 currentUser = user;
 
 document.getElementById("getCoinsBtn").addEventListener("click", async () => {
@@ -2350,47 +2352,29 @@ function returnToPublicChat() {
 
 
 
-// Timer za zaznavo konca tipkanja
-let typingTimeout = null;
 
-// Poslušaj vnos v polje
-document.getElementById("messageInput").addEventListener("input", () => {
-  setTypingStatus(true);
 
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(() => {
-    setTypingStatus(false);
-  }, 2000);
-});
+// Poslušaj tipkanje drugih (samo enkrat!)
+let typingListenerSet = false;
 
-// Nastavi isTyping status v bazo
-function setTypingStatus(isTyping) {
-  const user = auth.currentUser;
-  if (!user) return;
+function listenToTypingStatus() {
+  if (typingListenerSet) return;
+  typingListenerSet = true;
 
-  db.ref("typingStatus/" + user.uid).set({
-    isTyping: isTyping,
-    timestamp: Date.now()
-  });
-}
+  db.ref("typingStatus").on("value", async (snapshot) => {
+    const data = snapshot.val();
+    const container = document.getElementById("typingIndicatorContainer");
+    container.innerHTML = ""; // 🔄 Počisti prejšnje avatarje
 
-// Poslušaj spremembe statusa tipkanja
-firebase.database().ref("typingStatus").on("value", async (snapshot) => {
-  const data = snapshot.val();
-  const container = document.getElementById("typingIndicatorContainer");
-  container.innerHTML = "";
+    if (!data) return;
 
-  if (!data) return;
+    const promises = Object.entries(data).map(async ([uid, status]) => {
+      if (uid === auth.currentUser.uid || !status.isTyping) return null;
 
-  for (const [uid, status] of Object.entries(data)) {
-    if (uid === auth.currentUser.uid || !status.isTyping) continue;
-
-    try {
-      // Povleci avatar in ime uporabnika iz users/{uid}
       const userSnap = await db.ref("users/" + uid).once("value");
       const userData = userSnap.val();
 
-      if (!userData) continue;
+      if (!userData) return null;
 
       const wrapper = document.createElement("div");
       wrapper.classList.add("typing-avatar-wrapper");
@@ -2401,17 +2385,19 @@ firebase.database().ref("typingStatus").on("value", async (snapshot) => {
 
       const name = document.createElement("div");
       name.classList.add("typing-name");
-      name.textContent = userData.displayName || "Neznan";
+      name.textContent = userData.displayName || "Uporabnik";
 
       wrapper.appendChild(avatar);
       wrapper.appendChild(name);
-      container.appendChild(wrapper);
+      return wrapper;
+    });
 
-    } catch (e) {
-      console.error("Napaka pri pridobivanju uporabnika:", e);
-    }
-  }
-});
+    const results = await Promise.all(promises);
+    results.forEach(wrapper => {
+      if (wrapper) container.appendChild(wrapper);
+    });
+  });
+}
 
 
 </script>
