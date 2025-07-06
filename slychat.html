@@ -838,25 +838,35 @@ async function sendMessage() {
   }
 
 const replyInput = document.getElementById("replyInput");
-  const odgovor = replyInput ? replyInput.value.trim() : "";
+const odgovor = replyInput ? replyInput.value.trim() : "";
 
-  if (!odgovor) {
-    alert("Prosim, vpiši sporočilo za odgovor.");
-    return;
-  }
+if (!odgovor) {
+  alert("Prosim, vpiši sporočilo za odgovor.");
+  return;
+}
 
-  // Pripravi podatke za pošiljanje, vključno z reply podatki:
-  const messageData = {
-    uid: currentUser.uid,
-    text: odgovor,
-    timestamp: Date.now(),
-    replyTo: {
-      toUid: currentReply.toUid,
-      messageKey: currentReply.messageKey,
-      preview: currentReply.preview,
-      name: currentReply.name,
-    }
+// Če reply ni nastavljen, pošlji normalno sporočilo brez replyTo
+const messageData = {
+  uid: currentUser.uid,
+  text: odgovor,
+  timestamp: Date.now()
+};
+
+if (currentReply && currentReply.messageKey) {
+  messageData.replyTo = {
+    toUid: currentReply.toUid || null,
+    messageKey: currentReply.messageKey,
+    preview: currentReply.preview,
+    name: currentReply.name
   };
+}
+
+// Pošlji v Firebase
+db.ref("messages").push(messageData);
+
+// Po pošiljanju lahko počistiš input in resetiraš currentReply
+replyInput.value = "";
+currentReply = null;
 
 
 
