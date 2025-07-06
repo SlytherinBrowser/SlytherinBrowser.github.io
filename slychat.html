@@ -84,15 +84,14 @@ window.addEventListener("error", function(event) {
 
 
 
-@keyframes blinkHighlight {
-  0%, 100% { background-color: #ffeeba; }
-  50% { background-color: #fff; }
+.blink {
+  animation: blinkAnimation 1.5s ease;
 }
 
-.messageContainer.blink {
-  animation: blinkHighlight 1.5s ease;
+@keyframes blinkAnimation {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: #ffeeba; }
 }
-
 
 
 
@@ -671,35 +670,35 @@ avatarImg.onclick = () => {
   div.appendChild(senderSpan);
 
 
-if (msg.replyTo) {
-  const replyBox = document.createElement("div");
-  replyBox.classList.add("replyBox");
-  replyBox.style.borderLeft = "3px solid #888";
-  replyBox.style.background = "#f9f9f9";
-  replyBox.style.padding = "6px 10px";
-  replyBox.style.marginBottom = "6px";
-  replyBox.style.fontSize = "13px";
-  replyBox.style.color = "#555";
-  replyBox.style.cursor = "pointer";
-  replyBox.style.borderRadius = "6px";
-  replyBox.innerHTML = `<strong>${msg.replyTo.name}:</strong> <em>${msg.replyTo.preview}</em>`;
 
-  // Ko klikneš, skoči na originalno sporočilo
-  replyBox.addEventListener("click", () => {
-    const original = document.querySelector(`[data-message-key="${msg.replyTo.messageKey}"]`);
-    if (original) {
-      original.scrollIntoView({ behavior: "smooth", block: "center" });
-      original.style.transition = "background 0.5s";
-      original.style.backgroundColor = "#ffeeba";
-      setTimeout(() => {
-        original.style.backgroundColor = "";
-      }, 1500);
-    }
-  });
-
-  div.appendChild(replyBox);
+if (msg.replyTo) {  
+  const replyBox = document.createElement("div");  
+  replyBox.classList.add("replyBox");  
+  replyBox.style.borderLeft = "3px solid #888";  
+  replyBox.style.background = "#f9f9f9";  
+  replyBox.style.padding = "6px 10px";  
+  replyBox.style.marginBottom = "6px";  
+  replyBox.style.fontSize = "13px";  
+  replyBox.style.color = "#555";  
+  replyBox.style.cursor = "pointer";  
+  replyBox.style.borderRadius = "6px";  
+  replyBox.innerHTML = `<strong>${msg.replyTo.name}:</strong> <em>${msg.replyTo.preview}</em>`;  
+  
+  // Ko klikneš, skoči na originalno sporočilo in utripni
+  replyBox.addEventListener("click", () => {  
+    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);  
+    if (original) {  
+      original.scrollIntoView({ behavior: "smooth", block: "center" });  
+      
+      original.classList.add("blink");
+      setTimeout(() => {  
+        original.classList.remove("blink");  
+      }, 1500);  
+    }  
+  });  
+  
+  div.appendChild(replyBox);  
 }
-
   // Sporočilo
   const realText = document.createElement("span");
   realText.classList.add("realText");
