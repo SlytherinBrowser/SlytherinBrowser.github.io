@@ -2606,9 +2606,9 @@ function prepareReply(msg, messageKey, messageDiv) {
   confirmBtn.style.color = "white";  
   confirmBtn.style.cursor = "pointer";  
   confirmBtn.onclick = () => {  
-    sendMessage(); // Funkcija sendMessage naj prebere vsebino iz inputa 'replyInput'  
-    cancelReply(); // počisti reply UI  
-  };  
+  sendMessage(true); // pove, da gre za reply, torej se pošlje iz replyInput  
+  cancelReply();     // počisti reply UI po pošiljanju  
+}; 
   
   buttonRow.appendChild(cancelBtn);  
   buttonRow.appendChild(confirmBtn);  
