@@ -329,6 +329,52 @@ width: 100%;
   to { opacity: 1; transform: scale(1); }
 }
 
+
+
+
+#languageSliderContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1e1e1e;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  font-family: sans-serif;
+  z-index: 999;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.4);
+  border-top: 1px solid #444;
+}
+
+#currentLang {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+#languageSlider {
+  width: 100%;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+#languageSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #ffcc00;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 0 2px black;
+}
+
+#languageSlider::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #555;
+  border-radius: 4px;
+}
+
   </style>
 </head>
 <body>
@@ -358,7 +404,10 @@ width: 100%;
 
   </div>
 </div>
-
+<div id="languageSliderContainer">
+  <div id="currentLang">Jezik: Slovenščina</div>
+  <input type="range" id="languageSlider" min="0" max="6" value="0" step="1">
+</div>
 <script>  
 
   const firebaseConfig = {  
@@ -701,9 +750,12 @@ if (msg.replyTo) {
 
   // Sporočilo
   const realText = document.createElement("span");
-  realText.classList.add("realText");
-  realText.textContent = msg.text;
+realText.classList.add("realText");
 
+// Prevedi besedilo
+translateText(msg.text, selectedLanguage).then(translated => {
+  realText.textContent = translated;
+});
   // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
     realText.classList.add("hackerEffect");
@@ -2653,8 +2705,57 @@ function cancelReply() {
 
 
 
+const languages = [
+  { code: "sl", name: "Slovenščina" },
+  { code: "en", name: "English" },
+  { code: "de", name: "Deutsch" },
+  { code: "tr", name: "Türkçe" },
+  { code: "fr", name: "Français" },
+  { code: "it", name: "Italiano" },
+  { code: "es", name: "Español" }
+];
 
+const slider = document.getElementById("languageSlider");
+const langLabel = document.getElementById("currentLang");
 
+let selectedLangIndex = parseInt(localStorage.getItem("sliderLangIndex")) || 0;
+slider.value = selectedLangIndex;
+updateLang(selectedLangIndex);
+
+slider.addEventListener("input", (e) => {
+  selectedLangIndex = parseInt(e.target.value);
+  updateLang(selectedLangIndex);
+  localStorage.setItem("sliderLangIndex", selectedLangIndex);
+});
+
+function updateLang(index) {
+  const lang = languages[index];
+  langLabel.textContent = `Jezik: ${lang.name}`;
+  selectedLanguage = lang.code;
+  localStorage.setItem("preferredLang", selectedLanguage);
+}
+
+async function translateText(text, targetLang) {
+  if (targetLang === "auto") return text; // brez prevoda
+
+  try {
+    const res = await fetch("https://libretranslate.de/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        q: text,
+        source: "auto",
+        target: targetLang,
+        format: "text"
+      })
+    });
+    const data = await res.json();
+    return data.translatedText || text;
+  } catch (err) {
+    console.warn("Napaka pri prevajanju:", err);
+    return text; // če je napaka, vrni original
+  }
+}
 </script>
 </body>
 </html>
