@@ -329,7 +329,7 @@ width: 100%;
 <div class="container">
   <h2>Slychat</h2>
   <div id="chatBox">
-<div id="typingIndicatorContainer" style="position: fixed; bottom: 10px; left: 10px; display: flex; gap: 10px; align-items: center;"></div>
+
 </div>
 
 
@@ -508,9 +508,7 @@ if (!user) {
 window.location.href = "auth.html";
 return;
 }
-if (user) {
-    listenToTypingStatus(); // ⚠️ Samo enkrat
-  }
+
 currentUser = user;
 
 document.getElementById("getCoinsBtn").addEventListener("click", async () => {
@@ -2367,89 +2365,98 @@ function returnToPublicChat() {
 
 
 
-let typingTimeout = null;
+const chatId = "globalChat";
+const userId = "user_" + Math.floor(Math.random() * 10000);
 
-// Funkcija za zaznavanje tipkanja
-document.addEventListener("DOMContentLoaded", () => {
-  const input = document.getElementById("messageInput"); // predvidevam, da obstaja
-  if (input) {
-    input.addEventListener("input", () => {
-      setTypingStatus(true);
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        setTypingStatus(false);
-      }, 2000);
-    });
-  }
+const inputField = document.getElementById('messageInput');
+const defaultPlaceholder = "Vpiši sporočilo...";
+
+let typingTimeout;
+
+// 🔹 Dodaj CSS za utripanje roba
+(function addBlinkCSS() {
+  if (document.getElementById('typing-blink-style')) return;
+  const style = document.createElement('style');
+  style.id = 'typing-blink-style';
+  style.textContent = `
+    @keyframes borderBlink {
+      0%, 100% { border-color: #4a90e2; }
+      50% { border-color: #e91e63; }
+    }
+    .typing-blink {
+      animation: borderBlink 1.2s infinite;
+      border-width: 2px !important;
+      border-style: solid !important;
+      outline: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// 🔹 Nastavi onDisconnect, da se status pobriše ob izgubi povezave
+firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
+
+// 🔹 Pošlji status tipkanja ob vnosu
+inputField.addEventListener('input', () => {
+  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+  }, 2000);
 });
 
-function setTypingStatus(isTyping) {
-  const user = auth.currentUser;
-  if (!user) return;
-  db.ref("typingStatus/" + user.uid).set({
-    isTyping: isTyping,
-    timestamp: Date.now()
-  });
+// 🔹 Resetiraj status ob zapiranju okna
+window.addEventListener('beforeunload', () => {
+  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+});
+
+// 🔹 Pridobi prikazna imena uporabnikov
+async function getUserNames(userIds) {
+  const db = firebase.database();
+  const promises = userIds.map(id =>
+    db.ref(`users/${id}/displayName`).once('value').then(snap => snap.val())
+  );
+  return Promise.all(promises);
 }
-let typingListenerSet = false;
 
-function listenToTypingStatus() {
-  if (typingListenerSet) return;
-  typingListenerSet = true;
+// 🔹 Spremljaj status tipkanja drugih uporabnikov
+firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
+  const typingUsers = snapshot.val() || {};
+  delete typingUsers[userId]; // odstrani sebe iz prikaza
 
-  db.ref("typingStatus").on("value", async (snapshot) => {
-    const data = snapshot.val();
-    const chatBox = document.getElementById("chatBox");
+  const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
 
-    // 🧹 Odstrani stare avatarje (če obstajajo)
-    let existingTypingDiv = document.getElementById("typingUsers");
-    if (existingTypingDiv) existingTypingDiv.remove();
-
-    if (!data) return;
-
-    const typingDiv = document.createElement("div");
-    typingDiv.id = "typingUsers";
-    typingDiv.classList.add("typing-container");
-
-    const promises = Object.entries(data).map(async ([uid, status]) => {
-      if (uid === auth.currentUser.uid || !status.isTyping) return null;
-
-      const userSnap = await db.ref("users/" + uid).once("value");
-      const userData = userSnap.val();
-      if (!userData) return null;
-
-      const wrapper = document.createElement("div");
-      wrapper.classList.add("typing-avatar-wrapper");
-
-      const avatar = document.createElement("img");
-      avatar.src = userData.avatarUrl || "default.png";
-      avatar.classList.add("typing-avatar");
-
-      const name = document.createElement("div");
-      name.classList.add("typing-name");
-      name.textContent = userData.displayName || "Uporabnik";
-
-      wrapper.appendChild(avatar);
-      wrapper.appendChild(name);
-      return wrapper;
-    });
-
-    const results = await Promise.all(promises);
-    results.forEach(wrapper => {
-      if (wrapper) typingDiv.appendChild(wrapper);
-    });
-
-    // Dodaj avatarje v chatBox
-    if (typingDiv.children.length > 0) {
-      chatBox.appendChild(typingDiv);
+  // 🔸 Prisilni reset po 10 sekundah za vsak "zataknjen" status
+  Object.entries(typingUsers).forEach(([uid, isTyping]) => {
+    if (isTyping) {
+      setTimeout(() => {
+        firebase.database().ref(`typingStatus/${chatId}/${uid}`).once('value').then(snap => {
+          if (snap.val() === true) {
+            firebase.database().ref(`typingStatus/${chatId}/${uid}`).set(false);
+          }
+        });
+      }, 10000);
     }
   });
-}
 
-// Aktiviraj listener po prijavi
-auth.onAuthStateChanged(user => {
-  if (user) {
-    listenToTypingStatus();
+  if (usersTyping.length > 0) {
+    inputField.classList.add('typing-blink');
+
+    // Pridobi imena
+    const names = await getUserNames(usersTyping);
+    const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
+
+    if (cleanNames.length === 1) {
+      inputField.placeholder = `${cleanNames[0]} tipka...`;
+    } else if (cleanNames.length > 1) {
+      inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
+    } else {
+      inputField.placeholder = "Nekdo tipka...";
+    }
+  } else {
+    inputField.classList.remove('typing-blink');
+    inputField.placeholder = defaultPlaceholder;
   }
 });
 
