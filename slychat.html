@@ -632,11 +632,8 @@ return;
 messageInput.placeholder = "Vnesi sporočilo...";
 messageInput.dataset.nameConfirm = "0";
 }
-
-// 🎯 Poslušaj nova sporočila kronološko
 db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
-
 
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
@@ -687,19 +684,22 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const effects = userEffectsCache[msg.uid] || null;
 
   const div = document.createElement("div");
-div.classList.add("messageContainer");
-div.dataset.key = snapshot.key;
+  div.classList.add("messageContainer");
+  div.dataset.key = snapshot.key;
 
-  // Avatar
+  // Avatar - najprej 3D, če ni, 2D, če ni nobenega pa default
   const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
+  const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
+  const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
+  const avatarUrl = avatar3D || avatar2D || defaultAvatar;
+
   const avatarImg = document.createElement("img");
   avatarImg.src = avatarUrl;
   avatarImg.alt = "Avatar";
   avatarImg.classList.add("avatar");
-avatarImg.onclick = () => {
-  prepareReply(msg, snapshot.key, div);
-};
+  avatarImg.onclick = () => {
+    prepareReply(msg, snapshot.key, div);
+  };
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
@@ -726,44 +726,45 @@ avatarImg.onclick = () => {
   div.appendChild(avatarImg);
   div.appendChild(senderSpan);
 
-if (msg.replyTo) {
-  const replyBox = document.createElement("div");
-  replyBox.classList.add("replyBox");
-  replyBox.style.borderLeft = "3px solid #888";
-  replyBox.style.background = "#f9f9f9";
-  replyBox.style.padding = "6px 10px";
-  replyBox.style.marginBottom = "6px";
-  replyBox.style.fontSize = "13px";
-  replyBox.style.color = "#555";
-  replyBox.style.cursor = "pointer";
-  replyBox.style.borderRadius = "6px";
+  if (msg.replyTo) {
+    const replyBox = document.createElement("div");
+    replyBox.classList.add("replyBox");
+    replyBox.style.borderLeft = "3px solid #888";
+    replyBox.style.background = "#f9f9f9";
+    replyBox.style.padding = "6px 10px";
+    replyBox.style.marginBottom = "6px";
+    replyBox.style.fontSize = "13px";
+    replyBox.style.color = "#555";
+    replyBox.style.cursor = "pointer";
+    replyBox.style.borderRadius = "6px";
 
-  // Samo preview, brez imena
-  replyBox.textContent = msg.replyTo.preview;
+    // Samo preview, brez imena
+    replyBox.textContent = msg.replyTo.preview;
 
-  replyBox.addEventListener("click", () => {
-    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
-    if (original) {
-      original.scrollIntoView({ behavior: "smooth", block: "center" });
+    replyBox.addEventListener("click", () => {
+      const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+      if (original) {
+        original.scrollIntoView({ behavior: "smooth", block: "center" });
 
-      original.classList.add("blink");
-      setTimeout(() => {
-        original.classList.remove("blink");
-      }, 1500);
-    }
-  });
+        original.classList.add("blink");
+        setTimeout(() => {
+          original.classList.remove("blink");
+        }, 1500);
+      }
+    });
 
-  div.appendChild(replyBox);
-}
+    div.appendChild(replyBox);
+  }
 
   // Sporočilo
   const realText = document.createElement("span");
-realText.classList.add("realText");
+  realText.classList.add("realText");
 
-// Prevedi besedilo
-translateText(msg.text, selectedLanguage).then(translated => {
-  realText.textContent = translated;
-});
+  // Prevedi besedilo
+  translateText(msg.text, selectedLanguage).then(translated => {
+    realText.textContent = translated;
+  });
+
   // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
     realText.classList.add("hackerEffect");
@@ -793,7 +794,6 @@ translateText(msg.text, selectedLanguage).then(translated => {
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 
 
 
