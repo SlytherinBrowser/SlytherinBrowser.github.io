@@ -2,66 +2,54 @@
 <html>
 <head>
   <title>Ustvari Avatar</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     iframe {
       width: 100%;
       height: 600px;
       border: none;
     }
+
     #avatarDisplay {
       margin-top: 20px;
+    }
+
+    .viewer-wrapper {
       display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      flex-wrap: wrap;
       gap: 20px;
-      justify-content: center;
     }
-    .rectangle, .round {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    .rectangle {
-      width: 300px;
-      height: 600px;
-    }
-    .round {
+
+    model-viewer {
       width: 300px;
       height: 400px;
+    }
+
+    .round {
       border-radius: 50%;
       overflow: hidden;
+      width: 200px;
+      height: 200px;
       position: relative;
+      background: #eee;
     }
+
     .round model-viewer {
       width: 100%;
       height: 100%;
-      border-radius: 50%;
-      display: block;
+      object-fit: cover;
+      --model-viewer-touch-action: none;
+      camera-controls: true;
     }
-    .rectangle model-viewer {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    img.avatar-img {
-      width: 300px;
-      border-radius: 0;
-    }
-    label, input, button {
-      display: block;
-      margin: 10px auto;
-      width: 300px;
+
+    input, button {
+      margin-top: 10px;
+      padding: 8px;
       font-size: 16px;
     }
-    button {
-      cursor: pointer;
-      padding: 10px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      border-radius: 5px;
-    }
   </style>
-  <!-- Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -69,30 +57,14 @@
 <body>
 
 <h2>Ustvari svoj avatar</h2>
+<iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
 
-<!-- Iframe za Ready Player Me -->
-<iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
+<div id="avatarDisplay"></div>
 
-<!-- Prikaz avatarja -->
-<div id="avatarDisplay">
-  <div class="rectangle" id="rectangleAvatar">
-    <!-- Pravokotni avatar -->
-  </div>
-  <div class="round" id="roundAvatar">
-    <!-- Okrogli avatar -->
-  </div>
-  <div id="fullBodyImage" style="width:300px; height:600px;">
-    <!-- Slika celotnega telesa -->
-  </div>
-</div>
-
-<!-- Input za ročni vnos URL avatarja -->
-<label for="avatarURLInput">Vnesi link do avatarja (URL):</label>
-<input type="text" id="avatarURLInput" placeholder="https://...">
-<button id="saveAvatarURLBtn">Shrani URL v Firebase</button>
+<input type="text" id="linkInput" placeholder="Vnesi avatar URL ročno">
+<button onclick="shraniAvatar()">Shrani ročno</button>
 
 <script>
-  // Firebase konfiguracija
   const firebaseConfig = {
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
     authDomain: "chater-cf682.firebaseapp.com",
@@ -105,15 +77,12 @@
 
   firebase.initializeApp(firebaseConfig);
 
-  // Prijava anonimna
   firebase.auth().signInAnonymously().then(() => {
-    console.log("Prijavljen si.");
-    loadAvatarURL2();
+    console.log("✅ Prijavljen si.");
   });
 
   const frame = document.getElementById("rpm-frame");
 
-  // Pošlji zahtevek za dogodke iframe-u
   frame.addEventListener("load", () => {
     frame.contentWindow.postMessage(
       JSON.stringify({
@@ -125,118 +94,62 @@
     );
   });
 
-  // Ko je avatar izbran v iframe, shrani URL v avatarURL2 in prikaži
   window.addEventListener("message", async (event) => {
-    if (!event.data) return;
-    let json;
     try {
-      json = JSON.parse(event.data);
-    } catch(e) {
-      return; // Ni JSON, ignoriraj
-    }
+      const json = JSON.parse(event.data);
+      if (json.source !== "readyplayerme") return;
 
-    if (json.source !== "readyplayerme") return;
+      if (json.eventName === "v1.avatar.exported") {
+        const avatarUrl = json.data.url;
+        console.log("✅ Avatar URL: ", avatarUrl);
 
-    if (json.eventName === "v1.avatar.exported") {
-      const avatarUrl = json.data.url;
-      console.log("✅ Avatar URL iz iframe:", avatarUrl);
-
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const userId = user.uid;
-        // Shranimo v avatarURL2
-        await firebase.database().ref("users/" + userId).update({
-          avatarURL2: avatarUrl
-        });
-        loadAvatarURL2();
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const userId = user.uid;
+          await firebase.database().ref("users/" + userId).update({
+            avatar: avatarUrl
+          });
+          prikaziAvatar(avatarUrl);
+        }
       }
+    } catch (err) {
+      console.warn("Neveljavno sporočilo ali format.", err);
     }
   });
 
-  // Funkcija za nalaganje avatarja iz avatarURL2 iz Firebase in prikaz
-  async function loadAvatarURL2() {
+  async function shraniAvatar() {
+    const avatarUrl = document.getElementById("linkInput").value;
     const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    const userId = user.uid;
-    const snapshot = await firebase.database().ref("users/" + userId + "/avatarURL2").get();
-
-    if (snapshot.exists()) {
-      const url = snapshot.val();
-      console.log("Naložen avatarURL2 iz Firebase:", url);
-      displayAvatar(url);
-      document.getElementById("avatarURLInput").value = url;
-    } else {
-      console.log("Ni najden avatarURL2 v Firebase.");
+    if (user && avatarUrl) {
+      const userId = user.uid;
+      await firebase.database().ref("users/" + userId).update({
+        avatar: avatarUrl
+      });
+      prikaziAvatar(avatarUrl);
     }
   }
 
-  // Funkcija za prikaz avatarjev (pravokotni, okrogli, slika)
-  function displayAvatar(url) {
-    // Prikaz pravokotnega (celotno telo) z model-viewer
-    document.getElementById("rectangleAvatar").innerHTML = `
-      <model-viewer
-        src="${url}"
-        camera-controls
-        auto-rotate
-        disable-zoom
-        disable-pan
-        disable-tap
-        camera-target="0m 1.0m 0m"
-        field-of-view="30deg"
-        style="width: 100%; height: 100%;">
-      </model-viewer>
-    `;
+  function prikaziAvatar(url) {
+    document.getElementById("avatarDisplay").innerHTML = `
+      <h3>Tvoj avatar:</h3>
+      <div class="viewer-wrapper">
+        <model-viewer src="${url}" camera-controls auto-rotate
+          disable-zoom disable-pan disable-tap
+          min-camera-orbit="auto 90deg auto"
+          max-camera-orbit="auto 90deg auto">
+        </model-viewer>
 
-    // Prikaz okroglega (glava + ramena) z model-viewer
-    document.getElementById("roundAvatar").innerHTML = `
-      <model-viewer
-        src="${url}"
-        camera-controls
-        auto-rotate
-        disable-zoom
-        disable-pan
-        disable-tap
-        min-camera-orbit="0deg 90deg 1.0m"
-        max-camera-orbit="360deg 90deg 1.0m"
-        camera-target="0m 1.63m 0m"
-        field-of-view="20deg"
-        style="width: 100%; height: 100%; border-radius: 50%;">
-      </model-viewer>
-    `;
-
-    // Prikaz slike celotnega telesa preko render URL (transparent background)
-    const renderedImgUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(url)}&scene=full-body-portrait-v1-transparent`;
-    document.getElementById("fullBodyImage").innerHTML = `
-      <img src="${renderedImgUrl}" alt="Avatar slika" class="avatar-img" />
+        <div class="round">
+          <model-viewer src="${url}" camera-controls auto-rotate
+            disable-zoom disable-pan disable-tap
+            min-camera-orbit="auto 90deg auto"
+            max-camera-orbit="auto 90deg auto">
+          </model-viewer>
+        </div>
+      </div>
     `;
   }
-
-  // Gumb za shranjevanje ročno vnešenega URL-ja
-  document.getElementById("saveAvatarURLBtn").addEventListener("click", async () => {
-    const url = document.getElementById("avatarURLInput").value.trim();
-    if (!url) {
-      alert("Prosim, vnesi veljaven URL.");
-      return;
-    }
-
-    const user = firebase.auth().currentUser;
-    if (!user) {
-      alert("Uporabnik ni prijavljen.");
-      return;
-    }
-
-    const userId = user.uid;
-    await firebase.database().ref("users/" + userId).update({
-      avatarURL2: url
-    });
-    alert("URL uspešno shranjen!");
-    loadAvatarURL2();
-  });
 </script>
-
-<!-- Model Viewer CDN -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>
 
 </body>
 </html>
