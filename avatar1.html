@@ -79,6 +79,7 @@
 
   firebase.auth().signInAnonymously().then(() => {
     console.log("✅ Prijavljen si.");
+    preberiInPrikaziAvatar(); // ob prijavi preberi avatar
   });
 
   const frame = document.getElementById("rpm-frame");
@@ -106,8 +107,9 @@
         const user = firebase.auth().currentUser;
         if (user) {
           const userId = user.uid;
+          // shranimo v avatarURL2 namesto avatar
           await firebase.database().ref("users/" + userId).update({
-            avatar: avatarUrl
+            avatarURL2: avatarUrl
           });
           prikaziAvatar(avatarUrl);
         }
@@ -118,14 +120,31 @@
   });
 
   async function shraniAvatar() {
-    const avatarUrl = document.getElementById("linkInput").value;
+    const avatarUrl = document.getElementById("linkInput").value.trim();
+    if (!avatarUrl) {
+      alert("Prosim, vnesi veljaven URL.");
+      return;
+    }
     const user = firebase.auth().currentUser;
-    if (user && avatarUrl) {
+    if (user) {
       const userId = user.uid;
       await firebase.database().ref("users/" + userId).update({
-        avatar: avatarUrl
+        avatarURL2: avatarUrl
       });
       prikaziAvatar(avatarUrl);
+    }
+  }
+
+  // Funkcija za branje avatarURL2 ob nalaganju in prikaz
+  async function preberiInPrikaziAvatar() {
+    const user = firebase.auth().currentUser;
+    if (user) {
+      const userId = user.uid;
+      const snapshot = await firebase.database().ref("users/" + userId + "/avatarURL2").get();
+      if (snapshot.exists()) {
+        const avatarUrl = snapshot.val();
+        prikaziAvatar(avatarUrl);
+      }
     }
   }
 
