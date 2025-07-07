@@ -703,38 +703,26 @@ wrapper.className = "avatar-wrapper";
 wrapper.style.cssText = `
   width: 40px;
   height: 40px;
+  overflow: hidden;
   ${isOnline ? "border: 2px solid green;" : ""}
   border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #000;
 `;
 
-// Ali je URL do 3D modela?
-const is3DModel = avatarUrl.endsWith(".glb") || avatarUrl.endsWith(".gltf");
-
-wrapper.innerHTML = is3DModel ? `
+wrapper.innerHTML = `
   <model-viewer
-  src="${avatarUrl}"
-  camera-controls
-  auto-rotate
-  disable-zoom
-  disable-pan
-  disable-tap
-  camera-orbit="0deg 75deg 1.5m"
-  camera-target="0m 1.4m 0m"
-  field-of-view="35deg"
-  exposure="1.2"
-  style="width: 100%; height: 100%; background: transparent;">
-</model-viewer>
-` : `
-  <img src="${avatarUrl}" alt="Avatar"
-    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+    src="${avatarUrl}"
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    camera-orbit="0deg 75deg 0.7m"
+    camera-target="0m 1.55m 0m"
+    field-of-view="60deg"
+    exposure="1.3"
+    style="width: 100%; height: 100%; background: transparent;">
+  </model-viewer>
 `;
 
-// Klik na avatar
 wrapper.addEventListener("click", () => {
   prepareReply(msg, snapshot.key, div);
 });
