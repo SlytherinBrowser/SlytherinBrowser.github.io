@@ -719,19 +719,33 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   if (avatar3D) {
     // 3D avatar z model-viewer
     avatarWrapper.innerHTML = `
-      <model-viewer src="${avatar3D}" camera-controls auto-rotate
-        disable-zoom disable-pan disable-tap
-        style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: block;"
-        min-camera-orbit="auto 90deg auto"
-        max-camera-orbit="auto 90deg auto">
-      </model-viewer>
-      <div class="round" style="
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        border-radius: 50%;
-        box-shadow: 0 0 6px rgba(0,0,0,0.3);
-        pointer-events: none;"></div>
-    `;
+  <div class="avatar3d-container" style="
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    position: relative;
+  ">
+    <model-viewer
+      src="${avatar3D}"
+      disable-zoom
+      disable-pan
+      disable-tap
+      camera-controls
+      auto-rotate
+      shadow-intensity="0"
+      interaction-prompt="none"
+      camera-orbit="0deg 85deg 0.8m"
+      min-camera-orbit="auto 85deg auto"
+      max-camera-orbit="auto 85deg auto"
+      camera-target="0m 1.6m 0m"
+      field-of-view="30deg"
+      style="width: 100%; height: 100%; background-color: transparent;"
+      exposure="1.2"
+    ></model-viewer>
+  </div>
+`;
   } else {
     // 2D avatar ali default
     const img = document.createElement("img");
