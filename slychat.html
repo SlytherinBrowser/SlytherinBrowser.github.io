@@ -23,6 +23,7 @@ window.addEventListener("error", function(event) {
   console.error("Vrstica:", event.lineno, "Stolpec:", event.colno);
   alert(`Napaka v JS:\n${event.message}\nV datoteki: ${event.filename}\nVrstica: ${event.lineno}`);
 });</script>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -632,6 +633,16 @@ return;
 messageInput.placeholder = "Vnesi sporočilo...";
 messageInput.dataset.nameConfirm = "0";
 }
+// Predpostavka:
+// - db je tvoja Firebase realtime baza, ref na "messages"
+// - currentUser je objekt trenutnega uporabnika z uid
+// - currentChatPartner je uid trenutnega partnerja za zasebni klepet ali null
+// - users je objekt z info o uporabnikih (avatarURL, avatarURL2, displayName ...)
+// - chatBox je DOM element, kamor prikazuješ sporočila
+// - userNamesCache, userStatusCache, userColorsCache, userEffectsCache so cache objekti za podatke o uporabnikih
+// - translateText je async funkcija za prevajanje sporočil
+// - prepareReply je funkcija za pripravo odgovora na sporočilo
+
 db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
 
@@ -658,7 +669,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     return;
   }
 
-  // 🔒 Zasebna sporočila
+  // 🔒 Zasebna sporočila - prikaži samo če sta uporabnika v zasebnem klepetu
   if (currentChatPartner) {
     const isPrivateMatch =
       (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -668,7 +679,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     if (msg.privateUid) return;
   }
 
-  // 🪙 Kovanci
+  // 🪙 Povečaj kovance za pošiljatelja (če je trenutni uporabnik)
   if (msg.uid === currentUser.uid) {
     const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
     userCoinsRef.once('value').then(snapshot => {
@@ -687,26 +698,61 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   div.classList.add("messageContainer");
   div.dataset.key = snapshot.key;
 
-  // Avatar - najprej 3D, če ni, 2D, če ni nobenega pa default
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  // --- AVATAR ---
+
   const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
   const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
-  const avatarUrl = avatar3D || avatar2D || defaultAvatar;
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 
-  const avatarImg = document.createElement("img");
-  avatarImg.src = avatarUrl;
-  avatarImg.alt = "Avatar";
-  avatarImg.classList.add("avatar");
-  avatarImg.onclick = () => {
+  const avatarWrapper = document.createElement("div");
+  avatarWrapper.classList.add("avatar-wrapper");
+  avatarWrapper.style.position = "relative";
+  avatarWrapper.style.width = "48px";
+  avatarWrapper.style.height = "48px";
+  avatarWrapper.style.cursor = "pointer";
+
+  avatarWrapper.onclick = () => {
     prepareReply(msg, snapshot.key, div);
   };
 
-  if (isOnline) {
-    avatarImg.style.border = "2px solid green";
-    avatarImg.style.borderRadius = "50%";
+  if (avatar3D) {
+    // 3D avatar z model-viewer
+    avatarWrapper.innerHTML = `
+      <model-viewer src="${avatar3D}" camera-controls auto-rotate
+        disable-zoom disable-pan disable-tap
+        style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; display: block;"
+        min-camera-orbit="auto 90deg auto"
+        max-camera-orbit="auto 90deg auto">
+      </model-viewer>
+      <div class="round" style="
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        border-radius: 50%;
+        box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        pointer-events: none;"></div>
+    `;
+  } else {
+    // 2D avatar ali default
+    const img = document.createElement("img");
+    img.src = avatar2D || defaultAvatar;
+    img.alt = "Avatar";
+    img.style.width = "48px";
+    img.style.height = "48px";
+    img.style.borderRadius = "50%";
+    img.style.objectFit = "cover";
+    img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
+    avatarWrapper.appendChild(img);
   }
 
-  // Ime pošiljatelja
+  if (isOnline) {
+    avatarWrapper.style.border = "2px solid green";
+    avatarWrapper.style.borderRadius = "50%";
+  }
+
+  div.appendChild(avatarWrapper);
+
+  // --- IME POŠILJATELJA ---
+
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
 
@@ -723,8 +769,9 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   }
 
   senderSpan.textContent = displayName + ": ";
-  div.appendChild(avatarImg);
   div.appendChild(senderSpan);
+
+  // --- REPLY BOX ---
 
   if (msg.replyTo) {
     const replyBox = document.createElement("div");
@@ -738,7 +785,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     replyBox.style.cursor = "pointer";
     replyBox.style.borderRadius = "6px";
 
-    // Samo preview, brez imena
+    // Samo preview besedila brez imena
     replyBox.textContent = msg.replyTo.preview;
 
     replyBox.addEventListener("click", () => {
@@ -756,21 +803,20 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     div.appendChild(replyBox);
   }
 
-  // Sporočilo
+  // --- SPOROČILO ---
+
   const realText = document.createElement("span");
   realText.classList.add("realText");
 
-  // Prevedi besedilo
+  // Prevedi besedilo (asinkrono)
   translateText(msg.text, selectedLanguage).then(translated => {
     realText.textContent = translated;
   });
 
-  // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
     realText.classList.add("hackerEffect");
   }
 
-  // 📝 Če je sporočilo bilo urejeno
   if (msg.edited) {
     const editedMark = document.createElement("span");
     editedMark.textContent = " (urejeno)";
@@ -779,7 +825,6 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     realText.appendChild(editedMark);
   }
 
-  // 🕵️‍♂️ Skrito sporočilo
   if (msg.hidden) {
     const hiddenText = document.createElement("span");
     hiddenText.classList.add("hiddenText");
@@ -794,7 +839,6 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 
 
 // 🔁 Poslušaj spremembe sporočil (npr. popravljeno sporočilo)
