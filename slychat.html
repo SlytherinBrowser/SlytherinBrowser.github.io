@@ -691,61 +691,60 @@ div.classList.add("messageContainer");
 div.dataset.key = snapshot.key;
 
   // Avatar
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-const user = users[msg.uid] || {};
-const has3DAvatar = user.avatarURL2 && user.avatarURL2.includes(".glb");
-const isOnline = user.online;
+ const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+const userData = users[msg.uid] || {};
+const avatar2DContainer = document.createElement("div");
+avatar2DContainer.classList.add("avatar-container");
 
-const avatarWrapper = document.createElement("div");
-avatarWrapper.classList.add("avatar-wrapper");
-
-// === 3D AVATAR ===
-if (has3DAvatar) {
+if (userData.avatarURL2) {
+  // 👉 Prikaz 3D avatarja
   const modelViewer = document.createElement("model-viewer");
-modelViewer.setAttribute("src", user.avatarURL2);
-modelViewer.setAttribute("camera-controls", "");
-modelViewer.setAttribute("auto-rotate", "");
-modelViewer.setAttribute("disable-zoom", "");
-modelViewer.setAttribute("disable-pan", "");
-modelViewer.setAttribute("disable-tap", "");
-modelViewer.setAttribute("min-camera-orbit", "0deg 90deg 0.5m");  // približana glava
-modelViewer.setAttribute("max-camera-orbit", "0deg 90deg 0.5m");
-modelViewer.setAttribute("camera-orbit", "0deg 90deg 0.5m");
-modelViewer.setAttribute("field-of-view", "15deg"); // bolj fokusiran pogled
+  modelViewer.setAttribute("src", userData.avatarURL2);
+  modelViewer.setAttribute("camera-controls", "");
+  modelViewer.setAttribute("auto-rotate", "");
+  modelViewer.setAttribute("disable-zoom", "");
+  modelViewer.setAttribute("disable-pan", "");
+  modelViewer.setAttribute("disable-tap", "");
+  modelViewer.setAttribute("min-camera-orbit", "0deg 90deg 0.5m");
+  modelViewer.setAttribute("max-camera-orbit", "0deg 90deg 0.5m");
+  modelViewer.setAttribute("camera-orbit", "0deg 90deg 0.5m");
+  modelViewer.setAttribute("field-of-view", "15deg");
 
-modelViewer.style.width = "32px";
-modelViewer.style.height = "32px";
-modelViewer.style.borderRadius = "50%";
-modelViewer.style.marginRight = "8px";
-modelViewer.style.overflow = "hidden";
-modelViewer.style.background = "#fff";
-modelViewer.style.padding = "0";
+  modelViewer.style.width = "32px";
+  modelViewer.style.height = "32px";
+  modelViewer.style.borderRadius = "50%";
+  modelViewer.style.marginRight = "8px";
+  modelViewer.style.overflow = "hidden";
+  modelViewer.style.background = "#fff";
+  modelViewer.style.padding = "0";
+  modelViewer.style.border = isOnline ? "2px solid green" : "none";
 
-if (isOnline) {
-  modelViewer.style.border = "2px solid green";
-}
+  modelViewer.onclick = () => {
+    prepareReply(msg, snapshot.key, div);
+  };
 
-  avatarWrapper.appendChild(modelViewer);
+  avatar2DContainer.appendChild(modelViewer);
 } else {
-  // === 2D AVATAR ===
-  const avatarUrl = user.avatarUrl || defaultAvatar;
+  // 👉 Prikaz 2D avatarja
   const avatarImg = document.createElement("img");
-  avatarImg.src = avatarUrl;
+  avatarImg.src = userData.avatarUrl || defaultAvatar;
   avatarImg.alt = "Avatar";
   avatarImg.classList.add("avatar");
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
+    avatarImg.style.borderRadius = "50%";
   }
 
   avatarImg.onclick = () => {
     prepareReply(msg, snapshot.key, div);
   };
 
-  avatarWrapper.appendChild(avatarImg);
+  avatar2DContainer.appendChild(avatarImg);
 }
 
-div.appendChild(avatarWrapper);
+// Dodaj v svoj glavni element za sporočilo
+div.prepend(avatar2DContainer);
 
   // Ime pošiljatelja
   const senderSpan = document.createElement("span");
