@@ -383,6 +383,13 @@ width: 100%;
   opacity: 0.8;
 }
 
+
+.avatar3d {
+  width: 80px;
+  height: 80px;
+  display: inline-block;
+  vertical-align: middle;
+}
   </style>
 </head>
 <body>
@@ -513,7 +520,59 @@ let users = {};
 
   document.head.appendChild(style);  
 
+import * as THREE from 'three';
 
+function createSimple3DAvatar(container, userId) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  container.appendChild(renderer.domElement);
+
+  // Osnovna svetloba
+  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+  scene.add(light);
+
+  // Kamera postavljena tako, da gleda na sredino
+  camera.position.set(0, 1.5, 3);
+  camera.lookAt(0, 1, 0);
+
+  // Ustvari preprost "avatar" kot glavo in trup (npr. krogla + valj)
+  const headGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+  const bodyGeometry = new THREE.CylinderGeometry(0.4, 0.5, 1.2, 32);
+
+  // Barve uporabnika lahko generiraš na osnovi ID-ja (ali pa shraniš v userColorsCache)
+  const color = generateColorFromUserId(userId);
+
+  const material = new THREE.MeshStandardMaterial({ color });
+
+  const head = new THREE.Mesh(headGeometry, material);
+  head.position.y = 1.3;  // glava nad trupom
+  scene.add(head);
+
+  const body = new THREE.Mesh(bodyGeometry, material);
+  body.position.y = 0.3;  // trup pod glavo
+  scene.add(body);
+
+  // Animacija - rahlo vrtenje avatarja
+  function animate() {
+    requestAnimationFrame(animate);
+    head.rotation.y += 0.01;
+    body.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+  animate();
+}
+
+// Preprosta funkcija za generiranje barve iz userId (na primer hash)
+function generateColorFromUserId(userId) {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+  return '#' + '00000'.substring(0, 6 - c.length) + c;
+}
 
   function toggleHidden() {  
 
@@ -690,16 +749,14 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
 div.classList.add("messageContainer");
 div.dataset.key = snapshot.key;
 
-  // Avatar
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
-  const avatarImg = document.createElement("img");
-  avatarImg.src = avatarUrl;
-  avatarImg.alt = "Avatar";
-  avatarImg.classList.add("avatar");
-avatarImg.onclick = () => {
-  prepareReply(msg, snapshot.key, div);
-};
+  const avatar3DContainer = document.createElement("div");
+avatar3DContainer.classList.add("avatar3d");
+avatar3DContainer.style.width = "80px";
+avatar3DContainer.style.height = "80px";
+div.appendChild(avatar3DContainer);
+
+// Funkcija, ki ustvari 3D lik v tem containerju
+createSimple3DAvatar(avatar3DContainer, msg.uid);
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
