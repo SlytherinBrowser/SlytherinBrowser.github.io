@@ -710,6 +710,8 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
 
 // --- AVATAR ---
 
+// --- AVATAR ---
+
 const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
 const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
 const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
@@ -721,39 +723,50 @@ avatarWrapper.style.width = "32px";   // velikost po želji
 avatarWrapper.style.height = "32px";
 avatarWrapper.style.cursor = "pointer";
 avatarWrapper.style.borderRadius = "50%";
-avatarWrapper.style.overflow = "hidden";  // Zelo pomembno: da nič ne štrli ven!
+avatarWrapper.style.overflow = "hidden";  // da nič ne štrli ven!
 
 avatarWrapper.onclick = () => {
   prepareReply(msg, snapshot.key, div);
 };
 
+// Funkcija za nastavljanje okvirja glede na online status
+function setBorderOnline(element, isOnline) {
+  if (isOnline) {
+    element.style.border = "2px solid green";
+  } else {
+    element.style.border = "none";
+  }
+}
+
+// Prikaz avatarja
 if (avatar3D) {
   // 3D avatar z model-viewer
   avatarWrapper.innerHTML = `
-  <div class="avatar3d-container" style="
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    box-shadow: 0 0 6px rgba(0,0,0,0.3);
-  ">
-    <div class="round">
-  <model-viewer
-    src="${url}"
-    camera-controls
-    auto-rotate
-    disable-zoom
-    disable-pan
-    disable-tap
-    min-camera-orbit="0deg 90deg 1m"
-    max-camera-orbit="360deg 90deg 1m"
-    camera-target="0m 1.6m 0m"
-    field-of-view="15deg">
-  </model-viewer>
-  </div>
-  </div>
+    <div class="avatar3d-container" style="
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    ">
+      <model-viewer
+        src="${avatar3D}"
+        camera-controls
+        auto-rotate
+        disable-zoom
+        disable-pan
+        disable-tap
+        min-camera-orbit="0deg 90deg 1m"
+        max-camera-orbit="360deg 90deg 1m"
+        camera-target="0m 1.6m 0m"
+        field-of-view="15deg"
+        style="width:32px; height:32px; border-radius:50%; display:block;"
+      >
+      </model-viewer>
+    </div>
   `;
+  setBorderOnline(avatarWrapper, isOnline);
 } else {
   // 2D avatar ali default
   const img = document.createElement("img");
@@ -765,14 +778,7 @@ if (avatar3D) {
   img.style.objectFit = "cover";
   img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
   avatarWrapper.appendChild(img);
-}
-
-
-
-div.appendChild(avatarWrapper);
-if (isOnline) {
-  avatarWrapper.style.border = "2px solid green";
-  avatarWrapper.style.borderRadius = "50%";
+  setBorderOnline(avatarWrapper, isOnline);
 }
 
 div.appendChild(avatarWrapper);
