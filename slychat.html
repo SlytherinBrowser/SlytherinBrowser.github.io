@@ -698,16 +698,18 @@ div.dataset.key = snapshot.key;
   const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
 
+// Wrapper za avatar (3D model-viewer)
 const wrapper = document.createElement("div");
 wrapper.className = "avatar-wrapper";
 wrapper.style.cssText = `
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   overflow: hidden;
   ${isOnline ? "border: 2px solid green;" : ""}
   border-radius: 50%;
 `;
 
+// Notranji HTML z model-viewerjem
 wrapper.innerHTML = `
   <model-viewer
     src="${avatarUrl}"
@@ -724,29 +726,32 @@ wrapper.innerHTML = `
   </model-viewer>
 `;
 
+// Klik na avatar
 wrapper.addEventListener("click", () => {
   prepareReply(msg, snapshot.key, div);
 });
 
-  // Ime pošiljatelja
-  const senderSpan = document.createElement("span");
-  senderSpan.classList.add("sender");
+// Ime pošiljatelja
+const senderSpan = document.createElement("span");
+senderSpan.classList.add("sender");
 
-  if (color === "none") {
-    senderSpan.style.display = "none";
-  } else if (color === "rainbow") {
-    senderSpan.classList.add("rainbow");
-  } else if (color) {
-    senderSpan.style.color = color;
-  }
+if (color === "none") {
+  senderSpan.style.display = "none";
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
 
-  if (effects === "hacker") {
-    senderSpan.classList.add("hackerEffect");
-  }
+if (effects === "hacker") {
+  senderSpan.classList.add("hackerEffect");
+}
 
-  senderSpan.textContent = displayName + ": ";
-  div.appendChild(avatarImg);
-  div.appendChild(senderSpan);
+senderSpan.textContent = displayName + ": ";
+
+// Dodaj v element sporočila
+div.appendChild(wrapper); // <- tu je bil prej avatarImg
+div.appendChild(senderSpan);
 
 if (msg.replyTo) {
   const replyBox = document.createElement("div");
