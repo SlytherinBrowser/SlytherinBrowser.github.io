@@ -8,34 +8,29 @@
       height: 600px;
       border: none;
     }
-    .avatar-container {
-      display: flex;
-      gap: 20px;
-      align-items: center;
+    #avatarDisplay {
       margin-top: 20px;
     }
-    .avatar-rect img {
-      width: 200px;
-      height: 400px;
-      object-fit: contain;
-      background: #eee;
+    .avatar-full, .avatar-head {
+      display: inline-block;
+      margin: 10px;
     }
-    .avatar-circle {
+    .avatar-full img {
+      width: 200px;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .avatar-head img {
       width: 150px;
       height: 150px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: #eee;
-    }
-    .avatar-circle img {
-      width: 100%;
-      height: 100%;
       object-fit: cover;
-    }
-    .error {
-      color: red;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
   </style>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -43,18 +38,19 @@
 <body>
 
 <h2>Ustvari svoj avatar</h2>
-<iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
+<iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
 
-<div style="margin-top: 20px;">
-  <input type="text" id="manualUrl" placeholder="Vnesi .glb avatar URL" style="width: 70%;">
-  <button onclick="saveManualUrl()">Shrani</button>
+<div id="avatarDisplay">
+  <h3>Prikaz avatarja:</h3>
+  <div class="avatar-full" id="avatarFullBody"></div>
+  <div class="avatar-head" id="avatarHeadOnly"></div>
 </div>
 
-<div id="avatarUrlDisplay" style="margin-top: 10px; font-family: monospace;"></div>
-
-<div id="avatarDisplay" class="avatar-container"></div>
-
-<div id="errorMsg" class="error"></div>
+<div style="margin-top: 30px;">
+  <h3>Ročni vnos avatar URL-ja</h3>
+  <input type="text" id="manualAvatarUrl" placeholder="Vnesi avatar .glb link" style="width: 60%;">
+  <button onclick="saveManualUrl()">Shrani URL</button>
+</div>
 
 <script>
   const firebaseConfig = {
@@ -69,11 +65,17 @@
 
   firebase.initializeApp(firebaseConfig);
 
-  let currentUserId = null;
+  let currentUser;
 
   firebase.auth().signInAnonymously().then(() => {
-    currentUserId = firebase.auth().currentUser.uid;
-    loadAvatar(); // Load existing avatar if available
+    currentUser = firebase.auth().currentUser;
+    console.log("✅ Prijavljen:", currentUser.uid);
+
+    // Naloži avatar, če že obstaja
+    firebase.database().ref("users/" + currentUser.uid + "/avatar").once("value", snapshot => {
+      const url = snapshot.val();
+      if (url) displayAvatar(url);
+    });
   });
 
   const frame = document.getElementById("rpm-frame");
@@ -90,54 +92,49 @@
   });
 
   window.addEventListener("message", async (event) => {
-    const json = JSON.parse(event.data);
+    let json;
+    try {
+      json = JSON.parse(event.data);
+    } catch (e) {
+      return;
+    }
+
     if (json.source !== "readyplayerme") return;
+
+    console.log("🎯 Prejet dogodek:", json);
 
     if (json.eventName === "v1.avatar.exported") {
       const avatarUrl = json.data.url;
       console.log("✅ Avatar URL:", avatarUrl);
+
       await saveAvatarUrl(avatarUrl);
       displayAvatar(avatarUrl);
     }
   });
 
-  async function saveAvatarUrl(url) {
-    if (!currentUserId) return;
-    await firebase.database().ref("users/" + currentUserId).update({
-      avatar: url
-    });
+  async function saveAvatarUrl(avatarUrl) {
+    if (!currentUser) return;
+    await firebase.database().ref("users/" + currentUser.uid).update({ avatar: avatarUrl });
+    console.log("✅ Avatar shranjen v Firebase.");
   }
 
   async function saveManualUrl() {
-    const url = document.getElementById("manualUrl").value.trim();
-    if (url && url.endsWith(".glb")) {
-      await saveAvatarUrl(url);
-      displayAvatar(url);
-    } else {
-      document.getElementById("errorMsg").textContent = "Vnesi veljaven .glb URL!";
-    }
-  }
-
-  async function loadAvatar() {
-    const snapshot = await firebase.database().ref("users/" + currentUserId + "/avatar").get();
-    if (snapshot.exists()) {
-      const url = snapshot.val();
-      displayAvatar(url);
-    }
+    const input = document.getElementById("manualAvatarUrl");
+    const url = input.value.trim();
+    if (!url) return alert("Vnesi veljaven URL.");
+    await saveAvatarUrl(url);
+    displayAvatar(url);
   }
 
   function displayAvatar(avatarUrl) {
-    document.getElementById("errorMsg").textContent = "";
-    document.getElementById("avatarUrlDisplay").textContent = "GLB URL: " + avatarUrl;
+    // Render celotno telo
+    const fullRender = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
 
-    const bodyImgUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
-    const headImgUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
+    // Render glava do prsi
+    const headRender = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
 
-    const html = `
-      <div class="avatar-rect"><img src="${bodyImgUrl}" onerror="document.getElementById('errorMsg').textContent = '❌ Slika telesa se ne naloži. Morda je URL napačen ali ReadyPlayer ne deluje.'"></div>
-      <div class="avatar-circle"><img src="${headImgUrl}" onerror="document.getElementById('errorMsg').textContent = '❌ Slika glave se ne naloži. Morda je URL napačen ali ReadyPlayer ne deluje.'"></div>
-    `;
-    document.getElementById("avatarDisplay").innerHTML = html;
+    document.getElementById("avatarFullBody").innerHTML = `<img src="${fullRender}" alt="Avatar - celo telo">`;
+    document.getElementById("avatarHeadOnly").innerHTML = `<img src="${headRender}" alt="Avatar - glava">`;
   }
 </script>
 
