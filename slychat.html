@@ -708,6 +708,8 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   div.dataset.key = snapshot.key;
 // --- AVATAR ---
 
+// --- AVATAR ---
+
 const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
 const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
 const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
@@ -715,9 +717,11 @@ const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portr
 const avatarWrapper = document.createElement("div");
 avatarWrapper.classList.add("avatar-wrapper");
 avatarWrapper.style.position = "relative";
-avatarWrapper.style.width = "32px";  // sprememba na 32
-avatarWrapper.style.height = "32px"; // sprememba na 32
+avatarWrapper.style.width = "32px";   // velikost po želji
+avatarWrapper.style.height = "32px";
 avatarWrapper.style.cursor = "pointer";
+avatarWrapper.style.borderRadius = "50%";
+avatarWrapper.style.overflow = "hidden";  // Zelo pomembno: da nič ne štrli ven!
 
 avatarWrapper.onclick = () => {
   prepareReply(msg, snapshot.key, div);
@@ -731,24 +735,24 @@ if (avatar3D) {
     height: 32px;
     border-radius: 50%;
     overflow: hidden;
-    box-shadow: 0 0 6px rgba(0,0,0,0.3);
     position: relative;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
   ">
-   <model-viewer 
-     src="${avatar3D}"
-     camera-controls 
-     disable-zoom 
-     disable-pan 
-     disable-tap 
-     auto-rotate 
-     style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: transparent;"
-     exposure="1.2"
-     shadow-intensity="0"
-     environment-image="neutral"
-     camera-orbit="0deg 85deg 0.4m"
-     field-of-view="25deg"
-   >
-   </model-viewer>
+    <model-viewer
+      src="${avatar3D}"
+      camera-controls
+      disable-zoom
+      disable-pan
+      disable-tap
+      auto-rotate
+      style="width: 32px; height: 32px; border-radius: 50%; background: transparent;"
+      exposure="1.2"
+      shadow-intensity="0"
+      environment-image="neutral"
+      camera-orbit="0deg 90deg 0.4m"
+      field-of-view="30deg"
+    >
+    </model-viewer>
   </div>
   `;
 } else {
@@ -756,14 +760,17 @@ if (avatar3D) {
   const img = document.createElement("img");
   img.src = avatar2D || defaultAvatar;
   img.alt = "Avatar";
-  img.style.width = "32px";     // sprememba na 32
-  img.style.height = "32px";    // sprememba na 32
+  img.style.width = "32px";
+  img.style.height = "32px";
   img.style.borderRadius = "50%";
   img.style.objectFit = "cover";
   img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
   avatarWrapper.appendChild(img);
 }
 
+
+
+div.appendChild(avatarWrapper);
 if (isOnline) {
   avatarWrapper.style.border = "2px solid green";
   avatarWrapper.style.borderRadius = "50%";
