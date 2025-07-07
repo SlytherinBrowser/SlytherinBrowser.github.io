@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="sl">
 <head>
-  <title>Ustvari Avatar</title>
+  <meta charset="UTF-8" />
+  <title>Ustvari in prikaži avatar</title>
   <style>
     iframe {
       width: 100%;
@@ -10,27 +11,45 @@
     }
     #avatarDisplay {
       margin-top: 20px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
     }
-    .avatar-full, .avatar-head {
-      display: inline-block;
-      margin: 10px;
-    }
-    .avatar-full img {
+    #avatarFullBody img {
       width: 200px;
-      height: auto;
-      border-radius: 16px;
+      border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      object-fit: contain;
     }
-    .avatar-head img {
+    #avatarHeadOnly img {
       width: 150px;
       height: 150px;
-      object-fit: cover;
       border-radius: 50%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
+      object-fit: cover;
+      border: 3px solid #555;
+    }
+    label {
+      display: block;
+      margin-top: 30px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 12px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
     }
   </style>
 
-  <!-- Firebase -->
+  <!-- Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -38,21 +57,29 @@
 <body>
 
 <h2>Ustvari svoj avatar</h2>
-<iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
 
+<!-- Ready Player Me iframe -->
+<iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
+
+<!-- Avatar prikaz -->
 <div id="avatarDisplay">
-  <h3>Prikaz avatarja:</h3>
-  <div class="avatar-full" id="avatarFullBody"></div>
-  <div class="avatar-head" id="avatarHeadOnly"></div>
+  <div id="avatarFullBody">
+    <h3>Pravokotni avatar (glava)</h3>
+    <!-- Slika se prikaže tukaj -->
+  </div>
+  <div id="avatarHeadOnly">
+    <h3>Okrogel avatar (glava do prsi)</h3>
+    <!-- Slika se prikaže tukaj -->
+  </div>
 </div>
 
-<div style="margin-top: 30px;">
-  <h3>Ročni vnos avatar URL-ja</h3>
-  <input type="text" id="manualAvatarUrl" placeholder="Vnesi avatar .glb link" style="width: 60%;">
-  <button onclick="saveManualUrl()">Shrani URL</button>
-</div>
+<!-- Ročni vnos avatar URL -->
+<label for="avatarUrlInput">Vpiši avatar URL (.glb):</label>
+<input type="text" id="avatarUrlInput" placeholder="Npr. https://models.readyplayer.me/64b44e1d93f3dc3b2e739876.glb" />
+<button id="saveAvatarBtn">Shrani avatar</button>
 
 <script>
+  // Firebase konfiguracija
   const firebaseConfig = {
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
     authDomain: "chater-cf682.firebaseapp.com",
@@ -63,23 +90,22 @@
     appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
   };
 
+  // Inicializacija Firebase
   firebase.initializeApp(firebaseConfig);
 
-  let currentUser;
-
-  firebase.auth().signInAnonymously().then(() => {
-    currentUser = firebase.auth().currentUser;
-    console.log("✅ Prijavljen:", currentUser.uid);
-
-    // Naloži avatar, če že obstaja
-    firebase.database().ref("users/" + currentUser.uid + "/avatar").once("value", snapshot => {
-      const url = snapshot.val();
-      if (url) displayAvatar(url);
+  // Anonimna prijava
+  firebase.auth().signInAnonymously()
+    .then(() => {
+      console.log("Prijavljen anonimno");
+      loadAvatarFromFirebase();
+    })
+    .catch(error => {
+      console.error("Napaka pri prijavi:", error);
     });
-  });
 
   const frame = document.getElementById("rpm-frame");
 
+  // Pošlji zahtevek iframe-u za poslušanje dogodka export avatarja
   frame.addEventListener("load", () => {
     frame.contentWindow.postMessage(
       JSON.stringify({
@@ -91,51 +117,106 @@
     );
   });
 
+  // Prikaži avatar iz URL-ja (PNG slika)
+  function displayAvatar(avatarUrl) {
+    const match = avatarUrl.match(/\/([\w\d]+)\.glb$/);
+    if (!match) {
+      console.error("Neveljaven avatar URL.");
+      return;
+    }
+    const avatarId = match[1];
+
+    // Statika: Pokončni pravokotni avatar (glava)
+    const rectAvatarUrl = `https://readyplayer.me/avatar/${avatarId}.png`;
+
+    // Okrogel avatar (uporablja isti PNG, CSS naredi krog)
+    const roundAvatarUrl = rectAvatarUrl;
+
+    document.getElementById("avatarFullBody").innerHTML = `
+      <h3>Pravokotni avatar (glava)</h3>
+      <img src="${rectAvatarUrl}" alt="Pravokotni avatar">
+    `;
+
+    document.getElementById("avatarHeadOnly").innerHTML = `
+      <h3>Okrogel avatar (glava do prsi)</h3>
+      <img src="${roundAvatarUrl}" alt="Okrogel avatar">
+    `;
+  }
+
+  // Naloži avatar iz Firebase, če obstaja
+  async function loadAvatarFromFirebase() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const userId = user.uid;
+
+    const snapshot = await firebase.database().ref("users/" + userId + "/avatar").get();
+    const avatarUrl = snapshot.val();
+    if (avatarUrl) {
+      displayAvatar(avatarUrl);
+      document.getElementById("avatarUrlInput").value = avatarUrl;
+    }
+  }
+
+  // Počakaj na dogodek od iframe-a, ko je avatar exportan
   window.addEventListener("message", async (event) => {
+    if (!event.data) return;
+
     let json;
     try {
       json = JSON.parse(event.data);
-    } catch (e) {
+    } catch {
       return;
     }
 
     if (json.source !== "readyplayerme") return;
 
-    console.log("🎯 Prejet dogodek:", json);
-
     if (json.eventName === "v1.avatar.exported") {
       const avatarUrl = json.data.url;
-      console.log("✅ Avatar URL:", avatarUrl);
+      console.log("Avatar URL:", avatarUrl);
 
-      await saveAvatarUrl(avatarUrl);
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+      const userId = user.uid;
+
+      // Shrani avatar URL v Firebase
+      await firebase.database().ref("users/" + userId).update({
+        avatar: avatarUrl
+      });
+
       displayAvatar(avatarUrl);
+
+      // Vpiši v input
+      document.getElementById("avatarUrlInput").value = avatarUrl;
     }
   });
 
-  async function saveAvatarUrl(avatarUrl) {
-    if (!currentUser) return;
-    await firebase.database().ref("users/" + currentUser.uid).update({ avatar: avatarUrl });
-    console.log("✅ Avatar shranjen v Firebase.");
-  }
+  // Gumb za ročni vnos URL-ja
+  document.getElementById("saveAvatarBtn").addEventListener("click", async () => {
+    const avatarUrl = document.getElementById("avatarUrlInput").value.trim();
+    if (!avatarUrl) {
+      alert("Prosim, vnesi veljaven URL.");
+      return;
+    }
 
-  async function saveManualUrl() {
-    const input = document.getElementById("manualAvatarUrl");
-    const url = input.value.trim();
-    if (!url) return alert("Vnesi veljaven URL.");
-    await saveAvatarUrl(url);
-    displayAvatar(url);
-  }
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Uporabnik ni prijavljen.");
+      return;
+    }
+    const userId = user.uid;
 
-  function displayAvatar(avatarUrl) {
-    // Render celotno telo
-    const fullRender = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
-
-    // Render glava do prsi
-    const headRender = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
-
-    document.getElementById("avatarFullBody").innerHTML = `<img src="${fullRender}" alt="Avatar - celo telo">`;
-    document.getElementById("avatarHeadOnly").innerHTML = `<img src="${headRender}" alt="Avatar - glava">`;
-  }
+    // Shrani ročni URL v Firebase in prikaži
+    try {
+      await firebase.database().ref("users/" + userId).update({
+        avatar: avatarUrl
+      });
+      displayAvatar(avatarUrl);
+      alert("Avatar URL shranjen.");
+    } catch (e) {
+      console.error("Napaka pri shranjevanju:", e);
+      alert("Napaka pri shranjevanju.");
+    }
+  });
 </script>
 
 </body>
