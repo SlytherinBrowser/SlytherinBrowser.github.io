@@ -691,60 +691,51 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
 div.classList.add("messageContainer");
 div.dataset.key = snapshot.key;
 
-  // Avatarji (2D in 3D)
-const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 const userData = users[msg.uid] || {};
 const avatar2D = userData.avatarUrl || defaultAvatar;
 const avatar3D = userData.avatarURL2;
 
-// Kontejner za avatar (bodisi 2D ali 3D)
-let avatarElement;
+let avatarWrapper = document.createElement("div");
+avatarWrapper.style.width = "32px";
+avatarWrapper.style.height = "32px";
+avatarWrapper.style.borderRadius = "50%";
+avatarWrapper.style.overflow = "hidden";
+avatarWrapper.style.backgroundColor = "#eee";
+avatarWrapper.style.display = "inline-block";
 
-if (avatar3D) {
-  // 3D avatar z enako velikostjo kot 2D
-  avatarElement = document.createElement("model-viewer");
-  avatarElement.src = avatar3D;
-  avatarElement.setAttribute("camera-controls", "");
-  avatarElement.setAttribute("auto-rotate", "");
-  avatarElement.setAttribute("disable-zoom", "");
-  avatarElement.setAttribute("disable-pan", "");
-  avatarElement.setAttribute("disable-tap", "");
-  avatarElement.setAttribute("min-camera-orbit", "auto 90deg auto");
-  avatarElement.setAttribute("max-camera-orbit", "auto 90deg auto");
-
-  // Ujemanje z velikostjo 2D avatarja (32x32)
-  avatarElement.style.width = "32px";
-  avatarElement.style.height = "32px";
-  avatarElement.style.borderRadius = "50%";
-  avatarElement.style.overflow = "hidden";
-  avatarElement.style.backgroundColor = "#eee";
-
-  if (isOnline) {
-    avatarElement.style.border = "2px solid green";
-  }
-} else {
-  // Klasičen 2D avatar
-  avatarElement = document.createElement("img");
-  avatarElement.src = avatar2D;
-  avatarElement.alt = "Avatar";
-  avatarElement.classList.add("avatar"); // Dodaj razred, če uporabljaš CSS
-
-  avatarElement.style.width = "32px";
-  avatarElement.style.height = "32px";
-  avatarElement.style.borderRadius = "50%";
-
-  if (isOnline) {
-    avatarElement.style.border = "2px solid green";
-  }
+if (isOnline) {
+  avatarWrapper.style.border = "2px solid green";
 }
 
-// Klik na avatar (skupno za 2D in 3D)
-avatarElement.onclick = () => {
+if (avatar3D) {
+  // Vstavi model-viewer prek innerHTML
+  avatarWrapper.innerHTML = `
+    <model-viewer src="${avatar3D}"
+      style="width: 100%; height: 100%; border-radius: 50%;"
+      camera-controls auto-rotate
+      disable-zoom disable-pan disable-tap
+      min-camera-orbit="auto 90deg auto"
+      max-camera-orbit="auto 90deg auto">
+    </model-viewer>
+  `;
+} else {
+  const img = document.createElement("img");
+  img.src = avatar2D;
+  img.alt = "Avatar";
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.borderRadius = "50%";
+  avatarWrapper.appendChild(img);
+}
+
+// Klik - skupen za oboje
+avatarWrapper.onclick = () => {
   prepareReply(msg, snapshot.key, div);
 };
 
-// Dodaj avatar v DOM (npr. div s sporočilom)
-div.appendChild(avatarElement);
+div.appendChild(avatarWrapper);
+
   // Ime pošiljatelja
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
