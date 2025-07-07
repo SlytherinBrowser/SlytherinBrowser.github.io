@@ -383,9 +383,7 @@ width: 100%;
   opacity: 0.8;
 }
 
-
   </style>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -693,60 +691,20 @@ div.classList.add("messageContainer");
 div.dataset.key = snapshot.key;
 
   // Avatar
- const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-const userData = users[msg.uid] || {};
-const avatar2DContainer = document.createElement("div");
-avatar2DContainer.classList.add("avatar-container");
-
-if (userData.avatarURL2) {
-  // 👉 Prikaz 3D avatarja
-  const modelViewer = document.createElement("model-viewer");
-  modelViewer.setAttribute("src", userData.avatarURL2);
-  modelViewer.setAttribute("camera-controls", "");
-  modelViewer.setAttribute("auto-rotate", "");
-  modelViewer.setAttribute("disable-zoom", "");
-  modelViewer.setAttribute("disable-pan", "");
-  modelViewer.setAttribute("disable-tap", "");
-  modelViewer.setAttribute("min-camera-orbit", "0deg 90deg 0.5m");
-  modelViewer.setAttribute("max-camera-orbit", "0deg 90deg 0.5m");
-  modelViewer.setAttribute("camera-orbit", "0deg 90deg 0.5m");
-  modelViewer.setAttribute("field-of-view", "15deg");
-
-  modelViewer.style.width = "32px";
-  modelViewer.style.height = "32px";
-  modelViewer.style.borderRadius = "50%";
-  modelViewer.style.marginRight = "8px";
-  modelViewer.style.overflow = "hidden";
-  modelViewer.style.background = "#fff";
-  modelViewer.style.padding = "0";
-  modelViewer.style.border = isOnline ? "2px solid green" : "none";
-
-  modelViewer.onclick = () => {
-    prepareReply(msg, snapshot.key, div);
-  };
-
-  avatar2DContainer.appendChild(modelViewer);
-} else {
-  // 👉 Prikaz 2D avatarja
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
   const avatarImg = document.createElement("img");
-  avatarImg.src = userData.avatarUrl || defaultAvatar;
+  avatarImg.src = avatarUrl;
   avatarImg.alt = "Avatar";
   avatarImg.classList.add("avatar");
+avatarImg.onclick = () => {
+  prepareReply(msg, snapshot.key, div);
+};
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
     avatarImg.style.borderRadius = "50%";
   }
-
-  avatarImg.onclick = () => {
-    prepareReply(msg, snapshot.key, div);
-  };
-
-  avatar2DContainer.appendChild(avatarImg);
-}
-
-// Dodaj v svoj glavni element za sporočilo
-div.prepend(avatar2DContainer);
 
   // Ime pošiljatelja
   const senderSpan = document.createElement("span");
