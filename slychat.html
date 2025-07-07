@@ -23,7 +23,6 @@ window.addEventListener("error", function(event) {
   console.error("Vrstica:", event.lineno, "Stolpec:", event.colno);
   alert(`Napaka v JS:\n${event.message}\nV datoteki: ${event.filename}\nVrstica: ${event.lineno}`);
 });</script>
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -233,10 +232,11 @@ width: 100%;
 }
 
 .avatar {
-  width: 100%;
-  height: 100%;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
   object-fit: cover;
-  display: block;
 }
 
   .sparkle-effect {
@@ -383,11 +383,7 @@ width: 100%;
   opacity: 0.8;
 }
 
-
-
-
   </style>
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -636,18 +632,11 @@ return;
 messageInput.placeholder = "Vnesi sporočilo...";
 messageInput.dataset.nameConfirm = "0";
 }
-// Predpostavka:
-// - db je tvoja Firebase realtime baza, ref na "messages"
-// - currentUser je objekt trenutnega uporabnika z uid
-// - currentChatPartner je uid trenutnega partnerja za zasebni klepet ali null
-// - users je objekt z info o uporabnikih (avatarURL, avatarURL2, displayName ...)
-// - chatBox je DOM element, kamor prikazuješ sporočila
-// - userNamesCache, userStatusCache, userColorsCache, userEffectsCache so cache objekti za podatke o uporabnikih
-// - translateText je async funkcija za prevajanje sporočil
-// - prepareReply je funkcija za pripravo odgovora na sporočilo
 
+// 🎯 Poslušaj nova sporočila kronološko
 db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
+
 
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
@@ -672,7 +661,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     return;
   }
 
-  // 🔒 Zasebna sporočila - prikaži samo če sta uporabnika v zasebnem klepetu
+  // 🔒 Zasebna sporočila
   if (currentChatPartner) {
     const isPrivateMatch =
       (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
@@ -682,7 +671,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     if (msg.privateUid) return;
   }
 
-  // 🪙 Povečaj kovance za pošiljatelja (če je trenutni uporabnik)
+  // 🪙 Kovanci
   if (msg.uid === currentUser.uid) {
     const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
     userCoinsRef.once('value').then(snapshot => {
@@ -698,76 +687,26 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const effects = userEffectsCache[msg.uid] || null;
 
   const div = document.createElement("div");
-  div.classList.add("messageContainer");
-  div.dataset.key = snapshot.key;
-// --- AVATAR ---
+div.classList.add("messageContainer");
+div.dataset.key = snapshot.key;
 
-// --- AVATAR ---
-
-// --- AVATAR ---
-
-const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar (.glb)
-const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
-const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-
-const avatarWrapper = document.createElement("div");
-avatarWrapper.classList.add("avatar-wrapper");
-avatarWrapper.style.width = "32px";
-avatarWrapper.style.height = "32px";
-avatarWrapper.style.borderRadius = "50%";
-avatarWrapper.style.overflow = "hidden";
-avatarWrapper.style.cursor = "pointer";
-avatarWrapper.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
-
-// online indikator
-if (isOnline) {
-  avatarWrapper.style.border = "2px solid green";
-} else {
-  avatarWrapper.style.border = "none";
-}
-
-avatarWrapper.onclick = () => {
+  // Avatar
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
+  const avatarImg = document.createElement("img");
+  avatarImg.src = avatarUrl;
+  avatarImg.alt = "Avatar";
+  avatarImg.classList.add("avatar");
+avatarImg.onclick = () => {
   prepareReply(msg, snapshot.key, div);
 };
 
-if (avatar3D) {
-  const modelViewer = document.createElement("model-viewer");
-  modelViewer.classList.add("avatar3d");
-  modelViewer.setAttribute("src", avatar3D);
-  modelViewer.setAttribute("camera-controls", "");
-  modelViewer.setAttribute("auto-rotate", "");
-  modelViewer.setAttribute("disable-zoom", "");
-  modelViewer.setAttribute("disable-pan", "");
-  modelViewer.setAttribute("disable-tap", "");
-  modelViewer.setAttribute("min-camera-orbit", "0deg 90deg 1m");
-  modelViewer.setAttribute("max-camera-orbit", "360deg 90deg 1m");
-  modelViewer.setAttribute("camera-target", "0m 1.6m 0m");
-  modelViewer.setAttribute("field-of-view", "15deg");
-  modelViewer.setAttribute("environment-image", "neutral");
-  modelViewer.setAttribute("exposure", "1");
-  modelViewer.setAttribute("shadow-intensity", "0");
-  modelViewer.style.width = "100%";
-  modelViewer.style.height = "100%";
-  modelViewer.style.borderRadius = "50%";
-  modelViewer.style.objectFit = "cover";
-  modelViewer.style.backgroundColor = "transparent";
+  if (isOnline) {
+    avatarImg.style.border = "2px solid green";
+    avatarImg.style.borderRadius = "50%";
+  }
 
-  avatarWrapper.appendChild(modelViewer);
-} else {
-  const img = document.createElement("img");
-  img.src = avatar2D || defaultAvatar;
-  img.alt = "Avatar";
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.borderRadius = "50%";
-  img.style.objectFit = "cover";
-  avatarWrapper.appendChild(img);
-}
-
-div.appendChild(avatarWrapper);
-
-  // --- IME POŠILJATELJA ---
-
+  // Ime pošiljatelja
   const senderSpan = document.createElement("span");
   senderSpan.classList.add("sender");
 
@@ -784,54 +723,53 @@ div.appendChild(avatarWrapper);
   }
 
   senderSpan.textContent = displayName + ": ";
+  div.appendChild(avatarImg);
   div.appendChild(senderSpan);
 
-  // --- REPLY BOX ---
+if (msg.replyTo) {
+  const replyBox = document.createElement("div");
+  replyBox.classList.add("replyBox");
+  replyBox.style.borderLeft = "3px solid #888";
+  replyBox.style.background = "#f9f9f9";
+  replyBox.style.padding = "6px 10px";
+  replyBox.style.marginBottom = "6px";
+  replyBox.style.fontSize = "13px";
+  replyBox.style.color = "#555";
+  replyBox.style.cursor = "pointer";
+  replyBox.style.borderRadius = "6px";
 
-  if (msg.replyTo) {
-    const replyBox = document.createElement("div");
-    replyBox.classList.add("replyBox");
-    replyBox.style.borderLeft = "3px solid #888";
-    replyBox.style.background = "#f9f9f9";
-    replyBox.style.padding = "6px 10px";
-    replyBox.style.marginBottom = "6px";
-    replyBox.style.fontSize = "13px";
-    replyBox.style.color = "#555";
-    replyBox.style.cursor = "pointer";
-    replyBox.style.borderRadius = "6px";
+  // Samo preview, brez imena
+  replyBox.textContent = msg.replyTo.preview;
 
-    // Samo preview besedila brez imena
-    replyBox.textContent = msg.replyTo.preview;
+  replyBox.addEventListener("click", () => {
+    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+    if (original) {
+      original.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    replyBox.addEventListener("click", () => {
-      const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
-      if (original) {
-        original.scrollIntoView({ behavior: "smooth", block: "center" });
-
-        original.classList.add("blink");
-        setTimeout(() => {
-          original.classList.remove("blink");
-        }, 1500);
-      }
-    });
-
-    div.appendChild(replyBox);
-  }
-
-  // --- SPOROČILO ---
-
-  const realText = document.createElement("span");
-  realText.classList.add("realText");
-
-  // Prevedi besedilo (asinkrono)
-  translateText(msg.text, selectedLanguage).then(translated => {
-    realText.textContent = translated;
+      original.classList.add("blink");
+      setTimeout(() => {
+        original.classList.remove("blink");
+      }, 1500);
+    }
   });
 
+  div.appendChild(replyBox);
+}
+
+  // Sporočilo
+  const realText = document.createElement("span");
+realText.classList.add("realText");
+
+// Prevedi besedilo
+translateText(msg.text, selectedLanguage).then(translated => {
+  realText.textContent = translated;
+});
+  // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
     realText.classList.add("hackerEffect");
   }
 
+  // 📝 Če je sporočilo bilo urejeno
   if (msg.edited) {
     const editedMark = document.createElement("span");
     editedMark.textContent = " (urejeno)";
@@ -840,6 +778,7 @@ div.appendChild(avatarWrapper);
     realText.appendChild(editedMark);
   }
 
+  // 🕵️‍♂️ Skrito sporočilo
   if (msg.hidden) {
     const hiddenText = document.createElement("span");
     hiddenText.classList.add("hiddenText");
@@ -854,6 +793,8 @@ div.appendChild(avatarWrapper);
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
+
+
 
 
 // 🔁 Poslušaj spremembe sporočil (npr. popravljeno sporočilo)
