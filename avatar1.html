@@ -25,7 +25,6 @@
     model-viewer {
       width: 300px;
       height: 400px;
-      pointer-events: none; /* za vsak slučaj onemogoči interakcije */
     }
 
     .round {
@@ -34,13 +33,21 @@
       width: 200px;
       height: 200px;
       position: relative;
+      background: #eee;
     }
 
     .round model-viewer {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      pointer-events: none;
+      --model-viewer-touch-action: none;
+      camera-controls: true;
+    }
+
+    input, button {
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 16px;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -50,12 +57,12 @@
 <body>
 
 <h2>Ustvari svoj avatar</h2>
-<iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
+<iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
 
 <div id="avatarDisplay"></div>
 
-<input type="text" id="linkInput" placeholder="Vnesi avatar URL">
-<button onclick="shraniAvatar()">Shrani avatar URL</button>
+<input type="text" id="linkInput" placeholder="Vnesi avatar URL ročno">
+<button onclick="shraniAvatar()">Shrani ročno</button>
 
 <script>
   const firebaseConfig = {
@@ -71,7 +78,7 @@
   firebase.initializeApp(firebaseConfig);
 
   firebase.auth().signInAnonymously().then(() => {
-    console.log("Prijavljen si.");
+    console.log("✅ Prijavljen si.");
   });
 
   const frame = document.getElementById("rpm-frame");
@@ -88,21 +95,25 @@
   });
 
   window.addEventListener("message", async (event) => {
-    const json = JSON.parse(event.data);
-    if (json.source !== "readyplayerme") return;
+    try {
+      const json = JSON.parse(event.data);
+      if (json.source !== "readyplayerme") return;
 
-    if (json.eventName === "v1.avatar.exported") {
-      const avatarUrl = json.data.url;
-      console.log("✅ Avatar URL:", avatarUrl);
+      if (json.eventName === "v1.avatar.exported") {
+        const avatarUrl = json.data.url;
+        console.log("✅ Avatar URL: ", avatarUrl);
 
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const userId = user.uid;
-        await firebase.database().ref("users/" + userId).update({
-          avatar: avatarUrl
-        });
-        prikaziAvatar(avatarUrl);
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const userId = user.uid;
+          await firebase.database().ref("users/" + userId).update({
+            avatar: avatarUrl
+          });
+          prikaziAvatar(avatarUrl);
+        }
       }
+    } catch (err) {
+      console.warn("Neveljavno sporočilo ali format.", err);
     }
   });
 
@@ -123,10 +134,17 @@
       <h3>Tvoj avatar:</h3>
       <div class="viewer-wrapper">
         <model-viewer src="${url}" camera-controls auto-rotate
-          disable-zoom disable-pan disable-tap></model-viewer>
+          disable-zoom disable-pan disable-tap
+          min-camera-orbit="auto 90deg auto"
+          max-camera-orbit="auto 90deg auto">
+        </model-viewer>
+
         <div class="round">
           <model-viewer src="${url}" camera-controls auto-rotate
-            disable-zoom disable-pan disable-tap></model-viewer>
+            disable-zoom disable-pan disable-tap
+            min-camera-orbit="auto 90deg auto"
+            max-camera-orbit="auto 90deg auto">
+          </model-viewer>
         </div>
       </div>
     `;
