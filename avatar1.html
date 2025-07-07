@@ -9,23 +9,38 @@
       height: 600px;
       border: none;
     }
+
     #avatarDisplay {
       margin-top: 20px;
     }
+
     .viewer-wrapper {
       display: flex;
       justify-content: space-around;
       margin-top: 20px;
+      flex-wrap: wrap;
+      gap: 20px;
     }
+
     model-viewer {
       width: 300px;
       height: 400px;
+      pointer-events: none; /* za vsak slučaj onemogoči interakcije */
     }
+
     .round {
       border-radius: 50%;
       overflow: hidden;
       width: 200px;
       height: 200px;
+      position: relative;
+    }
+
+    .round model-viewer {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -107,9 +122,11 @@
     document.getElementById("avatarDisplay").innerHTML = `
       <h3>Tvoj avatar:</h3>
       <div class="viewer-wrapper">
-        <model-viewer src="${url}" camera-controls auto-rotate></model-viewer>
+        <model-viewer src="${url}" camera-controls auto-rotate
+          disable-zoom disable-pan disable-tap></model-viewer>
         <div class="round">
-          <model-viewer src="${url}" camera-controls auto-rotate></model-viewer>
+          <model-viewer src="${url}" camera-controls auto-rotate
+            disable-zoom disable-pan disable-tap></model-viewer>
         </div>
       </div>
     `;
