@@ -692,19 +692,60 @@ div.dataset.key = snapshot.key;
 
   // Avatar
   const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
+const user = users[msg.uid] || {};
+const has3DAvatar = user.avatarURL2 && user.avatarURL2.includes(".glb");
+const isOnline = user.online;
+
+const avatarWrapper = document.createElement("div");
+avatarWrapper.classList.add("avatar-wrapper");
+
+// === 3D AVATAR ===
+if (has3DAvatar) {
+  const modelViewer = document.createElement("model-viewer");
+modelViewer.setAttribute("src", user.avatarURL2);
+modelViewer.setAttribute("camera-controls", "");
+modelViewer.setAttribute("auto-rotate", "");
+modelViewer.setAttribute("disable-zoom", "");
+modelViewer.setAttribute("disable-pan", "");
+modelViewer.setAttribute("disable-tap", "");
+modelViewer.setAttribute("min-camera-orbit", "0deg 90deg 0.5m");  // približana glava
+modelViewer.setAttribute("max-camera-orbit", "0deg 90deg 0.5m");
+modelViewer.setAttribute("camera-orbit", "0deg 90deg 0.5m");
+modelViewer.setAttribute("field-of-view", "15deg"); // bolj fokusiran pogled
+
+modelViewer.style.width = "32px";
+modelViewer.style.height = "32px";
+modelViewer.style.borderRadius = "50%";
+modelViewer.style.marginRight = "8px";
+modelViewer.style.overflow = "hidden";
+modelViewer.style.background = "#fff";
+modelViewer.style.padding = "0";
+
+if (isOnline) {
+  modelViewer.style.border = "2px solid green";
+}
+
+  avatarWrapper.appendChild(modelViewer);
+} else {
+  // === 2D AVATAR ===
+  const avatarUrl = user.avatarUrl || defaultAvatar;
   const avatarImg = document.createElement("img");
   avatarImg.src = avatarUrl;
   avatarImg.alt = "Avatar";
   avatarImg.classList.add("avatar");
-avatarImg.onclick = () => {
-  prepareReply(msg, snapshot.key, div);
-};
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
-    avatarImg.style.borderRadius = "50%";
   }
+
+  avatarImg.onclick = () => {
+    prepareReply(msg, snapshot.key, div);
+  };
+
+  avatarWrapper.appendChild(avatarImg);
+}
+
+div.appendChild(avatarWrapper);
 
   // Ime pošiljatelja
   const senderSpan = document.createElement("span");
