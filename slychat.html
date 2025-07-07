@@ -383,15 +383,6 @@ width: 100%;
   opacity: 0.8;
 }
 
-
-
-.avatar3d {
-  width: 80px;
-  height: 80px;
-  display: inline-block;
-  vertical-align: middle;
-}
-
   </style>
 </head>
 <body>
@@ -521,49 +512,6 @@ let users = {};
   `;  
 
   document.head.appendChild(style);  
-
-
-
-
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-function loadAndRender3DAvatar(container) {
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  container.appendChild(renderer.domElement);
-
-  const loader = new GLTFLoader();
-
-  const modelUrl = container.dataset.url;
-  loader.load(modelUrl, (gltf) => {
-    scene.add(gltf.scene);
-
-    // Center model and scale it
-    const box = new THREE.Box3().setFromObject(gltf.scene);
-    const size = box.getSize(new THREE.Vector3());
-    const maxDim = Math.max(size.x, size.y, size.z);
-    gltf.scene.scale.setScalar(1 / maxDim); // normaliziraj velikost
-
-    // Postavi model pred kamero
-    camera.position.set(0, 1.5, 2);
-    camera.lookAt(new THREE.Vector3(0, 1, 0));
-
-    // Svetloba
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(light);
-
-    function animate() {
-      requestAnimationFrame(animate);
-      gltf.scene.rotation.y += 0.01; // rahlo rotiranje modela
-      renderer.render(scene, camera);
-    }
-    animate();
-  });
-}
-
 
 
 
@@ -742,16 +690,16 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
 div.classList.add("messageContainer");
 div.dataset.key = snapshot.key;
 
-  const avatarContainer = document.createElement("div");
-avatarContainer.classList.add("avatar3d");
-avatarContainer.style.width = "80px";   // prilagodi velikost
-avatarContainer.style.height = "80px";  // prilagodi velikost
-avatarContainer.dataset.url = users[msg.uid]?.modelUrl || defaultModelUrl; // link do .glb modela
-
-div.appendChild(avatarContainer);
-
-// Tukaj kličeš funkcijo, ki bo naložila in prikazala 3D avatar v ta container
-loadAndRender3DAvatar(avatarContainer);
+  // Avatar
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  const avatarUrl = users[msg.uid]?.avatarUrl || defaultAvatar;
+  const avatarImg = document.createElement("img");
+  avatarImg.src = avatarUrl;
+  avatarImg.alt = "Avatar";
+  avatarImg.classList.add("avatar");
+avatarImg.onclick = () => {
+  prepareReply(msg, snapshot.key, div);
+};
 
   if (isOnline) {
     avatarImg.style.border = "2px solid green";
@@ -2675,14 +2623,14 @@ function prepareReply(msg, messageKey, messageDiv) {
     replyPreviewDiv.remove();  
     replyPreviewDiv = null;  
   }  
-  
+
   currentReply = {  
     toUid: msg.uid,  
     messageKey: messageKey,  
     preview: msg.text.length > 100 ? msg.text.slice(0, 100) + "..." : msg.text,  
     name: users[msg.uid]?.displayName || "Anonimen"  
   };  
-  
+
   replyPreviewDiv = document.createElement("div");  
   replyPreviewDiv.classList.add("replyPreviewMessage");  
   replyPreviewDiv.style.background = "#f1f1f1";  
@@ -2692,7 +2640,7 @@ function prepareReply(msg, messageKey, messageDiv) {
   replyPreviewDiv.style.borderRadius = "10px";  
   replyPreviewDiv.style.width = "100%";  
   replyPreviewDiv.style.boxSizing = "border-box";  
-  
+
   // Vsebina originalnega sporočila  
   const content = document.createElement("div");  
   content.innerHTML = `  
@@ -2700,7 +2648,7 @@ function prepareReply(msg, messageKey, messageDiv) {
     <em>${currentReply.preview}</em>  
   `;  
   replyPreviewDiv.appendChild(content);  
-  
+
   // Input za odgovor  
   const replyInput = document.createElement("input");  
   replyInput.type = "text";  
@@ -2712,13 +2660,13 @@ function prepareReply(msg, messageKey, messageDiv) {
   replyInput.style.borderRadius = "6px";  
   replyInput.style.border = "1px solid #ccc";  
   replyPreviewDiv.appendChild(replyInput);  
-  
+
   // Gumbi spodaj  
   const buttonRow = document.createElement("div");  
   buttonRow.style.marginTop = "10px";  
   buttonRow.style.display = "flex";  
   buttonRow.style.gap = "10px";  
-  
+
   const cancelBtn = document.createElement("button");  
   cancelBtn.textContent = "✖ Prekliči";  
   cancelBtn.style.flex = "1";  
@@ -2728,7 +2676,7 @@ function prepareReply(msg, messageKey, messageDiv) {
   cancelBtn.style.backgroundColor = "#ccc";  
   cancelBtn.style.cursor = "pointer";  
   cancelBtn.onclick = cancelReply;  
-  
+
   const confirmBtn = document.createElement("button");  
   confirmBtn.textContent = "✔ Potrdi odgovor";  
   confirmBtn.style.flex = "2";  
@@ -2742,15 +2690,15 @@ function prepareReply(msg, messageKey, messageDiv) {
   sendMessage(true); // pove, da gre za reply, torej se pošlje iz replyInput  
   cancelReply();     // počisti reply UI po pošiljanju  
 }; 
-  
+
   buttonRow.appendChild(cancelBtn);  
   buttonRow.appendChild(confirmBtn);  
   replyPreviewDiv.appendChild(buttonRow);  
-  
+
   // Dodamo pod originalno sporočilo  
   messageDiv.insertAdjacentElement("afterend", replyPreviewDiv);  
   chatBox.scrollTop = chatBox.scrollHeight;  
-  
+
   // Fokus na input za odgovor  
   replyInput.focus();
 }
