@@ -1,60 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Avatar Creator</title>
+  <title>Ustvari Avatar</title>
   <style>
     iframe {
       width: 100%;
       height: 600px;
       border: none;
     }
-    #avatarDisplay {
-      margin-top: 20px;
-    }
-    .avatar-preview {
+    .avatar-container {
       display: flex;
       gap: 20px;
+      align-items: center;
       margin-top: 20px;
     }
-    .avatar-rectangle, .avatar-circle {
-      border: 2px solid #333;
-    }
-    .avatar-rectangle {
+    .avatar-rect img {
       width: 200px;
       height: 400px;
+      object-fit: contain;
+      background: #eee;
     }
     .avatar-circle {
       width: 150px;
       height: 150px;
       border-radius: 50%;
       overflow: hidden;
+      background: #eee;
     }
-    .avatar-rectangle img,
     .avatar-circle img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+    .error {
+      color: red;
+    }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
 <h2>Ustvari svoj avatar</h2>
-<iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
+<iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
 
-<!-- Manual avatar URL input -->
 <div style="margin-top: 20px;">
-  <input type="text" id="avatarUrlInput" placeholder="Vnesi avatar URL" style="width: 60%;">
-  <button onclick="useManualAvatar()">Uporabi avatar</button>
+  <input type="text" id="manualUrl" placeholder="Vnesi .glb avatar URL" style="width: 70%;">
+  <button onclick="saveManualUrl()">Shrani</button>
 </div>
 
-<div id="avatarDisplay"></div>
+<div id="avatarUrlDisplay" style="margin-top: 10px; font-family: monospace;"></div>
+
+<div id="avatarDisplay" class="avatar-container"></div>
+
+<div id="errorMsg" class="error"></div>
 
 <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  let currentUserId = null;
+
+  firebase.auth().signInAnonymously().then(() => {
+    currentUserId = firebase.auth().currentUser.uid;
+    loadAvatar(); // Load existing avatar if available
+  });
+
   const frame = document.getElementById("rpm-frame");
 
-  // Pošlji zahtevo za "export" dogodek
   frame.addEventListener("load", () => {
     frame.contentWindow.postMessage(
       JSON.stringify({
@@ -66,40 +89,55 @@
     );
   });
 
-  // Sprejmi sporočilo z avatarjem
-  window.addEventListener("message", (event) => {
-    let json;
-    try {
-      json = JSON.parse(event.data);
-    } catch (e) {
-      return;
-    }
-
+  window.addEventListener("message", async (event) => {
+    const json = JSON.parse(event.data);
     if (json.source !== "readyplayerme") return;
 
     if (json.eventName === "v1.avatar.exported") {
       const avatarUrl = json.data.url;
       console.log("✅ Avatar URL:", avatarUrl);
-      showAvatarPreviews(avatarUrl);
+      await saveAvatarUrl(avatarUrl);
+      displayAvatar(avatarUrl);
     }
   });
 
-  function useManualAvatar() {
-    const url = document.getElementById("avatarUrlInput").value.trim();
-    if (url) showAvatarPreviews(url);
+  async function saveAvatarUrl(url) {
+    if (!currentUserId) return;
+    await firebase.database().ref("users/" + currentUserId).update({
+      avatar: url
+    });
   }
 
-  function showAvatarPreviews(avatarUrl) {
-    const fullBody = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
-    const halfBody = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
+  async function saveManualUrl() {
+    const url = document.getElementById("manualUrl").value.trim();
+    if (url && url.endsWith(".glb")) {
+      await saveAvatarUrl(url);
+      displayAvatar(url);
+    } else {
+      document.getElementById("errorMsg").textContent = "Vnesi veljaven .glb URL!";
+    }
+  }
 
-    document.getElementById("avatarDisplay").innerHTML = `
-      <h3>Tvoj avatar:</h3>
-      <div class="avatar-preview">
-        <div class="avatar-rectangle"><img src="${fullBody}" alt="Full body"></div>
-        <div class="avatar-circle"><img src="${halfBody}" alt="Headshot"></div>
-      </div>
+  async function loadAvatar() {
+    const snapshot = await firebase.database().ref("users/" + currentUserId + "/avatar").get();
+    if (snapshot.exists()) {
+      const url = snapshot.val();
+      displayAvatar(url);
+    }
+  }
+
+  function displayAvatar(avatarUrl) {
+    document.getElementById("errorMsg").textContent = "";
+    document.getElementById("avatarUrlDisplay").textContent = "GLB URL: " + avatarUrl;
+
+    const bodyImgUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
+    const headImgUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
+
+    const html = `
+      <div class="avatar-rect"><img src="${bodyImgUrl}" onerror="document.getElementById('errorMsg').textContent = '❌ Slika telesa se ne naloži. Morda je URL napačen ali ReadyPlayer ne deluje.'"></div>
+      <div class="avatar-circle"><img src="${headImgUrl}" onerror="document.getElementById('errorMsg').textContent = '❌ Slika glave se ne naloži. Morda je URL napačen ali ReadyPlayer ne deluje.'"></div>
     `;
+    document.getElementById("avatarDisplay").innerHTML = html;
   }
 </script>
 
