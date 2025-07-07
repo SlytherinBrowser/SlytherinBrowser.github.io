@@ -738,21 +738,20 @@ if (avatar3D) {
     position: relative;
     box-shadow: 0 0 6px rgba(0,0,0,0.3);
   ">
-    <model-viewer
-      src="${avatar3D}"
-      camera-controls
-      disable-zoom
-      disable-pan
-      disable-tap
-      auto-rotate
-      style="width: 32px; height: 32px; border-radius: 50%; background: transparent;"
-      exposure="1.2"
-      shadow-intensity="0"
-      environment-image="neutral"
-      camera-orbit="0deg 90deg 0.4m"
-      field-of-view="30deg"
-    >
-    </model-viewer>
+    <div class="round">
+  <model-viewer
+    src="${url}"
+    camera-controls
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    min-camera-orbit="0deg 90deg 1m"
+    max-camera-orbit="360deg 90deg 1m"
+    camera-target="0m 1.6m 0m"
+    field-of-view="15deg">
+  </model-viewer>
+  </div>
   </div>
   `;
 } else {
