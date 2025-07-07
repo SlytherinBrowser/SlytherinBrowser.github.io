@@ -139,14 +139,20 @@
           max-camera-orbit="auto 90deg auto">
         </model-viewer>
 
-        <div class="round">
-          <model-viewer src="${url}" camera-controls auto-rotate
-            disable-zoom disable-pan disable-tap
-            min-camera-orbit="auto 90deg auto"
-            max-camera-orbit="auto 90deg auto">
-          </model-viewer>
-        </div>
-      </div>
+       <div class="round">
+  <model-viewer
+    src="${url}"
+    camera-controls
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    min-camera-orbit="0deg 90deg 1m"
+    max-camera-orbit="360deg 90deg 1m"
+    camera-target="0m 1.4m 0m"
+    field-of-view="15deg">
+  </model-viewer>
+</div>
     `;
   }
 </script>
