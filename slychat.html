@@ -698,19 +698,24 @@ div.dataset.key = snapshot.key;
   const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
 
-// Wrapper za avatar (3D model-viewer)
 const wrapper = document.createElement("div");
 wrapper.className = "avatar-wrapper";
 wrapper.style.cssText = `
   width: 40px;
   height: 40px;
-  overflow: hidden;
   ${isOnline ? "border: 2px solid green;" : ""}
   border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
 `;
 
-// Notranji HTML z model-viewerjem
-wrapper.innerHTML = `
+// Ali je URL do 3D modela?
+const is3DModel = avatarUrl.endsWith(".glb") || avatarUrl.endsWith(".gltf");
+
+wrapper.innerHTML = is3DModel ? `
   <model-viewer
     src="${avatarUrl}"
     camera-controls
@@ -722,8 +727,11 @@ wrapper.innerHTML = `
     max-camera-orbit="360deg 90deg 0.65m"
     camera-target="0m 1.70m 0m"
     field-of-view="20deg"
-    style="width: 100%; height: 100%;">
+    style="width: 100%; height: 100%; background: transparent;">
   </model-viewer>
+` : `
+  <img src="${avatarUrl}" alt="Avatar"
+    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
 `;
 
 // Klik na avatar
@@ -749,10 +757,9 @@ if (effects === "hacker") {
 
 senderSpan.textContent = displayName + ": ";
 
-// Dodaj v element sporočila
-div.appendChild(wrapper); // <- tu je bil prej avatarImg
+// Dodaj v sporočilo
+div.appendChild(wrapper);
 div.appendChild(senderSpan);
-
 if (msg.replyTo) {
   const replyBox = document.createElement("div");
   replyBox.classList.add("replyBox");
