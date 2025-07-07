@@ -11,39 +11,30 @@
     #avatarDisplay {
       margin-top: 20px;
     }
-    .avatar-wrapper {
+    .avatar-preview {
       display: flex;
-      gap: 40px;
+      gap: 20px;
       margin-top: 20px;
-      align-items: center;
     }
-    .avatar-rect {
+    .avatar-rectangle {
       width: 200px;
       height: 400px;
-      background-color: #f0f0f0;
-      overflow: hidden;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 2px solid #333;
     }
-    .avatar-round {
-      width: 200px;
-      height: 200px;
+    .avatar-circle {
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
       overflow: hidden;
-      background-color: #f0f0f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 2px solid #333;
     }
-    .avatar-rect img, .avatar-round img {
+    .avatar-circle img,
+    .avatar-rectangle img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
   </style>
-
   <!-- Firebase CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -54,9 +45,17 @@
 <h2>Ustvari svoj avatar</h2>
 <iframe id="rpm-frame" src="https://readyplayer.me/avatar?sk_live_339mFDSGcXj7CTL3xozk6ywjjERKN06cogHu" allow="camera *; microphone *;"></iframe>
 
+<!-- ✅ Input za ročni vnos avatar URL -->
+<div style="margin-top: 20px;">
+  <input type="text" id="avatarUrlInput" placeholder="Vnesi avatar URL" style="width: 60%;">
+  <button onclick="saveManualAvatar()">Shrani avatar</button>
+</div>
+
+<!-- Prikaz avatarja -->
 <div id="avatarDisplay"></div>
 
 <script>
+  // ✅ Firebase konfiguracija
   const firebaseConfig = {
     apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
     authDomain: "chater-cf682.firebaseapp.com",
@@ -69,8 +68,12 @@
 
   firebase.initializeApp(firebaseConfig);
 
+  let currentUser = null;
+
+  // 🔐 Anonimna prijava
   firebase.auth().signInAnonymously().then(() => {
     console.log("Prijavljen si.");
+    currentUser = firebase.auth().currentUser;
   });
 
   const frame = document.getElementById("rpm-frame");
@@ -86,6 +89,7 @@
     );
   });
 
+  // 🔁 Dogodek, ko avatar je iz ReadyPlayerMe izvožen
   window.addEventListener("message", async (event) => {
     const json = JSON.parse(event.data);
 
@@ -95,31 +99,41 @@
       const avatarUrl = json.data.url;
       console.log("✅ Avatar URL:", avatarUrl);
 
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const userId = user.uid;
-        await firebase.database().ref("users/" + userId).update({
-          avatar: avatarUrl
-        });
-
-        // 🔁 Prikaz avatarjev
-        const fullBody = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
-        const halfBody = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
-
-        document.getElementById("avatarDisplay").innerHTML = `
-          <h3>Tvoj avatar:</h3>
-          <div class="avatar-wrapper">
-            <div class="avatar-rect">
-              <img src="${fullBody}" alt="Celo telo">
-            </div>
-            <div class="avatar-round">
-              <img src="${halfBody}" alt="Glava in prsi">
-            </div>
-          </div>
-        `;
-      }
+      await saveAvatarToFirebase(avatarUrl);
+      showAvatarPreviews(avatarUrl);
     }
   });
+
+  // 📥 Ročno shrani avatar
+  async function saveManualAvatar() {
+    const avatarUrl = document.getElementById("avatarUrlInput").value.trim();
+    if (!avatarUrl || !currentUser) return;
+
+    await saveAvatarToFirebase(avatarUrl);
+    showAvatarPreviews(avatarUrl);
+  }
+
+  // 🔐 Shrani avatar URL v Firebase
+  async function saveAvatarToFirebase(avatarUrl) {
+    const userId = currentUser.uid;
+    await firebase.database().ref("users/" + userId).update({
+      avatar: avatarUrl
+    });
+  }
+
+  // 🎨 Prikaži avatar slike
+  function showAvatarPreviews(avatarUrl) {
+    const fullBodyUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=full-body-portrait-v1-transparent`;
+    const headshotUrl = `https://render.readyplayer.me/render?url=${encodeURIComponent(avatarUrl)}&scene=half-body-portrait-v1`;
+
+    document.getElementById("avatarDisplay").innerHTML = `
+      <h3>Tvoj avatar:</h3>
+      <div class="avatar-preview">
+        <div class="avatar-rectangle"><img src="${fullBodyUrl}" alt="Celo telo"></div>
+        <div class="avatar-circle"><img src="${headshotUrl}" alt="Glava"></div>
+      </div>
+    `;
+  }
 </script>
 
 </body>
