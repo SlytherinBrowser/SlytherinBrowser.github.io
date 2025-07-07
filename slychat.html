@@ -740,14 +740,13 @@ function setBorderOnline(element, isOnline) {
 
 // Prikaz avatarja
 if (avatar3D) {
-  // 3D avatar z model-viewer
   avatarWrapper.innerHTML = `
     <div class="avatar3d-container" style="
+      position: relative;
       width: 32px;
       height: 32px;
       border-radius: 50%;
       overflow: hidden;
-      position: relative;
       box-shadow: 0 0 6px rgba(0,0,0,0.3);
     ">
       <model-viewer
@@ -761,23 +760,20 @@ if (avatar3D) {
         max-camera-orbit="360deg 90deg 1m"
         camera-target="0m 1.6m 0m"
         field-of-view="15deg"
-        style="width:32px; height:32px; border-radius:50%; display:block;"
+        style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 150%;    /* povečano za 'cover' efekt */
+          height: 150%;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          pointer-events: none;  /* da se klikanje ne izgubi na wrapper */
+        "
       >
       </model-viewer>
     </div>
   `;
-  setBorderOnline(avatarWrapper, isOnline);
-} else {
-  // 2D avatar ali default
-  const img = document.createElement("img");
-  img.src = avatar2D || defaultAvatar;
-  img.alt = "Avatar";
-  img.style.width = "32px";
-  img.style.height = "32px";
-  img.style.borderRadius = "50%";
-  img.style.objectFit = "cover";
-  img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
-  avatarWrapper.appendChild(img);
   setBorderOnline(avatarWrapper, isOnline);
 }
 
