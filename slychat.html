@@ -384,6 +384,14 @@ width: 100%;
   opacity: 0.8;
 }
 
+
+.avatar-wrapper {
+  flex-shrink: 0;
+  overflow: hidden; /* da 3D model ostane v okvirju */
+  border-radius: 50%;
+  display: inline-block;
+}
+
   </style>
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
@@ -698,72 +706,70 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const div = document.createElement("div");
   div.classList.add("messageContainer");
   div.dataset.key = snapshot.key;
+// --- AVATAR ---
 
-  // --- AVATAR ---
+const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
+const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
+const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 
-  const avatar3D = users[msg.uid]?.avatarURL2 || null;  // 3D avatar
-  const avatar2D = users[msg.uid]?.avatarURL || null;   // 2D avatar
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+const avatarWrapper = document.createElement("div");
+avatarWrapper.classList.add("avatar-wrapper");
+avatarWrapper.style.position = "relative";
+avatarWrapper.style.width = "32px";  // sprememba na 32
+avatarWrapper.style.height = "32px"; // sprememba na 32
+avatarWrapper.style.cursor = "pointer";
 
-  const avatarWrapper = document.createElement("div");
-  avatarWrapper.classList.add("avatar-wrapper");
-  avatarWrapper.style.position = "relative";
-  avatarWrapper.style.width = "48px";
-  avatarWrapper.style.height = "48px";
-  avatarWrapper.style.cursor = "pointer";
+avatarWrapper.onclick = () => {
+  prepareReply(msg, snapshot.key, div);
+};
 
-  avatarWrapper.onclick = () => {
-    prepareReply(msg, snapshot.key, div);
-  };
-
-  if (avatar3D) {
-    // 3D avatar z model-viewer
-    avatarWrapper.innerHTML = `
+if (avatar3D) {
+  // 3D avatar z model-viewer
+  avatarWrapper.innerHTML = `
   <div class="avatar3d-container" style="
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     overflow: hidden;
     box-shadow: 0 0 6px rgba(0,0,0,0.3);
     position: relative;
   ">
    <model-viewer 
-  src="${avatar3D}"
-  camera-controls 
-  disable-zoom 
-  disable-pan 
-  disable-tap 
-  auto-rotate 
-  style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: transparent;"
-  exposure="1.2"
-  shadow-intensity="0"
-  environment-image="neutral"
-  camera-orbit="0deg 85deg 0.4m"
-  field-of-view="25deg"
->
-</model-viewer>
+     src="${avatar3D}"
+     camera-controls 
+     disable-zoom 
+     disable-pan 
+     disable-tap 
+     auto-rotate 
+     style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: transparent;"
+     exposure="1.2"
+     shadow-intensity="0"
+     environment-image="neutral"
+     camera-orbit="0deg 85deg 0.4m"
+     field-of-view="25deg"
+   >
+   </model-viewer>
   </div>
-`;
-  } else {
-    // 2D avatar ali default
-    const img = document.createElement("img");
-    img.src = avatar2D || defaultAvatar;
-    img.alt = "Avatar";
-    img.style.width = "48px";
-    img.style.height = "48px";
-    img.style.borderRadius = "50%";
-    img.style.objectFit = "cover";
-    img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
-    avatarWrapper.appendChild(img);
-  }
+  `;
+} else {
+  // 2D avatar ali default
+  const img = document.createElement("img");
+  img.src = avatar2D || defaultAvatar;
+  img.alt = "Avatar";
+  img.style.width = "32px";     // sprememba na 32
+  img.style.height = "32px";    // sprememba na 32
+  img.style.borderRadius = "50%";
+  img.style.objectFit = "cover";
+  img.style.boxShadow = "0 0 6px rgba(0,0,0,0.3)";
+  avatarWrapper.appendChild(img);
+}
 
-  if (isOnline) {
-    avatarWrapper.style.border = "2px solid green";
-    avatarWrapper.style.borderRadius = "50%";
-  }
+if (isOnline) {
+  avatarWrapper.style.border = "2px solid green";
+  avatarWrapper.style.borderRadius = "50%";
+}
 
-  div.appendChild(avatarWrapper);
-
+div.appendChild(avatarWrapper);
   // --- IME POŠILJATELJA ---
 
   const senderSpan = document.createElement("span");
