@@ -2462,112 +2462,117 @@ function showUserMapPopup() {
   });
 }
 
-function initUserMap() {  
-  const map = L.map('userMap').setView([46.05, 14.5], 7);  
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {  
-    maxZoom: 19  
-  }).addTo(map);  
-  
-  // 🔄 OSVEŽUJ LOKACIJO  
-  function updateMyLocation() {  
-    navigator.geolocation.getCurrentPosition(pos => {  
-      const lat = pos.coords.latitude;  
-      const lng = pos.coords.longitude;  
-      firebase.database().ref("locations/" + currentUser.uid).set({ lat, lng });  
-    });  
-  }  
-  
-  updateMyLocation();  
-  setInterval(updateMyLocation, 60000);  
-  
-  // 🧍 PRIKAŽI 3D AVATAR na tvoji lokaciji  
-  const avatarContainer = document.createElement("div");  
-  avatarContainer.style.position = "absolute";  
-  avatarContainer.style.width = "70px";   // manjši avatar  
-  avatarContainer.style.height = "140px"; // manjši avatar  
-  avatarContainer.style.pointerEvents = "none";  
-  avatarContainer.style.background = "transparent";  
-  avatarContainer.style.zIndex = 9999;    // najvišji sloj  
-  avatarContainer.style.display = "none";  
-  
-  const modelViewer = document.createElement("model-viewer");  
-  modelViewer.setAttribute("camera-controls", "");  
-  modelViewer.setAttribute("auto-rotate", "");  
-  modelViewer.setAttribute("disable-zoom", "");  
-  modelViewer.setAttribute("disable-pan", "");  
-  modelViewer.setAttribute("disable-tap", "");  
-  modelViewer.setAttribute("min-camera-orbit", "auto 90deg auto");  
-  modelViewer.setAttribute("max-camera-orbit", "auto 90deg auto");  
-  modelViewer.style.width = "100%";  
-  modelViewer.style.height = "100%";  
-  modelViewer.style.background = "transparent";  
-  
-  avatarContainer.appendChild(modelViewer);  
-  document.body.appendChild(avatarContainer);  
-  
-  function updateAvatarPosition(lat, lng) {  
-    const point = map.latLngToContainerPoint([lat, lng]);  
-    avatarContainer.style.left = (point.x - 35) + "px";  // polovica širine (70/2)  
-    avatarContainer.style.top = (point.y - 140) + "px";   // višina avatarja  
-  }  
-  
-  async function refreshAvatar() {  
-    try {  
-      const [locSnap, avatarSnap] = await Promise.all([  
-        firebase.database().ref("locations/" + currentUser.uid).once("value"),  
-        firebase.database().ref("users/" + currentUser.uid + "/avatarUrl2").once("value")  
-      ]);  
-  
-      const loc = locSnap.val();  
-      const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";  
-  
-      if (loc && loc.lat && loc.lng) {  
-        modelViewer.setAttribute("src", avatarUrl);  
-        updateAvatarPosition(loc.lat, loc.lng);  
-        avatarContainer.style.display = "block";  
-      } else {  
-        avatarContainer.style.display = "none";  
-      }  
-    } catch (e) {  
-      console.error("❌ Napaka pri avatarju:", e);  
-    }  
-  }  
-  
-  map.on("move", refreshAvatar);  
-  map.on("zoom", refreshAvatar);  
-  
-  refreshAvatar();  
-  setInterval(refreshAvatar, 30000);  
-  
-  // SKRIVANJE AVATARJA ob kliku na gumb closeBtn  
-  const closeBtn = document.getElementById("closeBtn");  
-  if (closeBtn) {  
-    closeBtn.addEventListener("click", () => {  
-      avatarContainer.style.display = "none";  
-    });  
-  }  
-  
-  // 🧍‍♂️ PRIKAŽI ostale aktivne uporabnike  
-  const active = Object.entries(userStatusCache)  
-    .filter(([uid, status]) => status.online && uid !== currentUser.uid);  
-  
-  active.forEach(([uid]) => {  
-    Promise.all([  
-      firebase.database().ref("locations/" + uid).once("value"),  
-      firebase.database().ref("userIcons/" + uid).once("value")  
-    ]).then(([locSnap, iconSnap]) => {  
-      const loc = locSnap.val();  
-      const iconEmoji = iconSnap.val() || '📍';  
-      if (loc && loc.lat && loc.lng) {  
-        const icon = L.divIcon({  
-          html: `<div style="font-size: 36px;">${iconEmoji}</div>`,  
-          className: ""  
-        });  
-        const name = userNamesCache[uid] || "Uporabnik";  
-        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup(`<b>${name}</b>`);  
-      }  
-    });  
-  });  
+function initUserMap() {
+  const map = L.map('userMap').setView([46.05, 14.5], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // 🔄 OSVEŽUJ LOKACIJO
+  function updateMyLocation() {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      firebase.database().ref("locations/" + currentUser.uid).set({ lat, lng });
+    });
+  }
+
+  updateMyLocation();
+  setInterval(updateMyLocation, 60000);
+
+  // 🧍 PRIKAŽI 3D AVATAR na tvoji lokaciji
+  const avatarContainer = document.createElement("div");
+  avatarContainer.style.position = "absolute";
+  avatarContainer.style.width = "80px";  // Manjši avatar
+  avatarContainer.style.height = "160px"; // Sorazmerno višji
+  avatarContainer.style.pointerEvents = "none";
+  avatarContainer.style.background = "transparent";
+  avatarContainer.style.zIndex = 9999;  // Najvišji sloj
+  avatarContainer.style.display = "none";
+
+  const modelViewer = document.createElement("model-viewer");
+  modelViewer.setAttribute("camera-controls", "");
+  modelViewer.setAttribute("auto-rotate", "");
+  modelViewer.setAttribute("disable-zoom", "");
+  modelViewer.setAttribute("disable-pan", "");
+  modelViewer.setAttribute("disable-tap", "");
+  modelViewer.setAttribute("min-camera-orbit", "auto 90deg auto");
+  modelViewer.setAttribute("max-camera-orbit", "auto 90deg auto");
+  modelViewer.style.width = "100%";
+  modelViewer.style.height = "100%";
+  modelViewer.style.background = "transparent";
+
+  avatarContainer.appendChild(modelViewer);
+  document.body.appendChild(avatarContainer);
+
+  let avatarHidden = false;
+
+  // Skrij avatar ob kliku na dinamični closeBtn (event delegation)
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "closeBtn") {
+      avatarHidden = true;
+      avatarContainer.style.display = "none";
+      console.log("Avatar skrit zaradi klika na closeBtn.");
+    }
+  });
+
+  function updateAvatarPosition(lat, lng) {
+    const point = map.latLngToContainerPoint([lat, lng]);
+    avatarContainer.style.left = (point.x - 40) + "px";  // Polovica širine (80/2=40)
+    avatarContainer.style.top = (point.y - 160) + "px";  // Višina avatarja
+  }
+
+  async function refreshAvatar() {
+    if (avatarHidden) return; // Če je skrit, nič ne delaj
+
+    try {
+      const [locSnap, avatarSnap] = await Promise.all([
+        firebase.database().ref("locations/" + currentUser.uid).once("value"),
+        firebase.database().ref("users/" + currentUser.uid + "/avatarURL2").once("value")
+      ]);
+
+      const loc = locSnap.val();
+      const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+
+      if (loc && loc.lat && loc.lng) {
+        modelViewer.setAttribute("src", avatarUrl);
+        updateAvatarPosition(loc.lat, loc.lng);
+        avatarContainer.style.display = "block";
+      } else {
+        avatarContainer.style.display = "none";
+      }
+    } catch (e) {
+      console.error("❌ Napaka pri avatarju:", e);
+    }
+  }
+
+  map.on("move", refreshAvatar);
+  map.on("zoom", refreshAvatar);
+
+  refreshAvatar();
+  setInterval(refreshAvatar, 30000);
+
+  // 🧍‍♂️ PRIKAŽI ostale aktivne uporabnike
+  const active = Object.entries(userStatusCache)
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+  active.forEach(([uid]) => {
+    Promise.all([
+      firebase.database().ref("locations/" + uid).once("value"),
+      firebase.database().ref("userIcons/" + uid).once("value")
+    ]).then(([locSnap, iconSnap]) => {
+      const loc = locSnap.val();
+      const iconEmoji = iconSnap.val() || '📍';
+      if (loc && loc.lat && loc.lng) {
+        const icon = L.divIcon({
+          html: `<div style="font-size: 36px;">${iconEmoji}</div>`,
+          className: ""
+        });
+        const name = userNamesCache[uid] || "Uporabnik";
+        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup(`<b>${name}</b>`);
+      }
+    });
+  });
 }
 
 
