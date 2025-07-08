@@ -2336,26 +2336,24 @@ function showUserMapPopup() {
   mapContainer.style.overflow = "hidden";
   mapContainer.style.position = "relative";
 
-const avatarContainer;
-const avatarHidden = false;
-  // 🔴 Znotraj initUserMap ali tiste funkcije, kjer ustvarjaš mapContainer
 const closeBtn = document.createElement("button");
 closeBtn.textContent = "✖";
 closeBtn.style.position = "absolute";
 closeBtn.style.top = "10px";
 closeBtn.style.right = "10px";
-closeBtn.style.zIndex = 2;
+closeBtn.style.zIndex = 1001;
 closeBtn.style.background = "transparent";
 closeBtn.style.border = "none";
 closeBtn.style.fontSize = "20px";
 closeBtn.style.cursor = "pointer";
 
-// Ob kliku skrij avatar in odstrani overlay
+// ➤ Ko klikneš gumb, skrij avatar in mapo
 closeBtn.addEventListener("click", () => {
-  avatarContainer.style.display = "none";  // SKRIJ AVATAR
-  avatarHidden = true;                     // NE PRIKAZUJ VEČ
-  overlay.remove();                        // Odstrani zemljevid/overlay
+    // skrij 3D avatar
+  map.remove();                            // skrij zemljevid (Leaflet)
 });
+
+mapContainer.appendChild(closeBtn); // dodaj gumb na mapo
 
 mapContainer.appendChild(closeBtn);
    // Tukaj bo container za izbiro ikone
