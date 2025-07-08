@@ -1612,7 +1612,7 @@ batterySpan.style.fontWeight = "bold";
 batterySpan.style.fontSize = "1.2em";
 topRow.appendChild(batterySpan);
 // Nastavi URL kamor naj vodi klik
-const targetURL = "avatar1.html"; // <-- zamenjaj s svojo povezavo
+const targetURL = "avatar.html"; // <-- zamenjaj s svojo povezavo
 
 batterySpan.style.cursor = "pointer";
 batterySpan.addEventListener("click", () => {
@@ -1630,8 +1630,6 @@ activeUsersContainer.style.padding = "10px";
 activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
 activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
 activeUsersContainer.style.borderRadius = "10px";
-activeUsersContainer.style.height = "auto";
-activeUsersContainer.style.maxHeight = "80vh";
 activeUsersContainer.style.overflowY = "auto";
 activeUsersContainer.style.gap = "10px";
 activeUsersContainer.style.boxSizing = "border-box";
@@ -1656,33 +1654,16 @@ logoutContainer.style.height = "140px";
 
 topContainer.appendChild(logoutContainer);
 
-const avatarWrapper = document.createElement("div");
-avatarWrapper.className = "avatar-wrapper";
-avatarWrapper.style.cssText = `
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  overflow: hidden;
-  position: relative;
-`;
+const userAvatar = document.createElement("img");
+userAvatar.style.width = "80px";
+userAvatar.style.height = "80px";
+userAvatar.style.borderRadius = "50%";
+userAvatar.style.objectFit = "cover";
+userAvatar.style.marginRight = "15px";
+userAvatar.alt = "Avatar uporabnika";
 
-const modelViewer = document.createElement("model-viewer");
-modelViewer.setAttribute("camera-controls", "");
-modelViewer.setAttribute("auto-rotate", "");
-modelViewer.setAttribute("disable-zoom", "");
-modelViewer.setAttribute("disable-pan", "");
-modelViewer.setAttribute("disable-tap", "");
-modelViewer.setAttribute("min-camera-orbit", "0deg 87deg 1.1m");
-modelViewer.setAttribute("max-camera-orbit", "360deg 87deg 1.1m");
-modelViewer.setAttribute("camera-target", "0m 1.7m 0m");
-modelViewer.setAttribute("field-of-view", "22deg");
-modelViewer.style.width = "100%";
-modelViewer.style.height = "100%";
-
-avatarWrapper.appendChild(modelViewer);
-
-// Klik za preusmeritev
-avatarWrapper.addEventListener("click", () => {
+// Dodaj event listener za klik
+userAvatar.addEventListener("click", () => {
   window.location.href = "store.html";
 });
 
@@ -1737,10 +1718,9 @@ logoutBtn.onclick = () => {
   });
 };
 
-logoutContainer.appendChild(avatarWrapper);
+logoutContainer.appendChild(userAvatar);
 logoutContainer.appendChild(userInfo);
 logoutContainer.appendChild(logoutBtn);
-
 
 // Ob prijavi naloži podatke in avatar, vendar **NE prikaže** logoutContainer, ker boš ti to naredil sam
 auth.onAuthStateChanged((user) => {
@@ -1750,14 +1730,14 @@ auth.onAuthStateChanged((user) => {
     userName.textContent = ime;
     userEmail.textContent = mail;
 
-    db.ref("users/" + user.uid + "/avatarURL2").once("value").then(snapshot => {
-  const url = snapshot.val();
-  if (url) {
-    modelViewer.setAttribute("src", url);
-  } else {
-    modelViewer.setAttribute("src", "default-avatar.glb");
-  }
-});
+    db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
+      const url = snapshot.val();
+      if (url) {
+        userAvatar.src = url;
+      } else {
+        userAvatar.src = "default-avatar.png"; // po potrebi rezervna slika
+      }
+    });
   } else {
     // ko ni userja, resetiraj podatke
     userName.textContent = "";
@@ -1835,65 +1815,46 @@ function showActiveUsers() {
       active.forEach(([uid]) => {
         const div = document.createElement("div");
         div.style.display = "flex";
-        div.style.alignItems = "center";
         div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+
+        // Dodano za blur in okvir:
         div.style.background = "rgba(255, 255, 255, 0.15)";
         div.style.backdropFilter = "blur(8px)";
         div.style.borderRadius = "10px";
         div.style.padding = "6px 10px";
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
-        div.style.cursor = "pointer";
 
+        // DODAJ DOGODEK KLIKA TUKAJ
         div.addEventListener("click", () => {
           startPrivateChatWith(uid, userNamesCache[uid] || "Anonimen");
         });
 
-        // Pridobimo avatarURL2 iz Firebase
-        firebase.database().ref("users/" + uid + "/avatarURL2").once("value").then(snapshot => {
-          const avatarURL2 = snapshot.val() || "default-avatar.glb";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = userNamesCache[uid] || "Anonimen";
 
-          // Ustvari model-viewer element
-          const modelViewer = document.createElement("model-viewer");
-          modelViewer.src = avatarURL2;
-          modelViewer.alt = userNamesCache[uid] || "Anonimen";
-          modelViewer.style.width = "50px";
-          modelViewer.style.height = "50px";
-          modelViewer.style.marginRight = "10px";
-          modelViewer.setAttribute("camera-controls", "");
-          modelViewer.setAttribute("auto-rotate", "");
-          modelViewer.setAttribute("interaction-prompt", "none");
-          modelViewer.style.borderRadius = "10px";
+        const batterySpan = document.createElement("span");
+        batterySpan.style.fontSize = "0.9em";
+        batterySpan.style.opacity = "0.8";
 
-          // Ime uporabnika
-          const nameSpan = document.createElement("span");
-          nameSpan.textContent = userNamesCache[uid] || "Anonimen";
-          nameSpan.style.flexGrow = "1";
-
-          // Prikaz baterije
-          const batterySpan = document.createElement("span");
-          batterySpan.style.fontSize = "0.9em";
-          batterySpan.style.opacity = "0.8";
-
-          firebase.database().ref("batteries/" + uid).once("value").then(battSnap => {
-            const data = battSnap.val();
-            if (data) {
-              const level = data.level;
-              const charging = data.charging;
-              let symbol = "🔋";
-              if (charging) symbol = "⚡️";
-              else if (level <= 20) symbol = "🪫";
-              batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
-            } else {
-              batterySpan.textContent = "–";
-            }
-          });
-
-          div.appendChild(modelViewer);
-          div.appendChild(nameSpan);
-          div.appendChild(batterySpan);
-          activeUsersContainer.appendChild(div);
+        firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
+          const data = snapshot.val();
+          if (data) {
+            const level = data.level;
+            const charging = data.charging;
+            let symbol = "🔋";
+            if (charging) symbol = "⚡️";
+            else if (level <= 20) symbol = "🪫";
+            batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
+          } else {
+            batterySpan.textContent = "–";
+          }
         });
+
+        div.appendChild(nameSpan);
+        div.appendChild(batterySpan);
+        activeUsersContainer.appendChild(div);
       });
     }
 
@@ -1910,58 +1871,42 @@ function showActiveUsers() {
       allUsers.forEach(([uid, name]) => {
         const div = document.createElement("div");
         div.style.display = "flex";
-        div.style.alignItems = "center";
         div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+
+        // Dodano za blur in okvir:
         div.style.background = "rgba(255, 255, 255, 0.15)";
         div.style.backdropFilter = "blur(8px)";
         div.style.borderRadius = "10px";
         div.style.padding = "6px 10px";
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
-        div.style.cursor = "pointer";
 
+        // DODAJ DOGODEK KLIKA TUKAJ
         div.addEventListener("click", () => {
           startPrivateChatWith(uid, name || "Anonimen");
         });
 
-        // Pridobimo avatarURL2
-        firebase.database().ref("users/" + uid + "/avatarURL2").once("value").then(snapshot => {
-          const avatarURL2 = snapshot.val() || "default-avatar.glb";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = name || "Anonimen";
 
-          const modelViewer = document.createElement("model-viewer");
-          modelViewer.src = avatarURL2;
-          modelViewer.alt = name || "Anonimen";
-          modelViewer.style.width = "50px";
-          modelViewer.style.height = "50px";
-          modelViewer.style.marginRight = "10px";
-          modelViewer.setAttribute("camera-controls", "");
-          modelViewer.setAttribute("auto-rotate", "");
-          modelViewer.setAttribute("interaction-prompt", "none");
-          modelViewer.style.borderRadius = "10px";
+        const statusSpan = document.createElement("span");
+        statusSpan.style.fontSize = "0.8em";
+        statusSpan.style.opacity = "0.7";
 
-          const nameSpan = document.createElement("span");
-          nameSpan.textContent = name || "Anonimen";
-          nameSpan.style.flexGrow = "1";
+        const status = userStatusCache[uid];
+        if (status?.online) {
+          statusSpan.textContent = "🟢 online";
+        } else if (status?.lastChanged) {
+          const formatted = formatTimestamp(status.lastChanged);
+          statusSpan.textContent = `⚫ offline (${formatted})`;
+        } else {
+          statusSpan.textContent = "⚫ offline";
+        }
 
-          const statusSpan = document.createElement("span");
-          statusSpan.style.fontSize = "0.8em";
-          statusSpan.style.opacity = "0.7";
-
-          const status = userStatusCache[uid];
-          if (status?.online) {
-            statusSpan.textContent = "🟢 online";
-          } else if (status?.lastChanged) {
-            const formatted = formatTimestamp(status.lastChanged);
-            statusSpan.textContent = `⚫ offline (${formatted})`;
-          } else {
-            statusSpan.textContent = "⚫ offline";
-          }
-
-          div.appendChild(modelViewer);
-          div.appendChild(nameSpan);
-          div.appendChild(statusSpan);
-          activeUsersContainer.appendChild(div);
-        });
+        div.appendChild(nameSpan);
+        div.appendChild(statusSpan);
+        activeUsersContainer.appendChild(div);
       });
     }
   }
