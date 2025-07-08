@@ -1833,46 +1833,65 @@ function showActiveUsers() {
       active.forEach(([uid]) => {
         const div = document.createElement("div");
         div.style.display = "flex";
-        div.style.justifyContent = "space-between";
         div.style.alignItems = "center";
-
-        // Dodano za blur in okvir:
+        div.style.justifyContent = "space-between";
         div.style.background = "rgba(255, 255, 255, 0.15)";
         div.style.backdropFilter = "blur(8px)";
         div.style.borderRadius = "10px";
         div.style.padding = "6px 10px";
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+        div.style.cursor = "pointer";
 
-        // DODAJ DOGODEK KLIKA TUKAJ
         div.addEventListener("click", () => {
           startPrivateChatWith(uid, userNamesCache[uid] || "Anonimen");
         });
 
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+        // Pridobimo avatarURL2 iz Firebase
+        firebase.database().ref("users/" + uid + "/avatarURL2").once("value").then(snapshot => {
+          const avatarURL2 = snapshot.val() || "default-avatar.glb";
 
-        const batterySpan = document.createElement("span");
-        batterySpan.style.fontSize = "0.9em";
-        batterySpan.style.opacity = "0.8";
+          // Ustvari model-viewer element
+          const modelViewer = document.createElement("model-viewer");
+          modelViewer.src = avatarURL2;
+          modelViewer.alt = userNamesCache[uid] || "Anonimen";
+          modelViewer.style.width = "50px";
+          modelViewer.style.height = "50px";
+          modelViewer.style.marginRight = "10px";
+          modelViewer.setAttribute("camera-controls", "");
+          modelViewer.setAttribute("auto-rotate", "");
+          modelViewer.setAttribute("interaction-prompt", "none");
+          modelViewer.style.borderRadius = "10px";
 
-        firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
-          const data = snapshot.val();
-          if (data) {
-            const level = data.level;
-            const charging = data.charging;
-            let symbol = "🔋";
-            if (charging) symbol = "⚡️";
-            else if (level <= 20) symbol = "🪫";
-            batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
-          } else {
-            batterySpan.textContent = "–";
-          }
+          // Ime uporabnika
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+          nameSpan.style.flexGrow = "1";
+
+          // Prikaz baterije
+          const batterySpan = document.createElement("span");
+          batterySpan.style.fontSize = "0.9em";
+          batterySpan.style.opacity = "0.8";
+
+          firebase.database().ref("batteries/" + uid).once("value").then(battSnap => {
+            const data = battSnap.val();
+            if (data) {
+              const level = data.level;
+              const charging = data.charging;
+              let symbol = "🔋";
+              if (charging) symbol = "⚡️";
+              else if (level <= 20) symbol = "🪫";
+              batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
+            } else {
+              batterySpan.textContent = "–";
+            }
+          });
+
+          div.appendChild(modelViewer);
+          div.appendChild(nameSpan);
+          div.appendChild(batterySpan);
+          activeUsersContainer.appendChild(div);
         });
-
-        div.appendChild(nameSpan);
-        div.appendChild(batterySpan);
-        activeUsersContainer.appendChild(div);
       });
     }
 
@@ -1889,45 +1908,63 @@ function showActiveUsers() {
       allUsers.forEach(([uid, name]) => {
         const div = document.createElement("div");
         div.style.display = "flex";
-        div.style.justifyContent = "space-between";
         div.style.alignItems = "center";
-
-        // Dodano za blur in okvir:
+        div.style.justifyContent = "space-between";
         div.style.background = "rgba(255, 255, 255, 0.15)";
         div.style.backdropFilter = "blur(8px)";
         div.style.borderRadius = "10px";
         div.style.padding = "6px 10px";
         div.style.marginBottom = "4px";
         div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+        div.style.cursor = "pointer";
 
-        // DODAJ DOGODEK KLIKA TUKAJ
         div.addEventListener("click", () => {
           startPrivateChatWith(uid, name || "Anonimen");
         });
 
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = name || "Anonimen";
+        // Pridobimo avatarURL2
+        firebase.database().ref("users/" + uid + "/avatarURL2").once("value").then(snapshot => {
+          const avatarURL2 = snapshot.val() || "default-avatar.glb";
 
-        const statusSpan = document.createElement("span");
-        statusSpan.style.fontSize = "0.8em";
-        statusSpan.style.opacity = "0.7";
+          const modelViewer = document.createElement("model-viewer");
+          modelViewer.src = avatarURL2;
+          modelViewer.alt = name || "Anonimen";
+          modelViewer.style.width = "50px";
+          modelViewer.style.height = "50px";
+          modelViewer.style.marginRight = "10px";
+          modelViewer.setAttribute("camera-controls", "");
+          modelViewer.setAttribute("auto-rotate", "");
+          modelViewer.setAttribute("interaction-prompt", "none");
+          modelViewer.style.borderRadius = "10px";
 
-        const status = userStatusCache[uid];
-        if (status?.online) {
-          statusSpan.textContent = "🟢 online";
-        } else if (status?.lastChanged) {
-          const formatted = formatTimestamp(status.lastChanged);
-          statusSpan.textContent = `⚫ offline (${formatted})`;
-        } else {
-          statusSpan.textContent = "⚫ offline";
-        }
+          const nameSpan = document.createElement("span");
+          nameSpan.textContent = name || "Anonimen";
+          nameSpan.style.flexGrow = "1";
 
-        div.appendChild(nameSpan);
-        div.appendChild(statusSpan);
-        activeUsersContainer.appendChild(div);
+          const statusSpan = document.createElement("span");
+          statusSpan.style.fontSize = "0.8em";
+          statusSpan.style.opacity = "0.7";
+
+          const status = userStatusCache[uid];
+          if (status?.online) {
+            statusSpan.textContent = "🟢 online";
+          } else if (status?.lastChanged) {
+            const formatted = formatTimestamp(status.lastChanged);
+            statusSpan.textContent = `⚫ offline (${formatted})`;
+          } else {
+            statusSpan.textContent = "⚫ offline";
+          }
+
+          div.appendChild(modelViewer);
+          div.appendChild(nameSpan);
+          div.appendChild(statusSpan);
+          activeUsersContainer.appendChild(div);
+        });
       });
     }
   }
+}
+
 
 
 
