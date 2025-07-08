@@ -49,6 +49,17 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/PointerLockControls.js"></script>
   <script>
+  firebase.auth().onAuthStateChanged((user) => {
+    if (!user) {
+      window.location.href = "auth.html"; // ali kamor želiš preusmeriti, če ni prijavljen
+    } else {
+      console.log("Uporabnik v igri:", user.displayName);
+      // tukaj lahko inicializiraš igro
+    }
+  });
+</script>
+
+  <script>
     // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
