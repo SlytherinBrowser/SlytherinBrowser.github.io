@@ -717,6 +717,7 @@ wrapper.innerHTML = `
     disable-zoom
     disable-pan
     disable-tap
+    interaction-prompt="none"
     camera-target="0m 1.6m 0m"
     min-camera-orbit="0deg 90deg 1.3m"
     max-camera-orbit="0deg 90deg 1.3m"
@@ -724,6 +725,7 @@ wrapper.innerHTML = `
     style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
   </model-viewer>
 `;
+
 
 wrapper.addEventListener("click", () => {
   prepareReply(msg, snapshot.key, div);
