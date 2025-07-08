@@ -1652,19 +1652,37 @@ logoutContainer.style.height = "140px";
 
 topContainer.appendChild(logoutContainer);
 
-const userAvatar = document.createElement("img");
-userAvatar.style.width = "80px";
-userAvatar.style.height = "80px";
-userAvatar.style.borderRadius = "50%";
-userAvatar.style.objectFit = "cover";
-userAvatar.style.marginRight = "15px";
-userAvatar.alt = "Avatar uporabnika";
+const avatarWrapper = document.createElement("div");
+avatarWrapper.className = "avatar-wrapper";
+avatarWrapper.style.cssText = `
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+`;
 
-// Dodaj event listener za klik
-userAvatar.addEventListener("click", () => {
+const modelViewer = document.createElement("model-viewer");
+modelViewer.setAttribute("camera-controls", "");
+modelViewer.setAttribute("auto-rotate", "");
+modelViewer.setAttribute("disable-zoom", "");
+modelViewer.setAttribute("disable-pan", "");
+modelViewer.setAttribute("disable-tap", "");
+modelViewer.setAttribute("min-camera-orbit", "0deg 87deg 1.1m");
+modelViewer.setAttribute("max-camera-orbit", "360deg 87deg 1.1m");
+modelViewer.setAttribute("camera-target", "0m 1.5m 0m");
+modelViewer.setAttribute("field-of-view", "22deg");
+modelViewer.style.width = "100%";
+modelViewer.style.height = "100%";
+
+avatarWrapper.appendChild(modelViewer);
+
+// Klik za preusmeritev
+avatarWrapper.addEventListener("click", () => {
   window.location.href = "store.html";
 });
-
+avatarContainer.innerHTML = ""; // očisti staro sliko
+avatarContainer.appendChild(avatarWrapper);
 const userInfo = document.createElement("div");
 userInfo.style.flexGrow = "1";
 userInfo.style.display = "flex";
@@ -1728,14 +1746,14 @@ auth.onAuthStateChanged((user) => {
     userName.textContent = ime;
     userEmail.textContent = mail;
 
-    db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
-      const url = snapshot.val();
-      if (url) {
-        userAvatar.src = url;
-      } else {
-        userAvatar.src = "default-avatar.png"; // po potrebi rezervna slika
-      }
-    });
+    db.ref("users/" + user.uid + "/avatarURL2").once("value").then(snapshot => {
+  const url = snapshot.val();
+  if (url) {
+    modelViewer.setAttribute("src", url);
+  } else {
+    modelViewer.setAttribute("src", "default-avatar.glb");
+  }
+});
   } else {
     // ko ni userja, resetiraj podatke
     userName.textContent = "";
