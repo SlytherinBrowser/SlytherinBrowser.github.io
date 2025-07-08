@@ -2503,7 +2503,7 @@ function initUserMap(currentUserIcon) {
     try {
       const [locSnap, avatarSnap] = await Promise.all([
         firebase.database().ref("locations/" + currentUser.uid).once("value"),
-        firebase.database().ref("users/" + currentUser.uid + "/avatarUrl").once("value")
+        firebase.database().ref("users/" + currentUser.uid + "/avatarUrl2").once("value")
       ]);
 
       const loc = locSnap.val();
