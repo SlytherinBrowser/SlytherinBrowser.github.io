@@ -1733,9 +1733,10 @@ logoutBtn.onclick = () => {
   });
 };
 
-logoutContainer.appendChild(wrapper);
+logoutContainer.appendChild(avatarWrapper);
 logoutContainer.appendChild(userInfo);
 logoutContainer.appendChild(logoutBtn);
+
 
 // Ob prijavi naloži podatke in avatar, vendar **NE prikaže** logoutContainer, ker boš ti to naredil sam
 auth.onAuthStateChanged((user) => {
