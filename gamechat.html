@@ -1,21 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Chat Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>3D Chat Game z Babylon.js</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      height: 100%;
-      width: 100%;
-      background: black;
+      margin: 0; padding: 0; height: 100%; overflow: hidden; background: black;
+      font-family: sans-serif;
+      color: white;
     }
-    canvas {
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
       display: block;
+      touch-action: none;
     }
     #healthBar {
       position: absolute;
@@ -25,259 +24,245 @@
       height: 20px;
       background: red;
       border: 2px solid #fff;
+      z-index: 100;
     }
     #healthBarInner {
       width: 100%;
       height: 100%;
       background: lime;
+      transition: width 0.3s ease;
     }
     #inventory {
       position: absolute;
       bottom: 10px;
       left: 10px;
       color: white;
-      font-family: sans-serif;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
+  <canvas id="renderCanvas"></canvas>
   <div id="healthBar"><div id="healthBarInner"></div></div>
   <div id="inventory">Inventory: <span id="weapons"></span></div>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/PointerLockControls.js"></script>
- <script>
-  // Firebase config in inicializacija
-  const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
 
-  // THREE.js setup (scene, camera, renderer)
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({antialias: true});
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  <!-- Babylon.js -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
 
-  const light = new THREE.HemisphereLight(0xffffff, 0x444444);
-  light.position.set(0, 200, 0);
-  scene.add(light);
+  <script>
+    // Firebase konfiguracija in inicializacija
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  camera.position.set(0, 3, 10);
-  camera.lookAt(0, 0, 0);
+    // Osnovne spremenljivke Babylon.js
+    const canvas = document.getElementById("renderCanvas");
+    const engine = new BABYLON.Engine(canvas, true);
+    const scene = new BABYLON.Scene(engine);
 
-  const loader = new THREE.GLTFLoader();
+    // Kamera z orjentacijo prve osebe
+    const camera = new BABYLON.UniversalCamera("playerCamera", new BABYLON.Vector3(0, 3, -10), scene);
+    camera.attachControl(canvas, true);
+    camera.speed = 0.1;
+    camera.inertia = 0.2;
 
-  // Igralec in ostali igralci
-  let playerId = localStorage.getItem("uid");
-  if (!playerId) {
-    alert("Nisi prijavljen.");
-    throw new Error("Ni UID");
-  }
+    // Svetloba
+    const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.9;
 
-  // Igralčeve podatke iz baze
-  let playerData = null;
-  const players = {}; // objekt za shranjevanje vseh avatarjev
+    // Osnovna podlaga
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+    ground.checkCollisions = true;
 
-  // Tvoj avatar bo dodan tukaj
-  let playerAvatar = null;
+    // Zdravje in inventory
+    let health = 100;
+    const healthBarInner = document.getElementById("healthBarInner");
 
-  // Za premikanje
-  const moveSpeed = 0.1;
-  const keys = {w:false, a:false, s:false, d:false};
-
-  // Zdravje igralca
-  let health = 100;
-
-  // Funkcija za premik igralca glede na pritisnjene tipke
-  function updatePlayerPosition() {
-    if (!playerAvatar) return;
-
-    if (keys.w) playerAvatar.position.z -= moveSpeed;
-    if (keys.s) playerAvatar.position.z += moveSpeed;
-    if (keys.a) playerAvatar.position.x -= moveSpeed;
-    if (keys.d) playerAvatar.position.x += moveSpeed;
-
-    // Kamera sledi igralcu
-    camera.position.x = playerAvatar.position.x;
-    camera.position.z = playerAvatar.position.z + 10;
-    camera.position.y = playerAvatar.position.y + 3;
-    camera.lookAt(playerAvatar.position);
-  }
-
-  // Posodobi pozicijo in zdravje v Firebase
-  function updateMyState() {
-    if (!playerAvatar) return;
-    db.ref("players/" + playerId).set({
-      position: {
-        x: playerAvatar.position.x,
-        y: playerAvatar.position.y,
-        z: playerAvatar.position.z
-      },
-      health: health,
-      shooting: false // za zdaj false, streljanje dodamo kasneje
-    });
-  }
-
-  // Naloži svoj avatar in ga doda v sceno
-  db.ref("users/" + playerId).once("value").then(snapshot => {
-    playerData = snapshot.val();
-    if (!playerData || !playerData.avatarURL2) {
-      alert("Ni avatarja za uporabnika.");
-      throw new Error("Ni avatarja");
+    // Igralčevi podatki
+    let playerId = localStorage.getItem("uid");
+    if (!playerId) {
+      alert("Nisi prijavljen.");
+      throw new Error("Ni UID");
     }
 
-    loader.load(playerData.avatarURL2, function(gltf) {
-      playerAvatar = gltf.scene;
-      playerAvatar.scale.set(1, 1, 1);
-      playerAvatar.position.set(0, 0, 0);
-      scene.add(playerAvatar);
+    let playerMesh = null;
+    const players = {}; // ostali igralci: id -> {mesh, health}
 
-      // Za prvič posodobi stanje v Firebase
-      updateMyState();
+    // Hitrost gibanja
+    const moveSpeed = 0.15;
 
-      // Začni poslušati ostale igralce
-      listenToOtherPlayers();
-    }, undefined, function(error) {
-      console.error("Napaka pri nalaganju avatarja:", error);
+    // Naloži svoj avatar iz Firebase in scene
+    db.ref("users/" + playerId).once("value").then(snapshot => {
+      const playerData = snapshot.val();
+      if (!playerData || !playerData.avatarURL2) {
+        alert("Ni avatarja za uporabnika.");
+        throw new Error("Ni avatarja");
+      }
+
+      // Naloži glTF model igralca
+      BABYLON.SceneLoader.ImportMesh("", "", playerData.avatarURL2, scene, function(meshes) {
+        playerMesh = BABYLON.Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
+        playerMesh.position = new BABYLON.Vector3(0, 0, 0);
+        playerMesh.scaling = new BABYLON.Vector3(1, 1, 1);
+        playerMesh.checkCollisions = true;
+
+        // Kamera sledi igralcu
+        camera.lockedTarget = playerMesh;
+
+        // Pošlji začetno stanje v bazo
+        updateMyState();
+
+        // Začni poslušati ostale igralce
+        listenToOtherPlayers();
+      });
     });
-  });
 
-  // Poslušaj spremembe vseh igralcev in upravljaj njihove avatarje
-  function listenToOtherPlayers() {
-    db.ref("players").on("value", snapshot => {
-      const allPlayers = snapshot.val() || {};
-      for (const id in allPlayers) {
-        if (id === playerId) continue; // preskoči sebe
+    // Posodobi svoje stanje v Firebase
+    function updateMyState() {
+      if (!playerMesh) return;
+      db.ref("players/" + playerId).set({
+        position: {
+          x: playerMesh.position.x,
+          y: playerMesh.position.y,
+          z: playerMesh.position.z
+        },
+        health: health,
+        shooting: false
+      });
+      updateHealthBar();
+    }
 
-        const data = allPlayers[id];
-        if (!players[id]) {
-          // Če avatar še ne obstaja, ga naloži
-          db.ref("users/" + id).once("value").then(snap => {
-            const u = snap.val();
-            if (u && u.avatarURL2) {
-              loader.load(u.avatarURL2, gltf => {
-                const avatar = gltf.scene;
-                avatar.scale.set(1, 1, 1);
-                scene.add(avatar);
-                players[id] = { avatar: avatar, health: 100 };
-                avatar.position.set(data.position.x, data.position.y, data.position.z);
-              });
-            }
-          });
-        } else {
-          // Posodobi pozicijo in zdravje avatarja
-          if (players[id].avatar) {
-            players[id].avatar.position.set(data.position.x, data.position.y, data.position.z);
+    // Poslušaj ostale igralce
+    function listenToOtherPlayers() {
+      db.ref("players").on("value", snapshot => {
+        const allPlayers = snapshot.val() || {};
+        for (const id in allPlayers) {
+          if (id === playerId) continue;
+          const data = allPlayers[id];
+
+          if (!players[id]) {
+            // Naloži avatar ostalih igralcev
+            db.ref("users/" + id).once("value").then(snap => {
+              const u = snap.val();
+              if (u && u.avatarURL2) {
+                BABYLON.SceneLoader.ImportMesh("", "", u.avatarURL2, scene, function(meshes) {
+                  const mesh = BABYLON.Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
+                  mesh.position = new BABYLON.Vector3(data.position.x, data.position.y, data.position.z);
+                  mesh.scaling = new BABYLON.Vector3(1, 1, 1);
+                  players[id] = { mesh: mesh, health: 100 };
+                });
+              }
+            });
+          } else {
+            // Posodobi pozicijo in zdravje
+            players[id].mesh.position = new BABYLON.Vector3(data.position.x, data.position.y, data.position.z);
             players[id].health = data.health;
-            // Lahko dodaš barvni efekt glede na zdravje, npr. rdeč če je malo zdravja
+
+            // Barvni indikator zdravja
             if (players[id].health < 30) {
-              players[id].avatar.traverse(child => {
-                if (child.isMesh) child.material.color.set(0xff0000);
-              });
+              players[id].mesh.material = new BABYLON.StandardMaterial("lowHealthMat", scene);
+              players[id].mesh.material.diffuseColor = new BABYLON.Color3(1, 0, 0);
             } else {
-              players[id].avatar.traverse(child => {
-                if (child.isMesh) child.material.color.set(0xffffff);
-              });
+              players[id].mesh.material = new BABYLON.StandardMaterial("normalMat", scene);
+              players[id].mesh.material.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            }
+          }
+        }
+
+        // Odstrani igralce, ki so odšli
+        for (const id in players) {
+          if (!allPlayers[id]) {
+            if (players[id].mesh) {
+              players[id].mesh.dispose();
+            }
+            delete players[id];
+          }
+        }
+      });
+    }
+
+    // Premikanje igralca - uporabimo tipke WASD za premik kamere in igralca
+    const inputMap = {};
+    scene.actionManager = new BABYLON.ActionManager(scene);
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+      inputMap[evt.sourceEvent.key.toLowerCase()] = true;
+    }));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+      inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+    }));
+
+    scene.onBeforeRenderObservable.add(() => {
+      if (!playerMesh) return;
+
+      let forward = new BABYLON.Vector3(0, 0, 1);
+      let right = new BABYLON.Vector3(1, 0, 0);
+
+      if (inputMap["w"]) playerMesh.position.addInPlace(forward.scale(-moveSpeed));
+      if (inputMap["s"]) playerMesh.position.addInPlace(forward.scale(moveSpeed));
+      if (inputMap["a"]) playerMesh.position.addInPlace(right.scale(-moveSpeed));
+      if (inputMap["d"]) playerMesh.position.addInPlace(right.scale(moveSpeed));
+
+      updateMyState();
+    });
+
+    // Posodobi health bar na UI
+    function updateHealthBar() {
+      healthBarInner.style.width = health + "%";
+    }
+
+    // Streljanje: klik z miško preveri zadetek na druge igralce
+    window.addEventListener("click", evt => {
+      if (!playerMesh) return;
+
+      // Raycast iz kamere na klik
+      const pickResult = scene.pick(scene.pointerX, scene.pointerY);
+
+      if (pickResult.hit) {
+        for (const id in players) {
+          if (!players[id].mesh) continue;
+
+          if (pickResult.pickedMesh === players[id].mesh) {
+            console.log("Zadel si igralca:", id);
+
+            let newHealth = Math.max(0, players[id].health - 20);
+            db.ref("players/" + id + "/health").set(newHealth);
+
+            if (newHealth === 0) {
+              // Respawn po 3 sekundah
+              setTimeout(() => {
+                db.ref("players/" + id).remove();
+                db.ref("players/" + id + "/health").set(100);
+              }, 3000);
             }
           }
         }
       }
-
-      // Odstrani igralce, ki so odšli (v bazi ni več podatkov)
-      for (const id in players) {
-        if (!allPlayers[id]) {
-          if (players[id].avatar) scene.remove(players[id].avatar);
-          delete players[id];
-        }
-      }
     });
-  }
 
-  // Upravljanje tipk za premikanje
-  window.addEventListener('keydown', e => {
-    if (e.key.toLowerCase() === 'w') keys.w = true;
-    if (e.key.toLowerCase() === 'a') keys.a = true;
-    if (e.key.toLowerCase() === 's') keys.s = true;
-    if (e.key.toLowerCase() === 'd') keys.d = true;
-  });
+    // Zagon scene in render loop
+    engine.runRenderLoop(() => {
+      scene.render();
+    });
 
-  window.addEventListener('keyup', e => {
-    if (e.key.toLowerCase() === 'w') keys.w = false;
-    if (e.key.toLowerCase() === 'a') keys.a = false;
-    if (e.key.toLowerCase() === 's') keys.s = false;
-    if (e.key.toLowerCase() === 'd') keys.d = false;
-  });
+    window.addEventListener("resize", () => {
+      engine.resize();
+    });
 
-  // Osnovno streljanje: klik z miško
-  window.addEventListener('click', (event) => {
-    if (!playerAvatar) return;
-
-    // Raycaster iz kamere skozi miško
-    const mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, camera);
-
-    // Preveri, ali zadeneš drugega igralca
-    const hitObjects = [];
-    for (const id in players) {
-      if (!players[id].avatar) continue;
-      // Preveri če ray seka bounding box avatarja
-      const avatar = players[id].avatar;
-      const box = new THREE.Box3().setFromObject(avatar);
-      if (raycaster.ray.intersectsBox(box)) {
-        hitObjects.push(id);
-      }
-    }
-
-    if (hitObjects.length > 0) {
-      const hitId = hitObjects[0]; // zadene prvega na seznamu
-      console.log("Zadel si igralca:", hitId);
-
-      // Zmanjšaj zdravje tega igralca v bazi
-      const currentHealth = players[hitId].health;
-      const newHealth = Math.max(0, currentHealth - 20);
-      db.ref("players/" + hitId + "/health").set(newHealth);
-
-      // Če zdravje pade na 0, odstrani avatar in resetiraj zdravje po 3 sekundah (respawn)
-      if (newHealth === 0) {
-        setTimeout(() => {
-          db.ref("players/" + hitId).remove();
-          db.ref("players/" + hitId + "/health").set(100);
-        }, 3000);
-      }
-    }
-  });
-
-  // Animacija in render
-  function animate() {
-    requestAnimationFrame(animate);
-    updatePlayerPosition();
-    updateMyState();
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  // Okno sprememba velikosti
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-</script>
-
+  </script>
 </body>
 </html>
+
+
