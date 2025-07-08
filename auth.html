@@ -104,6 +104,8 @@
       <input type="email" id="logEmail" placeholder="Email" />
       <input type="password" id="logPass" placeholder="Geslo" />
       <button onclick="login()">Prijavi se</button>
+      <button onclick="loginToGame()">Prijava v igro</button>
+
       <button
         onclick="resetPassword()"
         style="margin-top: 8px; background-color: rgba(255,255,255,0.1); font-size: 0.9em;"
@@ -211,6 +213,25 @@
       document.getElementById("loginForm").classList.toggle("hidden");
       document.getElementById("registerForm").classList.toggle("hidden");
     }
+
+
+    function loginToGame() {
+  const email = document.getElementById("logEmail").value.trim();
+  const pass = document.getElementById("logPass").value;
+
+  if (!email || !pass) {
+    alert("Prosimo, izpolni email in geslo.");
+    return;
+  }
+
+  auth
+    .signInWithEmailAndPassword(email, pass)
+    .then(() => {
+      window.location.href = "gamechat.html"; // 🔁 preusmeritev v igro
+    })
+    .catch((error) => alert("Napaka: " + error.message));
+}
+
   </script>
 </body>
 </html>
