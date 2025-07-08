@@ -2500,26 +2500,38 @@ function initUserMap(currentUserIcon) {
 
   // Funkcija za osvežitev avatarja
   async function refreshAvatar() {
-    try {
-      const [locSnap, avatarSnap] = await Promise.all([
-        firebase.database().ref("locations/" + currentUser.uid).once("value"),
-        firebase.database().ref("users/" + currentUser.uid + "/avatarUrl2").once("value")
-      ]);
-
-      const loc = locSnap.val();
-      const avatarUrl = avatarSnap.val();
-
-      if (loc && loc.lat && loc.lng && avatarUrl) {
-        modelViewer.setAttribute("src", avatarUrl);
-        updateAvatarPosition(loc.lat, loc.lng);
-        avatarDiv.style.display = "block";
-      } else {
-        avatarDiv.style.display = "none";
-      }
-    } catch (e) {
-      console.error("Napaka pri osveževanju avatarja:", e);
+  try {
+    // 🔄 Najprej posodobi lastno lokacijo v Firebase
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const { latitude, longitude } = position.coords;
+        firebase.database().ref("locations/" + currentUser.uid).set({
+          lat: latitude,
+          lng: longitude
+        });
+      });
     }
+
+    // 🔄 Nato preberi lokacijo in avatar URL iz Firebase
+    const [locSnap, avatarSnap] = await Promise.all([
+      firebase.database().ref("locations/" + currentUser.uid).once("value"),
+      firebase.database().ref("users/" + currentUser.uid + "/avatarUrl2").once("value")
+    ]);
+
+    const loc = locSnap.val();
+    const avatarUrl = avatarSnap.val();
+
+    if (loc && loc.lat && loc.lng && avatarUrl) {
+      modelViewer.setAttribute("src", avatarUrl);
+      updateAvatarPosition(loc.lat, loc.lng);
+      avatarDiv.style.display = "block";
+    } else {
+      avatarDiv.style.display = "none";
+    }
+  } catch (e) {
+    console.error("Napaka pri osveževanju avatarja:", e);
   }
+}
 
   // Osveži avatar ob premiku/zoomu zemljevida, da ostane na pravem mestu
   map.on("move", () => {
