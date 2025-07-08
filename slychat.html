@@ -2462,43 +2462,13 @@ function showUserMapPopup() {
   });
 }
 
-function initUserMap(currentUserIcon) {
+function initUserMap() {
   const map = L.map('userMap').setView([46.05, 14.5], 7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
   }).addTo(map);
 
-  // USTVARI avatar div
-  const avatarDiv = document.createElement("div");
-  avatarDiv.style.position = "absolute";
-  avatarDiv.style.width = "120px";
-  avatarDiv.style.height = "240px";
-  avatarDiv.style.pointerEvents = "none";
-  avatarDiv.style.background = "transparent";
-  avatarDiv.style.userSelect = "none";
-  avatarDiv.style.zIndex = 1000;
-  avatarDiv.style.display = "none";
-
-  // USTVARI model-viewer
-  const modelViewer = document.createElement("model-viewer");
-  modelViewer.setAttribute("camera-controls", "");
-  modelViewer.setAttribute("auto-rotate", "");
-  modelViewer.setAttribute("disable-zoom", "");
-  modelViewer.style.width = "100%";
-  modelViewer.style.height = "100%";
-  modelViewer.style.background = "transparent";
-
-  modelViewer.addEventListener("load", () => {
-    console.log("✅ Avatar naložen.");
-  });
-  modelViewer.addEventListener("error", (e) => {
-    console.error("❌ Napaka pri nalaganju avatarja", e);
-  });
-
-  avatarDiv.appendChild(modelViewer);
-  document.body.appendChild(avatarDiv);
-
-  // 🔄 OSVEŽI lokacijo v Firebase
+  // 🔄 OSVEŽUJ LOKACIJO
   function updateMyLocation() {
     navigator.geolocation.getCurrentPosition(pos => {
       const lat = pos.coords.latitude;
@@ -2507,17 +2477,40 @@ function initUserMap(currentUserIcon) {
     });
   }
 
-  updateMyLocation(); // takoj ob zagonu
-  setInterval(updateMyLocation, 60000); // vsako minuto
+  updateMyLocation();
+  setInterval(updateMyLocation, 60000);
 
-  // 🔁 POZICIONIRAJ avatar na zemljevidu
+  // 🧍 PRIKAŽI 3D AVATAR na tvoji lokaciji
+  const avatarContainer = document.createElement("div");
+  avatarContainer.style.position = "absolute";
+  avatarContainer.style.width = "120px";
+  avatarContainer.style.height = "240px";
+  avatarContainer.style.pointerEvents = "none";
+  avatarContainer.style.background = "transparent";
+  avatarContainer.style.zIndex = 1000;
+  avatarContainer.style.display = "none";
+
+  const modelViewer = document.createElement("model-viewer");
+  modelViewer.setAttribute("camera-controls", "");
+  modelViewer.setAttribute("auto-rotate", "");
+  modelViewer.setAttribute("disable-zoom", "");
+  modelViewer.setAttribute("disable-pan", "");
+  modelViewer.setAttribute("disable-tap", "");
+  modelViewer.setAttribute("min-camera-orbit", "auto 90deg auto");
+  modelViewer.setAttribute("max-camera-orbit", "auto 90deg auto");
+  modelViewer.style.width = "100%";
+  modelViewer.style.height = "100%";
+  modelViewer.style.background = "transparent";
+
+  avatarContainer.appendChild(modelViewer);
+  document.body.appendChild(avatarContainer);
+
   function updateAvatarPosition(lat, lng) {
     const point = map.latLngToContainerPoint([lat, lng]);
-    avatarDiv.style.left = (point.x - avatarDiv.clientWidth / 2) + "px";
-    avatarDiv.style.top = (point.y - avatarDiv.clientHeight) + "px";
+    avatarContainer.style.left = (point.x - 60) + "px";
+    avatarContainer.style.top = (point.y - 240) + "px";
   }
 
-  // 🔄 OSVEŽI avatar iz Firebase
   async function refreshAvatar() {
     try {
       const [locSnap, avatarSnap] = await Promise.all([
@@ -2526,30 +2519,26 @@ function initUserMap(currentUserIcon) {
       ]);
 
       const loc = locSnap.val();
-      const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb"; // privzet
-
-      console.log("🔎 Lokacija:", loc);
-      console.log("🔎 Avatar URL:", avatarUrl);
+      const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
       if (loc && loc.lat && loc.lng) {
         modelViewer.setAttribute("src", avatarUrl);
         updateAvatarPosition(loc.lat, loc.lng);
-        avatarDiv.style.display = "block";
+        avatarContainer.style.display = "block";
       } else {
-        avatarDiv.style.display = "none";
+        avatarContainer.style.display = "none";
       }
     } catch (e) {
-      console.error("❌ Napaka pri osveževanju avatarja:", e);
+      console.error("❌ Napaka pri avatarju:", e);
     }
   }
 
-  // Osveži ob premiku
   map.on("move", refreshAvatar);
   map.on("zoom", refreshAvatar);
 
-  // Osveži na začetku + vsake 30s
   refreshAvatar();
   setInterval(refreshAvatar, 30000);
+}
 
   // 🧍‍♂️ PRIKAŽI ostale aktivne uporabnike
   const active = Object.entries(userStatusCache)
