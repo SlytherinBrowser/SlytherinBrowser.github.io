@@ -2,70 +2,129 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <title>Ready Player Me Avatar v Babylon.js</title>
+  <title>Prijava / Registracija</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
   <style>
-    html, body { width:100%; height:100%; margin:0; overflow:hidden; }
-    #renderCanvas { width: 100%; height: 100%; display:block; }
-    #userLabel {
-      position: absolute;
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 18px;
-      background: rgba(0,0,0,0.5);
-      padding: 4px 8px;
-      border-radius: 4px;
-      pointer-events: none;
-      user-select: none;
-      white-space: nowrap;
-      transform: translate(-50%, 0);
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
     }
-    #loginForm {
-      position: absolute;
-      top: 10px; left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 15px;
+
+    body {
+      background: url('slika.png') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      width: 90%;
+      max-width: 380px;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.05);
+      color: white;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    input:focus {
+      border-color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: none;
       border-radius: 8px;
       color: white;
-      font-family: Arial, sans-serif;
-      z-index: 1000;
-    }
-    #loginForm input {
-      margin-bottom: 8px;
-      width: 200px;
-      padding: 5px;
-      font-size: 14px;
-    }
-    #loginForm button {
-      padding: 5px 10px;
-      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .toggle {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #dddddd;
+      font-size: 0.9em;
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <!-- PRIJAVA -->
+    <div id="loginForm">
+      <h2>Prijava</h2>
+      <input type="email" id="logEmail" placeholder="Email" />
+      <input type="password" id="logPass" placeholder="Geslo" />
+      <button onclick="login()">Prijavi se</button>
+      <button
+        onclick="resetPassword()"
+        style="margin-top: 8px; background-color: rgba(255,255,255,0.1); font-size: 0.9em;"
+      >
+        Pozabil/a geslo?
+      </button>
+      <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
+    </div>
 
-  <canvas id="renderCanvas"></canvas>
-
-  <div id="userLabel" style="display:none;"></div>
-
-  <div id="loginForm">
-    <div><input type="email" id="email" placeholder="Email" /></div>
-    <div><input type="password" id="password" placeholder="Geslo" /></div>
-    <button id="btnLogin">Prijavi se</button>
-    <div id="loginError" style="color:#f88; margin-top:5px;"></div>
+    <!-- REGISTRACIJA -->
+    <div id="registerForm" class="hidden">
+      <h2>Registracija</h2>
+      <input type="text" id="regName" placeholder="Ime" />
+      <input type="email" id="regEmail" placeholder="Email" />
+      <input type="password" id="regPass" placeholder="Geslo" />
+      <button onclick="register()">Registriraj</button>
+      <div class="toggle" onclick="toggleForms()">Že imaš račun? Prijavi se</div>
+    </div>
   </div>
 
-  <!-- Babylon.js -->
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
   <script>
-    // Firebase konfiguracija - zamenjaj s svojimi podatki
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
@@ -73,134 +132,85 @@
       projectId: "chater-cf682",
       storageBucket: "chater-cf682.appspot.com",
       messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // Spremenljivke Babylon
-    let engine, scene, camera;
-    let avatar;
-    let userLabel = document.getElementById("userLabel");
-    let currentUser;
-
-    // Pridobi avatar URL iz baze
-    async function loadUserAvatarURL(uid) {
-      try {
-        const snapshot = await db.ref(`users/${uid}/avatarURL2`).get();
-        if (snapshot.exists()) {
-          return snapshot.val();
-        }
-      } catch (e) {
-        console.error("Napaka pri pridobivanju avatarURL2:", e);
-      }
-      return null;
-    }
-
-    // Posodobi pozicijo labela pod avatarjem
-    function updateUserLabelPosition() {
-      if (!avatar || !userLabel) return;
-      const pos = avatar.getBoundingInfo().boundingBox.centerWorld;
-      const coords = BABYLON.Vector3.Project(
-        pos,
-        BABYLON.Matrix.Identity(),
-        scene.getTransformMatrix(),
-        camera.viewport.toGlobal(
-          engine.getRenderWidth(),
-          engine.getRenderHeight()
-        )
-      );
-      userLabel.style.left = coords.x + "px";
-      userLabel.style.top = (coords.y + 20) + "px";
-    }
-
-    async function startGame() {
-      const canvas = document.getElementById("renderCanvas");
-      engine = new BABYLON.Engine(canvas, true);
-      scene = new BABYLON.Scene(engine);
-
-      // Kamera in svetloba
-      camera = new BABYLON.ArcRotateCamera("cam", -Math.PI/2, Math.PI/3, 4, BABYLON.Vector3.Zero(), scene);
-      camera.attachControl(canvas, true);
-      const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-      light.intensity = 0.9;
-
-      // Tla
-      const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 10, height: 10}, scene);
-      ground.position.y = -0.5;
-
-      // Najprej poskusi naložiti avatar iz URL-ja
-      const avatarURL = await loadUserAvatarURL(currentUser.uid);
-
-      if (avatarURL) {
-        try {
-          // Naloži avatar model (glb, gltf)
-          const result = await BABYLON.SceneLoader.ImportMeshAsync("", avatarURL, "", scene);
-          if (result.meshes.length > 0) {
-            avatar = result.meshes[0];
-            avatar.position = BABYLON.Vector3.Zero();
-            avatar.scaling = new BABYLON.Vector3(1, 1, 1);
-          } else {
-            throw new Error("Ni bilo naloženih mesh-ov.");
-          }
-        } catch (e) {
-          console.warn("Napaka pri nalaganju avatarja iz URL, prikažem kocko:", e);
-          avatar = BABYLON.MeshBuilder.CreateBox("avatar", {size: 1}, scene);
-          avatar.position.y = 0.5;
-          const mat = new BABYLON.StandardMaterial("mat", scene);
-          mat.diffuseColor = new BABYLON.Color3(0.2, 0.6, 1);
-          avatar.material = mat;
-        }
-      } else {
-        // Ni URL, naredi default kocko
-        avatar = BABYLON.MeshBuilder.CreateBox("avatar", {size: 1}, scene);
-        avatar.position.y = 0.5;
-        const mat = new BABYLON.StandardMaterial("mat", scene);
-        mat.diffuseColor = new BABYLON.Color3(0.2, 0.6, 1);
-        avatar.material = mat;
-      }
-
-      // Prikaži label z imenom
-      userLabel.style.display = "block";
-      userLabel.textContent = currentUser.displayName || currentUser.email || "Anonimni";
-
-      engine.runRenderLoop(() => {
-        scene.render();
-        updateUserLabelPosition();
-      });
-
-      window.addEventListener("resize", () => {
-        engine.resize();
-      });
-    }
-
-    // Prijavni gumb in funkcija
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const errorDiv = document.getElementById("loginError");
-      errorDiv.textContent = "";
-
-      try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        currentUser = userCredential.user;
-
-        // Skrij login formo
-        document.getElementById("loginForm").style.display = "none";
-
-        // Zaženi igro z avatarjem
-        startGame();
-      } catch (err) {
-        errorDiv.textContent = "Napaka pri prijavi: " + err.message;
+    // ✅ Avtomatska prijava, če je že prijavljen
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        window.location.href = "slychat.html";
       }
     });
 
-    // Če želiš avtomatsko prijavo ali testiranje, lahko tukaj nastaviš
-    // auth.signInWithEmailAndPassword("test@example.com", "geslo123").then(...)
+    function register() {
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const pass = document.getElementById("regPass").value;
 
+      if (!name || !email || !pass) {
+        alert("Prosim, izpolni vsa polja.");
+        return;
+      }
+
+      auth
+        .createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          // Nastavi displayName v Firebase auth profilu
+          return user
+            .updateProfile({
+              displayName: name,
+            })
+            .then(() => {
+              // Shrani v bazo
+              return db.ref("users/" + user.uid).set({
+                displayName: name,
+                email: email,
+              });
+            });
+        })
+        .then(() => {
+          alert("Registracija uspešna!");
+          window.location.href = "slychat.html";
+        })
+        .catch((error) => alert(error.message));
+    }
+
+    function login() {
+      const email = document.getElementById("logEmail").value.trim();
+      const pass = document.getElementById("logPass").value;
+      auth
+        .signInWithEmailAndPassword(email, pass)
+        .then(() => (window.location.href = "slychat.html"))
+        .catch((error) => alert(error.message));
+    }
+
+    function resetPassword() {
+      const email = document.getElementById("logEmail").value.trim();
+      if (!email) {
+        alert("Prosimo, vnesite vaš email za ponastavitev gesla.");
+        return;
+      }
+
+      auth
+        .sendPasswordResetEmail(email)
+        .then(() => {
+          alert("Na vaš email je bilo poslano sporočilo za ponastavitev gesla.");
+        })
+        .catch((error) => {
+          alert("Napaka: " + error.message);
+        });
+    }
+
+    function toggleForms() {
+      document.getElementById("loginForm").classList.toggle("hidden");
+      document.getElementById("registerForm").classList.toggle("hidden");
+    }
   </script>
 </body>
 </html>
-
