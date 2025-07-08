@@ -2468,6 +2468,7 @@ function initUserMap() {
     maxZoom: 19
   }).addTo(map);
 
+  // 🔄 OSVEŽUJ LOKACIJO
   function updateMyLocation() {
     navigator.geolocation.getCurrentPosition(pos => {
       const lat = pos.coords.latitude;
@@ -2479,12 +2480,14 @@ function initUserMap() {
   updateMyLocation();
   setInterval(updateMyLocation, 60000);
 
-  // 🔄 AVATAR
+  // 🧍 PRIKAŽI 3D AVATAR na tvoji lokaciji
   const avatarContainer = document.createElement("div");
   avatarContainer.style.position = "absolute";
+  avatarContainer.style.width = "80px";  // Manjši avatar
+  avatarContainer.style.height = "160px"; // Sorazmerno višji
   avatarContainer.style.pointerEvents = "none";
   avatarContainer.style.background = "transparent";
-  avatarContainer.style.zIndex = 9999;
+  avatarContainer.style.zIndex = 9999;  // Najvišji sloj
   avatarContainer.style.display = "none";
 
   const modelViewer = document.createElement("model-viewer");
@@ -2495,6 +2498,8 @@ function initUserMap() {
   modelViewer.setAttribute("disable-tap", "");
   modelViewer.setAttribute("min-camera-orbit", "auto 90deg auto");
   modelViewer.setAttribute("max-camera-orbit", "auto 90deg auto");
+  modelViewer.style.width = "100%";
+  modelViewer.style.height = "100%";
   modelViewer.style.background = "transparent";
 
   avatarContainer.appendChild(modelViewer);
@@ -2502,39 +2507,23 @@ function initUserMap() {
 
   let avatarHidden = false;
 
+  // Skrij avatar ob kliku na dinamični closeBtn (event delegation)
   document.addEventListener("click", (e) => {
     if (e.target && e.target.id === "closeBtn") {
       avatarHidden = true;
       avatarContainer.style.display = "none";
-      console.log("Avatar skrit zaradi closeBtn");
+      console.log("Avatar skrit zaradi klika na closeBtn.");
     }
   });
 
-  function getAvatarSizeByZoom(zoom) {
-    // Večji zoom → večji avatar, višina razmeroma večja
-    const baseWidth = 50;
-    const baseHeight = 100;
-    const factor = zoom / 14; // prilagodi po želji
-    return {
-      width: baseWidth * factor,
-      height: baseHeight * factor
-    };
-  }
-
   function updateAvatarPosition(lat, lng) {
     const point = map.latLngToContainerPoint([lat, lng]);
-    const zoom = map.getZoom();
-    const size = getAvatarSizeByZoom(zoom);
-
-    avatarContainer.style.width = size.width + "px";
-    avatarContainer.style.height = size.height + "px";
-
-    avatarContainer.style.left = (point.x - size.width / 2) + "px";
-    avatarContainer.style.top = (point.y - size.height + 10) + "px"; // +10 da stoji točno na markerju
+    avatarContainer.style.left = (point.x - 40) + "px";  // Polovica širine (80/2=40)
+    avatarContainer.style.top = (point.y - 160) + "px";  // Višina avatarja
   }
 
   async function refreshAvatar() {
-    if (avatarHidden) return;
+    if (avatarHidden) return; // Če je skrit, nič ne delaj
 
     try {
       const [locSnap, avatarSnap] = await Promise.all([
@@ -2553,7 +2542,7 @@ function initUserMap() {
         avatarContainer.style.display = "none";
       }
     } catch (e) {
-      console.error("Napaka pri avatarju:", e);
+      console.error("❌ Napaka pri avatarju:", e);
     }
   }
 
@@ -2563,7 +2552,7 @@ function initUserMap() {
   refreshAvatar();
   setInterval(refreshAvatar, 30000);
 
-  // ➕ Ostali uporabniki
+  // 🧍‍♂️ PRIKAŽI ostale aktivne uporabnike
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
