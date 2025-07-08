@@ -2,151 +2,169 @@
 <html lang="sl">
 <head>
 <meta charset="UTF-8" />
-<title>Ready Player Me avatar + napreden svet + premikanje</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ready Player Me avatar + Sketchfab okolje (URL naloži)</title>
 <style>
-  body { margin: 0; overflow: hidden; }
-  canvas { display: block; }
+  body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+  #overlay {
+    position: absolute;
+    bottom: 10px; left: 50%; transform: translateX(-50%);
+    width: 300px; background: rgba(0,0,0,0.5); border-radius: 5px;
+    padding: 10px; color: white; font-size: 16px;
+  }
+  #message {
+    position: absolute;
+    color: white; background: rgba(0,0,0,0.7);
+    padding: 5px 10px; border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
+
+<div id="overlay">
+  <input type="text" id="chatInput" placeholder="Napiši sporočilo..." style="width: 100%; padding: 8px; font-size: 16px;" />
+</div>
+
+<div id="message" style="display:none;"></div>
+
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/loaders/GLTFLoader.js';
-import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/loaders/RGBELoader.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.153.0/examples/jsm/controls/OrbitControls.js';
 
-// Scena in renderer
-const scene = new THREE.Scene();
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.outputEncoding = THREE.sRGBEncoding;
-document.body.appendChild(renderer.domElement);
+let scene, camera, renderer, controls;
+let avatar, environment;
+let messageDiv = document.getElementById('message');
+let chatInput = document.getElementById('chatInput');
 
-// Kamera (začnemo na lokaciji, ki je za avatarjem)
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
-camera.position.set(0, 2, 5);
+init();
+animate();
 
-// Kontrole orbite (za rotiranje okoli avatarja)
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
+function init() {
+  scene = new THREE.Scene();
 
-// Poljubni materiali za naravo
-const groundMat = new THREE.MeshStandardMaterial({ color: 0x446633, roughness: 1 });
-const treeMat = new THREE.MeshStandardMaterial({ color: 0x228822, roughness: 0.8 });
-const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.9 });
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 1.7, 3);
 
-// Tla (z rahlim reliefom z geometrijo)
-const groundGeo = new THREE.PlaneGeometry(20, 20, 64, 64);
-for(let i = 0; i < groundGeo.attributes.position.count; i++) {
-  const y = Math.sin(i*0.3)*0.1 + Math.cos(i*0.5)*0.1;
-  groundGeo.attributes.position.setY(i, y);
-}
-groundGeo.computeVertexNormals();
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-scene.add(ground);
+  renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-// Dodamo nekaj "dreves" (stožci + debla)
-function addTree(x, z) {
-  const tree = new THREE.Group();
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x664422 }));
-  trunk.position.y = 0.3;
-  const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 8), treeMat);
-  leaves.position.y = 1;
-  tree.add(trunk);
-  tree.add(leaves);
-  tree.position.set(x, 0, z);
-  scene.add(tree);
-}
-addTree(3, 2);
-addTree(-2, -3);
-addTree(5, -1);
-addTree(-4, 4);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 1, 0);
+  controls.update();
 
-// Dodamo nekaj skal (kroglice)
-function addRock(x, z, size) {
-  const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(size || 0.3, 0), rockMat);
-  rock.position.set(x, 0.15, z);
-  rock.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
-  scene.add(rock);
-}
-addRock(1, 1);
-addRock(-3, 0.5, 0.5);
-addRock(2, -2);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+  hemiLight.position.set(0, 20, 0);
+  scene.add(hemiLight);
 
-// Osnovna svetloba
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
-hemiLight.position.set(0, 10, 0);
-scene.add(hemiLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(-3, 10, -10);
+  scene.add(dirLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-dirLight.position.set(-5, 10, -5);
-dirLight.castShadow = true;
-scene.add(dirLight);
+  const loader = new GLTFLoader();
 
-// HDRI okolje (venice sunset iz Poly Haven)
-new RGBELoader()
-  .setPath('https://cdn.polyhaven.com/hdris/1k/')
-  .load('venice_sunset_1k.hdr', function(texture) {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    scene.environment = texture;
-    scene.background = texture;
+  // Naloži Sketchfab okolje (brez prenosa, iz URL)
+  // Primer: https://sketchfab.com/3d-models/simplified-forest-4f91e7a255774c67965e5b16a82b5f93
+  // Neposreden GLB link (vadi URL: spodaj vzorčni)
+  loader.load('https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Sponza/glTF/Sponza.gltf',
+    (gltf) => {
+      environment = gltf.scene;
+      environment.scale.set(0.02, 0.02, 0.02); // prilagodi po potrebi
+      environment.position.set(0, 0, 0);
+      scene.add(environment);
+    },
+    undefined,
+    (error) => {
+      console.error('Napaka pri nalaganju okolja:', error);
+    }
+  );
+
+  // Naloži Ready Player Me avatar iz demo URL-ja (sample glb avatar)
+  loader.load('https://models.readyplayer.me/63eb16281e994c1409719e32.glb',
+    (gltf) => {
+      avatar = gltf.scene;
+      avatar.scale.set(1, 1, 1);
+      avatar.position.set(0, 0, 0);
+      scene.add(avatar);
+    },
+    undefined,
+    (error) => {
+      console.error('Napaka pri nalaganju avatarja:', error);
+    }
+  );
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-// Naloži avatar
-const loader = new GLTFLoader();
-const avatarURL = 'https://models.readyplayer.me/64025ac4c4a0d9018b8d3c28.glb';
-let avatar;
+  window.addEventListener('keydown', (e) => {
+    if(!avatar) return;
 
-loader.load(avatarURL, (gltf) => {
-  avatar = gltf.scene;
-  avatar.position.set(0, 0, 0);
-  avatar.scale.set(1,1,1);
-  scene.add(avatar);
-});
+    const step = 0.1;
+    switch(e.key.toLowerCase()) {
+      case 'w': avatar.position.z -= step; break;
+      case 's': avatar.position.z += step; break;
+      case 'a': avatar.position.x -= step; break;
+      case 'd': avatar.position.x += step; break;
+    }
+  });
 
-// Premikanje avatarja
-let clock = new THREE.Clock();
-let speed = 1; // enota na sekundo
-let direction = 1;
+  chatInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') {
+      const text = chatInput.value.trim();
+      if(text && avatar) {
+        showMessageAboveAvatar(text);
+        chatInput.value = '';
+      }
+    }
+  });
+}
+
+function showMessageAboveAvatar(text) {
+  if(!avatar) return;
+
+  messageDiv.style.display = 'block';
+  messageDiv.textContent = text;
+
+  const vector = new THREE.Vector3();
+  const canvas = renderer.domElement;
+
+  function updatePosition() {
+    vector.copy(avatar.position);
+    vector.y += 2;
+    vector.project(camera);
+
+    const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
+    const y = (-vector.y * 0.5 + 0.5) * canvas.clientHeight;
+
+    messageDiv.style.transform = `translate(-50%, -100%) translate(${x}px,${y}px)`;
+  }
+
+  updatePosition();
+
+  let frameId;
+  function animateMessage() {
+    updatePosition();
+    frameId = requestAnimationFrame(animateMessage);
+  }
+  animateMessage();
+
+  setTimeout(() => {
+    messageDiv.style.display = 'none';
+    cancelAnimationFrame(frameId);
+  }, 10000);
+}
 
 function animate() {
   requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-
-  if (avatar) {
-    // Avatar hodi sem in tja po osi X med -5 in +5
-    avatar.position.x += direction * speed * delta;
-
-    if (avatar.position.x > 5) {
-      direction = -1;
-      avatar.rotation.y = Math.PI; // obrni avatar nazaj
-    } else if (avatar.position.x < -5) {
-      direction = 1;
-      avatar.rotation.y = 0; // obrni avatar naprej
-    }
-  }
-
-  // Kamera naj sledi avatarju (iz tretje osebe - rahlo nad in za njim)
-  if (avatar) {
-    const camPos = new THREE.Vector3(avatar.position.x, avatar.position.y + 2, avatar.position.z + 5);
-    camera.position.lerp(camPos, 0.1);
-    controls.target.lerp(avatar.position.clone().setY(1), 0.1);
-  }
-
-  controls.update();
   renderer.render(scene, camera);
 }
-
-animate();
-
-// Prilagajanje velikosti okna
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
 </script>
+
 </body>
 </html>
