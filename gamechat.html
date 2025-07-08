@@ -1,325 +1,356 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3D Chat Game z Babylon.js</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0; height: 100%; overflow: hidden; background: black;
-      font-family: sans-serif;
-      color: white;
-    }
-    #renderCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      touch-action: none;
-    }
-    #healthBar {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 200px;
-      height: 20px;
-      background: red;
-      border: 2px solid #fff;
-      z-index: 100;
-    }
-    #healthBarInner {
-      width: 100%;
-      height: 100%;
-      background: lime;
-      transition: width 0.3s ease;
-    }
-    #inventory {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      color: white;
-      z-index: 100;
-    }
-    /* Login obrazec */
-    #loginForm {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: #222;
-      padding: 20px;
-      border-radius: 8px;
-      z-index: 200;
-      width: 300px;
-      box-sizing: border-box;
-    }
-    #loginForm input {
-      width: 100%;
-      margin: 8px 0;
-      padding: 8px;
-      border-radius: 4px;
-      border: none;
-      box-sizing: border-box;
-    }
-    #loginForm button {
-      width: 100%;
-      padding: 10px;
-      border-radius: 4px;
-      border: none;
-      background-color: #4CAF50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #loginError {
-      color: red;
-      margin-top: 10px;
-      font-size: 0.9em;
-      height: 1.2em;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Babylon.js + Firebase Multiplayer z orožjem in zdravjem</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #222; }
+  #renderCanvas { width: 100%; height: 100%; touch-action: none; display: block; }
+  #healthBar {
+    position: absolute;
+    height: 8px;
+    background-color: red;
+    border: 1px solid black;
+    border-radius: 3px;
+  }
+</style>
 </head>
 <body>
-  <canvas id="renderCanvas" style="display:none;"></canvas>
 
-  <div id="loginForm">
-    <h2>Prijava</h2>
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Geslo" required />
-    <button id="loginBtn">Prijavi se</button>
-    <div id="loginError"></div>
-  </div>
+<canvas id="renderCanvas"></canvas>
+<div id="healthBar"></div>
 
-  <div id="healthBar" style="display:none;"><div id="healthBarInner"></div></div>
-  <div id="inventory" style="display:none;">Inventory: <span id="weapons"></span></div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<!-- Babylon.js -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
 
-  <!-- Babylon.js -->
-  <script src="https://cdn.babylonjs.com/babylon.js"></script>
-  <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
 
-  <script>
-    // Firebase konfiguracija in inicializacija
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
-    firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
 
-    const auth = firebase.auth();
-    const db = firebase.database();
+  const canvas = document.getElementById("renderCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
 
-    const loginForm = document.getElementById("loginForm");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
+  let scene, camera, playerMesh;
+  let myUID;
+  let playerHealth = 100;
+  let healthBar = document.getElementById("healthBar");
 
-    const canvas = document.getElementById("renderCanvas");
-    const healthBar = document.getElementById("healthBar");
-    const healthBarInner = document.getElementById("healthBarInner");
-    const inventory = document.getElementById("inventory");
+  // Shrani stanje vseh igralcev iz Firebase
+  let playersData = {};
 
-    // Preveri, če je uporabnik že prijavljen
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        // Prijavljen - skrij login in pokaži canvas ter UI
-        loginForm.style.display = "none";
-        canvas.style.display = "block";
-        healthBar.style.display = "block";
-        inventory.style.display = "block";
+  // Za strele
+  let bullets = [];
 
-        // Shranimo UID
-        localStorage.setItem("uid", user.uid);
+  // Hitrost strele
+  const BULLET_SPEED = 0.3;
+  const MAX_HEALTH = 100;
 
-        // Zaženi igro
-        startGame(user.uid);
-      } else {
-        // Ni prijave - pokaži login, skrij canvas in UI
-        loginForm.style.display = "block";
-        canvas.style.display = "none";
-        healthBar.style.display = "none";
-        inventory.style.display = "none";
-        localStorage.removeItem("uid");
-      }
-    });
+  auth.signInAnonymously()
+    .then(userCredential => {
+      myUID = userCredential.user.uid;
+      console.log("Prijavljen anonimno:", myUID);
+      createScene();
+    })
+    .catch(err => alert("Napaka pri prijavi: " + err.message));
 
-    loginBtn.addEventListener("click", () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-      loginError.textContent = "";
+  function createScene() {
+    scene = new BABYLON.Scene(engine);
+    scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
+    scene.collisionsEnabled = true;
 
-      if (!email || !password) {
-        loginError.textContent = "Vnesi email in geslo.";
-        return;
-      }
+    const sceneURL = "https://models.babylonjs.com/CornellBox/glTF/CornellBox.glb";
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          // Uspešna prijava, auth state listener bo sprožil začetek igre
-        })
-        .catch(error => {
-          loginError.textContent = "Napaka pri prijavi: " + error.message;
-        });
-    });
+    BABYLON.SceneLoader.Append("", sceneURL, scene, () => {
+      console.log("Scena naložena.");
 
-    function startGame(playerId) {
-      // Če je igra že teče, jo resetiramo
-      if (window.engine) {
-        window.engine.dispose();
-        window.scene.dispose();
-      }
+      // Za igralca vzamemo zadnji mesh
+      playerMesh = scene.meshes[scene.meshes.length - 1];
+      playerMesh.name = myUID;
+      playerMesh.position = new BABYLON.Vector3(0, 0, 0);
+      playerMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+      playerMesh.checkCollisions = true;
+      playerMesh.isPickable = false;
 
-      // Babylon.js nastavitev
-      const engine = new BABYLON.Engine(canvas, true);
-      window.engine = engine;
-      const scene = new BABYLON.Scene(engine);
-      window.scene = scene;
+      // Dodamo health property
+      playerMesh.health = MAX_HEALTH;
 
-      const camera = new BABYLON.UniversalCamera("playerCamera", new BABYLON.Vector3(0, 3, -10), scene);
+      // Kamera sledi igralcu
+      camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 6, playerMesh.position, scene);
       camera.attachControl(canvas, true);
-      camera.speed = 0.1;
-      camera.inertia = 0.2;
+      camera.checkCollisions = true;
+      camera.lowerBetaLimit = 0.1;
+      camera.upperBetaLimit = Math.PI / 2.2;
+      camera.lowerRadiusLimit = 4;
+      camera.upperRadiusLimit = 15;
+      camera.lockedTarget = playerMesh;
 
-      const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-      light.intensity = 0.9;
-
-      const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
-      ground.checkCollisions = true;
-
-      let health = 100;
-      updateHealthBar();
-
-      let playerMesh = null;
-      const players = {};
-      const moveSpeed = 0.15;
-
-      // Naloži svoj avatar iz Firebase
-      db.ref("users/" + playerId).once("value").then(snapshot => {
-        const playerData = snapshot.val();
-        if (!playerData || !playerData.avatarURL2) {
-          alert("Ni avatarja za uporabnika.");
-          throw new Error("Ni avatarja");
-        }
-
-        BABYLON.SceneLoader.ImportMesh("", "", playerData.avatarURL2, scene, function(meshes) {
-          playerMesh = BABYLON.Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
-          playerMesh.position = new BABYLON.Vector3(0, 0, 0);
-          playerMesh.scaling = new BABYLON.Vector3(1, 1, 1);
-          playerMesh.checkCollisions = true;
-
-          camera.lockedTarget = playerMesh;
-
-          updateMyState();
-          listenToOtherPlayers();
-        });
-      });
-
-      function updateMyState() {
-        if (!playerMesh) return;
-        db.ref("players/" + playerId).set({
-          position: {
-            x: playerMesh.position.x,
-            y: playerMesh.position.y,
-            z: playerMesh.position.z
-          },
-          health: health,
-          shooting: false
-        });
-        updateHealthBar();
+      if (scene.lights.length === 0) {
+        let light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+        light.intensity = 0.8;
       }
 
-      function listenToOtherPlayers() {
-        db.ref("players").on("value", snapshot => {
-          const allPlayers = snapshot.val() || {};
-          for (const id in allPlayers) {
-            if (id === playerId) continue;
-            const data = allPlayers[id];
-
-            if (!players[id]) {
-              db.ref("users/" + id).once("value").then(snap => {
-                const u = snap.val();
-                if (u && u.avatarURL2) {
-                  BABYLON.SceneLoader.ImportMesh("", "", u.avatarURL2, scene, function(meshes) {
-                    const mesh = BABYLON.Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
-                    mesh.position = new BABYLON.Vector3(data.position.x, data.position.y, data.position.z);
-                    mesh.scaling = new BABYLON.Vector3(1, 1, 1);
-                    players[id] = { mesh: mesh, health: 100 };
-                  });
-                }
-              });
-            } else {
-              players[id].mesh.position = new BABYLON.Vector3(data.position.x, data.position.y, data.position.z);
-              players[id].health = data.health;
-
-              if (players[id].health < 30) {
-                players[id].mesh.material = new BABYLON.StandardMaterial("lowHealthMat", scene);
-                players[id].mesh.material.diffuseColor = new BABYLON.Color3(1, 0, 0);
-              } else {
-                players[id].mesh.material = new BABYLON.StandardMaterial("normalMat", scene);
-                players[id].mesh.material.diffuseColor = new BABYLON.Color3(1, 1, 1);
-              }
-            }
-          }
-
-          for (const id in players) {
-            if (!allPlayers[id]) {
-              if (players[id].mesh) players[id].mesh.dispose();
-              delete players[id];
-            }
-          }
-        });
-      }
-
-      const inputMap = {};
-      scene.actionManager = new BABYLON.ActionManager(scene);
-      scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
-        inputMap[evt.sourceEvent.key.toLowerCase()] = true;
-      }));
-      scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
-        inputMap[evt.sourceEvent.key.toLowerCase()] = false;
-      }));
-
-      scene.onBeforeRenderObservable.add(() => {
-        if (!playerMesh) return;
-
-        let moved = false;
-        if (inputMap["w"]) { playerMesh.position.z += moveSpeed; moved = true; }
-        if (inputMap["s"]) { playerMesh.position.z -= moveSpeed; moved = true; }
-        if (inputMap["a"]) { playerMesh.position.x -= moveSpeed; moved = true; }
-        if (inputMap["d"]) { playerMesh.position.x += moveSpeed; moved = true; }
-
-        if (moved) updateMyState();
-      });
-
-      function updateHealthBar() {
-        healthBarInner.style.width = health + "%";
-      }
-
-      // Simulacija streljanja in padanja zdravja
-      window.addEventListener("click", () => {
-        health -= 10;
-        if (health < 0) health = 100;
-        updateHealthBar();
-        updateMyState();
-      });
-
+      setupControls();
+      listenToOtherPlayers();
       engine.runRenderLoop(() => {
         scene.render();
+        updateBullets();
+        updateHealthBar();
       });
+    });
+  }
 
-      window.addEventListener("resize", () => {
-        engine.resize();
-      });
+  const keys = {};
+  window.addEventListener("keydown", e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === " ") e.preventDefault(); // prepreči scroll z space
+  });
+  window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+  // Premikanje in streljanje
+  function setupControls() {
+    scene.onBeforeRenderObservable.add(() => {
+      if (!playerMesh) return;
+
+      const speed = 0.1;
+      if (keys["w"] || keys["arrowup"]) playerMesh.position.z -= speed;
+      if (keys["s"] || keys["arrowdown"]) playerMesh.position.z += speed;
+      if (keys["a"] || keys["arrowleft"]) playerMesh.position.x -= speed;
+      if (keys["d"] || keys["arrowright"]) playerMesh.position.x += speed;
+
+      playerMesh.position.y = 0;
+
+      // Strela na space
+      if (keys[" "]) {
+        shootBullet();
+        keys[" "] = false; // samo en strel na pritisk
+      }
+
+      updateMyState();
+    });
+  }
+
+  // Strela kot kroglica, ki potuje naprej iz pozicije igralca
+  function shootBullet() {
+    if (!playerMesh) return;
+
+    // Ustvari kroglico za metek
+    let bullet = BABYLON.MeshBuilder.CreateSphere("bullet_" + Date.now(), { diameter: 0.15 }, scene);
+    bullet.position = playerMesh.position.add(new BABYLON.Vector3(0, 0.5, 0));
+
+    // Smer metka iz kamere
+    let forward = camera.getForwardRay().direction.normalize();
+
+    bullet.metadata = {
+      shooterUID: myUID,
+      direction: forward,
+      speed: BULLET_SPEED,
+      alive: true
+    };
+
+    bullet.material = new BABYLON.StandardMaterial("bulletMat", scene);
+    bullet.material.diffuseColor = new BABYLON.Color3(1, 1, 0); // rumena kroglica
+
+    bullets.push(bullet);
+  }
+
+  // Posodobi pozicije vseh metkov
+  function updateBullets() {
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      let b = bullets[i];
+      if (!b.metadata.alive) {
+        b.dispose();
+        bullets.splice(i, 1);
+        continue;
+      }
+
+      // Premakni kroglico naprej
+      b.position.addInPlace(b.metadata.direction.scale(b.metadata.speed));
+
+      // Preveri trke z igralci
+      checkBulletCollision(b);
+      
+      // Če je metek predaleč od začetne točke, odstrani
+      if (BABYLON.Vector3.Distance(b.position, playerMesh.position) > 30) {
+        b.metadata.alive = false;
+      }
     }
-  </script>
+  }
+
+  // Preveri trke metka z drugimi igralci
+  function checkBulletCollision(bullet) {
+    // Preverimo vse igralce (razen tistega, ki je streljal)
+    for (const uid in playersData) {
+      if (uid === bullet.metadata.shooterUID) continue;
+      const p = playersData[uid];
+      if (!p.mesh) continue;
+
+      // Enostaven collision check: če je razdalja manjša od 1
+      if (BABYLON.Vector3.Distance(bullet.position, p.mesh.position) < 1) {
+        // Zadetek
+        bullet.metadata.alive = false;
+        damagePlayer(uid, 20);
+        break;
+      }
+    }
+  }
+
+  // Zmanjšaj zdravje igralca v Firebase in lokalno
+  function damagePlayer(uid, damage) {
+    const p = playersData[uid];
+    if (!p) return;
+    if (p.health === undefined) p.health = MAX_HEALTH;
+
+    p.health -= damage;
+    if (p.health < 0) p.health = 0;
+
+    // Če smo jaz, posodobi lokalno zdravje in morebitno "umiranje"
+    if (uid === myUID) {
+      playerHealth = p.health;
+      if (playerHealth <= 0) {
+        playerDies();
+      }
+    }
+
+    // Posodobi Firebase
+    db.ref("players/" + uid + "/health").set(p.health);
+  }
+
+  // Ko igralec umre
+  function playerDies() {
+    if (!playerMesh) return;
+
+    console.log("Umrl si!");
+    playerMesh.isVisible = false;
+
+    // Odstrani iz Firebase (ne povsem, ampak za zdaj)
+    db.ref("players/" + myUID + "/dead").set(true);
+
+    // Po 3 sekundah resetiraj
+    setTimeout(() => {
+      playerHealth = MAX_HEALTH;
+      playerMesh.position = new BABYLON.Vector3(0, 0, 0);
+      playerMesh.isVisible = true;
+      db.ref("players/" + myUID + "/health").set(playerHealth);
+      db.ref("players/" + myUID + "/dead").set(false);
+    }, 3000);
+  }
+
+  // Posodobi lokalno stanje in Firebase
+  function updateMyState() {
+    if (!myUID || !playerMesh) return;
+    db.ref("players/" + myUID).set({
+      x: playerMesh.position.x,
+      y: playerMesh.position.y,
+      z: playerMesh.position.z,
+      health: playerHealth,
+      dead: false,
+      lastUpdate: Date.now()
+    });
+  }
+
+  // Poslušaj stanje drugih igralcev in jih riši
+  function listenToOtherPlayers() {
+    db.ref("players").on("value", snapshot => {
+      const players = snapshot.val() || {};
+      playersData = {};
+
+      for (const uid in players) {
+        if (uid === myUID) {
+          // Posodobi svoje zdravje
+          playerHealth = players[uid].health ?? MAX_HEALTH;
+          continue;
+        }
+
+        const p = players[uid];
+
+        // Če igralec je "dead", skrij njegovo mesh
+        if (p.dead) {
+          let meshToHide = scene.getMeshByName(uid);
+          if (meshToHide) meshToHide.isVisible = false;
+          continue;
+        }
+
+        // Ali mesh že obstaja?
+        let mesh = scene.getMeshByName(uid);
+        if (!mesh) {
+          // Ustvari modro kocko za druge igralce
+          mesh = BABYLON.MeshBuilder.CreateBox(uid, { size: 1 }, scene);
+          mesh.material = new BABYLON.StandardMaterial("mat_" + uid, scene);
+          mesh.material.diffuseColor = new BABYLON.Color3(0, 0, 1); // modra barva za ostale igralce
+          mesh.position = new BABYLON.Vector3(p.x, p.y, p.z);
+          mesh.checkCollisions = true;
+          mesh.isPickable = false;
+          mesh.health = p.health ?? MAX_HEALTH;
+          mesh.name = uid;
+        } else {
+          // Posodobi pozicijo in zdravje
+          mesh.position.set(p.x, p.y, p.z);
+          mesh.health = p.health ?? MAX_HEALTH;
+          mesh.isVisible = true;
+        }
+
+        // Shranimo v playersData z mesh in health
+        playersData[uid] = {
+          mesh: mesh,
+          health: mesh.health,
+          dead: p.dead ?? false
+        };
+      }
+    });
+  }
+
+  // Posodobi prikaz health bara nad igralcem (samo za mojega)
+  function updateHealthBar() {
+    if (!playerMesh) {
+      healthBar.style.display = "none";
+      return;
+    }
+
+    if (playerHealth <= 0) {
+      healthBar.style.display = "none";
+      return;
+    }
+
+    healthBar.style.display = "block";
+
+    // Pretvori 3D pozicijo v 2D koordinate na zaslonu
+    const pos = BABYLON.Vector3.Project(
+      new BABYLON.Vector3(playerMesh.position.x, playerMesh.position.y + 1.5, playerMesh.position.z),
+      BABYLON.Matrix.Identity(),
+      scene.getTransformMatrix(),
+      camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight())
+    );
+
+    healthBar.style.left = (pos.x - 50) + "px"; // 100px širina, zato polovico pomaknem
+    healthBar.style.top = (pos.y - 15) + "px";
+    healthBar.style.width = (playerHealth) + "px"; // Širina health bara glede na zdravje
+  }
+
+  // Ob zaprtju okna odstranimo svoj zapis iz Firebase
+  window.addEventListener("beforeunload", () => {
+    if (myUID) {
+      db.ref("players/" + myUID).remove();
+    }
+  });
+</script>
+
 </body>
 </html>
 
