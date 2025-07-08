@@ -2336,20 +2336,26 @@ function showUserMapPopup() {
   mapContainer.style.overflow = "hidden";
   mapContainer.style.position = "relative";
 
-  const closeBtn = document.createElement("button");
-  closeBtn.textContent = "✖";
-  closeBtn.style.position = "absolute";
-  closeBtn.style.top = "10px";
-  closeBtn.style.right = "10px";
-  closeBtn.style.zIndex = 2;
-  closeBtn.style.background = "transparent";
-  closeBtn.style.border = "none";
-  closeBtn.style.fontSize = "20px";
-  closeBtn.style.cursor = "pointer";
-  closeBtn.addEventListener("click", () => overlay.remove());
+  // 🔴 Znotraj initUserMap ali tiste funkcije, kjer ustvarjaš mapContainer
+const closeBtn = document.createElement("button");
+closeBtn.textContent = "✖";
+closeBtn.style.position = "absolute";
+closeBtn.style.top = "10px";
+closeBtn.style.right = "10px";
+closeBtn.style.zIndex = 2;
+closeBtn.style.background = "transparent";
+closeBtn.style.border = "none";
+closeBtn.style.fontSize = "20px";
+closeBtn.style.cursor = "pointer";
 
-  mapContainer.appendChild(closeBtn);
+// Ob kliku skrij avatar in odstrani overlay
+closeBtn.addEventListener("click", () => {
+  avatarContainer.style.display = "none";  // SKRIJ AVATAR
+  avatarHidden = true;                     // NE PRIKAZUJ VEČ
+  overlay.remove();                        // Odstrani zemljevid/overlay
+});
 
+mapContainer.appendChild(closeBtn);
    // Tukaj bo container za izbiro ikone
   const iconChooser = document.createElement("div");
   iconChooser.style.position = "absolute";
