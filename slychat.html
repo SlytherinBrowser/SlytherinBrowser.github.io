@@ -2468,35 +2468,71 @@ function initUserMap(currentUserIcon) {
     maxZoom: 19
   }).addTo(map);
 
-  // Prikaži marker za trenutnega uporabnika s svojo ikono ALI avatarjem, če obstaja
-  Promise.all([
-    firebase.database().ref("locations/" + currentUser.uid).once("value"),
-    firebase.database().ref("users/" + currentUser.uid + "/avatarUrl").once("value")
-  ]).then(([locSnap, avatarSnap]) => {
-    const loc = locSnap.val();
-    const avatarUrl = avatarSnap.val();
-    if (loc && loc.lat && loc.lng) {
-      if (avatarUrl) {
-        // Uporabi sliko avatarja kot marker
-        const avatarIcon = L.icon({
-          iconUrl: avatarUrl,
-          iconSize: [40, 40], // prilagodi velikost avatarja
-          iconAnchor: [20, 40], // točka sidrišča pod sliko
-          popupAnchor: [0, -40]
-        });
-        L.marker([loc.lat, loc.lng], { icon: avatarIcon }).addTo(map).bindPopup("<b>Tvoja lokacija (avatar)</b>");
+  // --- Dodamo 3D avatar container (brez ozadja) ---
+  const avatarDiv = document.createElement("div");
+  avatarDiv.style.position = "absolute";
+  avatarDiv.style.width = "120px";    // prilagodi širino
+  avatarDiv.style.height = "240px";   // višina za celo telo
+  avatarDiv.style.pointerEvents = "none";  // naj ne moti zemljevida
+  avatarDiv.style.background = "transparent"; // brez ozadja
+  avatarDiv.style.userSelect = "none";
+  avatarDiv.style.zIndex = 1000;  // da je nad zemljevidom
+  avatarDiv.style.display = "none"; // skrito dokler ni lokacije
+
+  // Ustvari <model-viewer> element za 3D avatar
+  const modelViewer = document.createElement("model-viewer");
+  modelViewer.setAttribute("camera-controls", "");
+  modelViewer.setAttribute("auto-rotate", "");
+  modelViewer.setAttribute("disable-zoom", "");
+  modelViewer.style.width = "100%";
+  modelViewer.style.height = "100%";
+  modelViewer.style.background = "transparent"; // brez ozadja v model-viewerju
+
+  avatarDiv.appendChild(modelViewer);
+  document.body.appendChild(avatarDiv);
+
+  // Funkcija za pozicioniranje avatarja na zemljevidu glede na lat/lng
+  function updateAvatarPosition(lat, lng) {
+    const point = map.latLngToContainerPoint([lat, lng]);
+    avatarDiv.style.left = (point.x - avatarDiv.clientWidth / 2) + "px";
+    avatarDiv.style.top = (point.y - avatarDiv.clientHeight) + "px";
+  }
+
+  // Funkcija za osvežitev avatarja
+  async function refreshAvatar() {
+    try {
+      const [locSnap, avatarSnap] = await Promise.all([
+        firebase.database().ref("locations/" + currentUser.uid).once("value"),
+        firebase.database().ref("users/" + currentUser.uid + "/avatarUrl").once("value")
+      ]);
+
+      const loc = locSnap.val();
+      const avatarUrl = avatarSnap.val();
+
+      if (loc && loc.lat && loc.lng && avatarUrl) {
+        modelViewer.setAttribute("src", avatarUrl);
+        updateAvatarPosition(loc.lat, loc.lng);
+        avatarDiv.style.display = "block";
       } else {
-        // Uporabi emoji ikono, če ni avatarja
-        const icon = L.divIcon({
-          html: `<div style="font-size: 36px;">${currentUserIcon || '📍'}</div>`,
-          className: ""
-        });
-        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup("<b>Tvoja lokacija</b>");
+        avatarDiv.style.display = "none";
       }
+    } catch (e) {
+      console.error("Napaka pri osveževanju avatarja:", e);
     }
+  }
+
+  // Osveži avatar ob premiku/zoomu zemljevida, da ostane na pravem mestu
+  map.on("move", () => {
+    refreshAvatar();
   });
 
-  // Prikaži markerje za ostale uporabnike z emoji ikonami (kot prej)
+  // Prvič osveži avatar
+  refreshAvatar();
+
+  // Samodejno osveževanje lokacije in avatarja na 30s
+  setInterval(refreshAvatar, 30000);
+
+  // --- Prikaži marker za ostale uporabnike z emoji ikonami ---
   const active = Object.entries(userStatusCache)
     .filter(([uid, status]) => status.online && uid !== currentUser.uid);
 
@@ -2517,7 +2553,7 @@ function initUserMap(currentUserIcon) {
       }
     });
   });
-};
+}
 
 
 
