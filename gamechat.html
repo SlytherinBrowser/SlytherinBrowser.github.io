@@ -62,10 +62,10 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Pripravi THREE.js sceno
+  // THREE.js setup (scene, camera, renderer)
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer();
+  const renderer = new THREE.WebGLRenderer({antialias: true});
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
@@ -73,61 +73,211 @@
   light.position.set(0, 200, 0);
   scene.add(light);
 
-  camera.position.set(0, 2, 10);
+  camera.position.set(0, 3, 10);
+  camera.lookAt(0, 0, 0);
 
   const loader = new THREE.GLTFLoader();
 
-  // Funkcija za pozicioniranje avatarjev, da se ne prekrivajo
-  function getPosition(index) {
-    const spacing = 3; // razmik med avatarji
-    const x = (index % 5) * spacing - 6;    // postavi max 5 avatarjev v vrstico, centrirano
-    const z = Math.floor(index / 5) * spacing - 6;
-    return { x, y: 0, z };
+  // Igralec in ostali igralci
+  let playerId = localStorage.getItem("uid");
+  if (!playerId) {
+    alert("Nisi prijavljen.");
+    throw new Error("Ni UID");
   }
 
-  // Naloži vse avatarje uporabnikov in jih prikaži v sceni
-  db.ref("users").once("value").then(snapshot => {
-    const users = snapshot.val();
-    if (!users) {
-      alert("V bazi ni uporabnikov.");
-      return;
+  // Igralčeve podatke iz baze
+  let playerData = null;
+  const players = {}; // objekt za shranjevanje vseh avatarjev
+
+  // Tvoj avatar bo dodan tukaj
+  let playerAvatar = null;
+
+  // Za premikanje
+  const moveSpeed = 0.1;
+  const keys = {w:false, a:false, s:false, d:false};
+
+  // Zdravje igralca
+  let health = 100;
+
+  // Funkcija za premik igralca glede na pritisnjene tipke
+  function updatePlayerPosition() {
+    if (!playerAvatar) return;
+
+    if (keys.w) playerAvatar.position.z -= moveSpeed;
+    if (keys.s) playerAvatar.position.z += moveSpeed;
+    if (keys.a) playerAvatar.position.x -= moveSpeed;
+    if (keys.d) playerAvatar.position.x += moveSpeed;
+
+    // Kamera sledi igralcu
+    camera.position.x = playerAvatar.position.x;
+    camera.position.z = playerAvatar.position.z + 10;
+    camera.position.y = playerAvatar.position.y + 3;
+    camera.lookAt(playerAvatar.position);
+  }
+
+  // Posodobi pozicijo in zdravje v Firebase
+  function updateMyState() {
+    if (!playerAvatar) return;
+    db.ref("players/" + playerId).set({
+      position: {
+        x: playerAvatar.position.x,
+        y: playerAvatar.position.y,
+        z: playerAvatar.position.z
+      },
+      health: health,
+      shooting: false // za zdaj false, streljanje dodamo kasneje
+    });
+  }
+
+  // Naloži svoj avatar in ga doda v sceno
+  db.ref("users/" + playerId).once("value").then(snapshot => {
+    playerData = snapshot.val();
+    if (!playerData || !playerData.avatarURL2) {
+      alert("Ni avatarja za uporabnika.");
+      throw new Error("Ni avatarja");
     }
 
-    let index = 0;
-    for (const uid in users) {
-      const user = users[uid];
-      if (user.avatarURL2) {
-        loader.load(user.avatarURL2,
-          function(gltf) {
-            const avatar = gltf.scene;
-            avatar.scale.set(1, 1, 1);
-            const pos = getPosition(index);
-            avatar.position.set(pos.x, pos.y, pos.z);
-            scene.add(avatar);
-            index++;
-          },
-          undefined,
-          function(error) {
-            console.error("Napaka pri nalaganju avatarja:", error);
+    loader.load(playerData.avatarURL2, function(gltf) {
+      playerAvatar = gltf.scene;
+      playerAvatar.scale.set(1, 1, 1);
+      playerAvatar.position.set(0, 0, 0);
+      scene.add(playerAvatar);
+
+      // Za prvič posodobi stanje v Firebase
+      updateMyState();
+
+      // Začni poslušati ostale igralce
+      listenToOtherPlayers();
+    }, undefined, function(error) {
+      console.error("Napaka pri nalaganju avatarja:", error);
+    });
+  });
+
+  // Poslušaj spremembe vseh igralcev in upravljaj njihove avatarje
+  function listenToOtherPlayers() {
+    db.ref("players").on("value", snapshot => {
+      const allPlayers = snapshot.val() || {};
+      for (const id in allPlayers) {
+        if (id === playerId) continue; // preskoči sebe
+
+        const data = allPlayers[id];
+        if (!players[id]) {
+          // Če avatar še ne obstaja, ga naloži
+          db.ref("users/" + id).once("value").then(snap => {
+            const u = snap.val();
+            if (u && u.avatarURL2) {
+              loader.load(u.avatarURL2, gltf => {
+                const avatar = gltf.scene;
+                avatar.scale.set(1, 1, 1);
+                scene.add(avatar);
+                players[id] = { avatar: avatar, health: 100 };
+                avatar.position.set(data.position.x, data.position.y, data.position.z);
+              });
+            }
+          });
+        } else {
+          // Posodobi pozicijo in zdravje avatarja
+          if (players[id].avatar) {
+            players[id].avatar.position.set(data.position.x, data.position.y, data.position.z);
+            players[id].health = data.health;
+            // Lahko dodaš barvni efekt glede na zdravje, npr. rdeč če je malo zdravja
+            if (players[id].health < 30) {
+              players[id].avatar.traverse(child => {
+                if (child.isMesh) child.material.color.set(0xff0000);
+              });
+            } else {
+              players[id].avatar.traverse(child => {
+                if (child.isMesh) child.material.color.set(0xffffff);
+              });
+            }
           }
-        );
+        }
+      }
+
+      // Odstrani igralce, ki so odšli (v bazi ni več podatkov)
+      for (const id in players) {
+        if (!allPlayers[id]) {
+          if (players[id].avatar) scene.remove(players[id].avatar);
+          delete players[id];
+        }
+      }
+    });
+  }
+
+  // Upravljanje tipk za premikanje
+  window.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() === 'w') keys.w = true;
+    if (e.key.toLowerCase() === 'a') keys.a = true;
+    if (e.key.toLowerCase() === 's') keys.s = true;
+    if (e.key.toLowerCase() === 'd') keys.d = true;
+  });
+
+  window.addEventListener('keyup', e => {
+    if (e.key.toLowerCase() === 'w') keys.w = false;
+    if (e.key.toLowerCase() === 'a') keys.a = false;
+    if (e.key.toLowerCase() === 's') keys.s = false;
+    if (e.key.toLowerCase() === 'd') keys.d = false;
+  });
+
+  // Osnovno streljanje: klik z miško
+  window.addEventListener('click', (event) => {
+    if (!playerAvatar) return;
+
+    // Raycaster iz kamere skozi miško
+    const mouse = new THREE.Vector2();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+
+    // Preveri, ali zadeneš drugega igralca
+    const hitObjects = [];
+    for (const id in players) {
+      if (!players[id].avatar) continue;
+      // Preveri če ray seka bounding box avatarja
+      const avatar = players[id].avatar;
+      const box = new THREE.Box3().setFromObject(avatar);
+      if (raycaster.ray.intersectsBox(box)) {
+        hitObjects.push(id);
+      }
+    }
+
+    if (hitObjects.length > 0) {
+      const hitId = hitObjects[0]; // zadene prvega na seznamu
+      console.log("Zadel si igralca:", hitId);
+
+      // Zmanjšaj zdravje tega igralca v bazi
+      const currentHealth = players[hitId].health;
+      const newHealth = Math.max(0, currentHealth - 20);
+      db.ref("players/" + hitId + "/health").set(newHealth);
+
+      // Če zdravje pade na 0, odstrani avatar in resetiraj zdravje po 3 sekundah (respawn)
+      if (newHealth === 0) {
+        setTimeout(() => {
+          db.ref("players/" + hitId).remove();
+          db.ref("players/" + hitId + "/health").set(100);
+        }, 3000);
       }
     }
   });
 
-  // Animacija
+  // Animacija in render
   function animate() {
     requestAnimationFrame(animate);
+    updatePlayerPosition();
+    updateMyState();
     renderer.render(scene, camera);
   }
   animate();
 
-  // Ob spremembi velikosti okna
+  // Okno sprememba velikosti
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 </script>
+
 </body>
 </html>
