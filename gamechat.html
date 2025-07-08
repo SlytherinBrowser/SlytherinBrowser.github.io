@@ -3,399 +3,215 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>3D Multiplayer igra z avatarji in klepetom</title>
+<title>3D Igra z Babylon.js, Ready Player Me & Firebase Chat</title>
 <style>
-  body, html {
-    margin:0; padding:0; overflow: hidden;
-    background: #222;
-    font-family: Arial, sans-serif;
-    color: white;
-  }
-  #loginForm {
-    position: absolute;
-    top:50%; left:50%;
-    transform: translate(-50%, -50%);
-    background: #333;
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
-    display: flex; flex-direction: column;
-    z-index: 10;
-  }
-  #loginForm input, #loginForm button {
-    margin-bottom: 10px;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    border:none;
-  }
-  #loginForm button {
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-  }
-  #loginError {
-    color: #f55;
-    margin-top: 10px;
-    min-height: 20px;
-  }
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+  #renderCanvas { width: 100%; height: 100%; display: block; }
   #chatContainer {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 400px;
-    z-index: 10;
-    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: rgba(0,0,0,0.6);
+    padding: 5px;
+    display: flex;
   }
   #chatInput {
-    width: 100%;
-    padding: 10px;
+    flex: 1;
     font-size: 18px;
-    border-radius: 8px;
-    border: none;
-    outline: none;
+    padding: 5px;
   }
-  /* Oblački sporočil nad avatarji */
-  .chat-bubble {
-    position: absolute;
-    background: rgba(0,0,0,0.75);
+  #chatSend {
+    font-size: 18px;
     padding: 5px 10px;
-    border-radius: 15px;
-    max-width: 200px;
+  }
+  #chatBubble {
+    position: absolute;
+    background: white;
+    padding: 6px 10px;
+    border-radius: 10px;
     font-size: 14px;
     pointer-events: none;
-    white-space: nowrap;
-    color: white;
-    border: 1px solid white;
-    user-select: none;
+    display: none;
+    max-width: 200px;
+    word-wrap: break-word;
   }
 </style>
 </head>
 <body>
 
-<div id="loginForm">
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Geslo" />
-  <button id="loginBtn">Prijava / Registracija</button>
-  <div id="loginError"></div>
-</div>
+<canvas id="renderCanvas"></canvas>
+
+<div id="chatBubble"></div>
 
 <div id="chatContainer">
-  <input type="text" id="chatInput" placeholder="Vnesi sporočilo..." />
+  <input type="text" id="chatInput" placeholder="Napiši sporočilo..." />
+  <button id="chatSend">Pošlji</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+<!-- Babylon.js CDN -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+<!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase konfiguracija (tvoja)
-  const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
+  // Firebase konfiguracija - tukaj vnesi svojo config
+   const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+    
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.database();
 
-  // Spremenljivke za igro
-  let scene, camera, renderer;
-  let localPlayer = null;
-  let players = {}; // podatki vseh igralcev: {uid: {x,y,z,name,avatarURL2,model,chatBubble,...}}
-  let chatMessages = {}; // sporočila v igri {uid: {text, timestamp}}
-  let chatContainer = null;
-  let chatInput = null;
+  // Babylon.js scena
+  const canvas = document.getElementById("renderCanvas");
+  const engine = new BABYLON.Engine(canvas, true);
 
-  // Init UI elementi
-  const loginForm = document.getElementById('loginForm');
-  const loginError = document.getElementById('loginError');
-  const loginBtn = document.getElementById('loginBtn');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  chatContainer = document.getElementById('chatContainer');
-  chatInput = document.getElementById('chatInput');
+  let scene, camera, avatar, avatarAnimationGroup;
+  let chatBubble = document.getElementById("chatBubble");
+  let chatTimeout;
 
-  loginBtn.onclick = () => {
-    loginError.innerText = "";
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    if(!email || !password) {
-      loginError.innerText = "Vnesi email in geslo.";
-      return;
-    }
-    // Poskusi prijavo
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        loginForm.style.display = "none";
-        startGame();
-      })
-      .catch(err => {
-        if(err.code === 'auth/user-not-found') {
-          // Registracija, če ni najden
-          auth.createUserWithEmailAndPassword(email, password)
-            .then(() => {
-              loginForm.style.display = "none";
-              startGame();
-            })
-            .catch(e => loginError.innerText = e.message);
-        } else {
-          loginError.innerText = err.message;
-        }
-      });
-  };
+  function createScene() {
+    scene = new BABYLON.Scene(engine);
 
-  // Ko se prijavi, vzpostavi igro
-  function startGame() {
-    const user = auth.currentUser;
-    if(!user) return;
+    // Kamera - Follow + Orbit z miško
+    camera = new BABYLON.ArcRotateCamera("Camera", 
+      BABYLON.Tools.ToRadians(0), BABYLON.Tools.ToRadians(75), 
+      8, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
+    camera.lowerRadiusLimit = 5;
+    camera.upperRadiusLimit = 15;
+    camera.wheelPrecision = 50;
+    camera.useBouncingBehavior = true;
 
-    // Najprej naložimo podatke uporabnika iz Firebase profila (avatarURL2, name)
-    db.ref('users/' + user.uid).once('value').then(snapshot => {
-      let profile = snapshot.val() || {};
+    // Svetloba
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-      // Če ni avatarURL2, nastavimo privzeti
-      if(!profile.avatarURL2) {
-        profile.avatarURL2 = "https://i.pravatar.cc/64?u=" + user.uid;
-        db.ref('users/' + user.uid + '/avatarURL2').set(profile.avatarURL2);
-      }
-      if(!profile.name) {
-        profile.name = user.email.split('@')[0];
-        db.ref('users/' + user.uid + '/name').set(profile.name);
-      }
+    // Tla (velik plane za svet)
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
+    ground.checkCollisions = true;
 
-      // Nastavimo lokalnega igralca z začetno pozicijo v prostoru
-      localPlayer = {
-        uid: user.uid,
-        x: Math.random() * 20 - 10,
-        y: 0,
-        z: Math.random() * 20 - 10,
-        name: profile.name,
-        avatarURL2: profile.avatarURL2,
-        chatBubble: null,
-      };
+    // Uvozi Ready Player Me avatar glTF - tu primer javnega avatarja
+    BABYLON.SceneLoader.ImportMeshAsync("", "https://models.readyplayer.me/63e4b54e5f4ff6513d0fca26/", "avatar.glb", scene).then((result) => {
+      avatar = result.meshes[0];
+      avatar.position = new BABYLON.Vector3(0, 0, 0);
+      avatar.scaling.scaleInPlace(1.5);
 
-      // Naložimo sceno
-      initThreeJS();
-      setupFirebaseListeners();
-
-      // Pokažemo chat input
-      chatContainer.style.display = "block";
-
-      // Posodabljaj lokalnega igralca v bazi
-      updateLocalPlayerInDb();
-
-      // Poslušaj chat input
-      chatInput.addEventListener('keydown', e => {
-        if(e.key === "Enter" && chatInput.value.trim() !== "") {
-          sendChat(chatInput.value.trim());
-          chatInput.value = "";
-        }
-      });
-
-      animate();
-    });
-  }
-
-  // Inicijaliziraj Three.js sceno, kamero, renderer
-  function initThreeJS() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 10, 20);
-    camera.lookAt(0,0,0);
-
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Osvetlitev
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(10, 20, 10);
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
-
-    // Tla
-    const floorGeometry = new THREE.PlaneGeometry(50, 50);
-    const floorMaterial = new THREE.MeshStandardMaterial({color: 0x222222});
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI/2;
-    scene.add(floor);
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Dodaj lokalnega igralca kot 3D model
-    addPlayerModel(localPlayer);
-  }
-
-  // Dodaj avatar model igralca (preprosta barvana krogla + slika)
-  function addPlayerModel(player) {
-    // Če model že obstaja, ne dodaj
-    if(player.model) return;
-
-    // Krogla kot telo
-    const geometry = new THREE.SphereGeometry(1, 32, 32);
-    const material = new THREE.MeshStandardMaterial({color: 0x00aaff});
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(player.x, player.y + 1, player.z);
-    scene.add(mesh);
-    player.model = mesh;
-
-    // Ustvarimo HTML chat bubble za prikaz sporočil nad avatarjem
-    const bubble = document.createElement('div');
-    bubble.className = 'chat-bubble';
-    bubble.style.display = 'none';
-    document.body.appendChild(bubble);
-    player.chatBubble = bubble;
-  }
-
-  // Posodobi pozicijo modela igralca
-  function updatePlayerModelPosition(player) {
-    if(!player.model) return;
-    player.model.position.set(player.x, player.y + 1, player.z);
-  }
-
-  // Sinhronizacija Firebase baze s seznamom igralcev
-  function setupFirebaseListeners() {
-    const playersRef = db.ref('game/players');
-
-    // Poslušaj dodajanje/spreminjanje igralcev
-    playersRef.on('value', snapshot => {
-      const data = snapshot.val() || {};
-      // Odstrani tiste, ki niso več
-      for(let uid in players) {
-        if(!data[uid]) {
-          // Odstrani model in bubble iz scene in DOM
-          if(players[uid].model) scene.remove(players[uid].model);
-          if(players[uid].chatBubble) players[uid].chatBubble.remove();
-          delete players[uid];
-        }
-      }
-      // Dodaj ali posodobi
-      for(let uid in data) {
-        if(!players[uid]) {
-          players[uid] = data[uid];
-          addPlayerModel(players[uid]);
-        } else {
-          // Posodobi vrednosti
-          players[uid].x = data[uid].x;
-          players[uid].y = data[uid].y;
-          players[uid].z = data[uid].z;
-          players[uid].name = data[uid].name;
-          players[uid].avatarURL2 = data[uid].avatarURL2;
-        }
+      // Poišči animacije in zaženi hojo
+      avatarAnimationGroup = scene.animationGroups[0]; // predpostavimo, da je prva animacija hoja
+      if(avatarAnimationGroup){
+        avatarAnimationGroup.start(true, 1.0, avatarAnimationGroup.from, avatarAnimationGroup.to, false);
       }
     });
 
-    // Poslušaj chat sporočila
-    const chatRef = db.ref('game/chat');
-    chatRef.on('value', snapshot => {
-      const msgs = snapshot.val() || {};
-      chatMessages = msgs;
-      updateChatBubbles();
-    });
-  }
-
-  // Posodobi prikaz chat bubble za vse igralce
-  function updateChatBubbles() {
-    for(let uid in players) {
-      const player = players[uid];
-      if(!player.chatBubble) continue;
-
-      if(chatMessages[uid]) {
-        player.chatBubble.style.display = 'block';
-        player.chatBubble.innerText = chatMessages[uid].text;
-      } else {
-        player.chatBubble.style.display = 'none';
+    // Kamera sledi avatarju
+    scene.onBeforeRenderObservable.add(() => {
+      if(avatar){
+        camera.target = avatar.position;
       }
-    }
-  }
-
-  // Posodobi lokalnega igralca v bazi
-  function updateLocalPlayerInDb() {
-    if(!localPlayer) return;
-    db.ref('game/players/' + localPlayer.uid).set({
-      x: localPlayer.x,
-      y: localPlayer.y,
-      z: localPlayer.z,
-      name: localPlayer.name,
-      avatarURL2: localPlayer.avatarURL2
     });
-  }
 
-  // Pošlji chat sporočilo lokalnega igralca (zapišemo v bazo, izbrišemo po 5 sekundah)
-  function sendChat(text) {
-    if(!localPlayer) return;
-    const msgRef = db.ref('game/chat/' + localPlayer.uid);
-    msgRef.set({text: text, timestamp: Date.now()});
+    // Premikanje avatarja z WASD
+    const inputMap = {};
+    scene.actionManager = new BABYLON.ActionManager(scene);
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+      inputMap[evt.sourceEvent.key.toLowerCase()] = true;
+    }));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+      inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+    }));
 
-    // Po 5 sekundah pobrišemo sporočilo, da ne ostane ves čas prikazano
-    setTimeout(() => {
-      msgRef.remove();
-    }, 5000);
-  }
+    scene.onBeforeRenderObservable.add(() => {
+      if(!avatar) return;
+      let speed = 0.1;
+      let move = new BABYLON.Vector3.Zero();
 
-  // Kontrole za premikanje lokalnega igralca
-  const keys = {};
-  window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
-  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+      if(inputMap["w"]) move.z += 1;
+      if(inputMap["s"]) move.z -= 1;
+      if(inputMap["a"]) move.x -= 1;
+      if(inputMap["d"]) move.x += 1;
 
-  // Glavna animacija in posodobitev
-  function animate() {
-    requestAnimationFrame(animate);
+      if(move.length() > 0) {
+        move = move.normalize().scale(speed);
+        avatar.position.addInPlace(move);
 
-    // Premikanje lokalnega igralca WASD (ali arrow keys)
-    let moved = false;
-    const speed = 0.1;
-    if(keys['w'] || keys['arrowup']) { localPlayer.z -= speed; moved = true; }
-    if(keys['s'] || keys['arrowdown']) { localPlayer.z += speed; moved = true; }
-    if(keys['a'] || keys['arrowleft']) { localPlayer.x -= speed; moved = true; }
-    if(keys['d'] || keys['arrowright']) { localPlayer.x += speed; moved = true; }
-
-    if(moved) {
-      updateLocalPlayerInDb();
-    }
-
-    // Posodobi model pozicijo
-    if(localPlayer) updatePlayerModelPosition(localPlayer);
-
-    // Posodobi pozicije drugih igralcev
-    for(let uid in players) {
-      if(uid !== localPlayer.uid) {
-        updatePlayerModelPosition(players[uid]);
+        // avatar naj gleda smer gibanja
+        avatar.rotation.y = Math.atan2(move.x, move.z);
       }
-    }
+    });
 
-    // Posodobi pozicijo chat bubble (prevedemo 3D pozicijo v 2D screen koordinati)
-    updateChatBubblePositions();
-
-    renderer.render(scene, camera);
+    return scene;
   }
 
-  // Pretvori 3D koordinati v 2D screen pozicijo in postavi chat bubble
-  function updateChatBubblePositions() {
-    for(let uid in players) {
-      const p = players[uid];
-      if(!p.model || !p.chatBubble) continue;
+  const sceneInstance = createScene();
 
-      const vector = new THREE.Vector3(p.model.position.x, p.model.position.y + 1.8, p.model.position.z);
-      vector.project(camera);
+  engine.runRenderLoop(() => {
+    sceneInstance.render();
 
-      const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-vector.y * 0.5 + 0.5) * window.innerHeight;
-
-      p.chatBubble.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+    // Prikaz chat oblačka nad avatarjem
+    if(avatar && chatBubble.style.display === "block") {
+      let pos = BABYLON.Vector3.Project(
+        avatar.position.add(new BABYLON.Vector3(0, 2.2, 0)), 
+        BABYLON.Matrix.Identity(),
+        scene.getTransformMatrix(),
+        camera.viewport.toGlobal(
+          engine.getRenderWidth(),
+          engine.getRenderHeight()
+        )
+      );
+      chatBubble.style.left = pos.x + "px";
+      chatBubble.style.top = pos.y + "px";
     }
+  });
+
+  window.addEventListener("resize", () => {
+    engine.resize();
+  });
+
+  // Chat funkcionalnost
+  const chatInput = document.getElementById("chatInput");
+  const chatSend = document.getElementById("chatSend");
+
+  chatSend.addEventListener("click", sendMessage);
+  chatInput.addEventListener("keydown", e => {
+    if(e.key === "Enter") sendMessage();
+  });
+
+  function showChatBubble(message){
+    chatBubble.textContent = message;
+    chatBubble.style.display = "block";
+
+    if(chatTimeout) clearTimeout(chatTimeout);
+    chatTimeout = setTimeout(() => {
+      chatBubble.style.display = "none";
+    }, 10000);
   }
+
+  // Firebase chat - zapis sporočil
+  function sendMessage() {
+    const msg = chatInput.value.trim();
+    if(msg === "") return;
+    // Zapiši v Firebase
+    db.ref("chatMessages").push({
+      message: msg,
+      timestamp: Date.now()
+    });
+    chatInput.value = "";
+  }
+
+  // Prikaži zadnje sporočilo nad avatarjem
+  db.ref("chatMessages").limitToLast(1).on("child_added", snapshot => {
+    const data = snapshot.val();
+    showChatBubble(data.message);
+  });
 </script>
 
 </body>
