@@ -444,15 +444,21 @@ function startChallenge3() {
 // Ustvari n zombije
 function createZombies(n) {
   for(let i=0; i<n; i++) {
+    let pos;
+    do {
+      pos = new BABYLON.Vector3(
+        Math.random() * 20 - 10,
+        1,
+        Math.random() * 20 - 10
+      );
+    } while(pos.subtract(avatar.position).length() < 5); // vsaj 5 enot od avatarja
+
     let mesh = BABYLON.MeshBuilder.CreateBox("zombie_" + i, {height: 2, width: 1, depth: 0.5}, scene);
     let mat = new BABYLON.StandardMaterial("mat_zombie_" + i, scene);
-    mat.diffuseColor = new BABYLON.Color3(0.1, 0.8, 0.1); // zelena barva za zombije
+    mat.diffuseColor = new BABYLON.Color3(0.1, 0.8, 0.1); // zelena barva
     mesh.material = mat;
-    mesh.position = new BABYLON.Vector3(
-      Math.random() * 20 - 10,
-      1,
-      Math.random() * 20 - 10
-    );
+    mesh.position = pos;
+
     zombieBots[i] = { mesh };
   }
 }
