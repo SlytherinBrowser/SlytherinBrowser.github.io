@@ -68,7 +68,7 @@
 
 <script>
   // --- Firebase konfiguracija ---
-   const firebaseConfig = {
+  const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
       databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
@@ -77,7 +77,7 @@
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
     };
-  
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.database();
@@ -118,12 +118,13 @@
 
   let scene, camera, avatar;
   let inputMap = {};
+  let avatarRotationY = 0;  // za obračanje avatarja in kamere
 
   function startGame() {
     scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color3(0.63, 0.82, 0.63); // svetlo zelena
+    scene.clearColor = new BABYLON.Color3(0.63, 0.82, 0.63);
 
-    // Kamera tretjeosebni pogled
+    // Kamera tretjeosebni pogled (sledimo avatarju)
     camera = new BABYLON.UniversalCamera("cam", new BABYLON.Vector3(0, 5, -10), scene);
     camera.attachControl(canvas, true);
 
@@ -132,13 +133,13 @@
     light.position = new BABYLON.Vector3(20, 40, 20);
     light.intensity = 1;
 
-    // Zemlja (trava)
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:100, height:100}, scene);
+    // Večja zemlja (povečaj ground)
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:200, height:200}, scene);
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
     ground.material = groundMat;
 
-    // Drevesa - preprosti cilinder + krogelasti vrh
+    // Drevesa - cilindri in krogle (30 kos)
     for(let i=0; i<30; i++) {
       let tree = new BABYLON.TransformNode("tree" + i, scene);
 
@@ -156,11 +157,26 @@
       leaves.position.y = 3;
       leaves.parent = tree;
 
-      tree.position.x = (Math.random() - 0.5) * 80;
-      tree.position.z = (Math.random() - 0.5) * 80;
+      tree.position.x = (Math.random() - 0.5) * 180;
+      tree.position.z = (Math.random() - 0.5) * 180;
     }
 
-    // Avatar - kocka z avatar teksturo
+    // Skale (10 kos, kot sive nepravilne kocke)
+    for(let i=0; i<10; i++) {
+      let rock = BABYLON.MeshBuilder.CreateBox("rock"+i, {size: 1 + Math.random()*2}, scene);
+      let rockMat = new BABYLON.StandardMaterial("rockMat"+i, scene);
+      let grey = 0.4 + Math.random()*0.4;
+      rockMat.diffuseColor = new BABYLON.Color3(grey, grey, grey);
+      rock.material = rockMat;
+      rock.position.x = (Math.random() - 0.5) * 180;
+      rock.position.z = (Math.random() - 0.5) * 180;
+      rock.position.y = 0.5;
+      rock.rotation.y = Math.random() * Math.PI * 2;
+      rock.scaling.x = 1 + Math.random();
+      rock.scaling.z = 1 + Math.random();
+    }
+
+    // Avatar z avatar teksturo iz avatarURL2
     const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
     avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
     avatarMat.diffuseTexture.hasAlpha = true;
@@ -169,46 +185,69 @@
     avatar.material = avatarMat;
     avatar.position.y = 1;
 
-    // Sledi avatarju: kamera naj bo rahlo za avatarjem in gor
+    // Funkcija za obračanje avatarja in kamere
+    function updateCameraAndAvatar() {
+      // Kamera sledi avatarju z offsetom za tretjo osebo, na osnovi avatarRotationY
+      const radius = 8;
+      const height = 5;
+
+      let camX = avatar.position.x + Math.sin(avatarRotationY) * radius;
+      let camZ = avatar.position.z + Math.cos(avatarRotationY) * radius;
+      let camY = avatar.position.y + height;
+
+      camera.position = BABYLON.Vector3.Lerp(camera.position, new BABYLON.Vector3(camX, camY, camZ), 0.1);
+      camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), avatar.position, 0.1));
+
+      avatar.rotation.y = avatarRotationY;
+    }
+
+    // Register pred render loop za update premikov
     scene.registerBeforeRender(() => {
-      // premikanje avatarja glede na input
-      let delta = engine.getDeltaTime() / 1000; // v sekundah
-      let speed = 5; // enote na sekundo
+      let delta = engine.getDeltaTime() / 1000;
+      let speed = 5;
+
+      // Premikanje naprej/nazaj glede na avatarRotationY
+      let forward = new BABYLON.Vector3(
+        Math.sin(avatarRotationY),
+        0,
+        Math.cos(avatarRotationY)
+      );
 
       if(inputMap["w"] || inputMap["arrowup"]) {
-        avatar.position.z += speed * delta * -1;
+        avatar.position.addInPlace(forward.scale(speed * delta));
       }
       if(inputMap["s"] || inputMap["arrowdown"]) {
-        avatar.position.z += speed * delta;
+        avatar.position.addInPlace(forward.scale(-speed * delta));
       }
-      if(inputMap["a"] || inputMap["arrowleft"]) {
-        avatar.position.x += speed * delta * -1;
+      // Levo/desno (A/D) obračata avatar in kamero
+      if(inputMap["a"]) {
+        avatarRotationY -= 2 * delta; // hitrost obračanja
       }
-      if(inputMap["d"] || inputMap["arrowright"]) {
-        avatar.position.x += speed * delta;
+      if(inputMap["d"]) {
+        avatarRotationY += 2 * delta;
       }
 
-      // Kamera sledi avatarju
-      const camTarget = avatar.position.clone();
-      const camPosition = avatar.position.add(new BABYLON.Vector3(0, 5, 8));
-      camera.position = BABYLON.Vector3.Lerp(camera.position, camPosition, 0.1);
-      camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), camTarget, 0.1));
+      updateCameraAndAvatar();
     });
 
-    // Input za premikanje
+    // Input
     scene.actionManager = new BABYLON.ActionManager(scene);
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, evt => {
-      inputMap[evt.sourceEvent.key.toLowerCase()] = true;
-    }));
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, evt => {
-      inputMap[evt.sourceEvent.key.toLowerCase()] = false;
-    }));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+      BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = true;
+      }
+    ));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+      BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+      }
+    ));
 
     engine.runRenderLoop(() => {
       scene.render();
     });
 
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       engine.resize();
     });
   }
