@@ -1,232 +1,258 @@
+
 <!DOCTYPE html>
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Babylon.js 3D Avatar z Firebase prijavo</title>
+  <title>3D igra z Babylon.js in Firebase prijava</title>
   <style>
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
-    #renderCanvas { width: 100%; height: 100%; touch-action: none; display: block; }
-    #loginDiv {
-      position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;
-      font-family: Arial, sans-serif; z-index: 10;
-      width: 300px;
+    html, body {
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #a0d6a0;
     }
-    #loginDiv input, #loginDiv button {
-      width: 100%; margin: 5px 0; padding: 8px; font-size: 14px;
+    #renderCanvas {
+      width: 100%; height: 100%; display: block;
     }
-    #statusMsg { font-size: 14px; color: red; min-height: 20px; }
+    #login {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00000033;
+      z-index: 10;
+      width: 250px;
+    }
+    #login input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    #login button {
+      width: 100%;
+      padding: 10px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #login button:hover {
+      background-color: #276129;
+    }
   </style>
 </head>
 <body>
 
-<div id="loginDiv">
+<div id="login">
   <h3>Prijava</h3>
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Geslo" />
+  <input type="email" id="email" placeholder="Email" autocomplete="username" />
+  <input type="password" id="password" placeholder="Geslo" autocomplete="current-password" />
   <button id="loginBtn">Prijavi se</button>
-  <button id="logoutBtn" style="display:none;">Odjavi se</button>
-  <div id="statusMsg"></div>
 </div>
 
 <canvas id="renderCanvas"></canvas>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <!-- Babylon.js -->
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
-  // Firebase konfiguracija - zamenjaj s svojo!
+  // --- Firebase konfiguracija ---
   const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
-  const database = firebase.database();
+  const db = firebase.database();
 
-  // UI elementi
-  const loginDiv = document.getElementById('loginDiv');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
   const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const statusMsg = document.getElementById('statusMsg');
 
-  // Babylon.js setup
-  const canvas = document.getElementById("renderCanvas");
-  const engine = new BABYLON.Engine(canvas, true);
-  let scene;
-  let avatarRoot = null;
+  let avatarURL = null;
 
-  // Nastavi sceno
-  function createScene() {
-    const scene = new BABYLON.Scene(engine);
+  loginBtn.onclick = () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
 
-    // Kamera - third person
-    const camera = new BABYLON.ArcRotateCamera("cam", -Math.PI / 2, Math.PI / 3, 10, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerBetaLimit = 0.1;
-    camera.upperBetaLimit = Math.PI / 2.2;
-    camera.lowerRadiusLimit = 5;
-    camera.upperRadiusLimit = 20;
-
-    // Svetloba
-    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.9;
-
-    // Teren (velik 200x200)
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:200, height:200}, scene);
-    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMat.diffuseColor = new BABYLON.Color3(0.1, 0.6, 0.1);
-    ground.material = groundMat;
-
-    return scene;
-  }
-
-  // Naloži 3D avatar model iz URL (glb/gltf)
-  function loadAvatarModel(url) {
-    if (avatarRoot) {
-      avatarRoot.dispose();
-      avatarRoot = null;
-    }
-    BABYLON.SceneLoader.ImportMesh(null, "", url, scene,
-      function(meshes) {
-        avatarRoot = new BABYLON.TransformNode("avatarRoot", scene);
-        meshes.forEach(m => m.parent = avatarRoot);
-
-        avatarRoot.position = new BABYLON.Vector3(0, 0, 0);
-        avatarRoot.rotation = new BABYLON.Vector3(0, 0, 0);
-
-        statusMsg.textContent = "Avatar naložen.";
-      },
-      null,
-      function(scene, message, exception) {
-        statusMsg.textContent = "Napaka pri nalaganju avatarja.";
-        console.error("Napaka pri nalaganju avatarja:", message, exception);
-      }
-    );
-  }
-
-  // Pridobi avatar URL iz Firebase DB in naloži avatar
-  function loadAvatarForUser(uid) {
-    const ref = database.ref(`uporabniki/${uid}/avatarURL2`);
-    ref.once('value').then(snapshot => {
-      const url = snapshot.val();
-      if (url) {
-        loadAvatarModel(url);
-      } else {
-        statusMsg.textContent = "Uporabnik nima nastavljenega avatarja.";
-      }
-    });
-  }
-
-  // Kontrole avatarja (premikanje in rotacija s tipkami)
-  const inputMap = {};
-  window.addEventListener("keydown", evt => inputMap[evt.key.toLowerCase()] = true);
-  window.addEventListener("keyup", evt => inputMap[evt.key.toLowerCase()] = false);
-
-  function avatarControls() {
-    if (!avatarRoot) return;
-
-    const speed = 0.1;
-    // Rotacija z q/e
-    if (inputMap["q"]) avatarRoot.rotation.y -= 0.05;
-    if (inputMap["e"]) avatarRoot.rotation.y += 0.05;
-
-    // Premikanje v smer, kamor gleda avatar (forward/back)
-    let forward = new BABYLON.Vector3(Math.sin(avatarRoot.rotation.y), 0, Math.cos(avatarRoot.rotation.y));
-    forward.normalize();
-
-    if (inputMap["w"]) avatarRoot.position.addInPlace(forward.scale(speed));
-    if (inputMap["s"]) avatarRoot.position.subtractInPlace(forward.scale(speed));
-
-    // Levo/desno premikanje (strafe)
-    let right = new BABYLON.Vector3(forward.z, 0, -forward.x);
-    if (inputMap["a"]) avatarRoot.position.subtractInPlace(right.scale(speed));
-    if (inputMap["d"]) avatarRoot.position.addInPlace(right.scale(speed));
-
-    // Omejitev gibanja na teren 100x100 v x/z osi (pol-terena)
-    avatarRoot.position.x = Math.min(100, Math.max(-100, avatarRoot.position.x));
-    avatarRoot.position.z = Math.min(100, Math.max(-100, avatarRoot.position.z));
-  }
-
-  // Prikaz scene in glavni loop
-  scene = createScene();
-
-  engine.runRenderLoop(() => {
-    avatarControls();
-
-    // Kamera sledi avatarju (druga oseba)
-    if (avatarRoot) {
-      let target = avatarRoot.position.clone();
-      target.y += 1.5;
-      scene.activeCamera.target = BABYLON.Vector3.Lerp(scene.activeCamera.target, target, 0.1);
-    }
-
-    scene.render();
-  });
-
-  window.addEventListener("resize", () => {
-    engine.resize();
-  });
-
-  // Firebase prijava/odjava
-  loginBtn.addEventListener("click", () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
     if (!email || !password) {
-      statusMsg.textContent = "Prosim vnesi email in geslo.";
+      alert("Prosim vnesi email in geslo.");
       return;
     }
-    loginBtn.disabled = true;
-    statusMsg.textContent = "Prijavljam...";
 
     auth.signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        statusMsg.textContent = "Prijava uspešna.";
-        loginDiv.style.display = "none";
-        logoutBtn.style.display = "block";
-        loadAvatarForUser(userCredential.user.uid);
+      .then(() => {
+        const user = auth.currentUser;
+        return db.ref('users/' + user.uid + '/avatarURL2').once('value');
       })
-      .catch(error => {
-        statusMsg.textContent = "Napaka: " + error.message;
+      .then(snapshot => {
+        avatarURL = snapshot.val() || null;
+        if (!avatarURL) avatarURL = 'https://i.pravatar.cc/128';
+        document.getElementById('login').style.display = 'none';
+        startGame();
       })
-      .finally(() => loginBtn.disabled = false);
-  });
+      .catch(err => {
+        alert('Napaka pri prijavi: ' + err.message);
+      });
+  };
 
-  logoutBtn.addEventListener("click", () => {
-    auth.signOut().then(() => {
-      statusMsg.textContent = "Odjava uspešna.";
-      loginDiv.style.display = "block";
-      logoutBtn.style.display = "none";
-      if (avatarRoot) {
-        avatarRoot.dispose();
-        avatarRoot = null;
-      }
-    });
-  });
+  // ----- Babylon.js scena -----
 
-  // Ob spremembi prijave (reload strani ipd)
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      loginDiv.style.display = "none";
-      logoutBtn.style.display = "block";
-      loadAvatarForUser(user.uid);
-    } else {
-      loginDiv.style.display = "block";
-      logoutBtn.style.display = "none";
+  let canvas = document.getElementById("renderCanvas");
+  let engine = new BABYLON.Engine(canvas, true);
+
+  let scene, camera, avatar;
+  let inputMap = {};
+  let avatarRotationY = 0;  // za obračanje avatarja in kamere
+
+  function startGame() {
+    scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.63, 0.82, 0.63);
+
+    // Kamera tretjeosebni pogled (sledimo avatarju)
+    camera = new BABYLON.UniversalCamera("cam", new BABYLON.Vector3(0, 5, -10), scene);
+    camera.attachControl(canvas, true);
+
+    // Svetloba
+    const light = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
+    light.position = new BABYLON.Vector3(20, 40, 20);
+    light.intensity = 1;
+
+    // Večja zemlja (povečaj ground)
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:200, height:200}, scene);
+    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
+    ground.material = groundMat;
+
+    // Drevesa - cilindri in krogle (30 kos)
+    for(let i=0; i<30; i++) {
+      let tree = new BABYLON.TransformNode("tree" + i, scene);
+
+      let trunk = BABYLON.MeshBuilder.CreateCylinder("trunk"+i, {height: 2, diameterTop: 0.3, diameterBottom: 0.3}, scene);
+      let trunkMat = new BABYLON.StandardMaterial("trunkMat"+i, scene);
+      trunkMat.diffuseColor = new BABYLON.Color3(0.55, 0.27, 0.07);
+      trunk.material = trunkMat;
+      trunk.position.y = 1;
+      trunk.parent = tree;
+
+      let leaves = BABYLON.MeshBuilder.CreateSphere("leaves"+i, {diameter: 2}, scene);
+      let leavesMat = new BABYLON.StandardMaterial("leavesMat"+i, scene);
+      leavesMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
+      leaves.material = leavesMat;
+      leaves.position.y = 3;
+      leaves.parent = tree;
+
+      tree.position.x = (Math.random() - 0.5) * 180;
+      tree.position.z = (Math.random() - 0.5) * 180;
     }
-  });
+
+    // Skale (10 kos, kot sive nepravilne kocke)
+    for(let i=0; i<10; i++) {
+      let rock = BABYLON.MeshBuilder.CreateBox("rock"+i, {size: 1 + Math.random()*2}, scene);
+      let rockMat = new BABYLON.StandardMaterial("rockMat"+i, scene);
+      let grey = 0.4 + Math.random()*0.4;
+      rockMat.diffuseColor = new BABYLON.Color3(grey, grey, grey);
+      rock.material = rockMat;
+      rock.position.x = (Math.random() - 0.5) * 180;
+      rock.position.z = (Math.random() - 0.5) * 180;
+      rock.position.y = 0.5;
+      rock.rotation.y = Math.random() * Math.PI * 2;
+      rock.scaling.x = 1 + Math.random();
+      rock.scaling.z = 1 + Math.random();
+    }
+
+    // Avatar z avatar teksturo iz avatarURL2
+    const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
+    avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
+    avatarMat.diffuseTexture.hasAlpha = true;
+
+    avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
+    avatar.material = avatarMat;
+    avatar.position.y = 1;
+
+    // Funkcija za obračanje avatarja in kamere
+    function updateCameraAndAvatar() {
+      // Kamera sledi avatarju z offsetom za tretjo osebo, na osnovi avatarRotationY
+      const radius = 8;
+      const height = 5;
+
+      let camX = avatar.position.x + Math.sin(avatarRotationY) * radius;
+      let camZ = avatar.position.z + Math.cos(avatarRotationY) * radius;
+      let camY = avatar.position.y + height;
+
+      camera.position = BABYLON.Vector3.Lerp(camera.position, new BABYLON.Vector3(camX, camY, camZ), 0.1);
+      camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), avatar.position, 0.1));
+
+      avatar.rotation.y = avatarRotationY;
+    }
+
+    // Register pred render loop za update premikov
+    scene.registerBeforeRender(() => {
+      let delta = engine.getDeltaTime() / 1000;
+      let speed = 5;
+
+      // Premikanje naprej/nazaj glede na avatarRotationY
+      let forward = new BABYLON.Vector3(
+        Math.sin(avatarRotationY),
+        0,
+        Math.cos(avatarRotationY)
+      );
+
+      if(inputMap["w"] || inputMap["arrowup"]) {
+        avatar.position.addInPlace(forward.scale(speed * delta));
+      }
+      if(inputMap["s"] || inputMap["arrowdown"]) {
+        avatar.position.addInPlace(forward.scale(-speed * delta));
+      }
+      // Levo/desno (A/D) obračata avatar in kamero
+      if(inputMap["a"]) {
+        avatarRotationY -= 2 * delta; // hitrost obračanja
+      }
+      if(inputMap["d"]) {
+        avatarRotationY += 2 * delta;
+      }
+
+      updateCameraAndAvatar();
+    });
+
+    // Input
+    scene.actionManager = new BABYLON.ActionManager(scene);
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+      BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = true;
+      }
+    ));
+    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+      BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+        inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+      }
+    ));
+
+    engine.runRenderLoop(() => {
+      scene.render();
+    });
+
+    window.addEventListener("resize", () => {
+      engine.resize();
+    });
+  }
 </script>
+
 </body>
 </html>
