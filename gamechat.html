@@ -413,7 +413,7 @@ scene.registerBeforeRender(checkGoal);
 
 if (BABYLON.Vector3.Distance(ball.position, goals.left.position) < 2) { incrementScore("right"); resetBall(); } else if (BABYLON.Vector3.Distance(ball.position, goals.right.position) < 2) { incrementScore("left"); resetBall(); } 
 
-function incrementScore(team) { scores[team] = (scores[team] || 0) + 1; alert(Ekipa ${team} je zadela! Rezultat: ${scores[team]});
+function incrementScore(team) { scores[team] = (scores[team] || 0) + 1; alert(Ekipa ${team} je zadela! Rezultat: ${scores[team]});)
 
 if (scores[team] >= 10) { alert(IZZIV 2: Ekipa ${team} ZMAGA!); isChallenge2Active = false; ball.dispose(); ball = null; } }
 
