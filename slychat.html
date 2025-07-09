@@ -1654,73 +1654,90 @@ logoutContainer.style.height = "140px";
 
 topContainer.appendChild(logoutContainer);
 
-const userAvatar = document.createElement("img");
-userAvatar.style.width = "80px";
-userAvatar.style.height = "80px";
-userAvatar.style.borderRadius = "50%";
-userAvatar.style.objectFit = "cover";
-userAvatar.style.marginRight = "15px";
-userAvatar.alt = "Avatar uporabnika";
-
-// Dodaj event listener za klik
-userAvatar.addEventListener("click", () => {
-  window.location.href = "store.html";
-});
-
-const userInfo = document.createElement("div");
-userInfo.style.flexGrow = "1";
-userInfo.style.display = "flex";
-userInfo.style.flexDirection = "column";
-userInfo.style.justifyContent = "center";
-
-const userName = document.createElement("div");
-userName.style.fontSize = "1.2em";
-userName.style.fontWeight = "bold";
-
-const userEmail = document.createElement("div");
-userEmail.style.marginTop = "4px";
-userEmail.style.fontSize = "0.9em";
-userEmail.style.opacity = "0.8";
-
-userInfo.appendChild(userName);
-userInfo.appendChild(userEmail);
-
-const logoutBtn = document.createElement("button");
-logoutBtn.className = "btn1";
-logoutBtn.textContent = "×"; // križec kot gumb za odjavo
-logoutBtn.style.padding = "6px 10px";
-logoutBtn.style.borderRadius = "50%";
-logoutBtn.style.border = "none";
-logoutBtn.style.backgroundColor = "#ff5555";
-logoutBtn.style.color = "white";
-logoutBtn.style.cursor = "pointer";
-logoutBtn.style.fontWeight = "bold";
-logoutBtn.style.fontSize = "1.2em";
-logoutBtn.style.flexShrink = "0";
-logoutBtn.style.width = "32px";
-logoutBtn.style.height = "32px";
-logoutBtn.style.display = "flex";
-logoutBtn.style.alignItems = "center";
-logoutBtn.style.justifyContent = "center";
-
-logoutBtn.onmouseover = () => {
-  logoutBtn.style.backgroundColor = "#ff2222";
-};
-logoutBtn.onmouseout = () => {
-  logoutBtn.style.backgroundColor = "#ff5555";
-};
-
-logoutBtn.onclick = () => {
-  auth.signOut().then(() => {
-    window.location.href = "auth.html";
-  }).catch((error) => {
-    console.error("Napaka pri odjavi:", error);
-  });
-};
-
-logoutContainer.appendChild(userAvatar);
-logoutContainer.appendChild(userInfo);
-logoutContainer.appendChild(logoutBtn);
+const avatarWrapper = document.createElement("div");  
+avatarWrapper.className = "avatar-wrapper";  
+avatarWrapper.style.cssText = `  
+  width: 60px;  
+  height: 60px;  
+  border-radius: 50%;  
+  overflow: hidden;  
+  position: relative;  
+`;  
+  
+const modelViewer = document.createElement("model-viewer");  
+modelViewer.setAttribute("camera-controls", "");  
+modelViewer.setAttribute("auto-rotate", "");  
+modelViewer.setAttribute("disable-zoom", "");  
+modelViewer.setAttribute("disable-pan", "");  
+modelViewer.setAttribute("disable-tap", "");  
+modelViewer.setAttribute("min-camera-orbit", "0deg 87deg 1.1m");  
+modelViewer.setAttribute("max-camera-orbit", "360deg 87deg 1.1m");  
+modelViewer.setAttribute("camera-target", "0m 1.7m 0m");  
+modelViewer.setAttribute("field-of-view", "22deg");  
+modelViewer.style.width = "100%";  
+modelViewer.style.height = "100%";  
+  
+avatarWrapper.appendChild(modelViewer);  
+  
+// Klik za preusmeritev  
+avatarWrapper.addEventListener("click", () => {  
+  window.location.href = "store.html";  
+});  
+  
+const userInfo = document.createElement("div");  
+userInfo.style.flexGrow = "1";  
+userInfo.style.display = "flex";  
+userInfo.style.flexDirection = "column";  
+userInfo.style.justifyContent = "center";  
+  
+const userName = document.createElement("div");  
+userName.style.fontSize = "1.2em";  
+userName.style.fontWeight = "bold";  
+  
+const userEmail = document.createElement("div");  
+userEmail.style.marginTop = "4px";  
+userEmail.style.fontSize = "0.9em";  
+userEmail.style.opacity = "0.8";  
+  
+userInfo.appendChild(userName);  
+userInfo.appendChild(userEmail);  
+  
+const logoutBtn = document.createElement("button");  
+logoutBtn.className = "btn1";  
+logoutBtn.textContent = "×"; // križec kot gumb za odjavo  
+logoutBtn.style.padding = "6px 10px";  
+logoutBtn.style.borderRadius = "50%";  
+logoutBtn.style.border = "none";  
+logoutBtn.style.backgroundColor = "#ff5555";  
+logoutBtn.style.color = "white";  
+logoutBtn.style.cursor = "pointer";  
+logoutBtn.style.fontWeight = "bold";  
+logoutBtn.style.fontSize = "1.2em";  
+logoutBtn.style.flexShrink = "0";  
+logoutBtn.style.width = "32px";  
+logoutBtn.style.height = "32px";  
+logoutBtn.style.display = "flex";  
+logoutBtn.style.alignItems = "center";  
+logoutBtn.style.justifyContent = "center";  
+  
+logoutBtn.onmouseover = () => {  
+  logoutBtn.style.backgroundColor = "#ff2222";  
+};  
+logoutBtn.onmouseout = () => {  
+  logoutBtn.style.backgroundColor = "#ff5555";  
+};  
+  
+logoutBtn.onclick = () => {  
+  auth.signOut().then(() => {  
+    window.location.href = "auth.html";  
+  }).catch((error) => {  
+    console.error("Napaka pri odjavi:", error);  
+  });  
+};  
+  
+logoutContainer.appendChild(avatarWrapper);
+logoutContainer.appendChild(userInfo);  
+logoutContainer.appendChild(logoutBtn); 
 
 // Ob prijavi naloži podatke in avatar, vendar **NE prikaže** logoutContainer, ker boš ti to naredil sam
 auth.onAuthStateChanged((user) => {
