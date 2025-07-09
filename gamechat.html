@@ -369,6 +369,51 @@ scene.registerBeforeRender(() => {
       engine.resize();
     });
   }
+
+
+// Globalne spremenljivke let isChallenge1Active = false; let isChallenge2Active = false; let challenge1Tagger = null; let challenge1StartTime = null; let caughtPlayers = new Set(); let totalPlayers = 0;
+
+let ball = null; let goals = {}; let scores = {};
+
+// Posodobi seznam igralcev function updateTotalPlayers(players) { totalPlayers = Object.keys(players).length; }
+
+// IZZIV 1 - Lovljenje window.addEventListener("keydown", (event) => { if (event.key.toLowerCase() === "l" && !isChallenge1Active && totalPlayers >= 2) { startTagChallenge(); } if (event.key.toLowerCase() === "f" && !isChallenge2Active && totalPlayers >= 2) { startFootballChallenge(); } });
+
+function startTagChallenge() { isChallenge1Active = true; challenge1Tagger = userId; challenge1StartTime = Date.now(); caughtPlayers = new Set(); alert("IZZIV 1: Začet lov! Imate 5 minut, da ujamete vse!");
+
+setTimeout(() => { if (caughtPlayers.size >= totalPlayers - 1) { alert("IZZIV 1 USPEŠNO OPRAVLJEN!"); } else { alert("IZZIV 1 NI USPELO :("); } isChallenge1Active = false; }, 300000); // 5 minut }
+
+// Detekcija dotika za lovljenje scene.registerBeforeRender(() => { if (isChallenge1Active && userId === challenge1Tagger) { for (let uid in otherPlayers) { let other = otherPlayers[uid]; if (!caughtPlayers.has(uid) && BABYLON.Vector3.Distance(avatar.position, other.position) < 1) { caughtPlayers.add(uid); alert(Ujet igralec: ${uid}); if (caughtPlayers.size >= totalPlayers - 1) { isChallenge1Active = false; alert("IZZIV 1 USPEŠNO OPRAVLJEN!"); } } } } });
+
+// IZZIV 2 - Nogomet function startFootballChallenge() { isChallenge2Active = true; scores = {}; alert("IZZIV 2: Nogomet! Prvi do 10 golov zmaga!");
+
+// Ustvari gol if (!goals.left) { goals.left = BABYLON.MeshBuilder.CreateBox("goalLeft", {width: 4, height: 2, depth: 0.5}, scene); goals.left.position = new BABYLON.Vector3(-20, 1, 0); goals.left.isVisible = false; goals.left.checkCollisions = false; } if (!goals.right) { goals.right = BABYLON.MeshBuilder.CreateBox("goalRight", {width: 4, height: 2, depth: 0.5}, scene); goals.right.position = new BABYLON.Vector3(20, 1, 0); goals.right.isVisible = false; goals.right.checkCollisions = false; }
+
+// Ustvari žogo if (!ball) { ball = BABYLON.MeshBuilder.CreateSphere("ball", {diameter: 1}, scene); ball.position = new BABYLON.Vector3(0, 1, 0); let ballMat = new BABYLON.StandardMaterial("ballMat", scene); ballMat.diffuseColor = BABYLON.Color3.Yellow(); ball.material = ballMat;
+
+ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.SphereImpostor, {
+  mass: 1,
+  restitution: 0.9,
+  friction: 0.5
+}, scene);
+
+}
+
+scene.registerBeforeRender(checkGoal); }
+
+// Preveri, če je žoga v golu function checkGoal() { if (!isChallenge2Active || !ball) return;
+
+if (BABYLON.Vector3.Distance(ball.position, goals.left.position) < 2) { incrementScore("right"); resetBall(); } else if (BABYLON.Vector3.Distance(ball.position, goals.right.position) < 2) { incrementScore("left"); resetBall(); } }
+
+function incrementScore(team) { scores[team] = (scores[team] || 0) + 1; alert(Ekipa ${team} je zadela! Rezultat: ${scores[team]});
+
+if (scores[team] >= 10) { alert(IZZIV 2: Ekipa ${team} ZMAGA!); isChallenge2Active = false; ball.dispose(); ball = null; } }
+
+function resetBall() { ball.position = new BABYLON.Vector3(0, 1, 0); ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0)); ball.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0)); }
+
+
+
+
 </script>
 
 </body>
