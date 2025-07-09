@@ -1747,7 +1747,7 @@ auth.onAuthStateChanged((user) => {
     userName.textContent = ime;
     userEmail.textContent = mail;
 
-    db.ref("users/" + user.uid + "/avatarUrl").once("value").then(snapshot => {
+    db.ref("users/" + user.uid + "/avatarURL2").once("value").then(snapshot => {
       const url = snapshot.val();
       if (url) {
         userAvatar.src = url;
