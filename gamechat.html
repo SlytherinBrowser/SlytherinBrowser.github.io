@@ -414,7 +414,7 @@ function resetBall() { ball.position = new BABYLON.Vector3(0, 1, 0); ball.physic
 
 // Globalne spremenljivke za izziv 3
 let challenge3Active = false;
-let challenge3Timer = 300; // 5 minut v sekundah
+let challenge3Timer = 300; // 5 minut
 let zombieBots = {};
 let zombieSpeed = 2; // hitrost zombijev
 
@@ -433,8 +433,10 @@ function startChallenge3() {
   challenge3Active = true;
   challenge3Timer = 300;
 
-  // Ustvari zombije (recimo 3)
-  createZombies(3);
+  // Če je samo igralec, ustvarimo zombije
+  if(Object.keys(otherPlayers).length === 0) {
+    createZombies(3); // npr. 3 zombiji
+  }
 
   scene.registerBeforeRender(updateChallenge3);
   console.log("Izziv 3 začel: Preživi 5 minut brez, da te zombiji ulovijo!");
@@ -456,13 +458,6 @@ function createZombies(n) {
   }
 }
 
-// Funkcija za preverjanje dotika med zombiji in igralci
-function checkZombieTouch(zombiePos, playerPos) {
-  let dist = zombiePos.subtract(playerPos);
-  dist.y = 0; // ignoriramo višino
-  return dist.length() < 1.5;
-}
-
 function updateChallenge3() {
   if(!challenge3Active) return;
 
@@ -474,43 +469,19 @@ function updateChallenge3() {
     return;
   }
 
-  // Preveri zombije, naj lovijo vse igralce
   for(let id in zombieBots) {
     let zombie = zombieBots[id].mesh;
+    let direction = avatar.position.subtract(zombie.position);
+    direction.y = 0; // ignoriramo višino
 
-    // Najdimo najbližjega igralca
-    let closestPlayerPos = null;
-    let closestDist = Infinity;
+    let distance = direction.length();
 
-    // Pregled vseh igralcev - tvoj avatar + drugi igralci
-    // Najprej tvoj avatar:
-    let playerPositions = [avatar.position];
-    // Dodamo pozicije ostalih igralcev:
-    for(let uid in otherPlayers) {
-      let p = otherPlayers[uid].position;
-      playerPositions.push(p);
-    }
-
-    // Poiščemo najbližjega igralca
-    for(let pos of playerPositions) {
-      let dist = zombie.position.subtract(pos);
-      dist.y = 0;
-      let len = dist.length();
-      if(len < closestDist) {
-        closestDist = len;
-        closestPlayerPos = pos;
-      }
-    }
-
-    // Če je blizu katerega igralca manj kot 1.5, izgubiš
-    if(closestDist < 1.5) {
+    if(distance < 1.5) {
+      // Dotik zombija in igralca - izgubi izziv
       endChallenge3(false);
       return;
     }
 
-    // Premakni zombija proti najbližjemu igralcu
-    let direction = closestPlayerPos.subtract(zombie.position);
-    direction.y = 0;
     direction.normalize();
     zombie.position.addInPlace(direction.scale(zombieSpeed * delta));
   }
