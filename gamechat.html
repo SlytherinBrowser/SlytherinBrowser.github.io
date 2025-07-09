@@ -415,7 +415,7 @@ if (BABYLON.Vector3.Distance(ball.position, goals.left.position) < 2) { incremen
 
 function incrementScore(team) { scores[team] = (scores[team] || 0) + 1; alert(Ekipa ${team} je zadela! Rezultat: ${scores[team]});
 
-if (scores[team] >= 10) { alert(IZZIV 2: Ekipa ${team} ZMAGA!); isChallenge2Active = false; ball.dispose(); ball = null; } }
+if (scores[team] >= 10) { alert(IZZIV 2: Ekipa ${team} ZMAGA!); isChallenge2Active = false; ball.dispose(); ball = null; }
 
 function resetBall() { ball.position = new BABYLON.Vector3(0, 1, 0); ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0)); ball.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0)); }
 
