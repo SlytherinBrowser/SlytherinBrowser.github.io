@@ -181,70 +181,124 @@
       rock.scaling.z = 1 + Math.random();
     }
 
-    // Avatar z avatar teksturo iz avatarURL2
-    const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
-    avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
-    avatarMat.diffuseTexture.hasAlpha = true;
+   // Avatar z avatar teksturo iz avatarURL
+const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
+avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
+avatarMat.diffuseTexture.hasAlpha = true;
 
-    avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
-    avatar.material = avatarMat;
-    avatar.position.y = 1;
+avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
+avatar.material = avatarMat;
+avatar.position.y = 1;
 
-    // Funkcija za obračanje avatarja in kamere
-    function updateCameraAndAvatar() {
-      const radius = 8;
-      const height = 5;
+let useGamepad = false;
 
-      let camX = avatar.position.x + Math.sin(avatarRotationY) * radius;
-      let camZ = avatar.position.z + Math.cos(avatarRotationY) * radius;
-      let camY = avatar.position.y + height;
+function updateCameraAndAvatar() {
+  const radius = 8;
+  const height = 5;
 
-      camera.position = BABYLON.Vector3.Lerp(camera.position, new BABYLON.Vector3(camX, camY, camZ), 0.1);
-      camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), avatar.position, 0.1));
+  let camX = avatar.position.x + Math.sin(avatarRotationY) * radius;
+  let camZ = avatar.position.z + Math.cos(avatarRotationY) * radius;
+  let camY = avatar.position.y + height;
 
-      avatar.rotation.y = avatarRotationY;
+  camera.position = BABYLON.Vector3.Lerp(camera.position, new BABYLON.Vector3(camX, camY, camZ), 0.1);
+  camera.setTarget(BABYLON.Vector3.Lerp(camera.getTarget(), avatar.position, 0.1));
+
+  avatar.rotation.y = avatarRotationY;
+}
+
+function updateMyPositionInFirebase() {
+  if (!userId) return;
+  db.ref('players/' + userId).set({
+    x: avatar.position.x,
+    y: avatar.position.y,
+    z: avatar.position.z,
+    rotationY: avatarRotationY,
+    avatarURL: avatarURL,
+    lastUpdated: Date.now()
+  });
+}
+
+// Funkcija, ki preveri gamepad in nastavi inputMap ter avatarRotationY glede na kontroler
+function updateGamepadInput() {
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  if (!gamepads) return false;
+
+  const gp = gamepads[0];
+  if (!gp) return false;
+
+  const deadzone = 0.2;
+
+  // Preveri, če je gamepad aktiven
+  let active = false;
+  for (let i = 0; i < gp.axes.length; i++) {
+    if (Math.abs(gp.axes[i]) > deadzone) active = true;
+  }
+  for (let i = 0; i < gp.buttons.length; i++) {
+    if (gp.buttons[i].pressed) active = true;
+  }
+  if (!active) return false;
+
+  useGamepad = true;
+
+  // Levi analog: osi 0 (X) in 1 (Y) za premikanje
+  let moveX = Math.abs(gp.axes[0]) > deadzone ? gp.axes[0] : 0;
+  let moveY = Math.abs(gp.axes[1]) > deadzone ? gp.axes[1] : 0;
+
+  inputMap["w"] = moveY < -deadzone;
+  inputMap["s"] = moveY > deadzone;
+  inputMap["a"] = moveX < -deadzone;
+  inputMap["d"] = moveX > deadzone;
+
+  // Desni analog: os 2 (X) za obračanje avatarja
+  let rotateX = Math.abs(gp.axes[2]) > deadzone ? gp.axes[2] : 0;
+  avatarRotationY += rotateX * 0.05;
+
+  return true;
+}
+
+// Event listenerji za tipkovnico
+window.addEventListener("keydown", (event) => {
+  inputMap[event.key.toLowerCase()] = true;
+  useGamepad = false; // če uporabljamo tipkovnico, gamepad ne uporabljamo
+});
+window.addEventListener("keyup", (event) => {
+  inputMap[event.key.toLowerCase()] = false;
+});
+
+scene.registerBeforeRender(() => {
+  let delta = engine.getDeltaTime() / 1000;
+  let speed = 5;
+
+  // Če gamepad ni aktiven, se uporablja tipkovnica
+  if (!updateGamepadInput()) {
+    useGamepad = false;
+  }
+
+  let forward = new BABYLON.Vector3(
+    Math.sin(avatarRotationY),
+    0,
+    Math.cos(avatarRotationY)
+  );
+
+  if(inputMap["w"]) {
+    avatar.position.addInPlace(forward.scale(speed * delta));
+  }
+  if(inputMap["s"]) {
+    avatar.position.subtractInPlace(forward.scale(speed * delta));
+  }
+  // Če uporabljamo tipkovnico, obračamo z A in D
+  if(!useGamepad) {
+    if(inputMap["a"]) {
+      avatarRotationY -= delta * 3;
     }
-
-    // Posodobi pozicijo in rotacijo v Firebase za multiplayer
-    function updateMyPositionInFirebase() {
-      if (!userId) return;
-      db.ref('players/' + userId).set({
-        x: avatar.position.x,
-        y: avatar.position.y,
-        z: avatar.position.z,
-        rotationY: avatarRotationY,
-        avatarURL: avatarURL,
-        lastUpdated: Date.now()
-      });
+    if(inputMap["d"]) {
+      avatarRotationY += delta * 3;
     }
+  }
 
-    // Register pred render loop za update premikov
-    scene.registerBeforeRender(() => {
-      let delta = engine.getDeltaTime() / 1000;
-      let speed = 5;
-
-      let forward = new BABYLON.Vector3(
-        Math.sin(avatarRotationY),
-        0,
-        Math.cos(avatarRotationY)
-      );
-
-      if(inputMap["w"]) {
-        avatar.position.addInPlace(forward.scale(speed * delta));
-      }
-      if(inputMap["s"]) {
-        avatar.position.subtractInPlace(forward.scale(speed * delta));
-      }
-      if(inputMap["a"]) {
-        avatarRotationY -= delta * 3;
-      }
-      if(inputMap["d"]) {
-        avatarRotationY += delta * 3;
-      }
-
-      updateCameraAndAvatar();
-      updateMyPositionInFirebase();
-    });
+  updateCameraAndAvatar();
+  updateMyPositionInFirebase();
+});
 
     // Input map za tipkovnico
     scene.actionManager = new BABYLON.ActionManager(scene);
