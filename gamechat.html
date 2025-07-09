@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <title>3D igra z Babylon.js in Firebase prijava</title>
+  <title>3D multiplayer igra z Babylon.js in Firebase prijava</title>
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%; overflow: hidden;
@@ -86,6 +85,10 @@
   const loginBtn = document.getElementById('loginBtn');
 
   let avatarURL = null;
+  let userId = null;
+
+  // Objekt za shranjevanje ostalih igralcev (uid => mesh)
+  let otherPlayers = {};
 
   loginBtn.onclick = () => {
     const email = document.getElementById('email').value.trim();
@@ -99,6 +102,7 @@
     auth.signInWithEmailAndPassword(email, password)
       .then(() => {
         const user = auth.currentUser;
+        userId = user.uid;
         return db.ref('users/' + user.uid + '/avatarURL2').once('value');
       })
       .then(snapshot => {
@@ -134,13 +138,13 @@
     light.position = new BABYLON.Vector3(20, 40, 20);
     light.intensity = 1;
 
-    // Večja zemlja (povečaj ground)
+    // Večja zemlja
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:200, height:200}, scene);
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
     ground.material = groundMat;
 
-    // Drevesa - cilindri in krogle (30 kos)
+    // Drevesa
     for(let i=0; i<30; i++) {
       let tree = new BABYLON.TransformNode("tree" + i, scene);
 
@@ -162,7 +166,7 @@
       tree.position.z = (Math.random() - 0.5) * 180;
     }
 
-    // Skale (10 kos, kot sive nepravilne kocke)
+    // Skale
     for(let i=0; i<10; i++) {
       let rock = BABYLON.MeshBuilder.CreateBox("rock"+i, {size: 1 + Math.random()*2}, scene);
       let rockMat = new BABYLON.StandardMaterial("rockMat"+i, scene);
@@ -188,7 +192,6 @@
 
     // Funkcija za obračanje avatarja in kamere
     function updateCameraAndAvatar() {
-      // Kamera sledi avatarju z offsetom za tretjo osebo, na osnovi avatarRotationY
       const radius = 8;
       const height = 5;
 
@@ -202,53 +205,113 @@
       avatar.rotation.y = avatarRotationY;
     }
 
+    // Posodobi pozicijo in rotacijo v Firebase za multiplayer
+    function updateMyPositionInFirebase() {
+      if (!userId) return;
+      db.ref('players/' + userId).set({
+        x: avatar.position.x,
+        y: avatar.position.y,
+        z: avatar.position.z,
+        rotationY: avatarRotationY,
+        avatarURL: avatarURL,
+        lastUpdated: Date.now()
+      });
+    }
+
     // Register pred render loop za update premikov
     scene.registerBeforeRender(() => {
       let delta = engine.getDeltaTime() / 1000;
       let speed = 5;
 
-      // Premikanje naprej/nazaj glede na avatarRotationY
       let forward = new BABYLON.Vector3(
         Math.sin(avatarRotationY),
         0,
         Math.cos(avatarRotationY)
       );
 
-      if(inputMap["w"] || inputMap["arrowup"]) {
+      if(inputMap["w"]) {
         avatar.position.addInPlace(forward.scale(speed * delta));
       }
-      if(inputMap["s"] || inputMap["arrowdown"]) {
-        avatar.position.addInPlace(forward.scale(-speed * delta));
+      if(inputMap["s"]) {
+        avatar.position.subtractInPlace(forward.scale(speed * delta));
       }
-      // Levo/desno (A/D) obračata avatar in kamero
       if(inputMap["a"]) {
-        avatarRotationY -= 2 * delta; // hitrost obračanja
+        avatarRotationY -= delta * 3;
       }
       if(inputMap["d"]) {
-        avatarRotationY += 2 * delta;
+        avatarRotationY += delta * 3;
       }
 
       updateCameraAndAvatar();
+      updateMyPositionInFirebase();
     });
 
-    // Input
+    // Input map za tipkovnico
     scene.actionManager = new BABYLON.ActionManager(scene);
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
-      BABYLON.ActionManager.OnKeyDownTrigger, evt => {
+    scene.actionManager.registerAction(
+      new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         inputMap[evt.sourceEvent.key.toLowerCase()] = true;
-      }
-    ));
-    scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
-      BABYLON.ActionManager.OnKeyUpTrigger, evt => {
+      })
+    );
+    scene.actionManager.registerAction(
+      new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
         inputMap[evt.sourceEvent.key.toLowerCase()] = false;
+      })
+    );
+
+    // Funkcija za kreiranje avatarjev drugih igralcev
+    function createOrUpdateOtherPlayer(uid, data) {
+      if(uid === userId) return; // svoj avatar ne rišemo tukaj
+
+      let mesh = otherPlayers[uid];
+      if(!mesh) {
+        // Kreiramo box z unikatno barvo
+        mesh = BABYLON.MeshBuilder.CreateBox("player_" + uid, {height: 2, width: 1, depth: 0.5}, scene);
+        let mat = new BABYLON.StandardMaterial("mat_" + uid, scene);
+        mat.diffuseColor = new BABYLON.Color3(Math.random()*0.7+0.3, Math.random()*0.7+0.3, Math.random()*0.7+0.3);
+        mesh.material = mat;
+        mesh.position.y = 1;
+        otherPlayers[uid] = mesh;
       }
-    ));
+      mesh.position.x = data.x;
+      mesh.position.y = data.y;
+      mesh.position.z = data.z;
+      mesh.rotation.y = data.rotationY;
+    }
+
+    // Brisanje odjavljenih igralcev po timeoutu 30 sekund
+    function cleanOldPlayers(snapshot) {
+      let players = snapshot.val() || {};
+      let now = Date.now();
+      for(let uid in otherPlayers) {
+        if(!players[uid] || now - players[uid].lastUpdated > 30000) {
+          otherPlayers[uid].dispose();
+          delete otherPlayers[uid];
+        }
+      }
+    }
+
+    // Poslušamo vse igralce v bazi
+    db.ref('players').on('value', snapshot => {
+      let players = snapshot.val() || {};
+      for(let uid in players) {
+        createOrUpdateOtherPlayer(uid, players[uid]);
+      }
+      cleanOldPlayers(snapshot);
+    });
+
+    // Ob odjavi, izbrišemo svoj zapis iz baze
+    window.addEventListener('beforeunload', () => {
+      if(userId) {
+        db.ref('players/' + userId).remove();
+      }
+    });
 
     engine.runRenderLoop(() => {
       scene.render();
     });
 
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', function(){
       engine.resize();
     });
   }
