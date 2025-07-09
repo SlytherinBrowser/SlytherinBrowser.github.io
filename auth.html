@@ -217,7 +217,52 @@
 function loginToGame() {
   window.location.href = "gamechat.html";
 }
+function startReset() {
+  const username = document.getElementById("usernameForReset").value.trim();
 
+  if (!username) {
+    alert("Vnesi uporabniško ime.");
+    return;
+  }
+
+  // Poiščemo uporabnika po displayName
+  db.ref("users").once("value", (snapshot) => {
+    let found = false;
+    snapshot.forEach((child) => {
+      const user = child.val();
+      if (user.displayName === username) {
+        found = true;
+        // Shranimo email v input (za prikaz ali preverbo)
+        document.getElementById("realResetEmail").value = user.email;
+        document.getElementById("resetStep2").classList.remove("hidden");
+        alert("Uporabnik najden! Vnesi email za ponastavitev.");
+      }
+    });
+
+    if (!found) {
+      alert("Uporabnik s tem imenom ni bil najden.");
+    }
+  });
+}
+
+function confirmReset() {
+  const email = document.getElementById("realResetEmail").value.trim();
+
+  if (!email) {
+    alert("Vnesi email naslov.");
+    return;
+  }
+
+  auth
+    .sendPasswordResetEmail(email)
+    .then(() => {
+      alert("Na vpisani e-mail je bila poslana povezava za ponastavitev gesla.");
+      document.getElementById("resetStep2").classList.add("hidden");
+    })
+    .catch((error) => {
+      alert("Napaka: " + error.message);
+    });
+}
 
   </script>
 </body>
