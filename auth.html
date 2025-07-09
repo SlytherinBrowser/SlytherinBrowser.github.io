@@ -215,20 +215,7 @@
       document.getElementById("registerForm").classList.toggle("hidden");
     }
 function loginToGame() {
-  const email = document.getElementById("logEmail").value.trim();
-  const pass = document.getElementById("logPass").value;
-  if (!email || !pass) {
-    alert("Prosim, vnesite email in geslo.");
-    return;
-  }
-
-  auth
-    .signInWithEmailAndPassword(email, pass)
-    .then(() => {
-      // Po uspešni prijavi preusmeri na igro
-      window.location.href = "gamechat.html";
-    })
-    .catch((error) => alert(error.message));
+  window.location.href = "gamechat.html";
 }
 
 
