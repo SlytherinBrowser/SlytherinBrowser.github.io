@@ -45,6 +45,14 @@
       background-color: #276129;
     }
   </style>
+<script>
+window.addEventListener("error", function(event) {
+  console.error("Napaka v JavaScriptu!");
+  console.error("Sporočilo:", event.message);
+  console.error("Datoteka:", event.filename);
+  console.error("Vrstica:", event.lineno, "Stolpec:", event.colno);
+  alert(`Napaka v JS:\n${event.message}\nV datoteki: ${event.filename}\nVrstica: ${event.lineno}`);
+});</script>
 </head>
 <body>
 
