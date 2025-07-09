@@ -412,7 +412,6 @@ if (scores[team] >= 10) { alert(IZZIV 2: Ekipa ${team} ZMAGA!); isChallenge2Acti
 function resetBall() { ball.position = new BABYLON.Vector3(0, 1, 0); ball.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0)); ball.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0)); }
 
 
-
 // Globalne spremenljivke za izziv 3
 let challenge3Active = false;
 let challenge3Timer = 300; // 5 minut v sekundah
@@ -444,21 +443,15 @@ function startChallenge3() {
 // Ustvari n zombije
 function createZombies(n) {
   for(let i=0; i<n; i++) {
-    let pos;
-    do {
-      pos = new BABYLON.Vector3(
-        Math.random() * 20 - 10,
-        1,
-        Math.random() * 20 - 10
-      );
-    } while(pos.subtract(avatar.position).length() < 5); // vsaj 5 enot od avatarja
-
     let mesh = BABYLON.MeshBuilder.CreateBox("zombie_" + i, {height: 2, width: 1, depth: 0.5}, scene);
     let mat = new BABYLON.StandardMaterial("mat_zombie_" + i, scene);
-    mat.diffuseColor = new BABYLON.Color3(0.1, 0.8, 0.1); // zelena barva
+    mat.diffuseColor = new BABYLON.Color3(0.1, 0.8, 0.1); // zelena barva za zombije
     mesh.material = mat;
-    mesh.position = pos;
-
+    mesh.position = new BABYLON.Vector3(
+      Math.random() * 20 - 10,
+      1,
+      Math.random() * 20 - 10
+    );
     zombieBots[i] = { mesh };
   }
 }
