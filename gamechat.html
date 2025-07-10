@@ -191,7 +191,7 @@ function startGame() {
 
   // Avatar z avatar teksturo iz avatarURL
   const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
-  avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL2, scene);
+  avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
   avatarMat.diffuseTexture.hasAlpha = true;
 
   avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
