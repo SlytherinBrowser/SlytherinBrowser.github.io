@@ -126,90 +126,102 @@ window.addEventListener("error", function(event) {
 
   // ----- Babylon.js scena -----
 
-  let canvas = document.getElementById("renderCanvas");
-  let engine = new BABYLON.Engine(canvas, true);
+ let canvas = document.getElementById("renderCanvas");
+let engine = new BABYLON.Engine(canvas, true);
 
-  let scene, camera, avatar;
-  let inputMap = {};
-  let avatarRotationY = 0;  // za obračanje avatarja in kamere
+let scene, camera, avatar;
+let inputMap = {};
+let avatarRotationY = 0;  // za obračanje avatarja in kamere
 
-  function startGame() {
-    scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color3(0.63, 0.82, 0.63);
+function startGame() {
+  scene = new BABYLON.Scene(engine);
+  scene.clearColor = new BABYLON.Color3(0.63, 0.82, 0.63);
 
-    // Kamera tretjeosebni pogled (sledimo avatarju)
-    camera = new BABYLON.UniversalCamera("cam", new BABYLON.Vector3(0, 5, -10), scene);
-    camera.attachControl(canvas, true);
+  // Kamera tretjeosebni pogled (sledimo avatarju)
+  camera = new BABYLON.UniversalCamera("cam", new BABYLON.Vector3(0, 5, -10), scene);
+  camera.attachControl(canvas, true);
 
-    // Svetloba
-    const light = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
-    light.position = new BABYLON.Vector3(20, 40, 20);
-    light.intensity = 1;
+  // Svetloba
+  const light = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
+  light.position = new BABYLON.Vector3(20, 40, 20);
+  light.intensity = 1;
 
-    // Večja zemlja
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:1000, height:1000}, scene);
-    const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
-    ground.material = groundMat;
+  // Večja zemlja
+  const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:1000, height:1000}, scene);
+  const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+  groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
+  ground.material = groundMat;
 
-    // Drevesa
-    for(let i=0; i<30; i++) {
-      let tree = new BABYLON.TransformNode("tree" + i, scene);
+  // Drevesa
+  for(let i=0; i<30; i++) {
+    let tree = new BABYLON.TransformNode("tree" + i, scene);
 
-      let trunk = BABYLON.MeshBuilder.CreateCylinder("trunk"+i, {height: 2, diameterTop: 0.3, diameterBottom: 0.3}, scene);
-      let trunkMat = new BABYLON.StandardMaterial("trunkMat"+i, scene);
-      trunkMat.diffuseColor = new BABYLON.Color3(0.55, 0.27, 0.07);
-      trunk.material = trunkMat;
-      trunk.position.y = 1;
-      trunk.parent = tree;
+    let trunk = BABYLON.MeshBuilder.CreateCylinder("trunk"+i, {height: 2, diameterTop: 0.3, diameterBottom: 0.3}, scene);
+    let trunkMat = new BABYLON.StandardMaterial("trunkMat"+i, scene);
+    trunkMat.diffuseColor = new BABYLON.Color3(0.55, 0.27, 0.07);
+    trunk.material = trunkMat;
+    trunk.position.y = 1;
+    trunk.parent = tree;
 
-      let leaves = BABYLON.MeshBuilder.CreateSphere("leaves"+i, {diameter: 2}, scene);
-      let leavesMat = new BABYLON.StandardMaterial("leavesMat"+i, scene);
-      leavesMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
-      leaves.material = leavesMat;
-      leaves.position.y = 3;
-      leaves.parent = tree;
+    let leaves = BABYLON.MeshBuilder.CreateSphere("leaves"+i, {diameter: 2}, scene);
+    let leavesMat = new BABYLON.StandardMaterial("leavesMat"+i, scene);
+    leavesMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
+    leaves.material = leavesMat;
+    leaves.position.y = 3;
+    leaves.parent = tree;
 
-      tree.position.x = (Math.random() - 0.5) * 180;
-      tree.position.z = (Math.random() - 0.5) * 180;
-    }
+    tree.position.x = (Math.random() - 0.5) * 180;
+    tree.position.z = (Math.random() - 0.5) * 180;
+  }
 
-    // Skale
-    for(let i=0; i<10; i++) {
-      let rock = BABYLON.MeshBuilder.CreateBox("rock"+i, {size: 1 + Math.random()*2}, scene);
-      let rockMat = new BABYLON.StandardMaterial("rockMat"+i, scene);
-      let grey = 0.4 + Math.random()*0.4;
-      rockMat.diffuseColor = new BABYLON.Color3(grey, grey, grey);
-      rock.material = rockMat;
-      rock.position.x = (Math.random() - 0.5) * 180;
-      rock.position.z = (Math.random() - 0.5) * 180;
-      rock.position.y = 0.5;
-      rock.rotation.y = Math.random() * Math.PI * 2;
-      rock.scaling.x = 1 + Math.random();
-      rock.scaling.z = 1 + Math.random();
-    }
+  // Skale
+  for(let i=0; i<10; i++) {
+    let rock = BABYLON.MeshBuilder.CreateBox("rock"+i, {size: 1 + Math.random()*2}, scene);
+    let rockMat = new BABYLON.StandardMaterial("rockMat"+i, scene);
+    let grey = 0.4 + Math.random()*0.4;
+    rockMat.diffuseColor = new BABYLON.Color3(grey, grey, grey);
+    rock.material = rockMat;
+    rock.position.x = (Math.random() - 0.5) * 180;
+    rock.position.z = (Math.random() - 0.5) * 180;
+    rock.position.y = 0.5;
+    rock.rotation.y = Math.random() * Math.PI * 2;
+    rock.scaling.x = 1 + Math.random();
+    rock.scaling.z = 1 + Math.random();
+  }
 
-   // Avatar z avatar teksturo iz avatarURL
-const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
-avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
-avatarMat.diffuseTexture.hasAlpha = true;
+  // Avatar z avatar teksturo iz avatarURL
+  const avatarMat = new BABYLON.StandardMaterial("avatarMat", scene);
+  avatarMat.diffuseTexture = new BABYLON.Texture(avatarURL, scene);
+  avatarMat.diffuseTexture.hasAlpha = true;
 
-avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
-avatar.material = avatarMat;
-avatar.position.y = 1;
+  avatar = BABYLON.MeshBuilder.CreateBox("avatar", {height: 2, width: 1, depth: 0.5}, scene);
+  avatar.material = avatarMat;
+  avatar.position.y = 1;
 
+  // Tukaj nastavimo actionManager na sceno in registriramo tipke
+  scene.actionManager = new BABYLON.ActionManager(scene);
 
- scene.actionManager = new BABYLON.ActionManager(scene);
   scene.actionManager.registerAction(
     new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
       inputMap[evt.sourceEvent.key.toLowerCase()] = true;
     })
   );
+
   scene.actionManager.registerAction(
     new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
       inputMap[evt.sourceEvent.key.toLowerCase()] = false;
     })
   );
+
+  engine.runRenderLoop(() => {
+    // Tvoja logika premikanja avatarja in kamera
+    scene.render();
+  });
+}
+
+// Na koncu pokliči startGame, ko je vse pripravljeno
+startGame();
+
 
 
     
