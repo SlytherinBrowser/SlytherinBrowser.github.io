@@ -147,7 +147,7 @@ window.addEventListener("error", function(event) {
     light.intensity = 1;
 
     // Večja zemlja
-    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:200, height:200}, scene);
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:1000, height:1000}, scene);
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
     groundMat.diffuseColor = new BABYLON.Color3(0.13, 0.55, 0.13);
     ground.material = groundMat;
