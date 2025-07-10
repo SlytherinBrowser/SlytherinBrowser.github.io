@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sl">
 <head>
@@ -75,63 +76,64 @@ window.addEventListener("error", function(event) {
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
-  // --- Firebase konfiguracija ---
-  const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
+// --- Firebase konfiguracija ---
+const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+};
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-  const loginBtn = document.getElementById('loginBtn');
+const loginBtn = document.getElementById('loginBtn');
 
-  let avatarURL = null;
-  let userId = null;
+let avatarURL = null;
+let userId = null;
 
-  // Objekt za shranjevanje ostalih igralcev (uid => mesh)
-  let otherPlayers = {};
+// Objekt za shranjevanje ostalih igralcev (uid => mesh)
+let otherPlayers = {};
 
-  loginBtn.onclick = () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+loginBtn.onclick = () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
 
-    if (!email || !password) {
-      alert("Prosim vnesi email in geslo.");
-      return;
-    }
+  if (!email || !password) {
+    alert("Prosim vnesi email in geslo.");
+    return;
+  }
 
-    auth.signInWithEmailAndPassword(email, password)
-      .then(() => {
-        const user = auth.currentUser;
-        userId = user.uid;
-        return db.ref('users/' + user.uid + '/avatarURL2').once('value');
-      })
-      .then(snapshot => {
-        avatarURL = snapshot.val() || null;
-        if (!avatarURL) avatarURL = 'https://i.pravatar.cc/128';
-        document.getElementById('login').style.display = 'none';
-        startGame();
-      })
-      .catch(err => {
-        alert('Napaka pri prijavi: ' + err.message);
-      });
-  };
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      const user = auth.currentUser;
+      userId = user.uid;
+      return db.ref('users/' + user.uid + '/avatarURL2').once('value');
+    })
+    .then(snapshot => {
+      avatarURL = snapshot.val() || null;
+      if (!avatarURL) avatarURL = 'https://i.pravatar.cc/128';
+      document.getElementById('login').style.display = 'none';
+      startGame();
+    })
+    .catch(err => {
+      alert('Napaka pri prijavi: ' + err.message);
+    });
+};
 
-  // ----- Babylon.js scena -----
+// ----- Babylon.js scena -----
 
- let canvas = document.getElementById("renderCanvas");
+let canvas = document.getElementById("renderCanvas");
 let engine = new BABYLON.Engine(canvas, true);
 
-let scene, camera, avatar;
+let scene, camera, avatar, hunter;
 let inputMap = {};
 let avatarRotationY = 0;  // za obračanje avatarja in kamere
+const avatarSpeed = 0.1;
 
 function startGame() {
   scene = new BABYLON.Scene(engine);
@@ -198,33 +200,34 @@ function startGame() {
   avatar.material = avatarMat;
   avatar.position.y = 1;
 
-  // Tukaj nastavimo actionManager na sceno in registriramo tipke
+  // Lovec (hunter) - enostaven rdeč kvader na naključni lokaciji
+  const hunterMat = new BABYLON.StandardMaterial("hunterMat", scene);
+  hunterMat.diffuseColor = new BABYLON.Color3(1, 0, 0); // rdeča barva
+
+  hunter = BABYLON.MeshBuilder.CreateBox("hunter", {height: 2, width: 1, depth: 0.5}, scene);
+  hunter.material = hunterMat;
+  hunter.position = new BABYLON.Vector3(
+    (Math.random() - 0.5) * 180,
+    1,
+    (Math.random() - 0.5) * 180
+  );
+
+  // Spremljanje tipk za premikanje
   scene.actionManager = new BABYLON.ActionManager(scene);
 
-  scene.actionManager.registerAction(
-    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+  scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+    BABYLON.ActionManager.OnKeyDownTrigger,
+    evt => {
       inputMap[evt.sourceEvent.key.toLowerCase()] = true;
-    })
-  );
+    }
+  ));
 
-  scene.actionManager.registerAction(
-    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+  scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(
+    BABYLON.ActionManager.OnKeyUpTrigger,
+    evt => {
       inputMap[evt.sourceEvent.key.toLowerCase()] = false;
-    })
-  );
-
-  engine.runRenderLoop(() => {
-    // Tvoja logika premikanja avatarja in kamera
-    scene.render();
-  });
-}
-
-// Na koncu pokliči startGame, ko je vse pripravljeno
-startGame();
-
-
-
-    
+    }
+  ));
 let useGamepad = false;
 
 function updateCameraAndAvatar() {
@@ -405,8 +408,6 @@ scene.registerBeforeRender(() => {
     });
   
 
-
-
 // Spremenljivke za lovca
 let isHunter = false;
 let huntActive = false;
@@ -545,6 +546,7 @@ scene.onBeforeRenderObservable.add(() => {
     }
   }
 });
+
 
 
 
