@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <title>Privat Klepet</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    #userList { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; }
+    .user { text-align: center; cursor: pointer; border: 1px solid #ccc; padding: 10px; border-radius: 10px; }
+    .user img { width: 60px; height: 60px; border-radius: 50%; }
+
+    #chatContainer { display: none; flex-direction: column; height: 100vh; }
+    #chatHeader {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      background: #eee;
+    }
+    #chatHeader img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; }
+    #chatHeader span { flex: 1; font-weight: bold; }
+    #chatHeader button {
+      background: none; border: none; color: blue; cursor: pointer;
+      font-size: 16px; padding: 5px 10px;
+    }
+
+    #messages { flex: 1; overflow-y: auto; padding: 10px; background: #f2f2f2; display: flex; flex-direction: column; }
+    .message { padding: 5px 10px; margin: 5px 0; border-radius: 10px; max-width: 60%; word-wrap: break-word; }
+    .me { background: #d1e7dd; align-self: flex-end; }
+    .other { background: #ffffff; align-self: flex-start; }
+
+    #inputContainer { display: flex; padding: 10px; border-top: 1px solid #ccc; }
+    #inputContainer input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; }
+    #inputContainer button { margin-left: 10px; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+
+<!-- Seznam uporabnikov -->
+<div id="userList">Nalagam uporabnike...</div>
+
+<!-- Privatni klepet -->
+<div id="chatContainer">
+  <div id="chatHeader">
+    <button onclick="goBack()">← Nazaj</button>
+    <img id="chatAvatar" src="" alt="avatar">
+    <span id="chatWithName">Uporabnik</span>
+  </div>
+  <div id="messages"></div>
+  <div id="inputContainer">
+    <input type="text" id="messageInput" placeholder="Napiši sporočilo...">
+    <button onclick="sendMessage()">Pošlji</button>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
+
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+
+  const userList = document.getElementById('userList');
+  const chatContainer = document.getElementById('chatContainer');
+  const messagesDiv = document.getElementById('messages');
+  const messageInput = document.getElementById('messageInput');
+  const chatWithName = document.getElementById('chatWithName');
+  const chatAvatar = document.getElementById('chatAvatar');
+
+  let currentUser = null;
+  let selectedUser = null;
+  let chatId = null;
+  let users = {};
+
+  // Funkcija za ustvarjanje chat ID-ja
+  function getChatId(uid1, uid2) {
+    return [uid1, uid2].sort().join("_");
+  }
+
+  // Prijava uporabnika (anonimno, lahko nadomestiš z Email/password ali Google)
+  auth.signInAnonymously().then(() => {
+    console.log("Signed in anonymously");
+  });
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      const uid = user.uid;
+      db.ref("users/" + uid).once("value").then(snap => {
+        if (snap.exists()) {
+          currentUser = { uid, ...snap.val() };
+          loadUsers(uid);
+        } else {
+          // Če uporabnik še ne obstaja v users/
+          db.ref("users/" + uid).set({
+            name: "Uporabnik " + uid.slice(0, 5),
+            avatarURL2: defaultAvatar
+          }).then(() => {
+            currentUser = { uid, name: "Uporabnik " + uid.slice(0, 5), avatarURL2: defaultAvatar };
+            loadUsers(uid);
+          });
+        }
+      });
+    }
+  });
+
+  function loadUsers(currentUid) {
+    db.ref("users").once("value").then(snapshot => {
+      users = snapshot.val();
+      userList.innerHTML = "";
+
+      for (const uid in users) {
+        if (uid === currentUid) continue;
+        const user = users[uid];
+        const avatar = user.avatarURL2 || defaultAvatar;
+
+        const div = document.createElement('div');
+        div.className = 'user';
+        div.innerHTML = `<img src="${avatar}" alt=""><div>${user.name}</div>`;
+        div.onclick = () => startPrivateChat(uid);
+        userList.appendChild(div);
+      }
+    });
+  }
+
+  function startPrivateChat(uid) {
+    selectedUser = { uid, ...users[uid] };
+    chatId = getChatId(currentUser.uid, uid);
+
+    // Nastavi zgornji trak
+    chatWithName.textContent = selectedUser.name;
+    chatAvatar.src = selectedUser.avatarURL2 || defaultAvatar;
+
+    // Prikaži klepet, skrij seznam
+    userList.style.display = "none";
+    chatContainer.style.display = "flex";
+    messagesDiv.innerHTML = "";
+
+    listenForMessages();
+  }
+
+  function goBack() {
+    db.ref("privatemsgs/" + chatId).off();
+    chatContainer.style.display = "none";
+    userList.style.display = "grid";
+  }
+
+  function listenForMessages() {
+    db.ref("privatemsgs/" + chatId).off();
+    db.ref("privatemsgs/" + chatId).on("child_added", snapshot => {
+      const msg = snapshot.val();
+      const div = document.createElement("div");
+      div.className = "message " + (msg.sender === currentUser.uid ? "me" : "other");
+      div.textContent = msg.text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
+
+  function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text) return;
+    const msg = {
+      sender: currentUser.uid,
+      text,
+      timestamp: Date.now()
+    };
+    db.ref("privatemsgs/" + chatId).push(msg);
+    messageInput.value = "";
+  }
+</script>
+
+</body>
+</html>
