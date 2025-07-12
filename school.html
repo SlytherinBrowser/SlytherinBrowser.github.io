@@ -1,114 +1,133 @@
-<!doctype html>
-<html lang="sl"> 
- <head> 
-  <meta charset="UTF-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Izbira Razreda in Predmeta z Nalaganjem Slike</title> 
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Avatar animacija z gumbom (5 sekund)</title>
   <style>
-        button { margin: 5px; padding: 10px; font-size: 16px; }
-        img { width: 100px; height: auto; margin: 5px; display: none; }
-        input { padding: 8px; margin: 10px; font-size: 16px; }
-    </style> <!-- Firebase Config --> 
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script> 
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script> 
- </head> 
- <body> <!-- Vnos Razreda in Predmeta --> 
-  <div> 
-   <h2>Vnesi Razred in Predmet</h2> <label for="classInput">Razred: </label> 
-   <input type="text" id="classInput" placeholder="Vnesi razred (npr. 1.a)"> <label for="subjectInput">Predmet: </label> 
-   <input type="text" id="subjectInput" placeholder="Vnesi predmet (npr. POS1p)"> <button onclick="checkAndUploadImage()">Naloži Sliko</button> 
-  </div> <!-- Predogled slike --> 
-  <div> 
-   <h3>Predogled slike:</h3> 
-   <img id="uploadedImage"> 
-  </div> <!-- Input za izbiro slike --> 
-  <input type="file" id="imageUpload" style="display:none"> 
-  <script>
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    canvas { display: block; }
+    #btnAnimate {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #008CBA;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      user-select: none;
+      z-index: 10;
+    }
+    #btnAnimate:active {
+      background-color: #005f73;
+    }
+  </style>
+</head>
+<body>
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBQaD0MGnuMa45hm_99VvOwNsTdCoFPgNI",
-  authDomain: "school-12a1f.firebaseapp.com",
-  projectId: "school-12a1f",
-  storageBucket: "school-12a1f.firebasestorage.app",
-  messagingSenderId: "539327102547",
-  appId: "1:539327102547:web:bd2571f5d327faafaed0a6",
-  measurementId: "G-GBG9YCLE12"
-};
+<button id="btnAnimate">Zaženi animacijo (5s)</button>
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/examples/js/loaders/GLTFLoader.js"></script>
 
-        // Inicializacija Firebase
-        firebase.initializeApp(firebaseConfig);
-        const storage = firebase.storage();
+<script>
+  let scene, camera, renderer, avatar, mixer, clock;
+  let currentAction;
+  let actions = {};
 
-        // Predmeti za razrede (ključni podatki)
-        const validKeys = {
-            "1.a": ["POS1p", "SSO", "ŠVZ", "SPL", "SLO", "NAR", "MAT", "STR", "DRU", "ANG", "UME"],
-            "1.b": ["SLO", "MAT", "DRU", "NAR", "ŠVZ"],
-            "1.c": ["POS1p", "SLO", "MAT", "ANG"],
-            // Dodajte še ostale razrede in predmete po potrebi
-        };
+  init();
+  animate();
 
-        // Funkcija za preverjanje in nalaganje slike
-        function checkAndUploadImage() {
-            const classInput = document.getElementById('classInput').value;
-            const subjectInput = document.getElementById('subjectInput').value;
-            const imageInput = document.getElementById('imageUpload');
+  function init() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xaaaaaa);
 
-            // Preverjanje, če sta razred in predmet veljavna
-            if (validKeys[classInput] && validKeys[classInput].includes(subjectInput)) {
-                alert("Ključi so pravilni! Lahko naložite sliko.");
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.5, 3);
 
-                // Omogočimo nalaganje slike
-                imageInput.click();
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(1, 2, 3);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040));
 
-                // Ko uporabnik izbere sliko, jo naložimo
-                imageInput.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        uploadImage(file, classInput, subjectInput);
-                    }
-                };
-            } else {
-                alert("Napačni ključi! Preverite razred in predmet.");
-            }
-        }
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-        // Funkcija za nalaganje slike v Firebase Storage
-        function uploadImage(file, className, subject) {
-            const storageRef = storage.ref().child(`${className}/${subject}/${file.name}`);
-            const uploadTask = storageRef.put(file);
+    clock = new THREE.Clock();
 
-            uploadTask.on('state_changed', 
-                function(snapshot) {
-                    // Napredek nalaganja (opcionalno)
-                }, 
-                function(error) {
-                    alert("Napaka pri nalaganju slike.");
-                }, 
-                function() {
-                    uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-                        displayImage(downloadURL);
-                    });
-                }
-            );
-        }
+    const loader = new THREE.GLTFLoader();
+    // Ready Player Me test avatar (prosto dostopen)
+    loader.load('https://models.readyplayer.me/63bf097d-5669-4ce7-93a9-e174bd5ed6d4.glb', function(gltf) {
+      avatar = gltf.scene;
+      avatar.scale.set(1,1,1);
+      scene.add(avatar);
 
-        // Funkcija za prikaz slike na strani
-        function displayImage(imageUrl) {
-            const imgElement = document.getElementById('uploadedImage');
-            imgElement.src = imageUrl;
-            imgElement.style.display = "block";  // Prikaz slike
-        }
-    </script> 
- 
-</body></html>
+      mixer = new THREE.AnimationMixer(avatar);
+
+      // Shrani animacije v objekt
+      gltf.animations.forEach(clip => {
+        actions[clip.name.toLowerCase()] = mixer.clipAction(clip);
+        console.log(`Animacija na voljo: ${clip.name}`);
+      });
+
+      // Začetna animacija idle, če obstaja
+      if(actions['idle']) {
+        currentAction = actions['idle'];
+      } else {
+        currentAction = Object.values(actions)[0];
+      }
+      currentAction.play();
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Gumb za animacijo
+    document.getElementById('btnAnimate').addEventListener('click', () => {
+      if (!actions['dance']) {
+        alert('Animacija "dance" ni na voljo pri tem avatarju.');
+        return;
+      }
+      switchAnimationForDuration('dance', 5000);
+    });
+  }
+
+  // Funkcija za menjavo animacije z vračanjem nazaj po določenem času
+  function switchAnimationForDuration(name, duration) {
+    name = name.toLowerCase();
+    if(!actions[name]) {
+      console.warn(`Animacija "${name}" ni najdena.`);
+      return;
+    }
+    if(currentAction === actions[name]) return;
+
+    currentAction.fadeOut(0.3);
+    currentAction = actions[name];
+    currentAction.reset().fadeIn(0.3).play();
+
+    setTimeout(() => {
+      // Po koncu trajanja vrni nazaj na idle
+      if(actions['idle']) {
+        currentAction.fadeOut(0.3);
+        currentAction = actions['idle'];
+        currentAction.reset().fadeIn(0.3).play();
+      }
+    }, duration);
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    if(mixer) mixer.update(delta);
+    renderer.render(scene, camera);
+  }
+</script>
+
+</body>
+</html>
