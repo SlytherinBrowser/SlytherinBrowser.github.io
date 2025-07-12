@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8" />
-  <title>Avatar animacija z gumbom (5 sekund)</title>
+  <title>Avatar animacija z gumbom (5 sekund) - test model</title>
   <style>
     body { margin: 0; overflow: hidden; font-family: sans-serif; }
     canvas { display: block; }
@@ -59,27 +59,28 @@
     clock = new THREE.Clock();
 
     const loader = new THREE.GLTFLoader();
-    // Ready Player Me test avatar (prosto dostopen)
-    loader.load('https://models.readyplayer.me/63bf097d-5669-4ce7-93a9-e174bd5ed6d4.glb', function(gltf) {
+
+    // Tu je testni model z animacijami
+    loader.load('https://threejs.org/examples/models/gltf/Soldier.glb', function(gltf) {
       avatar = gltf.scene;
       avatar.scale.set(1,1,1);
       scene.add(avatar);
 
       mixer = new THREE.AnimationMixer(avatar);
 
-      // Shrani animacije v objekt
       gltf.animations.forEach(clip => {
         actions[clip.name.toLowerCase()] = mixer.clipAction(clip);
         console.log(`Animacija na voljo: ${clip.name}`);
       });
 
-      // Začetna animacija idle, če obstaja
       if(actions['idle']) {
         currentAction = actions['idle'];
       } else {
         currentAction = Object.values(actions)[0];
       }
       currentAction.play();
+    }, undefined, function(error) {
+      console.error('Napaka pri nalaganju modela:', error);
     });
 
     window.addEventListener('resize', () => {
@@ -88,17 +89,18 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Gumb za animacijo
     document.getElementById('btnAnimate').addEventListener('click', () => {
-      if (!actions['dance']) {
-        alert('Animacija "dance" ni na voljo pri tem avatarju.');
-        return;
+      // Preizkusimo animacijo "run" ali "walk"
+      if (actions['run']) {
+        switchAnimationForDuration('run', 5000);
+      } else if (actions['walk']) {
+        switchAnimationForDuration('walk', 5000);
+      } else {
+        alert('Animacije "run" ali "walk" ni na voljo pri tem modelu.');
       }
-      switchAnimationForDuration('dance', 5000);
     });
   }
 
-  // Funkcija za menjavo animacije z vračanjem nazaj po določenem času
   function switchAnimationForDuration(name, duration) {
     name = name.toLowerCase();
     if(!actions[name]) {
@@ -112,7 +114,6 @@
     currentAction.reset().fadeIn(0.3).play();
 
     setTimeout(() => {
-      // Po koncu trajanja vrni nazaj na idle
       if(actions['idle']) {
         currentAction.fadeOut(0.3);
         currentAction = actions['idle'];
