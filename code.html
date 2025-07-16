@@ -1,143 +1,363 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Code Editor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #282c34;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            color: #fff;
-            margin: 0;
-            height: 100vh;
-        }
-        h1 {
-            font-size: 1.8em;
-            color: #61dafb;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .button {
-            background-color: #61dafb;
-            color: #282c34;
-            border: none;
-            padding: 10px 20px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .button:hover {
-            transform: scale(1.05);
-        }
-        .button:first-child {
-            border-top-left-radius: 20px;
-            border-bottom-left-radius: 20px;
-        }
-        .button:last-child {
-            border-top-right-radius: 20px;
-            border-bottom-right-radius: 20px;
-            margin-left: -1px; /* Remove gap between buttons */
-        }
-        .editor-section {
-            width: 90%;
-            height: 60%;
-            margin-bottom: 10px;
-        }
-        #preview {
-            width: 90%;
-            background: #1e1e1e;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-            color: #ddd;
-            overflow-y: auto;
-            height: 25%;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live Editor s projekti in zavihki</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: white;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    #header {
+      padding: 10px;
+      background: #007acc;
+      font-weight: bold;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    #tabs {
+      display: flex;
+      background: #252526;
+      border-bottom: 2px solid #007acc;
+      user-select: none;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .tab {
+      padding: 8px 15px;
+      cursor: pointer;
+      border-right: 1px solid #444;
+      color: #bbb;
+      transition: background-color 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+    }
+    .tab.active {
+      background: #007acc;
+      color: white;
+      font-weight: bold;
+    }
+    .tab .close-btn {
+      margin-left: 10px;
+      color: #f44336;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tab:hover {
+      background: #005a9e;
+      color: white;
+    }
+    #addTabBtn {
+      padding: 8px 15px;
+      cursor: pointer;
+      color: #0f0;
+      font-weight: bold;
+      border-left: 1px solid #444;
+      user-select: none;
+    }
+    #container {
+      flex: 1;
+      display: flex;
+      height: 100%;
+      overflow: hidden;
+      flex-direction: column;
+    }
+    #editor {
+      flex: 1;
+      height: 100%;
+    }
+    #output {
+      height: 120px;
+      background: #252526;
+      color: #d4d4d4;
+      padding: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      border-top: 2px solid #007acc;
+      overflow-y: auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/loader.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h1>Dynamic Code Editor</h1>
 
-    <!-- Controls for file name and buttons -->
-    <div class="controls">
-        <input type="text" id="fileName" placeholder="Enter file name (e.g., my_code.html)">
-        <button class="button" onclick="updatePreview()">Preview</button>
-        <button class="button" onclick="saveFile()">Save</button>
-    </div>
+<div id="projectModal">
+  <div id="projectModalContent" style="background:#1e1e1e; padding:20px 30px; border-radius:8px; box-shadow:0 0 15px #007acc; text-align:center; width:300px; margin:auto; position:fixed; top:40%; left:0; right:0;">
+    <div>Vnesi 5-mestno številko projekta:</div>
+    <input type="text" id="projectInput" maxlength="5" autofocus autocomplete="off" style="font-size:1.5em; width:100%; padding:10px; border:none; border-radius:5px; text-align:center; margin-top:10px; background:#252526; color:white;" />
+    <button id="projectBtn" style="margin-top:15px; padding:10px 20px; font-size:1.2em; border:none; border-radius:5px; background:#007acc; color:white; cursor:pointer; width:100%;">Pridruži se / Ustvari</button>
+    <div id="projectError" style="color:#f44336; margin-top:10px; font-weight:bold; height:1.2em;"></div>
+  </div>
+</div>
 
-    <!-- Code Editor -->
-    <div class="editor-section">
-        <textarea id="codeEditor"></textarea>
-    </div>
+<div id="header" style="display:none;">
+  <div>
+    Napredni Live Code Editor - Projekt <span id="projectIDdisplay"></span>
+  </div>
+  <div style="display:flex; align-items:center;">
+    <div id="status">Povezava: <span id="connStatus" style="color:lime;">● Povezan</span></div>
+    <button id="newProjectBtn" title="Ustvari ali se pridruži novemu projektu" style="margin-left:10px;">Novo</button>
+  </div>
+</div>
 
-    <!-- Preview Section -->
-    <div id="preview">Your preview will appear here</div>
+<div id="tabs" style="display:none;">
+  <!-- Zavihki se dinamično generirajo tukaj -->
+  <div id="addTabBtn">+</div>
+</div>
 
-    <!-- CodeMirror Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/html-hint.min.js"></script>
-    <script>
-        // Initialize CodeMirror with syntax highlighting and autocomplete
-        const codeEditor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
-            lineNumbers: true,
-            mode: "htmlmixed",
-            theme: "material",
-            autoCloseTags: true,
-            matchBrackets: true,
-            extraKeys: { "Ctrl-Space": "autocomplete" },
-        });
-        codeEditor.setSize("100%", "100%");
+<div id="container" style="display:none; flex-direction: column;">
+  <div id="editor"></div>
+  <div id="output">Rezultat evala in napake se prikažejo tukaj...</div>
+</div>
 
-        // Enable auto-complete suggestions automatically
-        codeEditor.on("inputRead", function(editor, event) {
-            if (!editor.state.completionActive && event.text[0].match(/[\w\.\-]/)) {
-                CodeMirror.commands.autocomplete(editor);
-            }
-        });
+<script>
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCaKT0CCg1xNJanG4-6Pox2UaH_1rSL3M0",
+  authDomain: "chater2-fc480.firebaseapp.com",
+  databaseURL: "https://chater2-fc480-default-rtdb.firebaseio.com",
+  projectId: "chater2-fc480",
+  storageBucket: "chater2-fc480.firebasestorage.app",
+  messagingSenderId: "623092508370",
+  appId: "1:623092508370:web:08cf5d58c6edcfac096f0b",
+  measurementId: "G-5W40WP5YEG"
+};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-        // Update preview based on file type
-        function updatePreview() {
-            const fileName = document.getElementById("fileName").value;
-            const codeContent = codeEditor.getValue();
-            const previewFrame = document.getElementById('preview');
+  let editor, model;
+  let currentProjectID = null;
+  let currentFile = null;
+  let files = {}; // objekt za vse datoteke in vsebine
+  let fileRefs = {}; // firebase ref-i za posamezne datoteke
+  let ignoreRemote = false;
 
-            if (fileName.endsWith(".html")) {
-                previewFrame.innerHTML = codeContent;
-            } else if (fileName.endsWith(".css")) {
-                previewFrame.innerHTML = `<style>${codeContent}</style><p>CSS Preview</p>`;
-            } else if (fileName.endsWith(".js")) {
-                previewFrame.innerHTML = `<p>JavaScript Preview</p><script>${codeContent}<\/script>`;
-            } else {
-                previewFrame.innerHTML = "<p>Unsupported file type. Please use .html, .css, or .js</p>";
-            }
+  // DOM elementi
+  const modal = document.getElementById('projectModal');
+  const input = document.getElementById('projectInput');
+  const btn = document.getElementById('projectBtn');
+  const errorDiv = document.getElementById('projectError');
+  const header = document.getElementById('header');
+  const container = document.getElementById('container');
+  const projectIDdisplay = document.getElementById('projectIDdisplay');
+  const newProjectBtn = document.getElementById('newProjectBtn');
+  const tabsDiv = document.getElementById('tabs');
+  const addTabBtn = document.getElementById('addTabBtn');
+  const outputDiv = document.getElementById('output');
+
+  function validateProjectID(id) {
+    return /^\d{5}$/.test(id);
+  }
+
+  btn.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!validateProjectID(val)) {
+      errorDiv.textContent = "Številka mora biti točno 5-mestna in samo številke!";
+      return;
+    }
+    errorDiv.textContent = "";
+    startEditorForProject(val);
+  });
+
+  input.addEventListener('keyup', (e) => {
+    if (e.key === "Enter") btn.click();
+  });
+
+  newProjectBtn.addEventListener('click', () => {
+    modal.style.display = 'flex';
+    input.value = '';
+    errorDiv.textContent = '';
+    input.focus();
+  });
+
+  addTabBtn.addEventListener('click', () => {
+    const newName = prompt("Vnesi ime nove datoteke (npr. main.js, index.html):");
+    if (newName && !files[newName]) {
+      addNewFile(newName, '');
+    } else if (files[newName]) {
+      alert("Datoteka s tem imenom že obstaja!");
+    }
+  });
+
+  // Ustvari nov zavihek/datoteko
+  function addNewFile(name, content) {
+    files[name] = content;
+    // ustvari firebase ref za datoteko
+    const ref = db.ref(`/live-editor/projects/${currentProjectID}/files/${name}`);
+    fileRefs[name] = ref;
+
+    // Poslušaj spremembe iz firebase
+    ref.on('value', snapshot => {
+      const val = snapshot.val() || '';
+      if (val !== files[name]) {
+        files[name] = val;
+        if (currentFile === name && !ignoreRemote) {
+          ignoreRemote = true;
+          editor.setValue(val);
+          ignoreRemote = false;
+          runCodeAndShowOutput(val);
         }
+      }
+    });
 
-        // Save file function
-        function saveFile() {
-            const fileName = document.getElementById("fileName").value || "my_code.html";
-            const codeContent = codeEditor.getValue();
-            const blob = new Blob([codeContent], { type: "text/plain" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            link.click();
+    renderTabs();
+    switchFile(name);
+    // če še ni vsebine, nastavi v firebase
+    if (!content) ref.set('');
+  }
+
+  // Prikaži zavihke
+  function renderTabs() {
+    tabsDiv.innerHTML = '';
+    for (const name in files) {
+      const tab = document.createElement('div');
+      tab.classList.add('tab');
+      if (name === currentFile) tab.classList.add('active');
+tab.textContent = name;
+
+      // Dodaj gumb za zapiranje zaviha
+      const closeBtn = document.createElement('span');
+      closeBtn.textContent = '×';
+      closeBtn.classList.add('close-btn');
+      closeBtn.title = "Zapri ta zavihek";
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeFile(name);
+      });
+
+      tab.appendChild(closeBtn);
+
+      tab.addEventListener('click', () => {
+        switchFile(name);
+      });
+
+      tabsDiv.appendChild(tab);
+    }
+
+    // Dodaj gumb za nov zavihek na konec
+    tabsDiv.appendChild(addTabBtn);
+  }
+
+  // Preklapljanje med zavihki/datotekami
+  function switchFile(name) {
+    if (currentFile === name) return;
+    // Shrani trenutno vsebino v objekt
+    if (currentFile) files[currentFile] = editor.getValue();
+
+    currentFile = name;
+    editor.setValue(files[name]);
+    renderTabs();
+    runCodeAndShowOutput(files[name]);
+  }
+
+  // Zapri datoteko (zavihek)
+  function closeFile(name) {
+    // Če zapiramo trenutno odprto datoteko, preklopi na drugo
+    if (currentFile === name) {
+      const keys = Object.keys(files);
+      const idx = keys.indexOf(name);
+      if (keys.length > 1) {
+        const nextIdx = idx === 0 ? 1 : idx - 1;
+        switchFile(keys[nextIdx]);
+      } else {
+        currentFile = null;
+        editor.setValue('');
+      }
+    }
+    // Odstrani datoteko iz objekta in firebase listenerja
+    if (fileRefs[name]) {
+      fileRefs[name].off();
+      fileRefs[name].remove(); // Opcijsko - odstrani tudi iz Firebase, če želiš
+      delete fileRefs[name];
+    }
+    delete files[name];
+    renderTabs();
+  }
+
+  // Zaženi kodo in izpiši rezultat (predpostavimo JavaScript kodo)
+  function runCodeAndShowOutput(code) {
+    try {
+      outputDiv.textContent = '';
+      // Previdno - eval lahko povzroči varnostne težave, uporabljaj znotraj sandboxa!
+      const result = eval(code);
+      outputDiv.textContent = result === undefined ? 'Koda izvršena brez napak.' : String(result);
+    } catch (e) {
+      outputDiv.textContent = 'Napaka: ' + e.message;
+    }
+  }
+
+  // Inicializiraj editor
+  require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs' }});
+  require(['vs/editor/editor.main'], function() {
+    editor = monaco.editor.create(document.getElementById('editor'), {
+      value: '',
+      language: 'javascript',
+      theme: 'vs-dark',
+      automaticLayout: true,
+      minimap: { enabled: false },
+    });
+
+    editor.onDidChangeModelContent(() => {
+      if (ignoreRemote) return;
+      if (!currentFile) return;
+      files[currentFile] = editor.getValue();
+      if (fileRefs[currentFile]) {
+        fileRefs[currentFile].set(files[currentFile]);
+      }
+      runCodeAndShowOutput(files[currentFile]);
+    });
+  });
+
+  // Zaženi editor za določen projekt
+  function startEditorForProject(id) {
+    currentProjectID = id;
+    modal.style.display = 'none';
+    header.style.display = 'flex';
+    container.style.display = 'flex';
+    tabsDiv.style.display = 'flex';
+    projectIDdisplay.textContent = id;
+
+    // Naloži vse datoteke za projekt iz Firebase
+    const filesRef = db.ref(`/live-editor/projects/${id}/files`);
+    filesRef.once('value').then(snapshot => {
+      files = snapshot.val() || {};
+
+      // Če ni datotek, ustvari default main.js
+      if (Object.keys(files).length === 0) {
+        addNewFile('main.js', '// Tvoja prva datoteka\nconsole.log("Pozdravljen svet!");');
+      } else {
+        // Nastavi firebase listenerje za vse datoteke
+        for (const name in files) {
+          addNewFile(name, files[name]);
         }
-    </script>
+        // Odpri prvi zavihek
+        switchFile(Object.keys(files)[0]);
+      }
+    });
+
+    // Status povezave
+    db.ref(".info/connected").on("value", snap => {
+      const connected = snap.val();
+      const connStatus = document.getElementById('connStatus');
+      if (connected) {
+        connStatus.textContent = '● Povezan';
+        connStatus.style.color = 'lime';
+      } else {
+        connStatus.textContent = '● Ni povezave';
+        connStatus.style.color = 'red';
+      }
+    });
+  }
+
+  // Ob začetku pokaži modal za vnos projekta
+  modal.style.display = 'flex';
+  input.focus();
+</script>
 </body>
 </html>
