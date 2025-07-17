@@ -115,30 +115,36 @@
   <div id="output">Rezultat evala in napake se prikažejo tukaj...</div>
 </div>
 <script type="module">
-  // Import the functions you need from the SDKs you need
+  // Uvoz potrebnih Firebase knjižnic
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  // Če boš uporabljal tudi Authentication, Storage ipd., jih lahko dodaš tu
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  // Firebase konfiguracija – popravljena
   const firebaseConfig = {
     apiKey: "AIzaSyCaKT0CCg1xNJanG4-6Pox2UaH_1rSL3M0",
     authDomain: "chater2-fc480.firebaseapp.com",
     databaseURL: "https://chater2-fc480-default-rtdb.firebaseio.com",
     projectId: "chater2-fc480",
-    storageBucket: "chater2-fc480.firebasestorage.app",
+    storageBucket: "chater2-fc480.appspot.com", // ✅ popravljeno iz .firebasestorage.app
     messagingSenderId: "623092508370",
     appId: "1:623092508370:web:08cf5d58c6edcfac096f0b",
     measurementId: "G-5W40WP5YEG"
   };
 
-  // Initialize Firebase
+  // Inicializacija Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+  const database = getDatabase(app); // ✅ dodano za dostop do baze
+
+  // Primer uporabe baze: nastavitev vrednosti
+  // set(ref(database, 'pot/do/nekega/podatka'), { test: true });
+
 </script>
+
 <script>
+  // Spremenljivke za editor
   let editor, model;
   let currentProjectID = null;
   let currentFile = null;
@@ -146,7 +152,7 @@
   let fileRefs = {}; // firebase ref-i za posamezne datoteke
   let ignoreRemote = false;
 
-  // DOM elementi
+  // DOM elementi (poskrbi, da obstajajo v HTML!)
   const modal = document.getElementById('projectModal');
   const input = document.getElementById('projectInput');
   const btn = document.getElementById('projectBtn');
