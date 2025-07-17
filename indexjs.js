@@ -733,6 +733,73 @@ function triggerHoverMessage(message) {
     }, 3000); // traja 10 sekund
 }
 
+let touchStartX = 0;
+
+topBar.addEventListener("mousedown", function(e) {
+    touchStartX = e.clientX;
+});
+
+topBar.addEventListener("mouseup", function(e) {
+    const touchEndX = e.clientX;
+    if (touchStartX - touchEndX > 50) {
+        showWeather(); // podrs z desne proti levi
+    }
+});
+
+topBar.addEventListener("wheel", function(e) {
+    if (e.deltaY > 0) {
+        showWeather(); // scroll navzdol
+    }
+});
+
+
+
+function showWeather() {
+    const topBar = document.getElementById("topBar");
+    topBar.innerText = "📍 Pridobivam lokacijo...";
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                const url = `https://wttr.in/${lat},${lon}?lang=sl&format=🌡️ +%t +%C`;
+
+                topBar.innerText = "🌤️ Pridobivam vreme...";
+                fetch(url)
+                    .then(response => response.text())
+                    .then(weather => {
+                        topBar.innerText = weather;
+                        setTimeout(() => {
+                            showCurrentTime();
+                        }, 6000);
+                    })
+                    .catch(() => {
+                        topBar.innerText = "❌ Napaka pri vremenu.";
+                        setTimeout(() => {
+                            showCurrentTime();
+                        }, 3000);
+                    });
+            },
+            (error) => {
+                topBar.innerText = "❌ Lokacija zavrnjena.";
+                setTimeout(() => {
+                    showCurrentTime();
+                }, 3000);
+            }
+        );
+    } else {
+        topBar.innerText = "🌍 Geolokacija ni podprta.";
+        setTimeout(() => {
+            showCurrentTime();
+        }, 3000);
+    }
+}
+
+
+
+
 
 function searchSlytherinBrowser() {
     const searchTerm = document.getElementById("search").value.trim();
