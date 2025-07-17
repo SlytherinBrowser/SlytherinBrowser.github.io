@@ -115,44 +115,37 @@
   <div id="output">Rezultat evala in napake se prikažejo tukaj...</div>
 </div>
 <script type="module">
-  // Uvoz potrebnih Firebase knjižnic
+  // === Firebase importi ===
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-  // Če boš uporabljal tudi Authentication, Storage ipd., jih lahko dodaš tu
+  import { getDatabase, ref, onValue, set, off, remove, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-  // Firebase konfiguracija – popravljena
+  // === Firebase konfiguracija ===
   const firebaseConfig = {
     apiKey: "AIzaSyCaKT0CCg1xNJanG4-6Pox2UaH_1rSL3M0",
     authDomain: "chater2-fc480.firebaseapp.com",
     databaseURL: "https://chater2-fc480-default-rtdb.firebaseio.com",
     projectId: "chater2-fc480",
-    storageBucket: "chater2-fc480.appspot.com", // ✅ popravljeno iz .firebasestorage.app
+    storageBucket: "chater2-fc480.appspot.com",
     messagingSenderId: "623092508370",
     appId: "1:623092508370:web:08cf5d58c6edcfac096f0b",
     measurementId: "G-5W40WP5YEG"
   };
 
-  // Inicializacija Firebase
+  // === Inicializacija Firebase ===
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-  const database = getDatabase(app); // ✅ dodano za dostop do baze
+  const database = getDatabase(app);
 
-  // Primer uporabe baze: nastavitev vrednosti
-  // set(ref(database, 'pot/do/nekega/podatka'), { test: true });
-
-</script>
-
-<script>
-  // Spremenljivke za editor
+  // === Spremenljivke ===
   let editor, model;
   let currentProjectID = null;
   let currentFile = null;
-  let files = {}; // objekt za vse datoteke in vsebine
-  let fileRefs = {}; // firebase ref-i za posamezne datoteke
+  let files = {};
+  let fileRefs = {};
   let ignoreRemote = false;
 
-  // DOM elementi (poskrbi, da obstajajo v HTML!)
+  // === DOM elementi ===
   const modal = document.getElementById('projectModal');
   const input = document.getElementById('projectInput');
   const btn = document.getElementById('projectBtn');
@@ -164,6 +157,9 @@
   const tabsDiv = document.getElementById('tabs');
   const addTabBtn = document.getElementById('addTabBtn');
   const outputDiv = document.getElementById('output');
+  const connStatus = document.getElementById('connStatus');
+
+  // === Funkcije ===
 
   function validateProjectID(id) {
     return /^\d{5}$/.test(id);
@@ -199,15 +195,12 @@
     }
   });
 
-  // Ustvari nov zavihek/datoteko
   function addNewFile(name, content) {
     files[name] = content;
-    // ustvari firebase ref za datoteko
-    const ref = db.ref(`/live-editor/projects/${currentProjectID}/files/${name}`);
-    fileRefs[name] = ref;
+    const fileRef = ref(database, `/live-editor/projects/${currentProjectID}/files/${name}`);
+    fileRefs[name] = fileRef;
 
-    // Poslušaj spremembe iz firebase
-    ref.on('value', snapshot => {
+    onValue(fileRef, snapshot => {
       const val = snapshot.val() || '';
       if (val !== files[name]) {
         files[name] = val;
@@ -222,20 +215,17 @@
 
     renderTabs();
     switchFile(name);
-    // če še ni vsebine, nastavi v firebase
-    if (!content) ref.set('');
+    if (!content) set(fileRef, '');
   }
 
-  // Prikaži zavihke
   function renderTabs() {
     tabsDiv.innerHTML = '';
     for (const name in files) {
       const tab = document.createElement('div');
       tab.classList.add('tab');
       if (name === currentFile) tab.classList.add('active');
-tab.textContent = name;
+      tab.textContent = name;
 
-      // Dodaj gumb za zapiranje zaviha
       const closeBtn = document.createElement('span');
       closeBtn.textContent = '×';
       closeBtn.classList.add('close-btn');
@@ -246,33 +236,25 @@ tab.textContent = name;
       });
 
       tab.appendChild(closeBtn);
-
       tab.addEventListener('click', () => {
         switchFile(name);
       });
 
       tabsDiv.appendChild(tab);
     }
-
-    // Dodaj gumb za nov zavihek na konec
     tabsDiv.appendChild(addTabBtn);
   }
 
-  // Preklapljanje med zavihki/datotekami
   function switchFile(name) {
     if (currentFile === name) return;
-    // Shrani trenutno vsebino v objekt
     if (currentFile) files[currentFile] = editor.getValue();
-
     currentFile = name;
     editor.setValue(files[name]);
     renderTabs();
     runCodeAndShowOutput(files[name]);
   }
 
-  // Zapri datoteko (zavihek)
   function closeFile(name) {
-    // Če zapiramo trenutno odprto datoteko, preklopi na drugo
     if (currentFile === name) {
       const keys = Object.keys(files);
       const idx = keys.indexOf(name);
@@ -284,21 +266,18 @@ tab.textContent = name;
         editor.setValue('');
       }
     }
-    // Odstrani datoteko iz objekta in firebase listenerja
     if (fileRefs[name]) {
-      fileRefs[name].off();
-      fileRefs[name].remove(); // Opcijsko - odstrani tudi iz Firebase, če želiš
+      off(fileRefs[name]);
+      remove(fileRefs[name]);
       delete fileRefs[name];
     }
     delete files[name];
     renderTabs();
   }
 
-  // Zaženi kodo in izpiši rezultat (predpostavimo JavaScript kodo)
   function runCodeAndShowOutput(code) {
     try {
       outputDiv.textContent = '';
-      // Previdno - eval lahko povzroči varnostne težave, uporabljaj znotraj sandboxa!
       const result = eval(code);
       outputDiv.textContent = result === undefined ? 'Koda izvršena brez napak.' : String(result);
     } catch (e) {
@@ -306,9 +285,9 @@ tab.textContent = name;
     }
   }
 
-  // Inicializiraj editor
+  // === Inicializacija Monaco Editorja ===
   require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs' }});
-  require(['vs/editor/editor.main'], function() {
+  require(['vs/editor/editor.main'], function () {
     editor = monaco.editor.create(document.getElementById('editor'), {
       value: '',
       language: 'javascript',
@@ -322,13 +301,12 @@ tab.textContent = name;
       if (!currentFile) return;
       files[currentFile] = editor.getValue();
       if (fileRefs[currentFile]) {
-        fileRefs[currentFile].set(files[currentFile]);
+        set(fileRefs[currentFile], files[currentFile]);
       }
       runCodeAndShowOutput(files[currentFile]);
     });
   });
 
-  // Zaženi editor za določen projekt
   function startEditorForProject(id) {
     currentProjectID = id;
     modal.style.display = 'none';
@@ -337,39 +315,31 @@ tab.textContent = name;
     tabsDiv.style.display = 'flex';
     projectIDdisplay.textContent = id;
 
-    // Naloži vse datoteke za projekt iz Firebase
-    const filesRef = db.ref(`/live-editor/projects/${id}/files`);
-    filesRef.once('value').then(snapshot => {
+    const filesRef = ref(database, `/live-editor/projects/${id}/files`);
+    get(filesRef).then(snapshot => {
       files = snapshot.val() || {};
-
-      // Če ni datotek, ustvari default main.js
       if (Object.keys(files).length === 0) {
         addNewFile('main.js', '// Tvoja prva datoteka\nconsole.log("Pozdravljen svet!");');
       } else {
-        // Nastavi firebase listenerje za vse datoteke
         for (const name in files) {
           addNewFile(name, files[name]);
         }
-        // Odpri prvi zavihek
         switchFile(Object.keys(files)[0]);
       }
     });
 
-    // Status povezave
-    db.ref(".info/connected").on("value", snap => {
+    // status povezave
+    const connectedRef = ref(database, ".info/connected");
+    onValue(connectedRef, snap => {
       const connected = snap.val();
-      const connStatus = document.getElementById('connStatus');
-      if (connected) {
-        connStatus.textContent = '● Povezan';
-        connStatus.style.color = 'lime';
-      } else {
-        connStatus.textContent = '● Ni povezave';
-        connStatus.style.color = 'red';
+      if (connStatus) {
+        connStatus.textContent = connected ? '● Povezan' : '● Ni povezave';
+        connStatus.style.color = connected ? 'lime' : 'red';
       }
     });
   }
 
-  // Ob začetku pokaži modal za vnos projekta
+  // Prikaži modal ob začetku
   modal.style.display = 'flex';
   input.focus();
 </script>
