@@ -7,13 +7,100 @@
   <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
   <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; }
-    #userList, #chatContainer, #publicChatBtn { margin: 10px; }
-    #userList div { cursor: pointer; display: flex; align-items: center; margin-bottom: 5px; }
-    model-viewer { width: 40px; height: 40px; margin-right: 10px; }
-    .status { width: 10px; height: 10px; border-radius: 50%; background: green; margin-left: auto; }
-    #chatContainer { display: none; }
-    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }#publicChatBtn {
+  margin: 20px;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#userList {
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+}
+
+#userList div {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+#userList div:hover {
+  background-color: #f0f0f0;
+}
+
+model-viewer {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  border-radius: 50%;
+}
+
+.status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: green;
+  margin-left: auto;
+}
+
+#chatContainer {
+  display: none;
+  width: 90%;
+  max-width: 600px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin-top: 20px;
+}
+
+#messages {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  height: 300px;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+#messageInput {
+  width: 80%;
+  padding: 10px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+#sendBtn {
+  padding: 10px 16px;
+  margin-left: 10px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
   </style>
 </head>
 <body>
@@ -24,7 +111,7 @@
     <button id="sendBtn">Pošlji</button>
   </div>  <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
-    import { getDatabase, ref, onChildAdded, push, set, get, child } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
+    import { getDatabase, ref, onChildAdded, push, set, get, child, onValue } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
     import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
 
     const firebaseConfig = {
@@ -64,30 +151,32 @@
       currentChatKey = 'messages';
       messagesDiv.innerHTML = '';
       chatContainer.style.display = 'block';
-      userList.style.display = 'none';
+      userList.style.display = 'block';
       listenForMessages(currentChatKey);
     };
 
     function loadUsers() {
-      get(ref(db, 'uporabniki')).then(snapshot => {
+      const usersRef = ref(db, 'uporabniki');
+      onValue(usersRef, snapshot => {
         userList.innerHTML = '';
-        snapshot.forEach(childSnap => {
-          const uid = childSnap.key;
-          const user = childSnap.val();
-          if (uid !== currentUser) {
-            const div = document.createElement('div');
-            const model = document.createElement('model-viewer');
-            model.setAttribute('src', user.avatarURL2);
-            model.setAttribute('camera-controls', '');
-            const status = document.createElement('div');
-            status.className = 'status';
-            div.appendChild(model);
-            div.appendChild(document.createTextNode(user.name || uid));
-            div.appendChild(status);
-            div.onclick = () => openPrivateChat(uid);
-            userList.appendChild(div);
-          }
-        });
+        const users = snapshot.val();
+        if (users) {
+          Object.entries(users).forEach(([uid, user]) => {
+            if (uid !== currentUser) {
+              const div = document.createElement('div');
+              const model = document.createElement('model-viewer');
+              model.setAttribute('src', user.avatarURL2);
+              model.setAttribute('camera-controls', '');
+              const status = document.createElement('div');
+              status.className = 'status';
+              div.appendChild(model);
+              div.appendChild(document.createTextNode(user.displayname || uid));
+              div.appendChild(status);
+              div.onclick = () => openPrivateChat(uid);
+              userList.appendChild(div);
+            }
+          });
+        }
       });
     }
 
