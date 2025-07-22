@@ -5,22 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Javni in Privat Klepet</title>
   <style>
-    body { margin:0; font-family: sans-serif; display: flex; height: 100vh; }
+    body { margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; background: #f9f9f9; }
     .sidebar {
       width: 25%;
-      background: #f0f0f0;
+      background: #ffffff;
       display: flex;
       flex-direction: column;
-      border-right: 1px solid #ccc;
+      border-right: 1px solid #ddd;
       overflow-y: auto;
+      box-shadow: 2px 0 5px rgb(0 0 0 / 0.05);
     }
     .user-panel {
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
       text-align: center;
+      background: #fafafa;
     }
     .user-panel img {
       width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+      border: 2px solid #007bff;
+      margin-bottom: 8px;
     }
     .user-list {
       flex-grow: 1;
@@ -28,84 +32,158 @@
     }
     .user {
       display: flex; flex-direction: column; align-items: center;
-      padding: 10px; cursor: pointer; border-bottom: 1px solid #ddd;
+      padding: 12px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+    }
+    .user:hover {
+      background-color: #e7f1ff;
     }
     .user img {
       width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+      border: 1.5px solid #007bff;
+      margin-bottom: 5px;
     }
     .chat {
       width: 75%;
       display: flex;
       flex-direction: column;
+      background: #fff;
+      box-shadow: -2px 0 5px rgb(0 0 0 / 0.05);
     }
     .chat-header {
-      padding: 10px;
-      background: #eee;
-      border-bottom: 1px solid #ccc;
-      font-weight: bold;
+      padding: 15px 20px;
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #0056b3;
     }
     .chat-messages {
       flex-grow: 1;
-      padding: 10px;
+      padding: 15px 20px;
       overflow-y: auto;
-      background: #fff;
+      background: #fefefe;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     .chat-input {
       display: flex;
-      border-top: 1px solid #ccc;
+      border-top: 1px solid #ddd;
+      padding: 10px 15px;
+      background: #fafafa;
     }
     .chat-input input {
       flex-grow: 1;
-      padding: 10px;
-      border: none;
+      padding: 12px 15px;
+      border: 1px solid #ccc;
       font-size: 16px;
+      border-radius: 25px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .chat-input input:focus {
+      border-color: #007bff;
     }
     .chat-input button {
-      padding: 10px 20px;
+      margin-left: 12px;
+      padding: 12px 25px;
       border: none;
       background: #007bff;
       color: white;
       cursor: pointer;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+    .chat-input button:hover {
+      background: #0056b3;
+    }
+
+    /* Sporočila z avatarjem */
+    .message-wrapper {
+      display: flex;
+      align-items: flex-end;
+      max-width: 70%;
+      gap: 10px;
+    }
+    .message-wrapper.you {
+      margin-left: auto;
+      flex-direction: row-reverse;
+    }
+    .message-wrapper.other {
+      margin-right: auto;
+      flex-direction: row;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #007bff;
+      flex-shrink: 0;
+      background: #ccc;
     }
     .message {
-      margin-bottom: 8px;
-      padding: 6px 10px;
-      border-radius: 5px;
-      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-weight: 500;
+      line-height: 1.3;
       word-wrap: break-word;
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+      max-width: 100%;
     }
     .message.you {
-      background-color: #d1e7dd;
-      margin-left: auto;
-      font-weight: bold;
+      background-color: #cdece5;
+      color: #034d40;
       text-align: right;
     }
     .message.other {
       background-color: #f8d7da;
-      margin-right: auto;
+      color: #721c24;
+      text-align: left;
     }
+
     .chat-system {
-      color: #555;
+      color: #666;
       font-style: italic;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
     }
+
     button#public-chat-btn {
-      margin-top: 8px;
+      margin-top: 12px;
       width: 100%;
-      padding: 8px 0;
-      font-weight: bold;
+      padding: 10px 0;
+      font-weight: 700;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button#public-chat-btn:hover {
+      background: #0056b3;
     }
     button#logout-btn {
-      margin-top: 8px;
+      margin-top: 12px;
       width: 100%;
-      padding: 8px 0;
+      padding: 10px 0;
       background: #dc3545;
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: bold;
-      border-radius: 4px;
+      font-weight: 700;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+    button#logout-btn:hover {
+      background: #a71d2a;
     }
   </style>
 </head>
@@ -163,6 +241,8 @@
     const logoutBtn = document.getElementById("logout-btn");
     const publicChatBtn = document.getElementById("public-chat-btn");
 
+    let usersCache = {}; // shranjevanje uporabnikovih podatkov za lažji dostop
+
     firebase.auth().onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "auth.html";
@@ -170,6 +250,7 @@
         currentUser = user;
         loadMyProfile();
         loadUsers();
+        openPublicChat(); // avtomatsko odpri javni klepet ob prijavi
       }
     });
 
@@ -185,6 +266,9 @@
         const avatar = data?.avatarURL2 || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
         myAvatarEl.src = avatar;
         myNameEl.textContent = data?.displayName || "Neznan uporabnik";
+
+        // Shrani tudi v cache
+        usersCache[currentUser.uid] = { displayName: myNameEl.textContent, avatarURL2: avatar };
       });
     }
 
@@ -196,62 +280,4 @@
           const data = child.val();
           if (uid === currentUser.uid) return; // ne prikaži sebe
 
-          const userDiv = document.createElement("div");
-          userDiv.className = "user";
-          const avatar = data.avatarURL2 || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-          const name = data.displayName || "Neznan uporabnik";
-
-          userDiv.innerHTML = `
-            <img src="${avatar}" alt="avatar" />
-            <div>${name}</div>
-          `;
-          userDiv.onclick = () => openPrivateChat(uid, name);
-          userListEl.appendChild(userDiv);
-        });
-      });
-    }
-
-    function openPrivateChat(uid, name) {
-      if (chatRef) chatRef.off();
-
-      selectedUser = uid;
-      chatType = "private";
-      chatWithEl.textContent = "Klepet z: " + name;
-      chatMessagesEl.innerHTML = "";
-
-      const chatId = currentUser.uid < uid
-        ? currentUser.uid + "_" + uid
-        : uid + "_" + currentUser.uid;
-
-      chatRef = firebase.database().ref("privatemsgs/" + chatId);
-      chatRef.on("child_added", snapshot => {
-        const msg = snapshot.val();
-        displayMessage(msg);
-      });
-    }
-
-    function openPublicChat() {
-      if (chatRef) chatRef.off();
-
-      selectedUser = null;
-      chatType = "public";
-      chatWithEl.textContent = "Javni klepet";
-      chatMessagesEl.innerHTML = "";
-
-      chatRef = firebase.database().ref("messages");
-      chatRef.on("child_added", snapshot => {
-        const msg = snapshot.val();
-        displayMessage(msg);
-      });
-    }
-
-    function displayMessage(msg) {
-      const msgEl = document.createElement("div");
-      msgEl.className = "message";
-
-      if (msg.uid === currentUser.uid) {
-        msgEl.classList.add("you");
-      } else {
-        msgEl.classList.add("other");
-      }
-      msgEl.text
+          const avatar = data.avatarURL
