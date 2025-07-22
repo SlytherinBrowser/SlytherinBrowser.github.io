@@ -1,283 +1,227 @@
 <!DOCTYPE html>
-<html lang="sl">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Javni in Privat Klepet</title>
+  <meta charset="UTF-8">
+  <title>Privat klepet</title>
   <style>
-    body { margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; height: 100vh; background: #f9f9f9; }
-    .sidebar {
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+
+    #userListContainer {
       width: 25%;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid #ddd;
+      border-right: 1px solid #ccc;
       overflow-y: auto;
-      box-shadow: 2px 0 5px rgb(0 0 0 / 0.05);
+      padding: 10px;
     }
-    .user-panel {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-      background: #fafafa;
-    }
-    .user-panel img {
-      width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
-      border: 2px solid #007bff;
-      margin-bottom: 8px;
-    }
-    .user-list {
-      flex-grow: 1;
-      overflow-y: auto;
-    }
+
     .user {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 12px 10px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
       cursor: pointer;
-      border-bottom: 1px solid #eee;
-      transition: background-color 0.2s ease;
+      gap: 10px;
     }
-    .user:hover {
-      background-color: #e7f1ff;
-    }
+
     .user img {
-      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-      border: 1.5px solid #007bff;
-      margin-bottom: 5px;
-    }
-    .chat {
-      width: 75%;
-      display: flex;
-      flex-direction: column;
-      background: #fff;
-      box-shadow: -2px 0 5px rgb(0 0 0 / 0.05);
-    }
-    .chat-header {
-      padding: 15px 20px;
-      background: #007bff;
-      color: white;
-      font-weight: 600;
-      font-size: 1.1rem;
-      border-bottom: 1px solid #0056b3;
-    }
-    .chat-messages {
-      flex-grow: 1;
-      padding: 15px 20px;
-      overflow-y: auto;
-      background: #fefefe;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .chat-input {
-      display: flex;
-      border-top: 1px solid #ddd;
-      padding: 10px 15px;
-      background: #fafafa;
-    }
-    .chat-input input {
-      flex-grow: 1;
-      padding: 12px 15px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      border-radius: 25px;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-    .chat-input input:focus {
-      border-color: #007bff;
-    }
-    .chat-input button {
-      margin-left: 12px;
-      padding: 12px 25px;
-      border: none;
-      background: #007bff;
-      color: white;
-      cursor: pointer;
-      border-radius: 25px;
-      font-weight: 600;
-      transition: background-color 0.3s ease;
-    }
-    .chat-input button:hover {
-      background: #0056b3;
-    }
-
-    /* Sporočila z avatarjem */
-    .message-wrapper {
-      display: flex;
-      align-items: flex-end;
-      max-width: 70%;
-      gap: 10px;
-    }
-    .message-wrapper.you {
-      margin-left: auto;
-      flex-direction: row-reverse;
-    }
-    .message-wrapper.other {
-      margin-right: auto;
-      flex-direction: row;
-    }
-
-    .message-avatar {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #007bff;
-      flex-shrink: 0;
-      background: #ccc;
-    }
-    .message {
-      padding: 10px 15px;
-      border-radius: 20px;
-      font-weight: 500;
-      line-height: 1.3;
-      word-wrap: break-word;
-      box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
-      max-width: 100%;
-    }
-    .message.you {
-      background-color: #cdece5;
-      color: #034d40;
-      text-align: right;
-    }
-    .message.other {
-      background-color: #f8d7da;
-      color: #721c24;
-      text-align: left;
     }
 
-    .chat-system {
-      color: #666;
-      font-style: italic;
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 0.9rem;
+    .user div {
+      font-weight: bold;
     }
 
-    button#public-chat-btn {
-      margin-top: 12px;
-      width: 100%;
-      padding: 10px 0;
-      font-weight: 700;
-      border-radius: 8px;
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+    #chatContainer {
+      width: 75%;
+      display: none;
+      flex-direction: column;
+      height: 100%;
     }
-    button#public-chat-btn:hover {
-      background: #0056b3;
+
+    #chatHeader {
+      padding: 10px;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #ccc;
     }
-    button#logout-btn {
-      margin-top: 12px;
-      width: 100%;
-      padding: 10px 0;
-      background: #dc3545;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: 700;
-      border-radius: 8px;
-      transition: background-color 0.3s ease;
+
+    #chatHeader img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
     }
-    button#logout-btn:hover {
-      background: #a71d2a;
+
+    #chatHeader button {
+      margin-left: auto;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+
+    #inputForm {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+
+    #inputForm input {
+      flex: 1;
+      padding: 8px;
+    }
+
+    #inputForm button {
+      padding: 8px 12px;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="user-panel" id="my-profile">
-      <img src="" id="my-avatar" alt="moj avatar" />
-      <div id="my-name"></div>
-      <button id="logout-btn">Odjava</button>
-      <button id="public-chat-btn">Javni klepet</button>
-    </div>
-    <div class="user-list" id="user-list"></div>
+<div id="userListContainer"></div>
+
+<div id="chatContainer">
+  <div id="chatHeader">
+    <img id="chatAvatar" src="" alt="">
+    <div id="chatWithName"></div>
+    <button onclick="goBack()">Nazaj</button>
   </div>
+  <div id="messages"></div>
+  <form id="inputForm" onsubmit="sendMessage(event)">
+    <input id="messageInput" placeholder="Napiši sporočilo..." autocomplete="off">
+    <button>Pošlji</button>
+  </form>
+</div>
 
-  <div class="chat">
-    <div class="chat-header" id="chat-with">Izberi klepet</div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input">
-      <input type="text" id="message-input" placeholder="Vpiši sporočilo..." />
-      <button id="send-btn">Pošlji</button>
-    </div>
-  </div>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  const userListContainer = document.getElementById("userListContainer");
+  const chatContainer = document.getElementById("chatContainer");
+  const chatWithName = document.getElementById("chatWithName");
+  const chatAvatar = document.getElementById("chatAvatar");
+  const messagesDiv = document.getElementById("messages");
+  const messageInput = document.getElementById("messageInput");
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
+  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+  let currentUser = null;
+  let users = {};
+  let chatId = "";
+  let selectedUser = null;
+  let messageListener = null;
 
-    firebase.initializeApp(firebaseConfig);
+  auth.signInAnonymously().then(() => {
+    currentUser = auth.currentUser;
+    const uid = currentUser.uid;
+    db.ref("users/" + uid).once("value").then(snapshot => {
+      if (!snapshot.exists()) {
+        db.ref("users/" + uid).set({
+          displayName: "Uporabnik " + uid.slice(0, 5),
+          model: {
+            avatar: {
+              view: defaultAvatar
+            }
+          }
+        });
+      }
+      loadUsers(uid);
+    });
+  });
 
-    let currentUser = null;
-    let selectedUser = null;
-    let chatType = null; // 'public' ali 'private'
-    let chatRef = null;
+  function loadUsers(currentUid) {
+    db.ref("users").on("value", snapshot => {
+      users = snapshot.val();
+      userListContainer.innerHTML = "";
 
-    const myAvatarEl = document.getElementById("my-avatar");
-    const myNameEl = document.getElementById("my-name");
-    const userListEl = document.getElementById("user-list");
-    const chatWithEl = document.getElementById("chat-with");
-    const chatMessagesEl = document.getElementById("chat-messages");
-    const messageInputEl = document.getElementById("message-input");
-    const sendBtn = document.getElementById("send-btn");
-    const logoutBtn = document.getElementById("logout-btn");
-    const publicChatBtn = document.getElementById("public-chat-btn");
+      for (const uid in users) {
+        if (uid === currentUid) continue;
+        const user = users[uid];
+        const displayName = user.displayName || "Uporabnik";
+        const avatar = user.model?.avatar?.view || defaultAvatar;
 
-    let usersCache = {}; // shranjevanje uporabnikovih podatkov za lažji dostop
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "auth.html";
-      } else {
-        currentUser = user;
-        loadMyProfile();
-        loadUsers();
-        openPublicChat(); // avtomatsko odpri javni klepet ob prijavi
+        const div = document.createElement("div");
+        div.className = "user";
+        div.innerHTML = `<img src="${avatar}" alt=""><div>${displayName}</div>`;
+        div.onclick = () => startPrivateChat(uid);
+        userListContainer.appendChild(div);
       }
     });
+  }
 
-    logoutBtn.onclick = () => firebase.auth().signOut();
+  function getChatId(uid1, uid2) {
+    return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
+  }
 
-    publicChatBtn.onclick = () => openPublicChat();
+  function startPrivateChat(uid) {
+    selectedUser = { uid, ...users[uid] };
+    chatId = getChatId(currentUser.uid, uid);
 
-    sendBtn.onclick = () => sendMessage();
+    chatWithName.textContent = selectedUser.displayName || "Uporabnik";
+    chatAvatar.src = selectedUser.model?.avatar?.view || defaultAvatar;
 
-    function loadMyProfile() {
-      firebase.database().ref("users/" + currentUser.uid).once("value").then(snapshot => {
-        const data = snapshot.val();
-        const avatar = data?.avatarURL2 || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-        myAvatarEl.src = avatar;
-        myNameEl.textContent = data?.displayName || "Neznan uporabnik";
+    userListContainer.style.display = "none";
+    chatContainer.style.display = "flex";
+    messagesDiv.innerHTML = "";
 
-        // Shrani tudi v cache
-        usersCache[currentUser.uid] = { displayName: myNameEl.textContent, avatarURL2: avatar };
-      });
-    }
+    listenForMessages();
+  }
 
-    function loadUsers() {
-      userListEl.innerHTML = "";
-      firebase.database().ref("users").once("value").then(snapshot => {
-        snapshot.forEach(child => {
-          const uid = child.key;
-          const data = child.val();
-          if (uid === currentUser.uid) return; // ne prikaži sebe
+  function listenForMessages() {
+    if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
+    messageListener = db.ref("privatemsgs/" + chatId).on("value", snapshot => {
+      const messages = snapshot.val() || {};
+      messagesDiv.innerHTML = "";
+      for (const id in messages) {
+        const msg = messages[id];
+        const div = document.createElement("div");
+        div.textContent = (msg.uid === currentUser.uid ? "Jaz: " : (users[msg.uid]?.displayName || "Uporabnik") + ": ") + msg.text;
+        messagesDiv.appendChild(div);
+      }
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
 
-          const avatar = data.avatarURL
+  function sendMessage(e) {
+    e.preventDefault();
+    const text = messageInput.value.trim();
+    if (!text) return;
+    const msg = {
+      uid: currentUser.uid,
+      text,
+      timestamp: Date.now()
+    };
+    db.ref("privatemsgs/" + chatId).push(msg);
+    messageInput.value = "";
+  }
+
+  function goBack() {
+    if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
+    chatContainer.style.display = "none";
+    userListContainer.style.display = "block";
+  }
+</script>
+</body>
+</html>
