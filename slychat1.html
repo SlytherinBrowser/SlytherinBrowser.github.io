@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Privat klepet</title>
+  <title>Klepet</title>
   <style>
     body {
       margin: 0;
@@ -14,6 +14,37 @@
     #userListContainer {
       width: 25%;
       border-right: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #myProfile {
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #myProfile img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+    }
+
+    #myProfile button {
+      margin-top: 10px;
+    }
+
+    #publicChatButton {
+      background: #f0f0f0;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #userList {
+      flex: 1;
       overflow-y: auto;
       padding: 10px;
     }
@@ -32,18 +63,14 @@
       border-radius: 50%;
     }
 
-    .user div {
-      font-weight: bold;
-    }
-
-    #chatContainer {
+    #chatContainer, #publicChatContainer {
       width: 75%;
       display: none;
       flex-direction: column;
       height: 100%;
     }
 
-    #chatHeader {
+    #chatHeader, #publicHeader {
       padding: 10px;
       background: #f0f0f0;
       display: flex;
@@ -58,37 +85,50 @@
       border-radius: 50%;
     }
 
-    #chatHeader button {
+    #chatHeader button, #publicHeader button {
       margin-left: auto;
     }
 
-    #messages {
+    #messages, #publicMessages {
       flex: 1;
       padding: 10px;
       overflow-y: auto;
       background: #fafafa;
     }
 
-    #inputForm {
+    #inputForm, #publicInputForm {
       display: flex;
       padding: 10px;
       border-top: 1px solid #ccc;
     }
 
-    #inputForm input {
+    #inputForm input, #publicInputForm input {
       flex: 1;
       padding: 8px;
     }
 
-    #inputForm button {
+    #inputForm button, #publicInputForm button {
       padding: 8px 12px;
     }
   </style>
 </head>
 <body>
 
-<div id="userListContainer"></div>
+<!-- LEVA STRAN -->
+<div id="userListContainer">
 
+  <div id="myProfile">
+    <img id="myAvatar" src="" alt="jaz">
+    <br>
+    <button onclick="logout()">Odjava</button>
+  </div>
+
+  <div id="publicChatButton" onclick="openPublicChat()">Javni klepet</div>
+
+  <div id="userList"></div>
+</div>
+
+<!-- PRIVAT KLEPET -->
 <div id="chatContainer">
   <div id="chatHeader">
     <img id="chatAvatar" src="" alt="">
@@ -97,7 +137,20 @@
   </div>
   <div id="messages"></div>
   <form id="inputForm" onsubmit="sendMessage(event)">
-    <input id="messageInput" placeholder="Napiši sporočilo..." autocomplete="off">
+    <input id="messageInput" placeholder="Napiši sporočilo...">
+    <button>Pošlji</button>
+  </form>
+</div>
+
+<!-- JAVNI KLEPET -->
+<div id="publicChatContainer">
+  <div id="publicHeader">
+    <div>Javni klepet</div>
+    <button onclick="goBack()">Nazaj</button>
+  </div>
+  <div id="publicMessages"></div>
+  <form id="publicInputForm" onsubmit="sendPublicMessage(event)">
+    <input id="publicInput" placeholder="Javno sporočilo...">
     <button>Pošlji</button>
   </form>
 </div>
@@ -119,54 +172,68 @@
   const db = firebase.database();
   const auth = firebase.auth();
 
-  const userListContainer = document.getElementById("userListContainer");
+  const userList = document.getElementById("userList");
+  const myAvatar = document.getElementById("myAvatar");
   const chatContainer = document.getElementById("chatContainer");
+  const publicChatContainer = document.getElementById("publicChatContainer");
+  const userListContainer = document.getElementById("userListContainer");
+
   const chatWithName = document.getElementById("chatWithName");
   const chatAvatar = document.getElementById("chatAvatar");
   const messagesDiv = document.getElementById("messages");
   const messageInput = document.getElementById("messageInput");
+  const publicMessages = document.getElementById("publicMessages");
+  const publicInput = document.getElementById("publicInput");
 
   const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+
   let currentUser = null;
   let users = {};
   let chatId = "";
   let selectedUser = null;
   let messageListener = null;
+  let publicListener = null;
 
   auth.signInAnonymously().then(() => {
     currentUser = auth.currentUser;
     const uid = currentUser.uid;
+
     db.ref("users/" + uid).once("value").then(snapshot => {
       if (!snapshot.exists()) {
         db.ref("users/" + uid).set({
           displayName: "Uporabnik " + uid.slice(0, 5),
-          model: {
-            avatar: {
-              view: defaultAvatar
-            }
-          }
+          avatarURL2: defaultAvatar,
+          model: { avatar: { view: defaultAvatar } }
         });
       }
       loadUsers(uid);
     });
   });
 
+  function logout() {
+    firebase.auth().signOut().then(() => location.reload());
+  }
+
   function loadUsers(currentUid) {
     db.ref("users").on("value", snapshot => {
       users = snapshot.val();
-      userListContainer.innerHTML = "";
+      userList.innerHTML = "";
 
       for (const uid in users) {
-        if (uid === currentUid) continue;
         const user = users[uid];
         const displayName = user.displayName || "Uporabnik";
-        const avatar = user.model?.avatar?.view || defaultAvatar;
+        const avatar = user.model?.avatar?.view || user.avatarURL2 || defaultAvatar;
+
+        if (uid === currentUid) {
+          myAvatar.src = avatar;
+          continue;
+        }
 
         const div = document.createElement("div");
         div.className = "user";
         div.innerHTML = `<img src="${avatar}" alt=""><div>${displayName}</div>`;
         div.onclick = () => startPrivateChat(uid);
-        userListContainer.appendChild(div);
+        userList.appendChild(div);
       }
     });
   }
@@ -180,24 +247,21 @@
     chatId = getChatId(currentUser.uid, uid);
 
     chatWithName.textContent = selectedUser.displayName || "Uporabnik";
-    chatAvatar.src = selectedUser.model?.avatar?.view || defaultAvatar;
+    chatAvatar.src = selectedUser.model?.avatar?.view || selectedUser.avatarURL2 || defaultAvatar;
 
-    userListContainer.style.display = "none";
+    hideAll();
     chatContainer.style.display = "flex";
     messagesDiv.innerHTML = "";
 
-    listenForMessages();
-  }
-
-  function listenForMessages() {
     if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
     messageListener = db.ref("privatemsgs/" + chatId).on("value", snapshot => {
       const messages = snapshot.val() || {};
       messagesDiv.innerHTML = "";
       for (const id in messages) {
         const msg = messages[id];
+        const sender = msg.uid === currentUser.uid ? "Jaz" : (users[msg.uid]?.displayName || "Uporabnik");
         const div = document.createElement("div");
-        div.textContent = (msg.uid === currentUser.uid ? "Jaz: " : (users[msg.uid]?.displayName || "Uporabnik") + ": ") + msg.text;
+        div.textContent = sender + ": " + msg.text;
         messagesDiv.appendChild(div);
       }
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
@@ -208,19 +272,57 @@
     e.preventDefault();
     const text = messageInput.value.trim();
     if (!text) return;
-    const msg = {
+    db.ref("privatemsgs/" + chatId).push({
       uid: currentUser.uid,
       text,
       timestamp: Date.now()
-    };
-    db.ref("privatemsgs/" + chatId).push(msg);
+    });
     messageInput.value = "";
+  }
+
+  function openPublicChat() {
+    hideAll();
+    publicChatContainer.style.display = "flex";
+    publicMessages.innerHTML = "";
+
+    if (publicListener) db.ref("messages").off("value", publicListener);
+    publicListener = db.ref("messages").on("value", snapshot => {
+      const messages = snapshot.val() || {};
+      publicMessages.innerHTML = "";
+      for (const id in messages) {
+        const msg = messages[id];
+        const sender = msg.uid === currentUser.uid ? "Jaz" : (users[msg.uid]?.displayName || "Uporabnik");
+        const div = document.createElement("div");
+        div.textContent = sender + ": " + msg.text;
+        publicMessages.appendChild(div);
+      }
+      publicMessages.scrollTop = publicMessages.scrollHeight;
+    });
+  }
+
+  function sendPublicMessage(e) {
+    e.preventDefault();
+    const text = publicInput.value.trim();
+    if (!text) return;
+    db.ref("messages").push({
+      uid: currentUser.uid,
+      text,
+      timestamp: Date.now()
+    });
+    publicInput.value = "";
   }
 
   function goBack() {
     if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
+    if (publicListener) db.ref("messages").off("value", publicListener);
+    hideAll();
+    userListContainer.style.display = "flex";
+  }
+
+  function hideAll() {
+    userListContainer.style.display = "none";
     chatContainer.style.display = "none";
-    userListContainer.style.display = "block";
+    publicChatContainer.style.display = "none";
   }
 </script>
 </body>
