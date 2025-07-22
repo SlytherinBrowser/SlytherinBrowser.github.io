@@ -130,6 +130,7 @@ model-viewer {
 
     let currentUser = null;
     let currentChatKey = 'messages';
+    const userMap = {}; // shranimo uid -> displayName
 
     signInAnonymously(auth);
     onAuthStateChanged(auth, user => {
@@ -156,13 +157,14 @@ model-viewer {
     };
 
     function loadUsers() {
-      const usersRef = ref(db, 'uporabniki');
+      const usersRef = ref(db, 'users');
       onValue(usersRef, snapshot => {
         userList.innerHTML = '';
         const users = snapshot.val();
         if (users) {
           Object.entries(users).forEach(([uid, user]) => {
             if (uid !== currentUser) {
+              userMap[uid] = user.displayname || uid;
               const div = document.createElement('div');
               const model = document.createElement('model-viewer');
               model.setAttribute('src', user.avatarURL2);
@@ -194,8 +196,9 @@ model-viewer {
       const chatRef = ref(db, path);
       onChildAdded(chatRef, snapshot => {
         const msg = snapshot.val();
+        const name = userMap[msg.sender] || msg.sender;
         const div = document.createElement('div');
-        div.textContent = msg.sender + ': ' + msg.text;
+        div.textContent = name + ': ' + msg.text;
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
