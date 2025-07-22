@@ -1,329 +1,128 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>Klepet</title>
+  <title>Klepetalnica</title>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
+  <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      display: flex;
-      height: 100vh;
-    }
-
-    #userListContainer {
-      width: 25%;
-      border-right: 1px solid #ccc;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #myProfile {
-      padding: 15px;
-      text-align: center;
-      border-bottom: 1px solid #ccc;
-    }
-
-    #myProfile img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      margin-bottom: 10px;
-    }
-
-    #myProfile button {
-      margin-top: 10px;
-    }
-
-    #publicChatButton {
-      background: #f0f0f0;
-      padding: 8px;
-      text-align: center;
-      cursor: pointer;
-      border-bottom: 1px solid #ccc;
-    }
-
-    #userList {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-    }
-
-    .user {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      cursor: pointer;
-      gap: 10px;
-    }
-
-    .user img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    #chatContainer, #publicChatContainer {
-      width: 75%;
-      display: none;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    #chatHeader, #publicHeader {
-      padding: 10px;
-      background: #f0f0f0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #ccc;
-    }
-
-    #chatHeader img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    #chatHeader button, #publicHeader button {
-      margin-left: auto;
-    }
-
-    #messages, #publicMessages {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      background: #fafafa;
-    }
-
-    #inputForm, #publicInputForm {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ccc;
-    }
-
-    #inputForm input, #publicInputForm input {
-      flex: 1;
-      padding: 8px;
-    }
-
-    #inputForm button, #publicInputForm button {
-      padding: 8px 12px;
-    }
+    body { font-family: Arial, sans-serif; }
+    #userList, #chatContainer, #publicChatBtn { margin: 10px; }
+    #userList div { cursor: pointer; display: flex; align-items: center; margin-bottom: 5px; }
+    model-viewer { width: 40px; height: 40px; margin-right: 10px; }
+    .status { width: 10px; height: 10px; border-radius: 50%; background: green; margin-left: auto; }
+    #chatContainer { display: none; }
+    #messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
   </style>
 </head>
 <body>
+  <button id="publicChatBtn">Javni klepet</button>
+  <div id="userList"></div>  <div id="chatContainer">
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Vnesi sporočilo">
+    <button id="sendBtn">Pošlji</button>
+  </div>  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+    import { getDatabase, ref, onChildAdded, push, set, get, child } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
 
-<!-- LEVA STRAN -->
-<div id="userListContainer">
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
 
-  <div id="myProfile">
-    <img id="myAvatar" src="" alt="jaz">
-    <br>
-    <button onclick="logout()">Odjava</button>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth();
 
-  <div id="publicChatButton" onclick="openPublicChat()">Javni klepet</div>
+    let currentUser = null;
+    let currentChatKey = 'messages';
 
-  <div id="userList"></div>
-</div>
+    signInAnonymously(auth);
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user.uid;
+        loadUsers();
+        listenForMessages('messages');
+      }
+    });
 
-<!-- PRIVAT KLEPET -->
-<div id="chatContainer">
-  <div id="chatHeader">
-    <img id="chatAvatar" src="" alt="">
-    <div id="chatWithName"></div>
-    <button onclick="goBack()">Nazaj</button>
-  </div>
-  <div id="messages"></div>
-  <form id="inputForm" onsubmit="sendMessage(event)">
-    <input id="messageInput" placeholder="Napiši sporočilo...">
-    <button>Pošlji</button>
-  </form>
-</div>
+    const userList = document.getElementById('userList');
+    const publicChatBtn = document.getElementById('publicChatBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
 
-<!-- JAVNI KLEPET -->
-<div id="publicChatContainer">
-  <div id="publicHeader">
-    <div>Javni klepet</div>
-    <button onclick="goBack()">Nazaj</button>
-  </div>
-  <div id="publicMessages"></div>
-  <form id="publicInputForm" onsubmit="sendPublicMessage(event)">
-    <input id="publicInput" placeholder="Javno sporočilo...">
-    <button>Pošlji</button>
-  </form>
-</div>
+    publicChatBtn.onclick = () => {
+      currentChatKey = 'messages';
+      messagesDiv.innerHTML = '';
+      chatContainer.style.display = 'block';
+      userList.style.display = 'none';
+      listenForMessages(currentChatKey);
+    };
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
-
-  const userList = document.getElementById("userList");
-  const myAvatar = document.getElementById("myAvatar");
-  const chatContainer = document.getElementById("chatContainer");
-  const publicChatContainer = document.getElementById("publicChatContainer");
-  const userListContainer = document.getElementById("userListContainer");
-
-  const chatWithName = document.getElementById("chatWithName");
-  const chatAvatar = document.getElementById("chatAvatar");
-  const messagesDiv = document.getElementById("messages");
-  const messageInput = document.getElementById("messageInput");
-  const publicMessages = document.getElementById("publicMessages");
-  const publicInput = document.getElementById("publicInput");
-
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-
-  let currentUser = null;
-  let users = {};
-  let chatId = "";
-  let selectedUser = null;
-  let messageListener = null;
-  let publicListener = null;
-
-  auth.signInAnonymously().then(() => {
-    currentUser = auth.currentUser;
-    const uid = currentUser.uid;
-
-    db.ref("users/" + uid).once("value").then(snapshot => {
-      if (!snapshot.exists()) {
-        db.ref("users/" + uid).set({
-          displayName: "Uporabnik " + uid.slice(0, 5),
-          avatarURL2: defaultAvatar,
-          model: { avatar: { view: defaultAvatar } }
+    function loadUsers() {
+      get(ref(db, 'uporabniki')).then(snapshot => {
+        userList.innerHTML = '';
+        snapshot.forEach(childSnap => {
+          const uid = childSnap.key;
+          const user = childSnap.val();
+          if (uid !== currentUser) {
+            const div = document.createElement('div');
+            const model = document.createElement('model-viewer');
+            model.setAttribute('src', user.avatarURL2);
+            model.setAttribute('camera-controls', '');
+            const status = document.createElement('div');
+            status.className = 'status';
+            div.appendChild(model);
+            div.appendChild(document.createTextNode(user.name || uid));
+            div.appendChild(status);
+            div.onclick = () => openPrivateChat(uid);
+            userList.appendChild(div);
+          }
         });
-      }
-      loadUsers(uid);
-    });
-  });
+      });
+    }
 
-  function logout() {
-    firebase.auth().signOut().then(() => location.reload());
-  }
+    function openPrivateChat(uid2) {
+      const chatId = [currentUser, uid2].sort().join('_');
+      currentChatKey = 'privatemsgs/' + chatId;
+      messagesDiv.innerHTML = '';
+      chatContainer.style.display = 'block';
+      userList.style.display = 'none';
+      listenForMessages(currentChatKey);
+    }
 
-  function loadUsers(currentUid) {
-    db.ref("users").on("value", snapshot => {
-      users = snapshot.val();
-      userList.innerHTML = "";
-
-      for (const uid in users) {
-        const user = users[uid];
-        const displayName = user.displayName || "Uporabnik";
-        const avatar = user.model?.avatar?.view || user.avatarURL2 || defaultAvatar;
-
-        if (uid === currentUid) {
-          myAvatar.src = avatar;
-          continue;
-        }
-
-        const div = document.createElement("div");
-        div.className = "user";
-        div.innerHTML = `<img src="${avatar}" alt=""><div>${displayName}</div>`;
-        div.onclick = () => startPrivateChat(uid);
-        userList.appendChild(div);
-      }
-    });
-  }
-
-  function getChatId(uid1, uid2) {
-    return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
-  }
-
-  function startPrivateChat(uid) {
-    selectedUser = { uid, ...users[uid] };
-    chatId = getChatId(currentUser.uid, uid);
-
-    chatWithName.textContent = selectedUser.displayName || "Uporabnik";
-    chatAvatar.src = selectedUser.model?.avatar?.view || selectedUser.avatarURL2 || defaultAvatar;
-
-    hideAll();
-    chatContainer.style.display = "flex";
-    messagesDiv.innerHTML = "";
-
-    if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
-    messageListener = db.ref("privatemsgs/" + chatId).on("value", snapshot => {
-      const messages = snapshot.val() || {};
-      messagesDiv.innerHTML = "";
-      for (const id in messages) {
-        const msg = messages[id];
-        const sender = msg.uid === currentUser.uid ? "Jaz" : (users[msg.uid]?.displayName || "Uporabnik");
-        const div = document.createElement("div");
-        div.textContent = sender + ": " + msg.text;
+    function listenForMessages(path) {
+      messagesDiv.innerHTML = '';
+      const chatRef = ref(db, path);
+      onChildAdded(chatRef, snapshot => {
+        const msg = snapshot.val();
+        const div = document.createElement('div');
+        div.textContent = msg.sender + ': ' + msg.text;
         messagesDiv.appendChild(div);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+
+    sendBtn.onclick = () => {
+      const text = messageInput.value.trim();
+      if (text) {
+        const msgRef = push(ref(db, currentChatKey));
+        set(msgRef, {
+          sender: currentUser,
+          text,
+          timestamp: Date.now()
+        });
+        messageInput.value = '';
       }
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    });
-  }
-
-  function sendMessage(e) {
-    e.preventDefault();
-    const text = messageInput.value.trim();
-    if (!text) return;
-    db.ref("privatemsgs/" + chatId).push({
-      uid: currentUser.uid,
-      text,
-      timestamp: Date.now()
-    });
-    messageInput.value = "";
-  }
-
-  function openPublicChat() {
-    hideAll();
-    publicChatContainer.style.display = "flex";
-    publicMessages.innerHTML = "";
-
-    if (publicListener) db.ref("messages").off("value", publicListener);
-    publicListener = db.ref("messages").on("value", snapshot => {
-      const messages = snapshot.val() || {};
-      publicMessages.innerHTML = "";
-      for (const id in messages) {
-        const msg = messages[id];
-        const sender = msg.uid === currentUser.uid ? "Jaz" : (users[msg.uid]?.displayName || "Uporabnik");
-        const div = document.createElement("div");
-        div.textContent = sender + ": " + msg.text;
-        publicMessages.appendChild(div);
-      }
-      publicMessages.scrollTop = publicMessages.scrollHeight;
-    });
-  }
-
-  function sendPublicMessage(e) {
-    e.preventDefault();
-    const text = publicInput.value.trim();
-    if (!text) return;
-    db.ref("messages").push({
-      uid: currentUser.uid,
-      text,
-      timestamp: Date.now()
-    });
-    publicInput.value = "";
-  }
-
-  function goBack() {
-    if (messageListener) db.ref("privatemsgs/" + chatId).off("value", messageListener);
-    if (publicListener) db.ref("messages").off("value", publicListener);
-    hideAll();
-    userListContainer.style.display = "flex";
-  }
-
-  function hideAll() {
-    userListContainer.style.display = "none";
-    chatContainer.style.display = "none";
-    publicChatContainer.style.display = "none";
-  }
-</script>
-</body>
+    };
+  </script></body>
 </html>
