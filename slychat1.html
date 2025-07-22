@@ -1,268 +1,459 @@
-<!DOCTYPE html><html lang="sl">
+<!DOCTYPE html>
+<html lang="sl">
 <head>
-  <meta charset="UTF-8">
-  <title>Klepetalnica</title>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
-  <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Klepetalnica</title>
+
+<script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
+<script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<style>
+  /* Reset in osnovni stil */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    color: #222;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #app {
+    display: flex;
+    flex: 1 1 auto;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sidebar - seznam uporabnikov */
+  #sidebar {
+    width: 280px;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #sidebar header {
+    padding: 15px 20px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #publicChatBtn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+  }
+  #publicChatBtn:hover {
+    background: #0056b3;
+  }
+
+  #userList {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 10px 0;
+  }
+
+  #userList div.user {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  #userList div.user:hover {
+    background-color: #e6f0ff;
+  }
+  #userList div.user.active {
+    border-left-color: #007bff;
+    background-color: #d0e4ff;
+    font-weight: 600;
+  }
+
+  model-viewer {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+    border: 2px solid #ccc;
+    transition: border-color 0.3s;
+    flex-shrink: 0;
+  }
+  #userList div.user.active model-viewer {
+    border-color: #007bff;
+  }
+
+  .status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-left: auto;
+    background-color: #4caf50; /* zelena aktivnost */
+    box-shadow: 0 0 6px #4caf50aa;
+  }
+
+  /* Glavni chat container */
+  #chatArea {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    background: white;
+  }
+
+  #chatHeader {
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+  }
+  #chatHeader button {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    margin-right: 15px;
+    cursor: pointer;
+    color: #007bff;
+    padding: 5px 10px;
+  }
+  #chatHeader h2 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    flex: 1 1 auto;
+  }
+
+  #messages {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 15px 20px;
+    background: #f9f9f9;
+  }
+
+  #messages div.message {
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  #messages div.message .sender {
+    font-weight: 700;
+    margin-right: 6px;
+    color: #007bff;
+  }
+
+  #inputArea {
+    display: flex;
+    padding: 10px 20px;
+    border-top: 1px solid #ddd;
+    background: #fff;
+  }
+
+  #messageInput {
+    flex: 1 1 auto;
+    font-size: 1rem;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #messageInput:focus {
+    border-color: #007bff;
+  }
+
+  #sendBtn {
+    background: #007bff;
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 18px;
+    margin-left: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  #sendBtn:hover {
+    background: #0056b3;
+  }
+
+  /* Mobilni prilagodljivost */
+  @media (max-width: 600px) {
+    #sidebar {
+      width: 100px;
+    }
+    #userList div.user {
       flex-direction: column;
-      height: 100vh;
-    }#mainContainer {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-#userListContainer {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.user-item {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.user-item model-viewer {
-  width: 40px;
-  height: 40px;
-  margin-right: 10px;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-#chatContainer {
-  display: none;
-  flex-direction: column;
-  height: 100%;
-}
-
-#messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
-}
-
-#inputContainer {
-  display: flex;
-  padding: 10px;
-}
-
-#messageInput {
-  flex: 1;
-  padding: 10px;
-}
-
-#sendBtn {
-  padding: 10px;
-  margin-left: 5px;
-}
-
-#dock {
-  display: flex;
-  justify-content: space-around;
-  border-top: 1px solid #ccc;
-  padding: 10px;
-}
-
-#profileContainer {
-  display: none;
-  flex-direction: column;
-  padding: 10px;
-}
-
-#profileContainer input, #profileContainer select {
-  margin-bottom: 10px;
-  padding: 8px;
-  width: 100%;
-}
-
-  </style>
+      align-items: center;
+      padding: 6px 5px;
+    }
+    #userList div.user span.name {
+      font-size: 0.7rem;
+      margin-top: 4px;
+      text-align: center;
+    }
+    model-viewer {
+      width: 40px;
+      height: 40px;
+      margin-right: 0;
+      margin-bottom: 4px;
+    }
+  }
+</style>
 </head>
 <body>
-  <div id="mainContainer">
-    <div id="userListContainer"></div><div id="chatContainer">
-  <div id="messages"></div>
-  <div id="inputContainer">
-    <input type="text" id="messageInput" placeholder="Vnesi sporočilo">
-    <button id="sendBtn">Pošlji</button>
+  <div id="app">
+    <aside id="sidebar">
+      <header>
+        Uporabniki
+        <button id="publicChatBtn">Javni klepet</button>
+      </header>
+      <div id="userList"></div>
+    </aside>
+    <section id="chatArea" style="display:none;">
+      <div id="chatHeader">
+        <button id="backBtn" title="Nazaj">&larr;</button>
+        <h2 id="chatTitle">Javni klepet</h2>
+      </div>
+      <div id="messages"></div>
+      <div id="inputArea">
+        <input type="text" id="messageInput" placeholder="Napiši sporočilo..." autocomplete="off" />
+        <button id="sendBtn">Pošlji</button>
+      </div>
+    </section>
   </div>
-</div>
 
-<div id="profileContainer">
-  <model-viewer id="myAvatar" camera-controls></model-viewer>
-  <input id="myBio" placeholder="Vnesi svoj bio">
-  <select id="myStatus">
-    <option value="">Izberi status</option>
-    <option value="samski">Samski</option>
-    <option value="v zvezi">V zvezi</option>
-    <option value="porocen">Poročen</option>
-    <option value="locen">Ločen</option>
-  </select>
-  <input id="myBirthdate" type="date">
-  <button id="saveProfileBtn">Shrani profil</button>
-</div>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+  import { getDatabase, ref, onChildAdded, push, set, get } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
+  import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
 
-<div id="dock">
-  <button id="dockUsers">Seznam</button>
-  <button id="dockProfile">Moj profil</button>
-</div>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
 
-  </div>  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
-    import { getDatabase, ref, onChildAdded, push, set, get, update } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth();
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-      authDomain: "chater-cf682.firebaseapp.com",
-      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-      projectId: "chater-cf682",
-      storageBucket: "chater-cf682.appspot.com",
-      messagingSenderId: "233632075480",
-      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-    };
+  let currentUser = null;
+  let currentChatKey = 'messages'; // javni klepet privzeto
+  let currentChatName = 'Javni klepet';
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth();
+  const userList = document.getElementById('userList');
+  const publicChatBtn = document.getElementById('publicChatBtn');
+  const chatArea = document.getElementById('chatArea');
+  const messagesDiv = document.getElementById('messages');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const backBtn = document.getElementById('backBtn');
+  const chatTitle = document.getElementById('chatTitle');
+  const sidebar = document.getElementById('sidebar');
 
-    let currentUser = null;
-    let currentChatKey = 'messages';
+  // Prijava anonimno
+  signInAnonymously(auth);
 
-    const userListContainer = document.getElementById('userListContainer');
-    const chatContainer = document.getElementById('chatContainer');
-    const messagesDiv = document.getElementById('messages');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const dockUsers = document.getElementById('dockUsers');
-    const dockProfile = document.getElementById('dockProfile');
-    const profileContainer = document.getElementById('profileContainer');
-    const myAvatar = document.getElementById('myAvatar');
-    const myBio = document.getElementById('myBio');
-    const myStatus = document.getElementById('myStatus');
-    const myBirthdate = document.getElementById('myBirthdate');
-    const saveProfileBtn = document.getElementById('saveProfileBtn');
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      currentUser = user.uid;
+      loadUsers();
+      openPublicChat();
+    }
+  });
 
-    signInAnonymously(auth);
+  // Naloži uporabnike iz Firebase, prikaži jih v sidebarju
+  function loadUsers() {
+    get(ref(db, 'uporabniki')).then(snapshot => {
+      userList.innerHTML = '';
+      snapshot.forEach(childSnap => {
+        const uid = childSnap.key;
+        const user = childSnap.val();
+        if (uid === currentUser) return; // ne prikazuj sebe
 
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUser = user.uid;
-        loadUsers();
-        loadMyProfile();
-        listenForMessages(currentChatKey);
+        // div za uporabnika
+        const userDiv = document.createElement('div');
+        userDiv.classList.add('user');
+        userDiv.dataset.uid = uid;
+
+        // model-viewer avatar
+        const avatar = document.createElement('model-viewer');
+        avatar.setAttribute('src', user.avatarURL2 || '');
+        avatar.setAttribute('camera-controls', '');
+        avatar.setAttribute('auto-rotate', '');
+        avatar.style.borderRadius = '50%';
+        avatar.style.overflow = 'hidden';
+
+        // ime uporabnika
+        const nameSpan = document.createElement('span');
+        nameSpan.classList.add('name');
+        nameSpan.textContent = user.displayName || uid;
+
+        // status (aktivnost) zelena pika
+        const statusDot = document.createElement('div');
+        statusDot.classList.add('status');
+
+        userDiv.appendChild(avatar);
+        userDiv.appendChild(nameSpan);
+        userDiv.appendChild(statusDot);
+
+        userDiv.addEventListener('click', () => {
+          openPrivateChat(uid, user.displayName || uid);
+        });
+
+        userList.appendChild(userDiv);
+      });
+    });
+  }
+
+  // Odpri javni klepet
+  function openPublicChat() {
+    currentChatKey = 'messages';
+    currentChatName = 'Javni klepet';
+    chatTitle.textContent = currentChatName;
+    chatArea.style.display = 'flex';
+    sidebar.style.width = '280px';
+    publicChatBtn.style.display = 'none'; // skrij gumb, ko si v klepetu
+    messagesDiv.innerHTML = '';
+    listenForMessages(currentChatKey);
+  }
+
+  function openPrivateChat(uid, displayName) {
+    currentChatKey = `privateChats/${currentUser}_${uid}`;
+    currentChatName = displayName;
+    chatTitle.textContent = currentChatName;
+    chatArea.style.display = 'flex';
+    sidebar.style.width = '280px';
+    publicChatBtn.style.display = 'inline-block'; // prikaži gumb za javni klepet
+    messagesDiv.innerHTML = '';
+    listenForMessages(currentChatKey);
+    setActiveUserInList(uid);
+  }
+
+  // Nastavi aktivnega uporabnika v sidebarju (poudarjen)
+  function setActiveUserInList(uid) {
+    const users = userList.querySelectorAll('.user');
+    users.forEach(u => {
+      if (u.dataset.uid === uid) {
+        u.classList.add('active');
+      } else {
+        u.classList.remove('active');
       }
     });
+  }
 
-    function loadUsers() {
-      get(ref(db, 'uporabniki')).then(snapshot => {
-        userListContainer.innerHTML = '';
-        snapshot.forEach(childSnap => {
-          const uid = childSnap.key;
-          const user = childSnap.val();
-          if (uid !== currentUser) {
-            const userDiv = document.createElement('div');
-            userDiv.className = 'user-item';
+  // Nazaj na javni klepet
+  backBtn.addEventListener('click', () => {
+    openPublicChat();
+    clearActiveUserInList();
+  });
 
-            const model = document.createElement('model-viewer');
-            model.setAttribute('src', user.avatarURL2 || '');
-            model.setAttribute('camera-controls', '');
-            userDiv.appendChild(model);
+  function clearActiveUserInList() {
+    userList.querySelectorAll('.user').forEach(u => u.classList.remove('active'));
+  }
 
-            const info = document.createElement('div');
-            info.className = 'user-info';
-            info.innerHTML = `<strong>${user.displayName || uid}</strong><small>${user.bio || ''}</small>`;
-            userDiv.appendChild(info);
-
-            userDiv.onclick = () => openPrivateChat(uid);
-            userListContainer.appendChild(userDiv);
-          }
-        });
-      });
+  // Prikaz sporočil iz Firebase
+  let messagesListener = null;
+  function listenForMessages(chatKey) {
+    if (messagesListener) {
+      messagesListener(); // odjavi prejšnjega listenerja
+      messagesListener = null;
     }
+    messagesDiv.innerHTML = '';
 
-    function openPrivateChat(uid2) {
-      const chatId = [currentUser, uid2].sort().join('_');
-      currentChatKey = 'privatemsgs/' + chatId;
-      messagesDiv.innerHTML = '';
-      chatContainer.style.display = 'flex';
-      userListContainer.style.display = 'none';
-      profileContainer.style.display = 'none';
-      listenForMessages(currentChatKey);
+    const chatRef = ref(db, chatKey);
+    messagesListener = onChildAdded(chatRef, (snapshot) => {
+      const msg = snapshot.val();
+      displayMessage(msg);
+    });
+
+    // Scroll na dno ob novih sporočilih
+    function scrollToBottom() {
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+    scrollToBottom();
 
-    function listenForMessages(path) {
-      messagesDiv.innerHTML = '';
-      const chatRef = ref(db, path);
-      onChildAdded(chatRef, snapshot => {
-        const msg = snapshot.val();
-        const div = document.createElement('div');
-        div.textContent = msg.sender + ': ' + msg.text;
-        messagesDiv.appendChild(div);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      });
+    // Pomakni navzdol ob vsakem novem sporočilu
+    chatRef.on('child_added', () => {
+      setTimeout(scrollToBottom, 50);
+    });
+  }
+
+  // Dodaj sporočilo v UI
+  function displayMessage(msg) {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message');
+
+    const senderSpan = document.createElement('span');
+    senderSpan.classList.add('sender');
+    senderSpan.textContent = msg.displayName || 'Anonim';
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = ': ' + msg.text;
+
+    msgDiv.appendChild(senderSpan);
+    msgDiv.appendChild(textSpan);
+
+    messagesDiv.appendChild(msgDiv);
+  }
+
+  // Pošlji sporočilo ob kliku
+  sendBtn.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
+  });
 
-    sendBtn.onclick = () => {
-      const text = messageInput.value.trim();
-      if (text) {
-        const msgRef = push(ref(db, currentChatKey));
-        set(msgRef, {
-          sender: currentUser,
-          text,
-          timestamp: Date.now()
-        });
+  function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    const msgObj = {
+      uid: currentUser,
+      displayName: "Ti",  // Lahko se pridobi iz Firebase uporabnika, za zdaj "Ti"
+      text,
+      timestamp: Date.now()
+    };
+
+    const messagesRef = ref(db, currentChatKey);
+    push(messagesRef, msgObj)
+      .then(() => {
         messageInput.value = '';
-      }
-    };
+      })
+      .catch(console.error);
+  }
 
-    dockUsers.onclick = () => {
-      userListContainer.style.display = 'block';
-      profileContainer.style.display = 'none';
-      chatContainer.style.display = 'none';
-    };
+  // Gumb za javni klepet
+  publicChatBtn.addEventListener('click', () => {
+    openPublicChat();
+    clearActiveUserInList();
+  });
 
-    dockProfile.onclick = () => {
-      profileContainer.style.display = 'flex';
-      userListContainer.style.display = 'none';
-      chatContainer.style.display = 'none';
-    };
-
-    saveProfileBtn.onclick = () => {
-      update(ref(db, 'uporabniki/' + currentUser), {
-        bio: myBio.value,
-        status: myStatus.value,
-        birthdate: myBirthdate.value
-      });
-    };
-
-    function loadMyProfile() {
-      get(ref(db, 'uporabniki/' + currentUser)).then(snapshot => {
-        const user = snapshot.val();
-        if (user) {
-          if (user.avatarURL2) myAvatar.setAttribute('src', user.avatarURL2);
-          if (user.bio) myBio.value = user.bio;
-          if (user.status) myStatus.value = user.status;
-          if (user.birthdate) myBirthdate.value = user.birthdate;
-        }
-      });
-    }
-  </script></body>
+</script>
+</body>
 </html>
