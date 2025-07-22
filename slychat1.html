@@ -1,120 +1,105 @@
 <!DOCTYPE html><html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Klepetalnica</title>
-  <script type="module" src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-  <script type="module" src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
+  <script src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
-    #header {
+    #publicChatBtn {
+      padding: 10px;
       background: #007bff;
       color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    #publicBtn, #backBtn {
-      background: #28a745;
-      color: white;
-      padding: 0.6rem 1.2rem;
       border: none;
-      border-radius: 6px;
-      margin: 0.5rem;
-      cursor: pointer;
-    }
-    #backBtn {
-      background: #dc3545;
-      display: none;
+      width: 100%;
+      font-size: 16px;
     }
     #userList {
       overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
       flex: 1;
+      padding: 10px;
     }
-    .user {
+    #userList div {
+      cursor: pointer;
       display: flex;
       align-items: center;
-      background: white;
-      padding: 0.6rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      cursor: pointer;
-    }
-    .user model-viewer {
-      width: 60px;
-      height: 60px;
-      margin-right: 1rem;
-    }
-    #chat {
-      display: none;
-      flex-direction: column;
-      flex: 1;
-    }
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      background: #ffffff;
-    }
-    .msg {
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-      background: #e1f5fe;
+      margin-bottom: 10px;
+      background: #f1f1f1;
+      padding: 8px;
       border-radius: 8px;
     }
-    .sender {
-      font-weight: bold;
-      margin-bottom: 0.2rem;
+    model-viewer {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
     }
-    #inputArea {
+    .status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: green;
+      margin-left: auto;
+    }
+    #chatContainer {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #messages {
+      border-top: 1px solid #ccc;
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: #fafafa;
+    }
+    #inputContainer {
       display: flex;
-      padding: 1rem;
-      background: white;
+      border-top: 1px solid #ccc;
+      padding: 10px;
+      background: #fff;
     }
     #messageInput {
       flex: 1;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 16px;
     }
     #sendBtn {
-      background: #007bff;
-      color: white;
+      margin-left: 10px;
+      padding: 8px 12px;
+    }
+    #backBtn {
+      padding: 10px;
+      background: #ccc;
+      width: 100%;
       border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      margin-left: 0.5rem;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <div id="header">
-    <button id="publicBtn">Javni klepet</button>
+  <button id="publicChatBtn">Javni klepet</button>
+  <div id="userList"></div>  <div id="chatContainer">
     <button id="backBtn">Nazaj</button>
-  </div>
-  <div id="userList"></div>
-  <div id="chat">
     <div id="messages"></div>
-    <div id="inputArea">
-      <input id="messageInput" placeholder="Vnesi sporočilo...">
+    <div id="inputContainer">
+      <input type="text" id="messageInput" placeholder="Vnesi sporočilo">
       <button id="sendBtn">Pošlji</button>
     </div>
   </div>  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, onValue, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+    import { getDatabase, ref, onChildAdded, push, set, get } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
@@ -131,68 +116,84 @@
     const auth = getAuth();
 
     let currentUser = null;
-    let currentChatKey = "messages";
+    let currentChatKey = 'messages';
+    let userMap = {};
 
-    const userList = document.getElementById("userList");
-    const chatBox = document.getElementById("chat");
-    const messagesDiv = document.getElementById("messages");
-    const messageInput = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const publicBtn = document.getElementById("publicBtn");
-    const backBtn = document.getElementById("backBtn");
+    const userList = document.getElementById('userList');
+    const publicChatBtn = document.getElementById('publicChatBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const backBtn = document.getElementById('backBtn');
 
-    function renderUsers() {
-      const usersRef = ref(db, "users");
-      onValue(usersRef, (snapshot) => {
-        userList.innerHTML = "";
-        snapshot.forEach(child => {
-          const user = child.val();
-          if (user.uid !== currentUser?.uid) {
-            const div = document.createElement("div");
-            div.className = "user";
-            div.innerHTML = `
-              <model-viewer src="${user.avatarURL2}" camera-controls></model-viewer>
-              <div>${user.displayname}</div>
-            `;
-            div.onclick = () => openPrivateChat(currentUser.uid, user.uid, user.displayname);
+    publicChatBtn.onclick = () => {
+      currentChatKey = 'messages';
+      messagesDiv.innerHTML = '';
+      chatContainer.style.display = 'flex';
+      userList.style.display = 'none';
+      publicChatBtn.style.display = 'none';
+      listenForMessages(currentChatKey);
+    };
+
+    backBtn.onclick = () => {
+      chatContainer.style.display = 'none';
+      userList.style.display = 'block';
+      publicChatBtn.style.display = 'block';
+    };
+
+    signInAnonymously(auth);
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user.uid;
+        loadUsers();
+        listenForMessages('messages');
+      }
+    });
+
+    function loadUsers() {
+      get(ref(db, 'users')).then(snapshot => {
+        userList.innerHTML = '';
+        snapshot.forEach(childSnap => {
+          const uid = childSnap.key;
+          const user = childSnap.val();
+          userMap[uid] = user.displayName || uid;
+          if (uid !== currentUser) {
+            const div = document.createElement('div');
+            const model = document.createElement('model-viewer');
+            model.setAttribute('src', user.avatarURL2);
+            model.setAttribute('camera-controls', '');
+            const status = document.createElement('div');
+            status.className = 'status';
+            div.appendChild(model);
+            div.appendChild(document.createTextNode(user.displayName || uid));
+            div.appendChild(status);
+            div.onclick = () => openPrivateChat(uid);
             userList.appendChild(div);
           }
         });
       });
     }
 
-    function openPrivateChat(uid1, uid2, recipientName) {
-      const chatId = [uid1, uid2].sort().join("_");
-      currentChatKey = "privatemsgs/" + chatId;
-      userList.style.display = "none";
-      publicBtn.style.display = "none";
-      backBtn.style.display = "inline-block";
-      chatBox.style.display = "flex";
-      messagesDiv.innerHTML = "";
-      listenForMessages(currentChatKey);
-    }
-
-    function openPublicChat() {
-      currentChatKey = "messages";
-      userList.style.display = "none";
-      publicBtn.style.display = "none";
-      backBtn.style.display = "inline-block";
-      chatBox.style.display = "flex";
-      messagesDiv.innerHTML = "";
+    function openPrivateChat(uid2) {
+      const chatId = [currentUser, uid2].sort().join('_');
+      currentChatKey = 'privatemsgs/' + chatId;
+      messagesDiv.innerHTML = '';
+      chatContainer.style.display = 'flex';
+      userList.style.display = 'none';
+      publicChatBtn.style.display = 'none';
       listenForMessages(currentChatKey);
     }
 
     function listenForMessages(path) {
+      messagesDiv.innerHTML = '';
       const chatRef = ref(db, path);
-      onValue(chatRef, (snapshot) => {
-        messagesDiv.innerHTML = "";
-        snapshot.forEach(child => {
-          const msg = child.val();
-          const div = document.createElement("div");
-          div.className = "msg";
-          div.innerHTML = `<div class="sender">${msg.displayName || msg.sender}</div><div>${msg.text}</div>`;
-          messagesDiv.appendChild(div);
-        });
+      onChildAdded(chatRef, snapshot => {
+        const msg = snapshot.val();
+        const div = document.createElement('div');
+        const name = userMap[msg.sender] || msg.sender;
+        div.textContent = name + ': ' + msg.text;
+        messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
     }
@@ -200,31 +201,14 @@
     sendBtn.onclick = () => {
       const text = messageInput.value.trim();
       if (text) {
-        push(ref(db, currentChatKey), {
-          sender: currentUser.uid,
-          displayName: currentUser.displayName,
+        const msgRef = push(ref(db, currentChatKey));
+        set(msgRef, {
+          sender: currentUser,
           text,
           timestamp: Date.now()
         });
-        messageInput.value = "";
+        messageInput.value = '';
       }
     };
-
-    backBtn.onclick = () => {
-      chatBox.style.display = "none";
-      userList.style.display = "block";
-      publicBtn.style.display = "inline-block";
-      backBtn.style.display = "none";
-      messagesDiv.innerHTML = "";
-    };
-
-    publicBtn.onclick = openPublicChat;
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUser = user;
-        renderUsers();
-      }
-    });
   </script></body>
 </html>
