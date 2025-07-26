@@ -1,156 +1,219 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dinamična obvestila</title>
-    <style>
-        /* Osnovni slog za obvestilo */
-        #notification {
-            position: fixed;
-            bottom: 20px; /* Prikaže se 20px od spodaj */
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #323232;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 16px;
-            font-size: 16px;
-            font-family: 'Arial', sans-serif;
-            z-index: 9999;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            opacity: 0;
-            transition: opacity 0.5s, bottom 0.5s, transform 0.3s ease;
-            cursor: pointer;
-            width: 300px;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ready Player Me + Udarci & Skok</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
 
-        /* Animacija za prikaži obvestila */
-        #notification.show {
-            opacity: 1;
-            bottom: 20px; /* Pokaže se na 20px od spodaj */
-        }
+    #gameArea {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://i.imgur.com/7yUvePI.png') center/cover no-repeat;
+    }
 
-        /* Slog za gumb */
-        #notifyButton {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    #avatar {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      background: url('https://i.imgur.com/vPLOypn.png') no-repeat;
+      background-size: 256px 256px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: idle 0.3s steps(1) infinite;
+    }
 
-        #notifyButton:hover {
-            background-color: #45a049;
-        }
-    </style>
+    @keyframes walk-down { 0% { background-position: 0 0; } 100% { background-position: -192px 0; } }
+    @keyframes walk-left { 0% { background-position: 0 -64px; } 100% { background-position: -192px -64px; } }
+    @keyframes walk-right { 0% { background-position: 0 -128px; } 100% { background-position: -192px -128px; } }
+    @keyframes walk-up { 0% { background-position: 0 -192px; } 100% { background-position: -192px -192px; } }
+    @keyframes idle { 0% { background-position: 0 0; } }
+
+    /* Jump animation */
+    .jumping {
+      animation: jump 0.4s ease;
+    }
+
+    @keyframes jump {
+      0% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-30px); }
+      100% { transform: translate(-50%, -50%) translateY(0); }
+    }
+
+    /* Punch animation - fake frame shift */
+    .punching {
+      animation: punch 0.3s steps(1) forwards;
+    }
+
+    @keyframes punch {
+      0% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
+      50% { filter: brightness(1.5); transform: translate(-50%, -50%) scale(1.2); }
+      100% { filter: brightness(1); transform: translate(-50%, -50%) scale(1); }
+    }
+
+    #joystick {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      touch-action: none;
+    }
+
+    #stick {
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      touch-action: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="gameArea">
+    <div id="avatar"></div>
+    <div id="joystick"><div id="stick"></div></div>
+  </div>
 
-    <button id="notifyButton">Prikaži random obvestilo</button>
+  <script>
+    const avatar = document.getElementById("avatar");
+    const joystick = document.getElementById("joystick");
+    const stick = document.getElementById("stick");
 
-    <div id="notification">
-        To je testno obvestilo!
-    </div>
+    let centerX = joystick.offsetLeft + joystick.offsetWidth / 2;
+    let centerY = joystick.offsetTop + joystick.offsetHeight / 2;
+    let moveInterval;
 
-    <script>
-        // Seznam naključnih obvestil
-        const notifications = [
-            "Nova posodobitev je na voljo!",
-            "Imate nove naloge v sistemu.",
-            "Ne pozabite na prihajajoči sestanek.",
-            "Prejeli ste novo sporočilo.",
-            "Vaša seja je bila uspešno zaključena.",
-            "Pozdravljeni, dobrodošli nazaj!",
-            "Na voljo so nove funkcionalnosti!",
-            "Obvestilo o vzdrževanju sistema."
-        ];
+    function getDirection(dx, dy) {
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (angle >= -45 && angle <= 45) return 'right';
+      if (angle > 45 && angle < 135) return 'down';
+      if (angle >= 135 || angle <= -135) return 'left';
+      if (angle > -135 && angle < -45) return 'up';
+    }
 
-        // Funkcija za naključno izbiro obvestila iz seznama
-        function getRandomNotification() {
-            const randomIndex = Math.floor(Math.random() * notifications.length);
-            return notifications[randomIndex];
-        }
+    function setAnimation(dir) {
+      avatar.style.animation = `walk-${dir} 0.4s steps(3) infinite`;
+    }
 
-        // Funkcija za prikaz obvestila z animacijo
-        function showNotification() {
-            const notification = document.getElementById('notification');
-            notification.textContent = getRandomNotification();  // Nastavi naključno obvestilo
+    function stopAnimation() {
+      avatar.style.animation = `idle 0.3s steps(1) infinite`;
+    }
 
-            // Pokaži obvestilo
-            notification.classList.add('show');
-        }
+    function moveAvatar(dx, dy) {
+      const currentTop = avatar.offsetTop;
+      const currentLeft = avatar.offsetLeft;
+      const speed = 2;
+      avatar.style.top = `${currentTop + dy * speed}px`;
+      avatar.style.left = `${currentLeft + dx * speed}px`;
+    }
 
-        // Dogodek za klik na gumb
-        document.getElementById('notifyButton').addEventListener('click', showNotification);
+    function startMoving(dx, dy) {
+      const dir = getDirection(dx, dy);
+      setAnimation(dir);
+      clearInterval(moveInterval);
+      moveInterval = setInterval(() => {
+        moveAvatar(dx, dy);
+      }, 20);
+    }
 
-        // Onemogoči "Pull-to-refresh" na mobilnih napravah
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) return; // Preprečimo več dotikov
-            const touchStart = e.touches[0].clientX;
-            let touchMove;
-            const notification = document.getElementById('notification');
-            let direction = null;
+    function stopMoving() {
+      clearInterval(moveInterval);
+      stopAnimation();
+    }
 
-            // Dogodek za gibanje prsta po zaslonu
-            window.addEventListener('touchmove', function(e) {
-                touchMove = e.touches[0].clientX;
-                const diff = touchMove - touchStart;
+    function handleJoystickStart(e) {
+      document.addEventListener("touchmove", handleJoystickMove);
+      document.addEventListener("touchend", handleJoystickEnd);
+      document.addEventListener("mousemove", handleJoystickMove);
+      document.addEventListener("mouseup", handleJoystickEnd);
+    }
 
-                // Prepreči osvežitev strani
-                if (window.scrollY === 0) {
-                    e.preventDefault();
-                }
+    function handleJoystickMove(e) {
+      let clientX, clientY;
+      if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
 
-                // Zaznavanje smeri poteze
-                if (diff > 0) {
-                    direction = 'right'; // Poteza desno
-                } else if (diff < 0) {
-                    direction = 'left'; // Poteza levo
-                }
+      const dx = clientX - centerX;
+      const dy = clientY - centerY;
+      const maxDist = 40;
+      const dist = Math.min(maxDist, Math.hypot(dx, dy));
+      const angle = Math.atan2(dy, dx);
+      const x = dist * Math.cos(angle);
+      const y = dist * Math.sin(angle);
+      stick.style.left = `${30 + x}px`;
+      stick.style.top = `${30 + y}px`;
+      const normX = x / maxDist;
+      const normY = y / maxDist;
+      startMoving(normX, normY);
+    }
 
-                // Premik obvestila glede na potezo
-                if (Math.abs(diff) > 50) {
-                    if (direction === 'right') {
-                        notification.style.transform = `translateX(${diff}px)`; // Premik desno
-                    } else if (direction === 'left') {
-                        notification.style.transform = `translateX(${diff}px)`; // Premik levo (takoj začne levo)
-                    }
-                }
-            });
+    function handleJoystickEnd() {
+      stick.style.left = "30px";
+      stick.style.top = "30px";
+      stopMoving();
+      document.removeEventListener("touchmove", handleJoystickMove);
+      document.removeEventListener("touchend", handleJoystickEnd);
+      document.removeEventListener("mousemove", handleJoystickMove);
+      document.removeEventListener("mouseup", handleJoystickEnd);
+    }
 
-            // Dogodek za zaključek poteze (spuščanje prsta)
-            window.addEventListener('touchend', function() {
-                const diff = touchMove - touchStart;
+    // Jump logic
+    function jump() {
+      if (!avatar.classList.contains('jumping')) {
+        avatar.classList.add('jumping');
+        setTimeout(() => {
+          avatar.classList.remove('jumping');
+        }, 400);
+      }
+    }
 
-                // Če je premik dovolj velik (več kot 100px), obvestilo izgine
-                if (Math.abs(diff) > 100) {
-                    if (direction === 'right') {
-                        notification.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                        notification.style.transform = 'translateX(100%)'; // Skrije obvestilo desno
-                    } else if (direction === 'left') {
-                        notification.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-                        notification.style.transform = 'translateX(-100%)'; // Skrije obvestilo levo
-                    }
+    // Punch logic
+    function punch() {
+      if (!avatar.classList.contains('punching')) {
+        avatar.classList.add('punching');
+        setTimeout(() => {
+          avatar.classList.remove('punching');
+        }, 300);
+      }
+    }
 
-                    // Po animaciji skrijemo obvestilo
-                    setTimeout(() => {
-                        notification.style.transition = 'none';
-                        notification.style.opacity = 0;
-                    }, 300);
-                } else {
-                    // Če ni bilo dovolj velikega premika, obvestilo vrnemo na svoje mesto
-                    notification.style.transition = 'transform 0.3s ease';
-                    notification.style.transform = 'translateX(-50%)';
-                }
-            });
-        });
-    </script>
+    // Key controls
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') jump();
+      if (e.key.toLowerCase() === 'f') punch();
+    });
 
+    // Touch zones
+    document.getElementById("gameArea").addEventListener("touchstart", (e) => {
+      const x = e.touches[0].clientX;
+      const y = e.touches[0].clientY;
+      if (x > window.innerWidth * 0.66) {
+        punch();
+      } else if (y < window.innerHeight * 0.4) {
+        jump();
+      }
+    });
+
+    stick.addEventListener("mousedown", handleJoystickStart);
+    stick.addEventListener("touchstart", handleJoystickStart);
+  </script>
 </body>
 </html>
