@@ -378,6 +378,21 @@ scene.registerBeforeRender(() => {
     });
   }
 
+window.addEventListener("keydown", (event) => {
+  if(event.key.toLowerCase() === "t") {
+    messageInput.style.display = "block";
+    messageField.focus();
+  }
+});
+
+sendMessageBtn.onclick = () => {
+  const message = messageField.value.trim();
+  if(message) {
+    db.ref('players/' + userId).update({ message });
+    messageField.value = "";
+    messageInput.style.display = "none";
+  }
+};
 
 
 
