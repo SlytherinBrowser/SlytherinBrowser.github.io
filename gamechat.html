@@ -378,13 +378,11 @@ scene.registerBeforeRender(() => {
     });
   }
 
-// Dodaj ob pritisku na "t"
 window.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "t") {
-    // Če že obstaja, ga ne dodamo znova
     if (document.getElementById("dynamicInput")) return;
 
-    // Ustvari wrapper za input
+    // Input wrapper
     const inputWrapper = document.createElement("div");
     inputWrapper.style.position = "absolute";
     inputWrapper.style.bottom = "30px";
@@ -395,7 +393,7 @@ window.addEventListener("keydown", (event) => {
     inputWrapper.style.borderRadius = "8px";
     inputWrapper.style.boxShadow = "0 0 10px #00000033";
 
-    // Ustvari input element
+    // Input element
     const input = document.createElement("input");
     input.type = "text";
     input.placeholder = "Vpiši sporočilo...";
@@ -410,42 +408,45 @@ window.addEventListener("keydown", (event) => {
     input.focus();
 
     input.addEventListener("keydown", async (e) => {
-  if (e.key === "Enter") {
-    const msg = input.value.trim();
-    if (msg) {
-      // Shrani sporočilo v players
-      await db.ref('players/' + userId).update({ message: msg });
+      if (e.key === "Enter") {
+        const msg = input.value.trim();
+        if (msg) {
+          // Shrani sporočilo v players/{userId}
+          await db.ref('players/' + userId).update({ message: msg });
 
-      // Pridobi displayName iz users/{userId}
-      db.ref('users/' + userId + '/displayName').once('value').then((snapshot) => {
-        const displayName = snapshot.val() || "Neznan uporabnik";
+          // Pridobi displayName iz users/{userId}
+          db.ref('users/' + userId + '/displayName').once('value').then((snapshot) => {
+            const displayName = snapshot.val() || "Neznan uporabnik";
 
-        // Prikaz sporočila na zaslonu
-        const msgDisplay = document.createElement("div");
-        msgDisplay.style.position = "fixed";
-        msgDisplay.style.bottom = "10px";
-        msgDisplay.style.right = "10px";
-        msgDisplay.style.background = "#f0f0f0";
-        msgDisplay.style.border = "1px solid #ccc";
-        msgDisplay.style.borderRadius = "6px";
-        msgDisplay.style.padding = "10px";
-        msgDisplay.style.marginTop = "5px";
-        msgDisplay.style.boxShadow = "0 0 8px #00000022";
-        msgDisplay.style.fontSize = "14px";
-        msgDisplay.innerHTML = `<strong>${displayName}</strong>: ${msg}`;
+            // Prikaz sporočila v spodnjem desnem kotu
+            const msgDisplay = document.createElement("div");
+            msgDisplay.style.position = "fixed";
+            msgDisplay.style.bottom = "10px";
+            msgDisplay.style.right = "10px";
+            msgDisplay.style.background = "#f0f0f0";
+            msgDisplay.style.border = "1px solid #ccc";
+            msgDisplay.style.borderRadius = "6px";
+            msgDisplay.style.padding = "10px";
+            msgDisplay.style.marginTop = "5px";
+            msgDisplay.style.boxShadow = "0 0 8px #00000022";
+            msgDisplay.style.fontSize = "14px";
+            msgDisplay.innerHTML = `<strong>${displayName}</strong>: ${msg}`;
 
-        document.body.appendChild(msgDisplay);
+            document.body.appendChild(msgDisplay);
 
-        // Odstrani po 10 sekundah
-        setTimeout(() => {
-          document.body.removeChild(msgDisplay);
-        }, 10000);
-      });
+            // Odstrani prikaz po 10 sekundah
+            setTimeout(() => {
+              document.body.removeChild(msgDisplay);
+            }, 10000);
+          });
 
-      document.body.removeChild(inputWrapper);
-    }
+          document.body.removeChild(inputWrapper);
+        }
+      }
+    });
   }
 });
+
 
 
 
