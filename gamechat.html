@@ -378,21 +378,48 @@ scene.registerBeforeRender(() => {
     });
   }
 
+// Dodaj ob pritisku na "t"
 window.addEventListener("keydown", (event) => {
-  if(event.key.toLowerCase() === "t") {
-    messageInput.style.display = "block";
-    messageField.focus();
+  if (event.key.toLowerCase() === "t") {
+    // Če že obstaja, ga ne dodamo znova
+    if (document.getElementById("dynamicInput")) return;
+
+    // Ustvari wrapper za input
+    const inputWrapper = document.createElement("div");
+    inputWrapper.style.position = "absolute";
+    inputWrapper.style.bottom = "30px";
+    inputWrapper.style.left = "50%";
+    inputWrapper.style.transform = "translateX(-50%)";
+    inputWrapper.style.background = "white";
+    inputWrapper.style.padding = "10px";
+    inputWrapper.style.borderRadius = "8px";
+    inputWrapper.style.boxShadow = "0 0 10px #00000033";
+
+    // Ustvari input element
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Vpiši sporočilo...";
+    input.id = "dynamicInput";
+    input.style.padding = "8px";
+    input.style.fontSize = "14px";
+    input.style.border = "1px solid #ccc";
+    input.style.borderRadius = "4px";
+    inputWrapper.appendChild(input);
+    document.body.appendChild(inputWrapper);
+
+    input.focus();
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const msg = input.value.trim();
+        if (msg) {
+          db.ref('players/' + userId).update({ message: msg });
+          document.body.removeChild(inputWrapper);
+        }
+      }
+    });
   }
 });
-
-sendMessageBtn.onclick = () => {
-  const message = messageField.value.trim();
-  if(message) {
-    db.ref('players/' + userId).update({ message });
-    messageField.value = "";
-    messageInput.style.display = "none";
-  }
-};
 
 
 
