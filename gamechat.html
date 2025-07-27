@@ -414,13 +414,34 @@ window.addEventListener("keydown", (event) => {
         const msg = input.value.trim();
         if (msg) {
           db.ref('players/' + userId).update({ message: msg });
+
+          // Prikaz sporočila v desnem spodnjem kotu
+          const msgDisplay = document.createElement("div");
+          msgDisplay.style.position = "fixed";
+          msgDisplay.style.bottom = "10px";
+          msgDisplay.style.right = "10px";
+          msgDisplay.style.background = "#f0f0f0";
+          msgDisplay.style.border = "1px solid #ccc";
+          msgDisplay.style.borderRadius = "6px";
+          msgDisplay.style.padding = "10px";
+          msgDisplay.style.marginTop = "5px";
+          msgDisplay.style.boxShadow = "0 0 8px #00000022";
+          msgDisplay.style.fontSize = "14px";
+          msgDisplay.innerHTML = `<strong>${userId}</strong>: ${msg}`;
+
+          document.body.appendChild(msgDisplay);
+
+          // Samodejno odstrani po nekaj sekundah
+          setTimeout(() => {
+            document.body.removeChild(msgDisplay);
+          }, 5000);
+
           document.body.removeChild(inputWrapper);
         }
       }
     });
   }
 });
-
 
 
 
