@@ -101,221 +101,267 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    let localStream, remoteStream, pc;
-    const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+    // ---- Spremenljivke ----
+let localStream = null;
+let remoteStream = null;
+let peerConnection = null;
 
-    let selectedUserId = null;
-    let callId = null;
-    let isCaller = false;
-    let callRef = null;
+const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-    // Elementi
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
-    const callControls = document.getElementById("callControls");
-    const toggleCameraBtn = document.getElementById("toggleCameraBtn");
-    const toggleMicBtn = document.getElementById("toggleMicBtn");
-    const hangupBtn = document.getElementById("hangupBtn");
+let callRef = null;
+let callId = null;
+let isCaller = false;
+let isCalling = false;
+let isInCall = false;
 
-    const incomingCallDiv = document.getElementById("incomingCall");
-    const callerNameSpan = document.getElementById("callerName");
-    const acceptCallBtn = document.getElementById("acceptCallBtn");
-    const rejectCallBtn = document.getElementById("rejectCallBtn");
+let videoTrack = null;
+let audioTrack = null;
 
-    // Prijava anonimna
-    auth.signInAnonymously().then(() => {
-      console.log("Prijavljen kot:", auth.currentUser.uid);
-    });
+// Uporabniški podatki (nastavi sam)
+const currentUserId = "user1";              // npr. Firebase UID ali displayName
+const currentUserDisplayName = "User 1";    // prikazno ime
 
-    // Iskanje uporabnikov (predlogi)
-    async function searchUsers() {
-      const input = document.getElementById("userSearch").value.toLowerCase();
-      const suggestionsBox = document.getElementById("suggestions");
-      suggestionsBox.innerHTML = '';
+// ---- Elementi iz DOM-a ----
+const userSearchInput = document.getElementById("userSearch");
+const callBtn = document.getElementById("callBtn");
+const acceptCallBtn = document.getElementById("acceptCallBtn");
+const rejectCallBtn = document.getElementById("rejectCallBtn");
+const hangupCallBtn = document.getElementById("hangupCallBtn");
+const toggleCameraBtn = document.getElementById("toggleCameraBtn");
+const toggleMicBtn = document.getElementById("toggleMicBtn");
 
-      if (input.length < 2) return;
+const incomingCallDiv = document.getElementById("incomingCall");
+const incomingCallUserSpan = document.getElementById("incomingCallUser");
 
-      const snapshot = await db.ref("users").once("value");
-      const users = snapshot.val();
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
 
-      for (const uid in users) {
-        if (uid === auth.currentUser.uid) continue;
-        const name = users[uid].displayName?.toLowerCase();
-        if (name && name.includes(input)) {
-          const li = document.createElement("li");
-          li.textContent = users[uid].displayName;
-          li.onclick = () => selectUser(uid, users[uid].displayName);
-          suggestionsBox.appendChild(li);
-        }
-      }
-    }
+// ---- Funkcija za zagon lokalnega streama ----
+async function startLocalStream() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localVideo.srcObject = localStream;
+    videoTrack = localStream.getVideoTracks()[0];
+    audioTrack = localStream.getAudioTracks()[0];
+  } catch (err) {
+    console.error("Napaka pri dostopu do kamere/mikrofona:", err);
+    alert("Napaka pri dostopu do kamere ali mikrofona.");
+  }
+}
 
-    function selectUser(uid, name) {
-      document.getElementById("userSearch").value = name;
-      document.getElementById("suggestions").innerHTML = '';
-      selectedUserId = uid;
-      const area = document.getElementById("callArea");
-      area.innerHTML = '';
-      const btn = document.createElement("button");
-      btn.textContent = "📞 Pokliči " + name;
-      btn.onclick = () => initiateCallTo(uid, name);
-      area.appendChild(btn);
-    }
+// Pokličemo takoj ob zagonu strani
+startLocalStream();
 
-    function generateCallId() {
-      return Math.random().toString(36).substr(2, 9);
-    }
+// ---- Funkcija za ustvarjanje RTCPeerConnection ----
+function createPeerConnection() {
+  peerConnection = new RTCPeerConnection(servers);
 
-    async function initiateCallTo(uid, name) {
-      if (!auth.currentUser.uid) {
-        alert("Počakaj na prijavo.");
-        return;
-      }
-      isCaller = true;
-      callId = generateCallId();
-      await db.ref("callRequests/" + uid).set({
-        from: auth.currentUser.uid,
-        fromName: "Tvoj uporabnik",  // PO potrebi nastavi pravo ime
-        callId,
-        timestamp: Date.now()
-      });
-      startWebRTC(true, callId);
-      showCallControls(true);
-    }
+  // Dodamo lokalni stream v peer connection
+  localStream.getTracks().forEach(track => {
+    peerConnection.addTrack(track, localStream);
+  });
 
-    // Prikaži/gumbi za klic
-    function showCallControls(show) {
-      callControls.style.display = show ? "block" : "none";
-    }
-
-    // Dohodni klic poslušalec
-    db.ref("callRequests/" + auth.currentUser.uid).on("value", snapshot => {
-      const data = snapshot.val();
-      if (data && !callId) { // samo če ni klica že v teku
-        callerNameSpan.textContent = data.fromName || data.from;
-        incomingCallDiv.style.display = "block";
-
-        // Shrani podatke za sprejem/zavrnitev
-        incomingCallDiv.dataset.callId = data.callId;
-        incomingCallDiv.dataset.fromUid = data.from;
-      }
-    });
-
-    acceptCallBtn.onclick = () => {
-      isCaller = false;
-      callId = incomingCallDiv.dataset.callId;
-      startWebRTC(false, callId);
-      incomingCallDiv.style.display = "none";
-      showCallControls(true);
-    };
-
-    rejectCallBtn.onclick = () => {
-      const fromUid = incomingCallDiv.dataset.fromUid;
-      if (fromUid) {
-        db.ref("callRequests/" + auth.currentUser.uid).remove();
-      }
-      incomingCallDiv.style.display = "none";
-      callId = null;
-    };
-
-    // Start WebRTC povezave
-    async function startWebRTC(caller, callIdParam) {
-      callId = callIdParam;
-      pc = new RTCPeerConnection(servers);
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  // Ko dobimo track od druge strani, ga prikažemo v remote video
+  peerConnection.ontrack = (event) => {
+    if (!remoteStream) {
       remoteStream = new MediaStream();
-
-      localVideo.srcObject = localStream;
       remoteVideo.srcObject = remoteStream;
-
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-      pc.ontrack = event => {
-        event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-      };
-
-      pc.onicecandidate = e => {
-        if (e.candidate) {
-          const path = caller ? 'offerCandidates' : 'answerCandidates';
-          db.ref(`calls/${callId}/${path}`).push(e.candidate.toJSON());
-        }
-      };
-
-      callRef = db.ref("calls/" + callId);
-
-      if (caller) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        await callRef.set({ offer });
-        callRef.child("answer").on("value", async snap => {
-          if (snap.exists() && !pc.currentRemoteDescription) {
-            await pc.setRemoteDescription(new RTCSessionDescription(snap.val()));
-          }
-        });
-      } else {
-        const offerSnap = await callRef.child("offer").get();
-        await pc.setRemoteDescription(new RTCSessionDescription(offerSnap.val()));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await callRef.child("answer").set(answer);
-      }
-
-      callRef.child("offerCandidates").on("child_added", snap => {
-        if (!caller) pc.addIceCandidate(new RTCIceCandidate(snap.val()));
-      });
-      callRef.child("answerCandidates").on("child_added", snap => {
-        if (caller) pc.addIceCandidate(new RTCIceCandidate(snap.val()));
-      });
     }
+    remoteStream.addTrack(event.track);
+  };
 
-    // Gumbi za kamero/mikrofon
-    toggleCameraBtn.onclick = () => {
-      if (!localStream) return;
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (!videoTrack) return;
+  // ICE kandidati: pošljemo jih v Firebase
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      callRef.child("iceCandidates").push(event.candidate.toJSON());
+    }
+  };
+}
 
-      videoTrack.enabled = !videoTrack.enabled;
-      toggleCameraBtn.textContent = videoTrack.enabled ? "Izklopi kamero" : "Vklopi kamero";
-    };
+// ---- Funkcija za začetek klica ----
+async function startCall(calleeId) {
+  isCalling = true;
+  isCaller = true;
 
-    toggleMicBtn.onclick = () => {
-      if (!localStream) return;
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (!audioTrack) return;
+  createPeerConnection();
 
-      audioTrack.enabled = !audioTrack.enabled;
-      toggleMicBtn.textContent = audioTrack.enabled ? "Izklopi mikrofon" : "Vklopi mikrofon";
-    };
+  // Ustvarimo unikaten ID za klic
+  callId = database.ref("calls").push().key;
+  callRef = database.ref(`calls/${callId}`);
 
-    hangupBtn.onclick = async () => {
-      if (pc) {
-        pc.close();
-        pc = null;
-      }
-      if (localStream) {
-        localStream.getTracks().forEach(t => t.stop());
-        localStream = null;
-      }
-      if (remoteStream) {
-        remoteStream.getTracks().forEach(t => t.stop());
-        remoteStream = null;
-      }
-      if (callRef) {
-        await callRef.remove();
-        callRef = null;
-      }
-      callId = null;
-      selectedUserId = null;
-      isCaller = false;
-      showCallControls(false);
-      incomingCallDiv.style.display = "none";
-      localVideo.srcObject = null;
-      remoteVideo.srcObject = null;
-      document.getElementById("callArea").innerHTML = "";
-      document.getElementById("userSearch").value = "";
-      toggleCameraBtn.textContent = "Izklopi kamero";
-      toggleMicBtn.textContent = "Izklopi mikrofon";
-    };
+  // Shranimo podatke o klicu
+  await callRef.set({
+    from: currentUserId,
+    fromDisplayName: currentUserDisplayName,
+    to: calleeId,
+    status: "calling"
+  });
+
+  // Poslušamo za ICE kandidate od druge strani
+  callRef.child("iceCandidates").on("child_added", snapshot => {
+    const candidate = snapshot.val();
+    if (candidate) {
+      peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  });
+
+  // Ustvarimo ponudbo (offer)
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+
+  // Shranimo ponudbo v Firebase
+  await callRef.update({ offer: { type: offer.type, sdp: offer.sdp } });
+
+  listenForAnswer();
+}
+
+// ---- Poslušamo odgovor klica ----
+function listenForAnswer() {
+  callRef.child("answer").on("value", async snapshot => {
+    const answer = snapshot.val();
+    if (answer && peerConnection.signalingState !== "stable") {
+      const rtcAnswer = new RTCSessionDescription(answer);
+      await peerConnection.setRemoteDescription(rtcAnswer);
+      isInCall = true;
+      isCalling = false;
+      showCallControls(true);
+    }
+  });
+}
+
+// ---- Poslušamo dohodne klice ----
+database.ref("calls").on("child_added", async (snapshot) => {
+  const data = snapshot.val();
+  const key = snapshot.key;
+
+  // Če je dohodni klic za nas, in še nismo v klicu ali ne kličemo
+  if (data.to === currentUserId && !isInCall && !isCalling) {
+    callId = key;
+    callRef = snapshot.ref;
+    isCaller = false;
+
+    incomingCallUserSpan.textContent = data.fromDisplayName || data.from;
+    incomingCallDiv.style.display = "block";
+
+    // Čakamo, da uporabnik sprejme ali zavrne
+  }
+});
+
+// ---- Sprejem klica ----
+async function acceptCall() {
+  incomingCallDiv.style.display = "none";
+  isInCall = true;
+
+  createPeerConnection();
+
+  // Poslušamo ICE kandidate od klicatelja
+  callRef.child("iceCandidates").on("child_added", snapshot => {
+    const candidate = snapshot.val();
+    if (candidate) {
+      peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  });
+
+  // Nastavimo ponudbo iz Firebase kot remote description
+  const callData = (await callRef.once("value")).val();
+  const offerDesc = new RTCSessionDescription(callData.offer);
+  await peerConnection.setRemoteDescription(offerDesc);
+
+  // Ustvarimo odgovor (answer)
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  // Posodobimo Firebase z odgovorom
+  await callRef.update({ answer: { type: answer.type, sdp: answer.sdp }, status: "in_call" });
+
+  showCallControls(true);
+}
+
+// ---- Zavrnitev klica ----
+async function rejectCall() {
+  if (!callRef) return;
+  await callRef.remove();
+  incomingCallDiv.style.display = "none";
+  resetCallState();
+}
+
+// ---- Prekini klic ----
+async function hangUpCall() {
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+
+  if (localStream) {
+    // NE ustavimo trackov, ker jih želimo držati za naslednji klic
+    // Če želiš, lahko pa jih ustaviš tukaj
+  }
+
+  if (remoteStream) {
+    remoteStream.getTracks().forEach(t => t.stop());
+    remoteStream = null;
+    remoteVideo.srcObject = null;
+  }
+
+  if (callRef) {
+    await callRef.remove();
+    callRef = null;
+  }
+
+  resetCallState();
+  showCallControls(false);
+}
+
+// ---- Ponastavi stanje klica ----
+function resetCallState() {
+  callId = null;
+  isCaller = false;
+  isCalling = false;
+  isInCall = false;
+  incomingCallDiv.style.display = "none";
+  userSearchInput.value = "";
+  toggleCameraBtn.textContent = "Izklopi kamero";
+  toggleMicBtn.textContent = "Izklopi mikrofon";
+}
+
+// ---- Prikaz kontrol za klic ----
+function showCallControls(show) {
+  hangupCallBtn.style.display = show ? "inline-block" : "none";
+  toggleCameraBtn.style.display = show ? "inline-block" : "none";
+  toggleMicBtn.style.display = show ? "inline-block" : "none";
+  callBtn.disabled = show;  // med klicem ne dovolimo novega klica
+}
+
+// ---- Gumbi za toggle kamere/mikrofona ----
+toggleCameraBtn.onclick = () => {
+  if (!videoTrack) return;
+  videoTrack.enabled = !videoTrack.enabled;
+  toggleCameraBtn.textContent = videoTrack.enabled ? "Izklopi kamero" : "Vklopi kamero";
+};
+
+toggleMicBtn.onclick = () => {
+  if (!audioTrack) return;
+  audioTrack.enabled = !audioTrack.enabled;
+  toggleMicBtn.textContent = audioTrack.enabled ? "Izklopi mikrofon" : "Vklopi mikrofon";
+};
+
+// ---- Dogodki za gumb ----
+callBtn.onclick = () => {
+  const calleeId = userSearchInput.value.trim();
+  if (!calleeId) {
+    alert("Vpiši uporabniško ime za klic.");
+    return;
+  }
+  if (calleeId === currentUserId) {
+    alert("Ne moreš klicati samega sebe.");
+    return;
+  }
+  startCall(calleeId);
+};
+
+acceptCallBtn.onclick = () => acceptCall();
+rejectCallBtn.onclick = () => rejectCall();
+hangupCallBtn.onclick = () => hangUpCall();
   </script>
 </body>
 </html>
