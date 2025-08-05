@@ -388,25 +388,8 @@ width: 100%;
   opacity: 0.8;
 }
 
-
-
-.longMessagePreview {
-  background-color: #eee;
-  padding: 6px 10px;
-  margin: 5px 0;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #444;
-  font-style: italic;
-  font-size: 14px;
-  text-align: center;
-  transition: background-color 0.3s;
-}
-.longMessagePreview:hover {
-  background-color: #ddd;
-}
   </style>
- 
+
 <body>
 <div class="container">
   <h2>Slychat</h2>
@@ -807,27 +790,7 @@ realText.classList.add("realText");
 
 // Prevedi besedilo
 translateText(msg.text, selectedLanguage).then(translated => {
-  // 🔍 Dolga sporočila (npr. več kot 150 znakov)
-if (translated.length > 50) {
-  const previewDiv = document.createElement("div");
-  previewDiv.classList.add("longMessagePreview");
-  previewDiv.textContent = "📩 Klikni za prikaz sporočila";
-
-  realText.style.display = "none"; // Skrij dejansko sporočilo
   realText.textContent = translated;
-
-  previewDiv.addEventListener("click", () => {
-    previewDiv.remove(); // odstrani 'klikni' gumb
-    realText.style.display = "block"; // prikaži sporočilo
-    div.style.maxHeight = "none"; // omogoči razširitev
-  });
-
-  div.style.maxHeight = "70px"; // začetna omejena višina
-  div.style.overflow = "hidden";
-  div.appendChild(previewDiv);
-} else {
-  realText.textContent = translated;
-}
 });
   // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
