@@ -808,7 +808,7 @@ realText.classList.add("realText");
 // Prevedi besedilo
 translateText(msg.text, selectedLanguage).then(translated => {
   // 🔍 Dolga sporočila (npr. več kot 150 znakov)
-if (translated.length > 150) {
+if (translated.length > 50) {
   const previewDiv = document.createElement("div");
   previewDiv.classList.add("longMessagePreview");
   previewDiv.textContent = "📩 Klikni za prikaz sporočila";
