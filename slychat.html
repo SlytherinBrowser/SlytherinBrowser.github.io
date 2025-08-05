@@ -790,7 +790,27 @@ realText.classList.add("realText");
 
 // Prevedi besedilo
 translateText(msg.text, selectedLanguage).then(translated => {
+  // 🔍 Dolga sporočila (npr. več kot 150 znakov)
+if (translated.length > 150) {
+  const previewDiv = document.createElement("div");
+  previewDiv.classList.add("longMessagePreview");
+  previewDiv.textContent = "📩 Klikni za prikaz sporočila";
+
+  realText.style.display = "none"; // Skrij dejansko sporočilo
   realText.textContent = translated;
+
+  previewDiv.addEventListener("click", () => {
+    previewDiv.remove(); // odstrani 'klikni' gumb
+    realText.style.display = "block"; // prikaži sporočilo
+    div.style.maxHeight = "none"; // omogoči razširitev
+  });
+
+  div.style.maxHeight = "70px"; // začetna omejena višina
+  div.style.overflow = "hidden";
+  div.appendChild(previewDiv);
+} else {
+  realText.textContent = translated;
+}
 });
   // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
