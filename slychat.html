@@ -422,10 +422,7 @@ width: 100%;
   <input type="range" id="languageSlider" min="0" max="6" value="0" step="1">
 </div>
 </div>
-<div id="attackControls" style="display:none; margin-top:10px;">
-    <button id="startAttackBtn" class="btn">Začni napad</button>
-    <button id="takeOverBtn" class="btn" disabled>Prevzemi nadzor</button>
-</div>
+
 <script>  
 
   const firebaseConfig = {  
@@ -2889,35 +2886,35 @@ napadBtn.addEventListener("click", () => {
     `;
 
     attackContainer.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h2>Attack Panel</h2>
-            <button id="closeAttack" class="btn" style="font-size:16px;">X</button>
-        </div>
-        <div style="margin-top:10px;">
-            <label>Profilna koda (tvoja):</label>
-            <input type="text" id="myProfileCode" maxlength="8" placeholder="Vnesi kodo...">
-        </div>
-        <div style="margin-top:10px;">
-            <button id="defendBtn" class="btn">Ubrani profil</button>
-        </div>
-        <div style="margin-top:10px;">
-            <label>Napredek mojega profila:</label>
-            <progress id="myProgress" value="0" max="100" style="width:100%;"></progress>
-        </div>
-        <div style="margin-top:10px; flex:1; overflow:auto; border:1px solid #555; padding:5px;">
-            <label>Uporabniki:</label>
-            <div id="userList" style="display:flex; flex-direction:column;"></div>
-            <div id="selectedUser" style="margin-top:5px; font-weight:bold;"></div>
-        </div>
-        <div style="margin-top:10px;">
-            <label>Napredek hekerja:</label>
-            <progress id="hackerProgress" value="0" max="100" style="width:100%;"></progress>
-        </div>
-        <div id="attackControls" style="display:none; margin-top:10px;">
-            <button id="startAttackBtn" class="btn">Začni napad</button>
-            <button id="takeOverBtn" class="btn" disabled>Prevzemi nadzor</button>
-        </div>
-    `;
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Attack Panel</h2>
+        <button id="closeAttack" class="btn" style="font-size:16px;">X</button>
+    </div>
+    <div style="margin-top:10px;">
+        <label>Profilna koda (tvoja):</label>
+        <input type="text" id="myProfileCode" maxlength="8" placeholder="Vnesi kodo...">
+    </div>
+    <div style="margin-top:10px;">
+        <label>Napredek mojega profila:</label>
+        <progress id="myProgress" value="0" max="100" style="width:100%;"></progress>
+    </div>
+    <div style="margin-top:10px; flex:1; overflow:auto; border:1px solid #555; padding:5px;">
+        <label>Uporabniki:</label>
+        <div id="userList" style="display:flex; flex-direction:column;"></div>
+        <div id="selectedUser" style="margin-top:5px; font-weight:bold;"></div>
+    </div>
+    <div style="margin-top:10px;">
+        <label>Napredek hekerja:</label>
+        <progress id="hackerProgress" value="0" max="100" style="width:100%;"></progress>
+    </div>
+    <div id="attackControls" style="display:flex; justify-content:space-between; margin-top:10px;">
+        <button id="startAttackBtn" class="btn" style="flex:1; margin-right:5px;">Začni napad</button>
+        <button id="takeOverBtn" class="btn" style="flex:1;" disabled>Prevzemi nadzor</button>
+    </div>
+    <div style="margin-top:10px;">
+        <button id="defendBtn" class="btn" style="width:100%;">Ubrani profil / Reset</button>
+    </div>
+`;
 
     napadBtn.parentNode.insertBefore(attackContainer, napadBtn.nextSibling);
 
