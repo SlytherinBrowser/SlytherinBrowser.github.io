@@ -414,6 +414,8 @@ width: 100%;
     <button class="btn" onclick="sendMessage()">Pošlji</button>
     <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
    <button class="btn" onclick="returnToPublicChat()">Javni klepet</button>
+<!-- Gumb za izbiro napada -->
+<button id="napadbtn" class="btn">Izberi napad</button>
   </div>
 <div id="languageSliderContainer">
   <div id="currentLang">Jezik: Slovenščina</div>
@@ -2857,11 +2859,7 @@ async function translateText(text, targetLang) {
 
 
 
-// --- IZBERI NAPAD GUMB 
-const napadBtn = document.createElement("button");
-napadBtn.textContent = "Izberi napad";
-napadBtn.classList.add("btn"); // uporablja tvoj CSS razred
-document.body.appendChild(napadBtn);
+
 
 // --- NAPAD CONTAINER ---
 const attackContainer = document.createElement("div");
