@@ -2852,6 +2852,184 @@ async function translateText(text, targetLang) {
   const result = await response.json();
   return result[0]?.map(t => t[0]).join("") || text;
 }
+
+
+
+
+
+// --- IZBERI NAPAD GUMB 
+const napadBtn = document.createElement("button");
+napadBtn.textContent = "Izberi napad";
+napadBtn.classList.add("btn"); // uporablja tvoj CSS razred
+document.body.appendChild(napadBtn);
+
+// --- NAPAD CONTAINER ---
+const attackContainer = document.createElement("div");
+attackContainer.style.position = "fixed";
+attackContainer.style.bottom = "70px";
+attackContainer.style.right = "20px";
+attackContainer.style.width = "300px";
+attackContainer.style.maxHeight = "400px";
+attackContainer.style.backgroundColor = "#111";
+attackContainer.style.color = "#0f0";
+attackContainer.style.border = "2px solid #0f0";
+attackContainer.style.padding = "10px";
+attackContainer.style.display = "none";
+attackContainer.style.flexDirection = "column";
+attackContainer.style.overflow = "hidden";
+document.body.appendChild(attackContainer);
+
+// --- Input varne kode ---
+const safeCodeInput = document.createElement("input");
+safeCodeInput.placeholder = "Vnesi svojo varno kodo (max 8 znakov)";
+safeCodeInput.maxLength = 8;
+safeCodeInput.style.width = "100%";
+safeCodeInput.style.marginBottom = "10px";
+attackContainer.appendChild(safeCodeInput);
+
+// --- Gumb varnost profila ---
+const defendBtn = document.createElement("button");
+defendBtn.textContent = "Varnost profila";
+defendBtn.style.marginBottom = "10px";
+defendBtn.style.cursor = "pointer";
+attackContainer.appendChild(defendBtn);
+
+// --- Prikaz napredka hekerja ---
+const hackerProgressDiv = document.createElement("div");
+hackerProgressDiv.textContent = "Napredek hekerja: 0%";
+hackerProgressDiv.style.marginBottom = "10px";
+attackContainer.appendChild(hackerProgressDiv);
+
+// --- Scrollable seznam uporabnikov ---
+const usersContainer = document.createElement("div");
+usersContainer.style.border = "1px solid #0f0";
+usersContainer.style.height = "150px";
+usersContainer.style.overflowY = "scroll";
+usersContainer.style.marginBottom = "10px";
+attackContainer.appendChild(usersContainer);
+
+// --- Sekcija za napad na izbranega uporabnika ---
+const attackSection = document.createElement("div");
+attackContainer.appendChild(attackSection);
+
+let selectedUser = null;
+let attackInterval = null;
+let attackProgress = 0;
+
+// --- Funkcija za nalaganje uporabnikov iz Firebase ---
+function loadUsers() {
+    usersContainer.innerHTML = "";
+    firebase.database().ref("users").once("value", snapshot => {
+        snapshot.forEach(child => {
+            const user = child.val();
+            const userBtn = document.createElement("button");
+            userBtn.textContent = user.username;
+            userBtn.style.display = "block";
+            userBtn.style.width = "100%";
+            userBtn.style.marginBottom = "5px";
+            userBtn.style.cursor = "pointer";
+            userBtn.onclick = () => selectUserForAttack(user);
+            usersContainer.appendChild(userBtn);
+        });
+    });
+}
+
+// --- Izberemo uporabnika ---
+function selectUserForAttack(user) {
+    selectedUser = user;
+    attackSection.innerHTML = "";
+
+    const startBtn = document.createElement("button");
+    startBtn.textContent = "Začni napad";
+    startBtn.style.marginRight = "5px";
+    startBtn.style.cursor = "pointer";
+
+    const progressDiv = document.createElement("div");
+    progressDiv.textContent = "Napredek napada: 0%";
+    progressDiv.style.margin = "5px 0";
+
+    const takeOverBtn = document.createElement("button");
+    takeOverBtn.textContent = "Prevzemi nadzor";
+    takeOverBtn.style.cursor = "pointer";
+    takeOverBtn.disabled = true;
+
+    attackSection.appendChild(startBtn);
+    attackSection.appendChild(progressDiv);
+    attackSection.appendChild(takeOverBtn);
+
+    // --- Začni napad ---
+    startBtn.onclick = () => {
+        if (!selectedUser) return;
+        if (attackInterval) clearInterval(attackInterval);
+        attackProgress = 0;
+        progressDiv.textContent = "Napredek napada: 0%";
+        takeOverBtn.disabled = true;
+
+        const code = selectedUser.profileCode || generateRandomCode(8);
+        firebase.database().ref("users/" + selectedUser.id + "/profileCode").set(code);
+
+        attackInterval = setInterval(() => {
+            attackProgress += Math.floor(Math.random() * 10) + 1;
+            if (attackProgress >= 100) attackProgress = 100;
+            progressDiv.textContent = `Napredek napada: ${attackProgress}%`;
+            // Posodobi napredek v Firebase za vizualni prikaz drugim
+            firebase.database().ref("attacks/" + selectedUser.id + "/progress").set(attackProgress);
+
+            if (attackProgress >= 100) {
+                clearInterval(attackInterval);
+                takeOverBtn.disabled = false;
+            }
+        }, 500);
+    };
+
+    // --- Prevzemi nadzor ---
+    takeOverBtn.onclick = () => {
+        alert("Vizualno prevzem nadzora: " + selectedUser.username);
+        // Tukaj lahko dodaš kodo, ki spremeni vizualno ime/avatar/barve v UI chat-a
+        firebase.database().ref("attacks/" + selectedUser.id + "/takenOver").set(true);
+    };
+}
+
+// --- Ubran profil ---
+defendBtn.onclick = () => {
+    // Zmanjšaj napredek napadalcev
+    for (let key in selectedUser) {
+        firebase.database().ref("attacks/" + selectedUser.id + "/progress").transaction(current => {
+            return current ? Math.max(current - 15, 0) : 0;
+        });
+    }
+};
+
+// --- Pokaži container ob kliku ---
+napadBtn.onclick = () => {
+    attackContainer.style.display = attackContainer.style.display === "none" ? "flex" : "none";
+    loadUsers();
+};
+
+// --- Funkcija za random kodo ---
+function generateRandomCode(length) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// --- Posodobi napredek hekerja v realnem času ---
+firebase.database().ref("attacks").on("value", snapshot => {
+    const attacks = snapshot.val() || {};
+    if (safeCodeInput.value && attacks[safeCodeInput.value]) {
+        hackerProgressDiv.textContent = "Napredek hekerja: " + (attacks[safeCodeInput.value].progress || 0) + "%";
+    } else {
+        hackerProgressDiv.textContent = "Napredek hekerja: 0%";
+    }
+});
+
+
+
+
+
 </script>
 </body>
 </html>
