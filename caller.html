@@ -3,177 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Napredni WebRTC Klic</title>
+<title>Videoklic ala WhatsApp</title>
 <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background: #1c1c1c;
-        color: #fff;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-    }
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-    h2 {
-        margin-top: 20px;
-        font-weight: 400;
-    }
+  #dock {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
 
-    .video-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        padding: 10px;
-    }
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+  }
 
-    video {
-        width: 45%;
-        max-width: 400px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        background: black;
-    }
+  #localVideo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 120px;
+    height: 160px;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    z-index: 2;
+  }
 
-    @media (max-width: 600px) {
-        video { width: 90%; }
-    }
+  #controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 2;
+  }
 
-    .controls {
-        margin: 15px 0;
-    }
+  button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    transition: background 0.2s;
+  }
 
-    input, button {
-        padding: 10px;
-        margin: 5px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-    }
-
-    input {
-        width: 200px;
-    }
-
-    button {
-        background: #4caf50;
-        color: white;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-
-    button:hover {
-        background: #45a049;
-    }
+  button:hover {
+    background: rgba(255,255,255,0.5);
+  }
 </style>
 </head>
 <body>
-<h2>Napredni WebRTC Video Klic</h2>
+<div id="dock">
+  <video id="remoteVideo" autoplay playsinline></video>
+  <video id="localVideo" autoplay muted playsinline></video>
 
-<div class="video-container">
-    <video id="localVideo" autoplay muted></video>
-    <video id="remoteVideo" autoplay></video>
-</div>
-
-<div class="controls">
+  <div id="controls">
     <button id="createBtn">Ustvari sobo</button>
-    <input id="roomInput" placeholder="ID sobe">
-    <button id="joinBtn">Pridruži se sobi</button>
+    <button id="joinBtn">Pridruži sobi</button>
+    <button id="hangupBtn" style="background:red;">Konec</button>
+  </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-<script>
-// ----- FIREBASE KONFIGURACIJA -----
 const firebaseConfig = {
-    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-    authDomain: "chater-cf682.firebaseapp.com",
-    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-    projectId: "chater-cf682",
-    storageBucket: "chater-cf682.appspot.com",
-    messagingSenderId: "233632075480",
-    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+  authDomain: "chater-cf682.firebaseapp.com",
+  databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+  projectId: "chater-cf682",
+  storageBucket: "chater-cf682.appspot.com",
+  messagingSenderId: "233632075480",
+  appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
-// ----- GLOBALNE SPREMENLJIVKE -----
-let localStream, remoteStream;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 let pc;
-const servers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+let localStream;
 
-// HTML elementi
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 
-// ----- FUNKCIJE -----
 async function initLocalStream() {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    localVideo.srcObject = localStream;
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localVideo.srcObject = localStream;
 }
 
 function createPeerConnection(roomRef) {
-    pc = new RTCPeerConnection(servers);
+  pc = new RTCPeerConnection();
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  pc.ontrack = (event) => {
+    remoteVideo.srcObject = event.streams[0];
+  };
 
-    remoteStream = new MediaStream();
-    remoteVideo.srcObject = remoteStream;
-    pc.ontrack = event => event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-
-    pc.onicecandidate = event => {
-        if (event.candidate) roomRef.collection('candidates').add(event.candidate.toJSON());
-    };
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      addDoc(collection(roomRef, 'candidates'), event.candidate.toJSON());
+    }
+  };
 }
 
-// ----- USTVARJANJE SOBE -----
 document.getElementById('createBtn').onclick = async () => {
-    await initLocalStream();
-    const roomRef = db.collection('rooms').doc();
-    createPeerConnection(roomRef);
+  await initLocalStream();
+  const roomRef = doc(db, 'rooms', crypto.randomUUID());
+  createPeerConnection(roomRef);
 
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
 
-    await roomRef.set({ offer: { type: offer.type, sdp: offer.sdp } });
+  await setDoc(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
 
-    roomRef.onSnapshot(snapshot => {
-        const data = snapshot.data();
-        if (!pc.currentRemoteDescription && data?.answer) {
-            pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-        }
+  onSnapshot(roomRef, snapshot => {
+    const data = snapshot.data();
+    if (!pc.currentRemoteDescription && data?.answer) {
+      pc.setRemoteDescription(data.answer);
+    }
+  });
+
+  onSnapshot(collection(roomRef, 'candidates'), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'added') pc.addIceCandidate(change.doc.data());
     });
+  });
 
-    roomRef.collection('candidates').onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-        });
-    });
-
-    alert("ID sobe: " + roomRef.id);
+  const roomLink = window.location.href + '?room=' + roomRef.id;
+  navigator.clipboard.writeText(roomLink).then(() => {
+    alert("Soba ustvarjena! Link je kopiran:\n" + roomLink);
+  });
 };
 
-// ----- PRIDRUŽITEV SOBI -----
 document.getElementById('joinBtn').onclick = async () => {
-    const roomId = document.getElementById('roomInput').value;
-    if (!roomId) return alert("Vnesi ID sobe!");
-    await initLocalStream();
-    const roomRef = db.collection('rooms').doc(roomId);
-    createPeerConnection(roomRef);
+  const roomId = prompt("Vnesi ID sobe:");
+  if (!roomId) return;
 
-    const roomData = (await roomRef.get()).data();
-    await pc.setRemoteDescription(new RTCSessionDescription(roomData.offer));
+  await initLocalStream();
+  const roomRef = doc(db, 'rooms', roomId);
+  createPeerConnection(roomRef);
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await roomRef.update({ answer: { type: answer.type, sdp: answer.sdp } });
+  const roomSnap = await getDoc(roomRef);
+  if (!roomSnap.exists()) { alert("Soba ne obstaja!"); return; }
 
-    roomRef.collection('candidates').onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-        });
+  const offer = roomSnap.data().offer;
+  await pc.setRemoteDescription(offer);
+
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+
+  await setDoc(roomRef, { answer: { type: answer.type, sdp: answer.sdp } }, { merge: true });
+
+  onSnapshot(collection(roomRef, 'candidates'), snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'added') pc.addIceCandidate(change.doc.data());
     });
+  });
+};
+
+document.getElementById('hangupBtn').onclick = () => {
+  pc?.close();
+  pc = null;
+  remoteVideo.srcObject = null;
+  localVideo.srcObject = null;
 };
 </script>
 </body>
