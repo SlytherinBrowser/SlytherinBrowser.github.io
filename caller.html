@@ -3,196 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Videoklic ala WhatsApp</title>
+<title>Napreden Video Klic</title>
 <style>
   body, html {
     margin: 0;
     padding: 0;
+    background: #121212;
+    font-family: sans-serif;
+    color: white;
     height: 100%;
-    font-family: Arial, sans-serif;
-    background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  #dock {
-    width: 100%;
-    height: 100%;
-    position: relative;
     overflow: hidden;
   }
-
+  #main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: black;
+  }
   video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    background: #000;
   }
-
-  #localVideo {
+  #myVideo {
     position: absolute;
+    width: 150px;
+    height: 200px;
     top: 10px;
     right: 10px;
-    width: 120px;
-    height: 160px;
     border: 2px solid #fff;
     border-radius: 8px;
-    z-index: 2;
+    z-index: 10;
   }
-
   #controls {
     position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    z-index: 2;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    z-index: 20;
   }
-
   button {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 50%;
+    margin: 0 10px;
+    padding: 10px 20px;
     font-size: 16px;
+    border-radius: 5px;
+    border: none;
     cursor: pointer;
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    transition: background 0.2s;
   }
-
-  button:hover {
-    background: rgba(255,255,255,0.5);
-  }
-
-  #hangupBtn { background:red; }
+  button#endCall { background: red; color: white; }
+  button#mute { background: gray; color: white; }
+  button#camera { background: gray; color: white; }
+  button#copyRoom { background: blue; color: white; }
 </style>
 </head>
 <body>
-<div id="dock">
+<div id="main">
   <video id="remoteVideo" autoplay playsinline></video>
-  <video id="localVideo" autoplay muted playsinline></video>
-
+  <video id="myVideo" autoplay muted playsinline></video>
   <div id="controls">
-    <button id="createBtn">Ustvari sobo</button>
-    <button id="joinBtn">Pridruži sobi</button>
-    <button id="copyBtn">Kopiraj ID sobe</button>
-    <button id="hangupBtn">Konec</button>
+    <button id="mute">Utišaj</button>
+    <button id="camera">Kamera</button>
+    <button id="endCall">Prekini klic</button>
+    <button id="copyRoom">Kopiraj ID sobe</button>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-  authDomain: "chater-cf682.firebaseapp.com",
-  databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-  projectId: "chater-cf682",
-  storageBucket: "chater-cf682.appspot.com",
-  messagingSenderId: "233632075480",
-  appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
-};
+<script>
+  // Firebase konfiguracija
+  const firebaseConfig = {
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+    authDomain: "chater-cf682.firebaseapp.com",
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+    projectId: "chater-cf682",
+    storageBucket: "chater-cf682.appspot.com",
+    messagingSenderId: "233632075480",
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  // Pridobi ID sobe ali ga generiraj
+  let roomID = prompt("Vnesi ID sobe ali pusti prazno za novo:");
+  if (!roomID) roomID = Math.random().toString(36).substring(2,10);
 
-let pc;
-let localStream;
-let roomId = null; // shranimo ID sobe
+  alert("Tvoj ID sobe: " + roomID);
 
-const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
+  const myVideo = document.getElementById('myVideo');
+  const remoteVideo = document.getElementById('remoteVideo');
 
-async function initLocalStream() {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  localVideo.srcObject = localStream;
-}
+  let pc = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
 
-function createPeerConnection(roomRef) {
-  pc = new RTCPeerConnection();
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  let localStream;
+  let isMuted = false;
+  let cameraOff = false;
 
-  pc.ontrack = (event) => {
-    remoteVideo.srcObject = event.streams[0];
+  // Zajem kamere in mikrofona
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+    localStream = stream;
+    myVideo.srcObject = stream;
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+  });
+
+  // Remote stream
+  let remoteStream = new MediaStream();
+  remoteVideo.srcObject = remoteStream;
+
+  pc.ontrack = event => {
+    event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
   };
 
-  pc.onicecandidate = (event) => {
+  // ICE kandidati
+  pc.onicecandidate = event => {
     if (event.candidate) {
-      addDoc(collection(roomRef, 'candidates'), event.candidate.toJSON());
+      const candidateData = JSON.stringify(event.candidate);
+      db.ref(`rooms/${roomID}/candidates/${Math.random().toString(36).substr(2,9)}`).set(candidateData);
     }
   };
-}
 
-document.getElementById('createBtn').onclick = async () => {
-  await initLocalStream();
-  roomId = crypto.randomUUID();
-  const roomRef = doc(db, 'rooms', roomId);
-  createPeerConnection(roomRef);
+  // poslušanje ICE kandidatov
+  db.ref(`rooms/${roomID}/candidates`).on('child_added', snapshot => {
+    const candidate = JSON.parse(snapshot.val());
+    pc.addIceCandidate(new RTCIceCandidate(candidate));
+  });
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
+  // SDP ponudba / odgovor
+  async function initCall() {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    db.ref(`rooms/${roomID}/offer`).set(JSON.stringify(offer));
 
-  await setDoc(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
+    db.ref(`rooms/${roomID}/answer`).on('value', async snap => {
+      if (snap.exists() && !pc.currentRemoteDescription) {
+        const answer = JSON.parse(snap.val());
+        await pc.setRemoteDescription(answer);
+      }
+    });
+  }
 
-  onSnapshot(roomRef, snapshot => {
-    const data = snapshot.data();
-    if (!pc.currentRemoteDescription && data?.answer) {
-      pc.setRemoteDescription(data.answer);
+  db.ref(`rooms/${roomID}/offer`).once('value', async snap => {
+    if (!snap.exists()) {
+      initCall();
+    } else {
+      const offer = JSON.parse(snap.val());
+      await pc.setRemoteDescription(offer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      db.ref(`rooms/${roomID}/answer`).set(JSON.stringify(answer));
     }
   });
 
-  onSnapshot(collection(roomRef, 'candidates'), snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type === 'added') pc.addIceCandidate(change.doc.data());
+  // Gumbi
+  document.getElementById('endCall').onclick = () => {
+    pc.close();
+    alert('Klic končan.');
+    window.location.reload();
+  };
+
+  document.getElementById('mute').onclick = () => {
+    isMuted = !isMuted;
+    localStream.getAudioTracks()[0].enabled = !isMuted;
+    document.getElementById('mute').innerText = isMuted ? 'Vklopi zvok' : 'Utišaj';
+  };
+
+  document.getElementById('camera').onclick = () => {
+    cameraOff = !cameraOff;
+    localStream.getVideoTracks()[0].enabled = !cameraOff;
+    document.getElementById('camera').innerText = cameraOff ? 'Vklopi kamero' : 'Kamera';
+  };
+
+  document.getElementById('copyRoom').onclick = () => {
+    navigator.clipboard.writeText(roomID).then(() => {
+      alert('ID sobe kopiran v odložišče!');
     });
-  });
-
-  alert("Soba ustvarjena! ID sobe: " + roomId);
-};
-
-document.getElementById('joinBtn').onclick = async () => {
-  const inputId = prompt("Vnesi ID sobe:");
-  if (!inputId) return;
-
-  roomId = inputId;
-  await initLocalStream();
-  const roomRef = doc(db, 'rooms', roomId);
-  createPeerConnection(roomRef);
-
-  const roomSnap = await getDoc(roomRef);
-  if (!roomSnap.exists()) { alert("Soba ne obstaja!"); return; }
-
-  const offer = roomSnap.data().offer;
-  await pc.setRemoteDescription(offer);
-
-  const answer = await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-
-  await setDoc(roomRef, { answer: { type: answer.type, sdp: answer.sdp } }, { merge: true });
-
-  onSnapshot(collection(roomRef, 'candidates'), snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type === 'added') pc.addIceCandidate(change.doc.data());
-    });
-  });
-};
-
-document.getElementById('copyBtn').onclick = async () => {
-  if (!roomId) { alert("Najprej ustvari ali se pridruži sobi!"); return; }
-  await navigator.clipboard.writeText(roomId);
-  alert("ID sobe kopiran: " + roomId);
-};
-
-document.getElementById('hangupBtn').onclick = () => {
-  pc?.close();
-  pc = null;
-  remoteVideo.srcObject = null;
-  localVideo.srcObject = null;
-  roomId = null;
-};
+  };
 </script>
 </body>
 </html>
