@@ -47,7 +47,7 @@
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 20px;
+    gap: 15px;
     z-index: 2;
   }
 
@@ -65,6 +65,8 @@
   button:hover {
     background: rgba(255,255,255,0.5);
   }
+
+  #hangupBtn { background:red; }
 </style>
 </head>
 <body>
@@ -75,7 +77,8 @@
   <div id="controls">
     <button id="createBtn">Ustvari sobo</button>
     <button id="joinBtn">Pridruži sobi</button>
-    <button id="hangupBtn" style="background:red;">Konec</button>
+    <button id="copyBtn">Kopiraj ID sobe</button>
+    <button id="hangupBtn">Konec</button>
   </div>
 </div>
 
@@ -98,6 +101,7 @@ const db = getFirestore(app);
 
 let pc;
 let localStream;
+let roomId = null; // shranimo ID sobe
 
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
@@ -124,7 +128,8 @@ function createPeerConnection(roomRef) {
 
 document.getElementById('createBtn').onclick = async () => {
   await initLocalStream();
-  const roomRef = doc(db, 'rooms', crypto.randomUUID());
+  roomId = crypto.randomUUID();
+  const roomRef = doc(db, 'rooms', roomId);
   createPeerConnection(roomRef);
 
   const offer = await pc.createOffer();
@@ -145,16 +150,14 @@ document.getElementById('createBtn').onclick = async () => {
     });
   });
 
-  const roomLink = window.location.href + '?room=' + roomRef.id;
-  navigator.clipboard.writeText(roomLink).then(() => {
-    alert("Soba ustvarjena! Link je kopiran:\n" + roomLink);
-  });
+  alert("Soba ustvarjena! ID sobe: " + roomId);
 };
 
 document.getElementById('joinBtn').onclick = async () => {
-  const roomId = prompt("Vnesi ID sobe:");
-  if (!roomId) return;
+  const inputId = prompt("Vnesi ID sobe:");
+  if (!inputId) return;
 
+  roomId = inputId;
   await initLocalStream();
   const roomRef = doc(db, 'rooms', roomId);
   createPeerConnection(roomRef);
@@ -177,11 +180,18 @@ document.getElementById('joinBtn').onclick = async () => {
   });
 };
 
+document.getElementById('copyBtn').onclick = async () => {
+  if (!roomId) { alert("Najprej ustvari ali se pridruži sobi!"); return; }
+  await navigator.clipboard.writeText(roomId);
+  alert("ID sobe kopiran: " + roomId);
+};
+
 document.getElementById('hangupBtn').onclick = () => {
   pc?.close();
   pc = null;
   remoteVideo.srcObject = null;
   localVideo.srcObject = null;
+  roomId = null;
 };
 </script>
 </body>
