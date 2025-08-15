@@ -1,0 +1,500 @@
+<!DOCTYPE html><html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video klic z avatarji + mimika (Ready Player Me)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; margin: 0; background: #0b0d12; color: #e6e8ee; }
+    header { padding: 16px 20px; display: flex; gap: 12px; align-items: center; justify-content: space-between; background: linear-gradient(180deg, #111723, #0b0d12); border-bottom: 1px solid #1b2230; position: sticky; top:0; z-index:2; }
+    header h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: .2px; }
+    .row { display: grid; grid-template-columns: 360px 1fr; gap: 16px; padding: 16px; }
+    .panel { background: #0f1420; border: 1px solid #1b2230; border-radius: 16px; padding: 14px; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
+    .panel h2 { font-size: 14px; font-weight: 700; margin: 0 0 10px; color: #9fb5ff; letter-spacing: .2px; }
+    .controls { display: grid; gap: 8px; }
+    label { font-size: 12px; color: #aeb6c5; }
+    input[type="text"], input[type="url"], select { width: 100%; padding: 10px 12px; background: #0b1120; border: 1px solid #20304a; border-radius: 12px; color: #e6e8ee; outline: none; }
+    button { padding: 10px 12px; border: 1px solid #2a3d63; background: #15223a; color: #e6e8ee; border-radius: 12px; cursor: pointer; font-weight: 600; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .videos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    video { width: 100%; height: auto; background: #151a24; border-radius: 12px; border: 1px solid #1c2536; }
+    canvas.webgl { width: 100%; height: 380px; display: block; background: radial-gradient(1000px 300px at 50% 120%, rgba(98,127,255,.15), rgba(0,0,0,0)); border-radius: 12px; border: 1px solid #1c2536; }
+    .status { font-size: 12px; color: #97a3ba; margin-top: 6px; min-height: 18px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #31456d; background:#132441; font-size:11px; margin-right:6px; }
+    .tiny { font-size: 11px; color: #7e8aa5; }
+    .footer { padding: 10px 16px; border-top: 1px solid #1b2230; display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+  <!-- Three.js + GLTFLoader -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- face-api.js (izrazi + landmarks) -->
+  <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🎥 Video klic + 3D avatar (Ready Player Me) z mimiko</h1>
+    <div>
+      <span class="badge">WebRTC</span>
+      <span class="badge">face-api.js</span>
+      <span class="badge">Three.js</span>
+    </div>
+  </header>  <div class="row">
+    <aside class="panel">
+      <h2>Nastavitve & povezava</h2>
+      <div class="controls">
+        <div>
+          <label for="avatarUrl">Ready Player Me GLB/GLTF URL (tvoj avatar)</label>
+          <input id="avatarUrl" type="url" placeholder="https://models.readyplayer.me/XXXXXX.glb" />
+        </div>
+        <div class="grid2">
+          <button id="btnStart">1) Zaženi kamero + mikrofon</button>
+          <button id="btnStop" disabled>Ustavi</button>
+        </div>
+        <div class="grid2">
+          <button id="btnCreate" disabled>2) Ustvari sobo</button>
+          <button id="btnJoin" disabled>Pridruži se</button>
+        </div>
+        <div>
+          <label for="roomId">ID sobe (kopiraj/prilepi)</label>
+          <input id="roomId" type="text" placeholder="samodejno po ustvarjanju" />
+          <div class="tiny">Opomba: signalizacija prek Firebase Firestore.</div>
+        </div>
+        <div class="grid2">
+          <button id="btnHangup" disabled>Končaj klic</button>
+          <button id="btnCopyId" disabled>Kopiraj ID</button>
+        </div>
+        <div class="status mono" id="status">⏳ Pripravljeno.</div>
+      </div>
+    </aside><main class="panel">
+  <h2>Predogled & avatarji</h2>
+  <div class="videos">
+    <div>
+      <label>🧑‍💻 Tvoj video</label>
+      <video id="localVideo" autoplay playsinline muted></video>
+    </div>
+    <div>
+      <label>📞 Oddaljeni video</label>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:12px;">
+    <div>
+      <label>🧍 Tvoj 3D avatar (mimika v živo)</label>
+      <canvas id="localCanvas" class="webgl"></canvas>
+    </div>
+    <div>
+      <label>🧍‍♂️ Oddaljeni 3D avatar (preko DataChannel)</label>
+      <canvas id="remoteCanvas" class="webgl"></canvas>
+    </div>
+  </div>
+  <div class="footer tiny">
+    <div>
+      🛈 Mimika temelji na <span class="mono">face-api.js</span> (izrazi+landmarki) in na jakosti glasu (lip‑sync). Pošiljanje blendshape vrednosti poteka preko WebRTC DataChannela.
+    </div>
+  </div>
+</main>
+
+  </div>  <script>
+    // =============================
+    // Firebase – zamenjaj s svojo konfiguracijo (ta je iz tvojega projekta)
+    // =============================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // =============================
+    // WebRTC spremenljivke
+    // =============================
+    let localStream, remoteStream, pc, exprChannel, exprChannelRemote;
+    const configuration = { iceServers: [ { urls: [ 'stun:stun.l.google.com:19302' ] } ] };
+
+    // =============================
+    // UI elementi
+    // =============================
+    const statusEl = document.getElementById('status');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const btnCreate = document.getElementById('btnCreate');
+    const btnJoin = document.getElementById('btnJoin');
+    const btnHangup = document.getElementById('btnHangup');
+    const btnCopyId = document.getElementById('btnCopyId');
+    const roomIdInput = document.getElementById('roomId');
+    const avatarUrlInput = document.getElementById('avatarUrl');
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    // =============================
+    // Kamera + mic
+    // =============================
+    btnStart.onclick = async () => {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+        btnStop.disabled = false; btnCreate.disabled = false; btnJoin.disabled = false;
+        setStatus('✅ Kamera/mikrofon vklopljena.');
+        initFacePipeline(); // zaženemo zaznavanje obraza
+        initLocalAvatar();
+        initRemoteAvatar();
+      } catch (e) {
+        console.error(e);
+        setStatus('❌ Napaka pri dostopu do kamere/mikrofona. Dovoli dovoljenja.');
+      }
+    };
+
+    btnStop.onclick = () => {
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      localVideo.srcObject = null; setStatus('⏹️ Ustavljeno.');
+      btnStop.disabled = true; btnCreate.disabled = true; btnJoin.disabled = true; btnHangup.disabled = true; btnCopyId.disabled = true;
+    };
+
+    // =============================
+    // Ustvari / pridruži sobi (Firestore signalizacija)
+    // =============================
+    btnCreate.onclick = async () => {
+      pc = new RTCPeerConnection(configuration);
+      registerPeerEvents();
+
+      // Media
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      remoteStream = new MediaStream();
+      remoteVideo.srcObject = remoteStream;
+
+      // Data channel za mimiko
+      exprChannel = pc.createDataChannel('expr');
+      exprChannel.onopen = () => setStatus('🟢 DataChannel odprt (pošiljanje mimike).');
+      exprChannel.onclose = () => setStatus('🟡 DataChannel zaprt.');
+
+      const roomRef = await db.collection('rooms').doc();
+      roomIdInput.value = roomRef.id;
+      btnCopyId.disabled = false; btnHangup.disabled = false;
+
+      const callerCandidatesCollection = roomRef.collection('callerCandidates');
+      pc.onicecandidate = event => {
+        if (event.candidate) callerCandidatesCollection.add(event.candidate.toJSON());
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await roomRef.set({ offer: { type: offer.type, sdp: offer.sdp }, created: Date.now() });
+
+      roomRef.onSnapshot(async snapshot => {
+        const data = snapshot.data();
+        if (!pc.currentRemoteDescription && data && data.answer) {
+          const answer = new RTCSessionDescription(data.answer);
+          await pc.setRemoteDescription(answer);
+          setStatus('🤝 Povezano (prejeli answer).');
+        }
+      });
+
+      roomRef.collection('calleeCandidates').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+          }
+        });
+      });
+      setStatus('🧩 Ustvarjena soba. Delite ID in počakajte na sogovornika.');
+    };
+
+    btnJoin.onclick = async () => {
+      const roomId = roomIdInput.value.trim();
+      if (!roomId) { setStatus('🔎 Vnesi ID sobe.'); return; }
+      const roomRef = db.collection('rooms').doc(roomId);
+      const roomSnapshot = await roomRef.get();
+      if (!roomSnapshot.exists) { setStatus('❌ Soba ne obstaja.'); return; }
+
+      pc = new RTCPeerConnection(configuration);
+      registerPeerEvents();
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+      remoteStream = new MediaStream();
+      remoteVideo.srcObject = remoteStream;
+
+      pc.ondatachannel = event => {
+        if (event.channel.label === 'expr') {
+          exprChannelRemote = event.channel;
+          exprChannelRemote.onmessage = ev => {
+            try { const data = JSON.parse(ev.data); applyRemoteBlendshapes(data); } catch {}
+          };
+          setStatus('🟢 DataChannel sprejet (prejem mimike).');
+        }
+      };
+
+      const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+      pc.onicecandidate = event => {
+        if (event.candidate) calleeCandidatesCollection.add(event.candidate.toJSON());
+      };
+
+      const offer = roomSnapshot.data().offer;
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await roomRef.update({ answer: { type: answer.type, sdp: answer.sdp }, joined: Date.now() });
+
+      roomRef.collection('callerCandidates').onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+          }
+        });
+      });
+
+      btnHangup.disabled = false; btnCopyId.disabled = false; setStatus('🤝 Pridružen klicu.');
+    };
+
+    btnHangup.onclick = async () => {
+      if (pc) { pc.close(); pc = null; }
+      if (exprChannel) exprChannel.close();
+      if (exprChannelRemote) exprChannelRemote.close();
+      setStatus('📴 Klic zaključen.');
+    };
+
+    btnCopyId.onclick = async () => {
+      try { await navigator.clipboard.writeText(roomIdInput.value); setStatus('📋 ID sobe kopiran.'); } catch {}
+    };
+
+    function registerPeerEvents() {
+      pc.ontrack = (event) => {
+        event.streams[0].getTracks().forEach(t => remoteStream.addTrack(t));
+      };
+      pc.onconnectionstatechange = () => setStatus('🔗 Povezava: ' + pc.connectionState);
+      pc.oniceconnectionstatechange = () => console.log('ICE:', pc.iceConnectionState);
+    }
+
+    // =============================
+    // face-api.js – zaznavanje (lokalno) + pošiljanje blendshape
+    // =============================
+    let faceReady = false, analyser, audioData;
+    async function initFacePipeline() {
+      setStatus('⬇️ Nalagam modele za obraz...');
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+      ]);
+      faceReady = true; setStatus('✅ Modeli naloženi.');
+      // Audio analyser za lip‑sync (jakost glasu)
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const src = ac.createMediaStreamSource(localStream);
+      analyser = ac.createAnalyser(); analyser.fftSize = 512; audioData = new Uint8Array(analyser.frequencyBinCount);
+      src.connect(analyser);
+      runFaceLoop();
+    }
+
+    // majhen filter za gladkost
+    const smooth = (prev, next, k=0.6) => prev + (next - prev) * k;
+    let smoothVals = { jawOpen: 0, smileL: 0, smileR: 0, browUp: 0, eyeBlinkL: 0, eyeBlinkR: 0 };
+
+    async function runFaceLoop() {
+      const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+      const loop = async () => {
+        if (!faceReady || !localVideo.videoWidth) { requestAnimationFrame(loop); return; }
+        const det = await faceapi.detectSingleFace(localVideo, opts).withFaceLandmarks().withFaceExpressions();
+        let blend = { jawOpen: 0, mouthSmileLeft: 0, mouthSmileRight: 0, browInnerUp: 0, eyeBlinkLeft: 0, eyeBlinkRight: 0 };
+        if (det) {
+          const lm = det.landmarks; // 68 točk
+          const pts = lm.positions;
+          // Usta odprta: razdalja med notranjo ustnico (66) in 62 ter normalizacija po razdalji oči
+          const mouthOpen = (() => {
+            const top = pts[62], bot = pts[66];
+            const dy = Math.hypot(top.x - bot.x, top.y - bot.y);
+            const eyeL = pts[36], eyeR = pts[45];
+            const eyeDist = Math.hypot(eyeL.x - eyeR.x, eyeL.y - eyeR.y);
+            return Math.min(1, Math.max(0, (dy / eyeDist) * 2.2)); // skalirano
+          })();
+          // Očesni utrip (EAR) – manjša vrednost pomeni zaprtje
+          const eyeBlink = (idxs) => {
+            const p = i => pts[i];
+            const A = Math.hypot(p(idxs[1]).y - p(idxs[5]).y, p(idxs[1]).x - p(idxs[5]).x);
+            const B = Math.hypot(p(idxs[2]).y - p(idxs[4]).y, p(idxs[2]).x - p(idxs[4]).x);
+            const C = Math.hypot(p(idxs[0]).y - p(idxs[3]).y, p(idxs[0]).x - p(idxs[3]).x);
+            const ear = (A + B) / (2.0 * C);
+            const blink = Math.min(1, Math.max(0, (0.28 - ear) * 5)); // prag
+            return blink;
+          };
+          const blinkL = eyeBlink([36,37,38,39,40,41]);
+          const blinkR = eyeBlink([42,43,44,45,46,47]);
+          // Smehljaj iz ekspresij
+          const smile = det.expressions.happy || 0;
+          // Dvignjene obrvi iz presenečenja
+          const surprise = det.expressions.surprised || 0;
+
+          // Lip‑sync iz glasu (jakost)
+          analyser.getByteTimeDomainData(audioData);
+          let vol = 0; for (let i=0;i<audioData.length;i++){ const v=(audioData[i]-128)/128; vol += v*v; }
+          vol = Math.sqrt(vol / audioData.length); // RMS
+          const voiceJaw = Math.min(1, vol * 8);
+
+          // združimo: največje od mouthOpen & voiceJaw
+          blend.jawOpen = Math.max(mouthOpen, voiceJaw);
+          blend.mouthSmileLeft = smile;
+          blend.mouthSmileRight = smile;
+          blend.browInnerUp = surprise * 0.8;
+          blend.eyeBlinkLeft = blinkL;
+          blend.eyeBlinkRight = blinkR;
+        }
+
+        // glajenje
+        smoothVals.jawOpen     = smooth(smoothVals.jawOpen, blend.jawOpen ?? 0);
+        smoothVals.smileL      = smooth(smoothVals.smileL, blend.mouthSmileLeft ?? 0);
+        smoothVals.smileR      = smooth(smoothVals.smileR, blend.mouthSmileRight ?? 0);
+        smoothVals.browUp      = smooth(smoothVals.browUp, blend.browInnerUp ?? 0);
+        smoothVals.eyeBlinkL   = smooth(smoothVals.eyeBlinkL, blend.eyeBlinkLeft ?? 0);
+        smoothVals.eyeBlinkR   = smooth(smoothVals.eyeBlinkR, blend.eyeBlinkRight ?? 0);
+
+        // posodobi lokalni avatar
+        applyLocalBlendshapes({
+          jawOpen: smoothVals.jawOpen,
+          mouthSmileLeft: smoothVals.smileL,
+          mouthSmileRight: smoothVals.smileR,
+          browInnerUp: smoothVals.browUp,
+          eyeBlinkLeft: smoothVals.eyeBlinkL,
+          eyeBlinkRight: smoothVals.eyeBlinkR
+        });
+
+        // pošlji po DataChannel (če obstaja)
+        const payload = JSON.stringify({
+          jawOpen: smoothVals.jawOpen,
+          mouthSmileLeft: smoothVals.smileL,
+          mouthSmileRight: smoothVals.smileR,
+          browInnerUp: smoothVals.browUp,
+          eyeBlinkLeft: smoothVals.eyeBlinkL,
+          eyeBlinkRight: smoothVals.eyeBlinkR
+        });
+        if (exprChannel && exprChannel.readyState === 'open') {
+          exprChannel.send(payload);
+        }
+        requestAnimationFrame(loop);
+      };
+      loop();
+    }
+
+    // =============================
+    // Three.js – nalaganje RPM avatarjev + mapiranje blendshape → morph targets
+    // =============================
+    let localThree = {}, remoteThree = {};
+
+    function initRenderer(canvas) {
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+      camera.position.set(0, 1.6, 2.2);
+      const light = new THREE.HemisphereLight(0xffffff, 0x223355, 1.1);
+      scene.add(light);
+      const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(1, 2, 3); scene.add(dir);
+      const controls = new THREE.OrbitControls(camera, canvas); controls.enableDamping = true; controls.target.set(0, 1.5, 0);
+      const clock = new THREE.Clock();
+      function onResize(){
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+      }
+      onResize(); new ResizeObserver(onResize).observe(canvas);
+      return { renderer, scene, camera, controls, clock };
+    }
+
+    async function loadRPMAvatar(url, scene) {
+      return new Promise((resolve, reject) => {
+        const loader = new THREE.GLTFLoader();
+        loader.load(url, (gltf) => {
+          const model = gltf.scene;
+          model.traverse(obj => { if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; } });
+          // standardna postavitev
+          model.position.set(0, 0, 0);
+          model.scale.set(1,1,1);
+          scene.add(model);
+          // poišči morphTargets (ARKit imena)
+          const morphMap = {};
+          model.traverse(obj => {
+            if (obj.morphTargetDictionary && obj.morphTargetInfluences) {
+              const dict = obj.morphTargetDictionary;
+              Object.keys(dict).forEach(name => { morphMap[name] = { mesh: obj, index: dict[name] }; });
+            }
+          });
+          resolve({ model, morphMap });
+        }, undefined, reject);
+      });
+    }
+
+    function startRenderLoop(store){
+      const { renderer, scene, camera, controls, clock } = store;
+      function animate(){
+        controls.update();
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    async function initLocalAvatar(){
+      localThree = initRenderer(document.getElementById('localCanvas'));
+      startRenderLoop(localThree);
+      // Če je URL prazen, damo demo avatar (možno zamenjati)
+      let url = avatarUrlInput.value.trim();
+      if (!url) {
+        // Public demo avatar iz RPM (zamenjaj s svojim GLB za najboljši rezultat)
+        url = 'https://models.readyplayer.me/647e1f294cf901f3c3c58e06.glb';
+      }
+      try {
+        const { model, morphMap } = await loadRPMAvatar(url, localThree.scene);
+        localThree.model = model; localThree.morphMap = morphMap;
+        // malo zasukamo v kamero
+        model.rotation.y = Math.PI;
+        setStatus('🧍 Lokalni avatar naložen.');
+      } catch(e){ console.error(e); setStatus('⚠️ Napaka pri nalaganju lokalnega avatarja.'); }
+    }
+
+    async function initRemoteAvatar(){
+      remoteThree = initRenderer(document.getElementById('remoteCanvas'));
+      startRenderLoop(remoteThree);
+      // Naložimo isti model, lahko pa drugačen – za demo
+      let url = avatarUrlInput.value.trim();
+      if (!url) url = 'https://models.readyplayer.me/647e1f294cf901f3c3c58e06.glb';
+      try {
+        const { model, morphMap } = await loadRPMAvatar(url, remoteThree.scene);
+        remoteThree.model = model; remoteThree.morphMap = morphMap; model.rotation.y = Math.PI;
+        setStatus('🧍 Oddaljeni avatar pripravljen (čaka na podatke).');
+      } catch(e){ console.error(e); setStatus('⚠️ Napaka pri nalaganju oddaljenega avatarja.'); }
+    }
+
+    function setMorph(map, name, val){
+      const t = map[name]; if (!t) return;
+      t.mesh.morphTargetInfluences[t.index] = THREE.MathUtils.clamp(val, 0, 1);
+    }
+
+    function applyLocalBlendshapes(vals){
+      if (!localThree.morphMap) return;
+      setMorph(localThree.morphMap, 'jawOpen', vals.jawOpen ?? 0);
+      setMorph(localThree.morphMap, 'mouthSmileLeft', vals.mouthSmileLeft ?? 0);
+      setMorph(localThree.morphMap, 'mouthSmileRight', vals.mouthSmileRight ?? 0);
+      setMorph(localThree.morphMap, 'browInnerUp', vals.browInnerUp ?? 0);
+      setMorph(localThree.morphMap, 'eyeBlinkLeft', vals.eyeBlinkLeft ?? 0);
+      setMorph(localThree.morphMap, 'eyeBlinkRight', vals.eyeBlinkRight ?? 0);
+    }
+
+    function applyRemoteBlendshapes(vals){
+      if (!remoteThree.morphMap) return;
+      setMorph(remoteThree.morphMap, 'jawOpen', vals.jawOpen ?? 0);
+      setMorph(remoteThree.morphMap, 'mouthSmileLeft', vals.mouthSmileLeft ?? 0);
+      setMorph(remoteThree.morphMap, 'mouthSmileRight', vals.mouthSmileRight ?? 0);
+      setMorph(remoteThree.morphMap, 'browInnerUp', vals.browInnerUp ?? 0);
+      setMorph(remoteThree.morphMap, 'eyeBlinkLeft', vals.eyeBlinkLeft ?? 0);
+      setMorph(remoteThree.morphMap, 'eyeBlinkRight', vals.eyeBlinkRight ?? 0);
+    }
+  </script></body>
+</html>
