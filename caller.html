@@ -2,23 +2,84 @@
 <html lang="sl">
 <head>
 <meta charset="UTF-8">
-<title>WebRTC Dvoosebni Klic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Napredni WebRTC Klic</title>
 <style>
-  body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-  video { width: 45%; margin: 10px; background: black; }
-  input, button { margin: 5px; padding: 5px; }
+    body {
+        font-family: 'Arial', sans-serif;
+        background: #1c1c1c;
+        color: #fff;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        margin-top: 20px;
+        font-weight: 400;
+    }
+
+    .video-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    video {
+        width: 45%;
+        max-width: 400px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        background: black;
+    }
+
+    @media (max-width: 600px) {
+        video { width: 90%; }
+    }
+
+    .controls {
+        margin: 15px 0;
+    }
+
+    input, button {
+        padding: 10px;
+        margin: 5px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+    }
+
+    input {
+        width: 200px;
+    }
+
+    button {
+        background: #4caf50;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button:hover {
+        background: #45a049;
+    }
 </style>
 </head>
 <body>
-<h2>WebRTC Video Klic</h2>
+<h2>Napredni WebRTC Video Klic</h2>
 
-<video id="localVideo" autoplay muted></video>
-<video id="remoteVideo" autoplay></video>
-<br>
+<div class="video-container">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+</div>
 
-<button id="createBtn">Ustvari sobo</button>
-<input id="roomInput" placeholder="ID sobe">
-<button id="joinBtn">Pridruži se sobi</button>
+<div class="controls">
+    <button id="createBtn">Ustvari sobo</button>
+    <input id="roomInput" placeholder="ID sobe">
+    <button id="joinBtn">Pridruži se sobi</button>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
