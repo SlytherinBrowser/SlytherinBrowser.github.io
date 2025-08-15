@@ -2863,30 +2863,30 @@ async function translateText(text, targetLang) {
 
 
 
-// Gumb za odpiranje kontainerja
-const napadBtn = document.getElementById("napadbtn");
+const napadBtn = document.getElementById("napadbtn"); // gumb za prikaz attack panela
 
-napadBtn.addEventListener("click", () => {
-    if (!document.getElementById("attackContainer")) createAttackPanel();
-});
+let originalProfile = null;      // tvoj originalni profil
+let takenProfile = null;         // prevzeti profil žrtve
+let currentTargetUid = null;     // uid žrtve, ki jo napadaš
 
+// Ustvari attack container
 function createAttackPanel() {
     const attackContainer = document.createElement("div");
     attackContainer.id = "attackContainer";
     attackContainer.style.cssText = `
-        position:fixed;  
-        top:0; left:0;  
-        width:100%; height:100%;  
-        background:#222;  
-        color:#fff;  
-        padding:20px;  
-        box-sizing:border-box;  
-        z-index:9999;  
-        overflow:auto;  
-        display:flex;  
+        position:fixed;
+        top:0; left:0;
+        width:100%; height:100%;
+        background:#222;
+        color:#fff;
+        padding:20px;
+        box-sizing:border-box;
+        z-index:9999;
+        overflow:auto;
+        display:flex;
         flex-direction:column;
-        font-size:16px;
     `;
+
     attackContainer.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h2>Attack Panel</h2>
@@ -2905,8 +2905,8 @@ function createAttackPanel() {
         </div>
         <div style="margin-top:10px; flex:1; overflow:auto; border:1px solid #555; padding:5px;">
             <label>Uporabniki:</label>
-            <div id="userList" style="display:flex; flex-direction:column;"></div>
-            <div id="selectedUser" style="margin-top:5px; font-weight:bold;"></div>
+            <div id="userList" style="display:flex; flex-direction:column; font-size:18px;"></div>
+            <div id="selectedTarget" style="margin-top:5px; font-weight:bold;"></div>
         </div>
         <div style="margin-top:10px;">
             <label>Napredek hekerja:</label>
@@ -2917,99 +2917,115 @@ function createAttackPanel() {
             <button id="takeOverBtn" class="btn" disabled>Prevzemi nadzor</button>
         </div>
     `;
+
     napadBtn.parentNode.insertBefore(attackContainer, napadBtn.nextSibling);
 
-    // Zapri gumb
-    document.getElementById("closeAttack").addEventListener("click", () => attackContainer.remove());
+    // Zapri panel
+    document.getElementById("closeAttack").onclick = () => attackContainer.remove();
 
+    // Funkcionalnost gumba
     const userListDiv = document.getElementById("userList");
-    const selectedUserDiv = document.getElementById("selectedUser");
-    let selectedUser = null;
-
-    // Firebase - pridobi uporabnike
-    firebase.database().ref("users").on("value", snapshot => {
-        userListDiv.innerHTML = "";
-        snapshot.forEach(childSnap => {
-            const user = childSnap.val();
-            const uid = childSnap.key;
-            if (uid === firebase.auth().currentUser.uid) return; // ne prikaži sebe
-
-            const userDiv = document.createElement("div");
-            userDiv.style.cssText = `
-                display:flex; align-items:center; margin:3px; cursor:pointer;
-            `;
-            userDiv.innerHTML = `<img src="${user.avatarURL2}" width="30" height="30" style="border-radius:50%; margin-right:5px;">
-                                 <span style="color:${user.color};">${user.displayName}</span>`;
-            userDiv.addEventListener("click", () => {
-                selectedUser = { uid, ...user };
-                selectedUserDiv.textContent = `Izbran uporabnik: ${user.displayName}`;
-                document.getElementById("attackControls").style.display = "block";
-            });
-            userListDiv.appendChild(userDiv);
-        });
-    });
-
-    const myProgress = document.getElementById("myProgress");
-    const hackerProgress = document.getElementById("hackerProgress");
-    const startAttackBtn = document.getElementById("startAttackBtn");
+    const selectedTargetDiv = document.getElementById("selectedTarget");
+    const startBtn = document.getElementById("startAttackBtn");
     const takeOverBtn = document.getElementById("takeOverBtn");
+    const hackerProgress = document.getElementById("hackerProgress");
+    const myProgress = document.getElementById("myProgress");
     const defendBtn = document.getElementById("defendBtn");
 
-    let attackInterval = null;
+    // Prikaži uporabnike
+    firebase.database().ref("users").on("value", snap => {
+        userListDiv.innerHTML = "";
+        snap.forEach(child => {
+            const u = child.val();
+            const uid = child.key;
+            if(uid === firebase.auth().currentUser.uid) return;
 
-    startAttackBtn.addEventListener("click", () => {
-        if (!selectedUser) return alert("Izberi uporabnika!");
-        startAttackBtn.disabled = true;
-        attackInterval = setInterval(() => {
-            hackerProgress.value += 1; // hitrost napada (težavnost)
-            if (hackerProgress.value >= 100) {
-                clearInterval(attackInterval);
+            const btn = document.createElement("button");
+            btn.textContent = u.displayName;
+            btn.style.color = u.color;
+            btn.onclick = () => {
+                currentTargetUid = uid;
+                selectedTargetDiv.textContent = `Izbrali ste: ${u.displayName}`;
+                takeOverBtn.disabled = false;
+            };
+            userListDiv.appendChild(btn);
+        });
+    });
+
+    // Začni napad
+    startBtn.onclick = () => {
+        if(!currentTargetUid) return;
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 2; // težavnost: hitrost napada
+            hackerProgress.value = progress;
+            if(progress >= 100) {
+                clearInterval(interval);
                 takeOverBtn.disabled = false;
             }
-        }, 200);
-    });
+        }, 300);
+    };
 
-    takeOverBtn.addEventListener("click", async () => {
-        if (!selectedUser) return;
-        const myUid = firebase.auth().currentUser.uid;
+    // Prevzem nadzora
+    takeOverBtn.onclick = () => {
+        if(!currentTargetUid) return;
+        firebase.database().ref(`users/${currentTargetUid}`).once("value").then(snap => {
+            const target = snap.val();
+            takenProfile = {
+                displayName: target.displayName,
+                color: target.color,
+                avatarURL2: target.avatarURL2
+            };
 
-        // prevzem profila
-        await firebase.database().ref(`users/${myUid}`).update({
-            displayName: selectedUser.displayName,
-            color: selectedUser.color,
-            avatarURL2: selectedUser.avatarURL2
+            // prevzemi stvari
+            const myUid = firebase.auth().currentUser.uid;
+            firebase.database().ref(`users/${myUid}`).update(takenProfile);
+
+            alert(`Uspešno ste prevzeli profil od ${target.displayName}`);
         });
+    };
 
-        alert(`Uspešno si prevzel profil ${selectedUser.displayName}!`);
-        hackerProgress.value = 0;
-        takeOverBtn.disabled = true;
-        startAttackBtn.disabled = false;
-    });
-
-    defendBtn.addEventListener("mousedown", () => {
-        const defendInterval = setInterval(() => {
-            if (hackerProgress.value > 0) hackerProgress.value -= 0.5; // počasi zmanjšuje
-        }, 100);
-        defendBtn.addEventListener("mouseup", () => clearInterval(defendInterval));
-        defendBtn.addEventListener("mouseleave", () => clearInterval(defendInterval));
-    });
-
-    // Ob osvežitvi - prenesi trenutni profil
-    const myUid = firebase.auth().currentUser.uid;
-    firebase.database().ref(`users/${myUid}`).once("value").then(snap => {
-        const data = snap.val();
-        if (data) {
-            document.getElementById("myProfileCode").value = data.profileCode || "";
-        }
-    });
-
-    // Ob odjavi se resetira originalni profil
-    firebase.auth().onAuthStateChanged(user => {
-        if (!user) {
-            // reset Firebase podatke (po želji shrani original v drug branch)
-        }
-    });
+    // Ubran profil gumb - zmanjšuje napredek hekerja
+    defendBtn.onclick = () => {
+        hackerProgress.value = Math.max(hackerProgress.value - 10, 0);
+    };
 }
+
+// Shrani tvoj originalni profil
+firebase.auth().onAuthStateChanged(user => {
+    if(user){
+        const myUid = user.uid;
+        firebase.database().ref(`users/${myUid}`).once("value").then(snap => {
+            const data = snap.val();
+            if(data){
+                originalProfile = {
+                    displayName: data.displayName,
+                    color: data.color,
+                    avatarURL2: data.avatarURL2
+                };
+            }
+        });
+    }
+});
+
+// Reset ob odjavi
+function logout() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    const myUid = user.uid;
+
+    // resetiraj profil na original
+    if(originalProfile){
+        firebase.database().ref(`users/${myUid}`).update(originalProfile).then(() => {
+            auth.signOut().then(()=> window.location.href="auth.html");
+        });
+    } else {
+        auth.signOut().then(()=> window.location.href="auth.html");
+    }
+}
+
+// Pokaži attack panel ob kliku
+napadBtn.onclick = () => createAttackPanel();
 
 
 </script>
