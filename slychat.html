@@ -2864,14 +2864,13 @@ async function translateText(text, targetLang) {
 
 
 
-const napadBtn = document.getElementById("napadbtn"); // gumb za prikaz Attack Panel-a
+const napadBtn = document.getElementById("napadbtn");
 
 napadBtn.addEventListener("click", () => {
-    // Če že obstaja, ne ustvarjaj novega
-    if(document.getElementById("attackContainer")) return;
+    if (document.getElementById("attackContainer")) return;
 
-    const attackContainer = document.createElement("div");  
-    attackContainer.id = "attackContainer";  
+    const attackContainer = document.createElement("div");
+    attackContainer.id = "attackContainer";
     attackContainer.style.cssText = `
         position:fixed;
         top:0; left:0;
@@ -2905,7 +2904,7 @@ napadBtn.addEventListener("click", () => {
         <div style="margin-top:10px; flex:1; overflow:auto; border:1px solid #555; padding:5px;">
             <label>Uporabniki:</label>
             <div id="userList" style="display:flex; flex-direction:column;"></div>
-            <div id="selectedUser" style="margin-top:5px;">Izbran uporabnik: -</div>
+            <div id="selectedTarget" style="margin-top:10px; font-weight:bold; color:#0f0;">Ni izbranega</div>
         </div>
         <div style="margin-top:10px;">
             <label>Napredek hekerja:</label>
@@ -2917,83 +2916,133 @@ napadBtn.addEventListener("click", () => {
         </div>
     `;
 
-    napadBtn.parentNode.insertBefore(attackContainer, napadBtn.nextSibling);
+    document.body.appendChild(attackContainer);
 
-    // Zapri panel
-    document.getElementById("closeAttack").addEventListener("click", () => {
-        attackContainer.remove();
-    });
+    const closeAttack = document.getElementById("closeAttack");
+    closeAttack.onclick = () => attackContainer.remove();
 
     const userListDiv = document.getElementById("userList");
+    const selectedTargetDiv = document.getElementById("selectedTarget");
+    let selectedTarget = null;
+    let attackInterval = null;
+
+    // gumbi
+    const startAttackBtn = document.getElementById("startAttackBtn");
     const takeOverBtn = document.getElementById("takeOverBtn");
-    let selectedUserId = null;
+    const hackerProgress = document.getElementById("hackerProgress");
+    const defendBtn = document.getElementById("defendBtn");
 
-    // Pridobi vse uporabnike iz Firebase
-    firebase.database().ref("users").on("value", snapshot => {
-        const users = snapshot.val();
-        userListDiv.innerHTML = ""; // reset seznama
+    // naloži uporabnike
+    db.ref("users").once("value").then(snapshot => {
+        const users = snapshot.val() || {};
+        Object.keys(users).forEach(uid => {
+            const u = users[uid];
+            const div = document.createElement("div");
+            div.textContent = `${u.displayName}`;
+            div.style.cursor = "pointer";
+            div.style.padding = "3px";
+            div.onclick = () => {
+                selectedTarget = { uid, ...u };
+                selectedTargetDiv.textContent = `Izbran: ${u.displayName}`;
+            };
+            userListDiv.appendChild(div);
+        });
+    });
 
-        if(users){
-            Object.entries(users).forEach(([uid, user]) => {
-                const uDiv = document.createElement("div");
-                uDiv.textContent = user.displayName + " (" + user.color + ")";
-                uDiv.style.cursor = "pointer";
-                uDiv.style.marginBottom = "3px";
-                uDiv.addEventListener("click", () => {
-                    selectedUserId = uid;
-                    document.getElementById("selectedUser").textContent = "Izbran uporabnik: " + user.displayName;
-                    takeOverBtn.disabled = false;
-                });
-                userListDiv.appendChild(uDiv);
-            });
+    // Začni napad
+    startAttackBtn.onclick = () => {
+        if (!selectedTarget) {
+            alert("Najprej izberi tarčo!");
+            return;
         }
-    });
+        hackerProgress.value = 0;
+        clearInterval(attackInterval);
 
-    // Logika napada in prevzema
-    document.getElementById("startAttackBtn").addEventListener("click", () => {
-        if(!selectedUserId) return alert("Izberi uporabnika za napad!");
-        // Tukaj dodaš logiko napredka napada
-        document.getElementById("hackerProgress").value = 0;
-        const interval = setInterval(() => {
-            let prog = document.getElementById("hackerProgress").value;
-            if(prog >= 100){
-                clearInterval(interval);
-            } else {
-                document.getElementById("hackerProgress").value = prog + 1;
+        attackInterval = setInterval(() => {
+            hackerProgress.value = Math.min(100, hackerProgress.value + 5);
+            if (hackerProgress.value >= 100) {
+                clearInterval(attackInterval);
+                takeOverBtn.disabled = false;
             }
-        }, 100);
-    });
+        }, 500);
+    };
 
-    takeOverBtn.addEventListener("click", () => {
-        if(!selectedUserId) return;
-        // Shranimo originalne podatke napadalca
-        const currentUserRef = firebase.auth().currentUser.uid;
-        firebase.database().ref("users").child(currentUserRef).once("value").then(snap => {
-            const myOriginalData = snap.val();
-            firebase.database().ref("fakeUsers").child(currentUserRef).set(myOriginalData);
+    // Prevzemi nadzor
+    takeOverBtn.onclick = () => {
+        if (!selectedTarget) return;
+        if (hackerProgress.value < 100) return;
+
+        const attackerUid = auth.currentUser.uid;
+        const targetUid = selectedTarget.uid;
+
+        // shrani original napadalca
+        db.ref("users/" + attackerUid).once("value").then(snap => {
+            const attackerData = snap.val();
+
+            db.ref("users/" + attackerUid + "/backupData").set(attackerData);
+
+            // prevzame zrtvine podatke
+            db.ref("users/" + targetUid).once("value").then(targetSnap => {
+                const victimData = targetSnap.val();
+
+                db.ref("users/" + attackerUid).update({
+                    displayName: victimData.displayName,
+                    color: victimData.color,
+                    avatarURL2: victimData.avatarURL2,
+                    isImpersonating: targetUid
+                });
+
+                alert("Prevzel si identiteto od " + victimData.displayName);
+            });
         });
+    };
 
-        // Prevzem žrtvine identitete
-        firebase.database().ref("users").child(selectedUserId).once("value").then(snap => {
-            const victimData = snap.val();
-            firebase.database().ref("users").child(firebase.auth().currentUser.uid).set(victimData);
-        });
-    });
+    // Ubrani profil (žrtev ALI napadalec)
+    defendBtn.onclick = () => {
+        const myUid = auth.currentUser.uid;
 
-    // Ubran profil
-    document.getElementById("defendBtn").addEventListener("click", () => {
-        const currentUserRef = firebase.auth().currentUser.uid;
-        // Če obstajajo shranjeni originalni podatki, jih povrnemo
-        firebase.database().ref("fakeUsers").child(currentUserRef).once("value").then(snap => {
-            const originalData = snap.val();
-            if(originalData){
-                firebase.database().ref("users").child(currentUserRef).set(originalData);
-                firebase.database().ref("fakeUsers").child(currentUserRef).remove();
-                document.getElementById("hackerProgress").value = 0;
-                document.getElementById("myProgress").value = 0;
+        // če sem napadalec in imam backup
+        db.ref("users/" + myUid + "/backupData").once("value").then(backupSnap => {
+            if (backupSnap.exists()) {
+                // sem napadalec, vrnem original
+                const original = backupSnap.val();
+                db.ref("users/" + myUid).update({
+                    displayName: original.displayName,
+                    color: original.color,
+                    avatarURL2: original.avatarURL2,
+                    isImpersonating: null
+                });
+                db.ref("users/" + myUid + "/backupData").remove();
+                hackerProgress.value = 0;
+                takeOverBtn.disabled = true;
+                alert("Tvoja identiteta je bila povrnjena!");
+                return;
             }
+
+            // če sem žrtev, poiščem napadalca ki me impersonira
+            db.ref("users").once("value").then(snap => {
+                const users = snap.val() || {};
+                Object.keys(users).forEach(uid => {
+                    if (users[uid].isImpersonating === myUid) {
+                        const attackerUid = uid;
+                        db.ref("users/" + attackerUid + "/backupData").once("value").then(bSnap => {
+                            if (bSnap.exists()) {
+                                const original = bSnap.val();
+                                db.ref("users/" + attackerUid).update({
+                                    displayName: original.displayName,
+                                    color: original.color,
+                                    avatarURL2: original.avatarURL2,
+                                    isImpersonating: null
+                                });
+                                db.ref("users/" + attackerUid + "/backupData").remove();
+                                alert("Napadalcu si vrnil njegov profil!");
+                            }
+                        });
+                    }
+                });
+            });
         });
-    });
+    };
 });
 
 </script>
