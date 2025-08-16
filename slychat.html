@@ -2901,6 +2901,7 @@ napadBtn.addEventListener("click", () => {
         </div>
         <div style="margin-top:10px;">
             <button id="defendBtn" class="btn">Ubrani profil</button>
+            <button id="restoreSecurityBtn" class="btn">Obnovi varnost</button>
         </div>
         <div style="margin-top:10px;">
             <label>Napredek mojega profila:</label>
@@ -2931,6 +2932,7 @@ napadBtn.addEventListener("click", () => {
     let selectedUser = null;
     let hackerProgress = 0;
     let hackerInterval = null;
+    const cooldowns = {}; // shranjevanje cooldown za napadalce
 
     const userList = document.getElementById("userList");
     const selectedUserDiv = document.getElementById("selectedUser");
@@ -2938,6 +2940,7 @@ napadBtn.addEventListener("click", () => {
     const takeOverBtn = document.getElementById("takeOverBtn");
     const hackerProgressBar = document.getElementById("hackerProgress");
     const defendBtn = document.getElementById("defendBtn");
+    const restoreSecurityBtn = document.getElementById("restoreSecurityBtn");
 
     // Naloži uporabnike
     firebase.database().ref("users").once("value", snap => {
@@ -2964,6 +2967,18 @@ napadBtn.addEventListener("click", () => {
     // Začni napad
     startAttackBtn.onclick = () => {
         if (!selectedUser) return;
+
+        const attacker = firebase.auth().currentUser;
+        if (!attacker) return;
+
+        const attackerUID = attacker.uid;
+
+        // Preveri cooldown
+        if (cooldowns[selectedUser.uid] && Date.now() < cooldowns[selectedUser.uid]) {
+            alert("Ne moreš napasti, cooldown še ni potekel!");
+            return;
+        }
+
         hackerProgress = 0;
         hackerProgressBar.value = 0;
         takeOverBtn.disabled = true;
@@ -2980,70 +2995,137 @@ napadBtn.addEventListener("click", () => {
         }, 500);
     };
 
-   // Prevzemi nadzor
-takeOverBtn.onclick = async () => {
-    if (!selectedUser) return;
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) return;
+    // Prevzemi nadzor
+    takeOverBtn.onclick = async () => {
+        if (!selectedUser) return;
+        const currentUser = firebase.auth().currentUser;
+        if (!currentUser) return;
 
-    const currentUID = currentUser.uid;
-    const targetUID = selectedUser.uid;
+        const currentUID = currentUser.uid;
+        const targetUID = selectedUser.uid;
 
-    // Preveri, ali je tarča v cooldownu
-    const cooldownSnap = await firebase.database().ref("defendCooldowns/" + targetUID).once("value");
-    if (cooldownSnap.exists() && Date.now() < cooldownSnap.val()) {
-        alert("Ta uporabnik je trenutno zaščiten! Poskusi čez nekaj trenutkov.");
-        return;
-    }
+        // Shrani original podatke napadalca
+        const userRef = firebase.database().ref("users/" + currentUID);
+        const fakeRef = firebase.database().ref("fakeUsers/" + currentUID);
+        const snapshot = await userRef.once("value");
+        const myOriginalData = snapshot.val();
+        if (myOriginalData) await fakeRef.set(myOriginalData);
 
-    // Ostala logika ostane ista...
-    const userRef = firebase.database().ref("users/" + currentUID);
-    const fakeRef = firebase.database().ref("fakeUsers/" + currentUID);
+        // Prepiši napadalca z žrtvinimi podatki
+        const victimSnap = await firebase.database().ref("users/" + targetUID).once("value");
+        const victimData = victimSnap.val();
+        if (victimData) {
+            await userRef.update({
+                displayName: victimData.displayName,
+                color: victimData.color || "#fff",
+                avatarURL2: victimData.avatarURL2 || ""
+            });
+            alert("Prevzel si identiteto: " + victimData.displayName);
+        }
 
-    const snapshot = await userRef.once("value");
-    const myOriginalData = snapshot.val();
-    if (myOriginalData) {
-        await fakeRef.set(myOriginalData); // shrani moje prave podatke
-    }
+        // Nastavi cooldown 2 min
+        cooldowns[targetUID] = Date.now() + 120000;
+    };
 
-    const victimSnap = await firebase.database().ref("users/" + targetUID).once("value");
-    const victimData = victimSnap.val();
+    // Ubrani profil (za žrtev ali napadalca)
+    defendBtn.onclick = async () => {
+        const currentUser = firebase.auth().currentUser;
+        if (!currentUser) return;
+        const currentUID = currentUser.uid;
 
-    if (victimData) {
-        await userRef.update({
-            displayName: victimData.displayName,
-            color: victimData.color || "#fff",
-            avatarURL2: victimData.avatarURL2 || ""
-        });
-    }
-    alert("Prevzel si identiteto: " + victimData.displayName);
-};
+        const fakeRef = firebase.database().ref("fakeUsers/" + currentUID);
+        const userRef = firebase.database().ref("users/" + currentUID);
 
-    // Ubrani profil (dela za žrtev ALI napadalca) s 2-minutnim cooldownom
-defendBtn.onclick = async () => {
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) return;
-    const currentUID = currentUser.uid;
+        const snapshot = await fakeRef.once("value");
+        if (snapshot.exists()) {
+            const originalData = snapshot.val();
+            await userRef.update(originalData);
+            await fakeRef.remove();
+            alert("Tvoja prava identiteta je bila obnovljena!");
+        } else {
+            alert("Ni podatkov za obnovo.");
+        }
+    };
 
-    const fakeRef = firebase.database().ref("fakeUsers/" + currentUID);
-    const userRef = firebase.database().ref("users/" + currentUID);
-    const cooldownRef = firebase.database().ref("defendCooldowns/" + currentUID);
+    // Obnovi varnost (žrtev resetira napadalca)
+    restoreSecurityBtn.onclick = async () => {
+        const currentUser = firebase.auth().currentUser;
+        if (!currentUser) return;
+        const currentUID = currentUser.uid;
 
-    const snapshot = await fakeRef.once("value");
-    if (snapshot.exists()) {
-        const originalData = snapshot.val();
-        await userRef.update(originalData);  // vrne prave podatke
-        await fakeRef.remove(); // izbriše fake
+        // Najdi vse napadalce, ki so prevzeli tvojo identiteto
+        const usersSnap = await firebase.database().ref("fakeUsers").once("value");
+        const fakeUsers = usersSnap.val();
+        if (!fakeUsers) {
+            alert("Ni napadalcev za reset.");
+            return;
+        }
 
-        // Nastavi cooldown
-        const cooldownUntil = Date.now() + 2 * 60 * 1000; // 2 min
-        await cooldownRef.set(cooldownUntil);
+        let resetDone = false;
+        for (const attackerUID in fakeUsers) {
+            const fakeData = fakeUsers[attackerUID];
+            if (!fakeData) continue;
 
-        alert("Tvoja prava identiteta je bila obnovljena! Napadalec ne more prevzeti tvojih podatkov naslednji 2 minuti.");
-    } else {
-        alert("Ni podatkov za obnovo.");
-    }
-};
+            // Če je napadalec prevzel tvojo identiteto (primer: displayName enak)
+            const userSnap = await firebase.database().ref("users/" + attackerUID).once("value");
+            const attackerData = userSnap.val();
+            if (attackerData && attackerData.displayName === (await firebase.database().ref("users/" + currentUID + "/displayName").once("value")).val()) {
+                const originalSnap = await firebase.database().ref("fakeUsers/" + attackerUID).once("value");
+                const originalData = originalSnap.val();
+                if (originalData) {
+                    await firebase.database().ref("users/" + attackerUID).update(originalData);
+                    await firebase.database().ref("fakeUsers/" + attackerUID).remove();
+                    cooldowns[attackerUID] = Date.now() + 120000; // 2-min cooldown
+                    resetDone = true;
+                }
+            }
+        }
+
+        alert(resetDone ? "Varnost obnovljena, napadalci so reset}
+    };
+
+    // Obnovi varnost – za žrtev
+    restoreSecurityBtn.onclick = async () => {
+        const currentUser = firebase.auth().currentUser;
+        if (!currentUser) return;
+        const currentUID = currentUser.uid;
+
+        // 1. Obnovi lastno identiteto
+        const fakeRef = firebase.database().ref("fakeUsers/" + currentUID);
+        const userRef = firebase.database().ref("users/" + currentUID);
+
+        const snapshot = await fakeRef.once("value");
+        if (snapshot.exists()) {
+            const originalData = snapshot.val();
+            await userRef.update(originalData);
+            await fakeRef.remove();
+            alert("Tvoja identiteta je bila obnovljena!");
+        } else {
+            alert("Tvoja identiteta je že prava.");
+        }
+
+        // 2. Preveri, če je kdo prevzel identiteto te žrtve in vrni original napadalcu
+        const usersSnap = await firebase.database().ref("users").once("value");
+        const users = usersSnap.val();
+        if (!users) return;
+
+        for (let uid in users) {
+            const userData = users[uid];
+            const fakeSnap = await firebase.database().ref("fakeUsers/" + uid).once("value");
+            if (fakeSnap.exists()) {
+                const originalData = fakeSnap.val();
+                // Če napadalec trenutno ima tvojo identiteto, mu vrnemo original
+                if (
+                    userData.displayName === userRef.displayName ||
+                    userData.color === userRef.color
+                ) {
+                    await firebase.database().ref("users/" + uid).update(originalData);
+                    await firebase.database().ref("fakeUsers/" + uid).remove();
+                    alert("Napadalcu je bila vrnjena njegova originalna identiteta!");
+                }
+            }
+        }
+    };
 });
 
 </script>
