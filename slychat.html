@@ -3050,52 +3050,41 @@ defendBtn.onclick = async () => {
     }
 };
 
-// Obnovi varnost (10 min cooldown za napadalca)
+// Obnovi varnost (ponastavi napadalčeve podatke)
 securityRestoreBtn.onclick = async () => {
     const currentUser = firebase.auth().currentUser;
     if (!currentUser || !selectedUser) {
-        alert("Izberi napadalca, da lahko obnoviš varnost.");
+        alert("Izberi žrtev, da lahko obnoviš varnost.");
         return;
     }
 
     const attackerUID = selectedUser.uid;
     const victimUID = currentUser.uid;
 
-    const fakeRef = firebase.database().ref("fakeUsers/" + attackerUID + "/" + victimUID);
-    const attackerRef = firebase.database().ref("users/" + attackerUID);
-
-    const snap = await fakeRef.once("value");
-
     const now = Date.now();
     if (attackCooldowns[victimUID] && attackCooldowns[victimUID][attackerUID]) {
-        const remaining = Math.ceil((attackCooldowns[victimUID][attackerUID] - now) / 1000);
+        const remaining = Math.ceil((attackCooldowns[victimUID][attackerUID] - now)/1000);
         if (remaining > 0) {
             alert(`Napadalec je zaščiten še ${remaining} sekund.`);
             return;
         }
     }
 
-    if (snap.exists()) {
-        // Napadalec ima podatke žrtve → ponastavi njegove podatke
-        const originalData = snap.val();
-        await attackerRef.update(originalData);
-        await fakeRef.remove();
+    // resetiraj napadalčeve fake podatke o tej žrtvi
+    const attackerFakeRef = firebase.database().ref("fakeUsers/" + attackerUID + "/" + victimUID);
+    await attackerFakeRef.remove();
 
-        alert("Napadalčevi podatki so ponastavljeni. Ti si zavarovan 10 minut.");
-    } else {
-        // Napadalec nima podatkov → samo obnovi varnost
-        alert(`Izbrana oseba (${selectedUser.name}) je zdaj zavarovana.`);
-    }
-
-    // Resetiraj napadalčev napredek
+    // resetiraj napredek napada
     hackerProgress = 0;
     hackerProgressBar.value = 0;
     takeOverBtn.disabled = true;
     clearInterval(hackerInterval);
 
-    // Nastavi 10-minutni cooldown
+    // nastavi 10-minutni cooldown
     if (!attackCooldowns[victimUID]) attackCooldowns[victimUID] = {};
     attackCooldowns[victimUID][attackerUID] = now + 10 * 60 * 1000;
+
+    alert("Varnost je obnovljena! Napadalec ne more napadati 10 minut.");
 };
 });
 
