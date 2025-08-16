@@ -3078,7 +3078,7 @@ napadBtn.addEventListener("click", () => {
 
         // nastavi 2-minutni cooldown
         if (!attackCooldowns[victimUID]) attackCooldowns[victimUID] = {};
-        attackCooldowns[victimUID][attackerUID] = now + 2 * 60 * 1000;
+        attackCooldowns[victimUID][attackerUID] = now + 10 * 60 * 1000;
 
         alert("Varnost je obnovljena! Napadalec ne more napadati 2 minuti.");
     };
