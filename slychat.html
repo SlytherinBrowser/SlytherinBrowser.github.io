@@ -422,7 +422,22 @@ width: 100%;
   <input type="range" id="languageSlider" min="0" max="6" value="0" step="1">
 </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm"></script>
+<script>
+  let aiEngine = null;
 
+  async function initAI() {
+    if (!aiEngine) {
+      aiEngine = await webllm.createEngine("Llama-2-7b-chat-hf-q4f16_1");
+    }
+  }
+
+  async function askAI(question) {
+    await initAI();
+    const reply = await aiEngine.chat.completion([{role:"user", content: question}]);
+    return reply.choices[0].message.content;
+  }
+</script>
 <script>  
 
   const firebaseConfig = {  
@@ -860,7 +875,14 @@ db.ref("messages").on("child_changed", snapshot => {
 });
 
 
-
+function sendMessageToChat(senderName, text) {
+  db.ref("messages").push({
+    uid: "ai-bot",
+    text: text,
+    system: true,
+    senderName: senderName
+  });
+}
 
 
 // Posodobi seznam aktivnih uporabnikov
@@ -926,6 +948,30 @@ async function sendMessage(isReply = false) {
   } else {
     textRaw = messageInput.value.trim();
   }
+
+
+// AI asistent - /ai ukaz
+if (!isReply && textRaw.startsWith("/ai")) {
+  const question = textRaw.replace("/ai", "").trim();
+  if (!question) {
+    alert("Napiši vprašanje za asistenta, npr. /ai povej šalo.");
+    messageInput.value = "";
+    return;
+  }
+
+  // Pokliči AI
+  sendMessageToChat("Asistent 🤖", "Razmišljam...");
+
+  askAI(question).then(answer => {
+    sendMessageToChat("Asistent 🤖", answer);
+  });
+
+  messageInput.value = "";
+  return;
+}
+
+
+
 
   if (!textRaw) return;
 
