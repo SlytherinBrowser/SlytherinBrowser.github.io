@@ -426,14 +426,26 @@ width: 100%;
   let aiEngine = null;
 
   async function initAI() {
-    if (!aiEngine) {
-      aiEngine = await webllm.createEngine("Llama-2-7b-chat-hf-q4f16_1");
+    if (!("gpu" in navigator)) {
+      alert("Ta brskalnik ne podpira WebGPU. AI asistent ne bo deloval.");
+      return null;
     }
+    if (!aiEngine) {
+      try {
+        aiEngine = await webllm.createEngine("Llama-2-7b-chat-hf-q4f16_1");
+      } catch (e) {
+        console.error("Napaka pri inicializaciji AI:", e);
+        alert("AI model se ni uspel zagnati.");
+        return null;
+      }
+    }
+    return aiEngine;
   }
 
   async function askAI(question) {
-    await initAI();
-    const reply = await aiEngine.chat.completion([{role:"user", content: question}]);
+    const engine = await initAI();
+    if (!engine) return "AI ni na voljo v tem brskalniku.";
+    const reply = await engine.chat.completion([{role:"user", content: question}]);
     return reply.choices[0].message.content;
   }
 </script>
