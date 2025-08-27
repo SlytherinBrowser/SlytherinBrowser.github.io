@@ -1,263 +1,165 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI kamera: oseba/roke + akcijski gumbi</title>
-<style>
-  :root { --bg:#0b0f14; --fg:#e8f0ff; --muted:#9db1c9; --acc:#8fd3ff; --ok:#39d98a; --warn:#ffd166; }
-  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-  header{padding:12px 16px;border-bottom:1px solid #14202b;display:flex;justify-content:space-between;align-items:center}
-  h1{margin:0;font-size:18px}
-  main{padding:12px}
-  #wrap{position:relative;max-width:920px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.35)}
-  video,canvas{width:100%;height:auto;display:block}
-  #hud{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:12px;font-size:12px;color:#cfe9ff}
-  #toolbar{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;flex-wrap:wrap}
-  .btn{border:1px solid #223242;background:#16202a;color:var(--fg);padding:10px 12px;border-radius:12px;font-size:14px}
-  .btn[disabled]{opacity:.5}
-  .tag{display:inline-block;border:1px solid #1c2f40;color:var(--muted);border-radius:999px;padding:3px 8px;margin-left:6px;font-size:12px}
-  .chip{display:inline-flex;gap:6px;align-items:center;border:1px solid #1c2f40;border-radius:999px;padding:3px 8px;margin-right:6px}
-  .dot{width:8px;height:8px;border-radius:50%}
-  .ok{background:var(--ok)} .warn{background:var(--warn)} .muted{background:#637a96}
-  .topbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0}
-  select,button{font-size:14px;border-radius:10px;border:1px solid #223242;background:#0f1620;color:var(--fg);padding:8px 10px}
-  .legend{color:#9ab0c9;text-align:center}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dejanski AI v brskalniku (brez kamere)</title>
+  <style>
+    :root{--bg:#0b0f14;--fg:#e8f0ff;--mut:#9db1c9;--card:#111a22;--b:#213245}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
+    header{padding:14px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center}
+    h1{font-size:18px;margin:0} .pill{font-size:12px;background:#8fd3ff;color:#0b0f14;padding:6px 10px;border-radius:999px}
+    main{max-width:900px;margin:0 auto;padding:16px;display:grid;gap:12px}
+    .card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+    textarea,input,button{width:100%;background:#0e1620;color:var(--fg);border:1px solid var(--b);border-radius:12px;padding:12px;font-size:15px}
+    button{cursor:pointer} .row{display:grid;gap:10px}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:800px){.grid{grid-template-columns:1fr 1fr}}
+    .out{white-space:pre-wrap;background:#0e1620;border:1px dashed var(--b);border-radius:12px;padding:12px;color:#cfe9ff;min-height:54px}
+    .hint{color:var(--mut);font-size:13px}
+    .badge{display:inline-block;font-size:12px;color:var(--mut);border:1px solid var(--b);border-radius:10px;padding:4px 8px;margin-left:6px}
+    .inline{display:flex;gap:8px;align-items:center}
+  </style>
 
-<!-- TF.js in modeli prek CDN -->
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-
-<!-- Hands: @tensorflow-models/hand-pose-detection (MediaPipe Hands - tfjs runtime) -->
-<script defer src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.min.js"></script>
+  <!-- Transformers.js (Xenova) – teče v brskalniku -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js" defer></script>
 </head>
 <body>
 <header>
-  <div class="topbar">
-    <h1>AI kamera</h1>
-    <span class="tag">COCO-SSD: oseba</span>
-    <span class="tag">MediaPipe Hands: roke</span>
-  </div>
-  <div class="chip"><span class="dot muted"></span> Backend: <span id="backend">…</span></div>
+  <h1>Dejanski AI v brskalniku (brez kamere)</h1>
+  <span class="pill">On-device NLP</span>
 </header>
 
 <main>
-  <div class="controls">
-    <button id="startBtn">Zaženi kamero + modele</button>
-    <button id="stopBtn" disabled>Ustavi</button>
-    <label>Resolucija
-      <select id="res">
-        <option value="640x480" selected>640×480</option>
-        <option value="960x540">960×540</option>
-        <option value="1280x720">1280×720</option>
-      </select>
-    </label>
-    <label>Min. zaupanje
-      <select id="thr">
-        <option>0.50</option><option selected>0.60</option><option>0.70</option><option>0.80</option>
-      </select>
-    </label>
-    <label>Detektor
-      <select id="mode">
-        <option value="both" selected>Oseba + roke</option>
-        <option value="person">Samo oseba</option>
-        <option value="hands">Samo roke</option>
-      </select>
-    </label>
+  <div class="card">
+    <div class="inline">
+      <strong>Stanje:</strong><span id="status" class="badge">Nalagam knjižnico…</span>
+    </div>
+    <p class="hint">Vsi modeli se poganjajo lokalno v brskalniku. Prvi zagon prenese uteži (cache).</p>
   </div>
 
-  <div id="wrap">
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-
-    <!-- HUD -->
-    <div id="hud">
-      FPS: <span id="fps">0</span> •
-      Osebe: <span id="pc">0</span> •
-      Roke: <span id="hc">0</span>
+  <div class="grid">
+    <!-- Sentiment -->
+    <div class="card">
+      <h3>1) Analiza sentimenta</h3>
+      <p class="hint">Večjezični model (deluje tudi za slovenščino/turščino, a najboljši je za kratka besedila).</p>
+      <div class="row">
+        <textarea id="sentText" rows="4" placeholder="Vnesi besedilo…"></textarea>
+        <button id="sentBtn">Analiziraj</button>
+        <div id="sentOut" class="out"></div>
+      </div>
     </div>
 
-    <!-- Plavajoča orodna vrstica – aktivna le, ko je detekcija -->
-    <div id="toolbar">
-      <button class="btn" id="snapBtn" disabled>📸 Posnemi</button>
-      <button class="btn" id="beepBtn" disabled>🔊 Pisk</button>
-      <button class="btn" id="vibeBtn" disabled>📳 Vibriraj</button>
-      <button class="btn" id="themeBtn" disabled>🎨 Tema</button>
+    <!-- Zero-shot klasifikacija -->
+    <div class="card">
+      <h3>2) Klasifikacija brez učenja (zero-shot)</h3>
+      <p class="hint">Besedilo razvrstiš v svoje kategorije (etikete) brez dodatnega učenja.</p>
+      <div class="row">
+        <textarea id="zsText" rows="4" placeholder="Besedilo za razvrstitev…"></textarea>
+        <input id="zsLabels" placeholder="Etikete (npr.: šport, politika, tehnologija)" />
+        <button id="zsBtn">Razvrsti</button>
+        <div id="zsOut" class="out"></div>
+      </div>
     </div>
   </div>
 
-  <p class="legend">
-    Gumbi se odklenejo, ko kamera **vidi človeka ali roko** (glede na izbran način). Posnetek se shrani kot PNG.
-  </p>
+  <!-- Question Answering -->
+  <div class="card">
+    <h3>3) Vprašanje → Odgovor (na osnovi podanega konteksta)</h3>
+    <p class="hint">Model odgovori na vprašanje iz tvojega konteksta (ni iskanja po spletu).</p>
+    <div class="row">
+      <textarea id="qaContext" rows="5" placeholder="Kontekst (članek/besedilo)…"></textarea>
+      <input id="qaQuestion" placeholder="Vprašanje (npr.: Kdo je avtor?)" />
+      <button id="qaBtn">Odgovori</button>
+      <div id="qaOut" class="out"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Nasveti za telefon</h3>
+    <ul class="hint">
+      <li>Prvi zagon je lahko počasnejši (prenos modela). Naslednjič je hitro (cache).</li>
+      <li>Za najboljšo hitrost uporabi Chrome (Android) ali Safari (iOS, iOS 16+).</li>
+      <li>Če želiš še hitreje, lahko pozneje dodava WebGPU backend.</li>
+    </ul>
+  </div>
 </main>
 
 <script>
-let cocoModel, handsModel, stream, rafId;
-const els = {
-  video: video, canvas: canvas, fps: fps, pc: pc, hc: hc, backend: backend,
-  start: startBtn, stop: stopBtn, res: res, thr: thr, mode: mode,
-  snap: snapBtn, beep: beepBtn, vibe: vibeBtn, theme: themeBtn
-};
-const ctx = canvas.getContext('2d');
-let fpsEMA = 0, lastT = performance.now();
-let darkTheme = true;
+const { pipeline } = window.transformers;
+const statusEl = document.getElementById('status');
 
-function parseRes(v){ const [w,h]=v.split('x').map(Number); return {width:w,height:h}; }
+let sentPipe, zsPipe, qaPipe;
 
-async function pickBackend(){ await tf.ready(); els.backend.textContent = tf.getBackend().toUpperCase(); }
+(async () => {
+  try {
+    statusEl.textContent = 'Inicializiram…';
 
-async function start() {
-  els.start.disabled = true; els.stop.disabled = false;
+    // 1) Sentiment – večjezični model
+    //   (nlptown/bert-base-multilingual-uncased-sentiment -> 1-5 zvezdic)
+    sentPipe = await pipeline('text-classification', 'Xenova/nlptown-bert-multilingual-uncased-sentiment');
 
-  // Kamera
-  const {width, height} = parseRes(els.res.value);
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'environment', width: {ideal: width}, height: {ideal: height} },
-    audio: false
-  });
-  els.video.srcObject = stream; await els.video.play();
-  canvas.width = els.video.videoWidth; canvas.height = els.video.videoHeight;
+    // 2) Zero-shot klasifikacija (angl. razlage; dela solidno tudi večjezično)
+    //   (facebook/bart-large-mnli je privzet pri Transformers.js kot "zero-shot-classification")
+    zsPipe = await pipeline('zero-shot-classification', 'Xenova/bart-large-mnli');
 
-  // TF backend info
-  await pickBackend();
+    // 3) Question Answering (SQuAD2)
+    qaPipe = await pipeline('question-answering', 'Xenova/deepset-roberta-base-squad2');
 
-  // Naloži modele po potrebi
-  const wantPerson = els.mode.value !== 'hands';
-  const wantHands  = els.mode.value !== 'person';
-
-  if (wantPerson && !cocoModel) {
-    cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+    statusEl.textContent = 'Pripravljeno ✅';
+  } catch (e) {
+    console.error(e);
+    statusEl.textContent = 'Napaka pri inicializaciji';
   }
+})();
 
-  if (wantHands && !handsModel) {
-    const model = handPoseDetection.SupportedModels.MediaPipeHands;
-    const cfg = {
-      runtime: 'tfjs',
-      modelType: 'lite', // lite = hitrejše za telefon
-      maxHands: 2
-    };
-    handsModel = await handPoseDetection.createDetector(model, cfg);
+// UI handlers
+document.getElementById('sentBtn').addEventListener('click', async () => {
+  const text = document.getElementById('sentText').value.trim();
+  const out = document.getElementById('sentOut');
+  if (!text) return out.textContent = 'Vnesi besedilo.';
+  out.textContent = 'Analiziram…';
+  try {
+    const res = await sentPipe(text);
+    // Primer izpisa: label: "5 stars", score: 0.76
+    const best = Array.isArray(res) ? res[0] : res;
+    out.textContent = `Ocena: ${best.label}  (zaupanje: ${(best.score*100).toFixed(1)}%)`;
+  } catch (e) {
+    console.error(e); out.textContent = 'Napaka pri analizi.';
   }
-
-  loop();
-}
-
-function stop() {
-  cancelAnimationFrame(rafId);
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  els.start.disabled = false; els.stop.disabled = true;
-  disableActions();
-}
-
-function enableActions(on) {
-  [els.snap, els.beep, els.vibe, els.theme].forEach(b => b.disabled = !on);
-}
-
-function disableActions(){ enableActions(false); }
-
-function drawPersonBoxes(preds, thr) {
-  const ppl = preds.filter(p => p.class === 'person' && p.score >= thr);
-  ppl.forEach(p => {
-    const [x,y,w,h] = p.bbox;
-    ctx.strokeStyle = '#8fd3ff'; ctx.lineWidth = 2; ctx.strokeRect(x,y,w,h);
-    const label = `person ${(p.score*100).toFixed(0)}%`;
-    ctx.fillStyle = 'rgba(10,28,43,.9)';
-    ctx.fillRect(x, y-18, ctx.measureText(label).width+8, 18);
-    ctx.fillStyle = '#cfe9ff'; ctx.font = '14px system-ui'; ctx.fillText(label, x+4, y-16);
-  });
-  return ppl.length;
-}
-
-function drawHands(hands) {
-  let count = 0;
-  ctx.lineWidth = 3;
-  hands.forEach(h => {
-    if (!h.keypoints) return;
-    count++;
-    // dlan poligon (približno): povežemo nekaj točk
-    const pts = h.keypoints.map(k => [k.x, k.y]);
-    // Narišemo le točke in nekaj segmentov
-    ctx.fillStyle = 'rgba(57,217,138,.25)';
-    ctx.strokeStyle = '#39d98a';
-    // točke
-    pts.forEach(([x,y]) => { ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); });
-  });
-  return count;
-}
-
-async function loop(){
-  const now = performance.now(), dt = now - lastT; lastT = now;
-  const fps = 1000 / dt; fpsEMA = 0.9*fpsEMA + 0.1*fps; els.fps.textContent = fpsEMA.toFixed(0);
-
-  // Nariši video
-  ctx.drawImage(els.video, 0, 0, canvas.width, canvas.height);
-
-  const thr = parseFloat(els.thr.value);
-  const mode = els.mode.value;
-  let personCount = 0, handCount = 0;
-
-  if (mode !== 'hands' && cocoModel) {
-    const preds = await cocoModel.detect(els.video);
-    personCount = drawPersonBoxes(preds, thr);
-  }
-  if (mode !== 'person' && handsModel) {
-    try {
-      const hands = await handsModel.estimateHands(els.video, { flipHorizontal:false });
-      handCount = drawHands(hands);
-    } catch(e) {
-      // Včasih na iOS vrne napako pri prvih frame-ih – ignoriramo
-    }
-  }
-
-  els.pc.textContent = personCount;
-  els.hc.textContent = handCount;
-
-  const active = (mode==='both' && (personCount>0 || handCount>0))
-               || (mode==='person' && personCount>0)
-               || (mode==='hands' && handCount>0);
-  enableActions(active);
-
-  rafId = requestAnimationFrame(loop);
-}
-
-// ——— AKCIJE GUMBOV ———
-els.snap.addEventListener('click', () => {
-  // Shrani trenutni canvas kot PNG
-  const a = document.createElement('a');
-  a.href = canvas.toDataURL('image/png');
-  a.download = 'posnetek.png';
-  a.click();
 });
 
-els.beep.addEventListener('click', async () => {
-  // Kratek pisk (AudioContext bi lahko potreboval user gesture – gumb je gesture)
-  const ac = new (window.AudioContext || window.webkitAudioContext)();
-  const o = ac.createOscillator(), g = ac.createGain();
-  o.type = 'square'; o.frequency.value = 880;
-  o.connect(g); g.connect(ac.destination); g.gain.setValueAtTime(0.0001, ac.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.2, ac.currentTime+0.01);
-  o.start();
-  setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.05); o.stop(ac.currentTime+0.06); }, 120);
+document.getElementById('zsBtn').addEventListener('click', async () => {
+  const text = document.getElementById('zsText').value.trim();
+  const labels = document.getElementById('zsLabels').value.split(',').map(s => s.trim()).filter(Boolean);
+  const out = document.getElementById('zsOut');
+  if (!text) return out.textContent = 'Vnesi besedilo.';
+  if (labels.length < 2) return out.textContent = 'Vnesi vsaj dve etiketi, ločeni z vejico.';
+  out.textContent = 'Razvrščam…';
+  try {
+    const res = await zsPipe(text, labels, { multi_label: false });
+    const lines = res.labels.map((lab, i) => `${lab}: ${(res.scores[i]*100).toFixed(1)}%`);
+    out.textContent = lines.join('\n');
+  } catch (e) {
+    console.error(e); out.textContent = 'Napaka pri razvrstitvi.';
+  }
 });
 
-els.vibe.addEventListener('click', () => {
-  if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+document.getElementById('qaBtn').addEventListener('click', async () => {
+  const context = document.getElementById('qaContext').value.trim();
+  const question = document.getElementById('qaQuestion').value.trim();
+  const out = document.getElementById('qaOut');
+  if (!context) return out.textContent = 'Vnesi kontekst.';
+  if (!question) return out.textContent = 'Vnesi vprašanje.';
+  out.textContent = 'Iščem odgovor…';
+  try {
+    const res = await qaPipe({ question, context });
+    if (!res.answer || res.score < 0.1) out.textContent = 'Ne najdem zanesljivega odgovora v podanem kontekstu.';
+    else out.textContent = `Odgovor: ${res.answer}\nZaupanje: ${(res.score*100).toFixed(1)}%`;
+  } catch (e) {
+    console.error(e); out.textContent = 'Napaka pri Q&A.';
+  }
 });
-
-els.theme.addEventListener('click', () => {
-  darkTheme = !darkTheme;
-  document.documentElement.style.setProperty('--bg', darkTheme ? '#0b0f14' : '#f6fbff');
-  document.documentElement.style.setProperty('--fg', darkTheme ? '#e8f0ff' : '#0b2239');
-  document.documentElement.style.setProperty('--muted', darkTheme ? '#9db1c9' : '#44607f');
-});
-
-// Start/Stop
-els.start.addEventListener('click', start);
-els.stop.addEventListener('click', stop);
-window.addEventListener('pagehide', stop);
 </script>
 </body>
 </html>
