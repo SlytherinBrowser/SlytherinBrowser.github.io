@@ -116,7 +116,7 @@
   <!-- Firebase + logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInAnonymously, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import { getDatabase, ref, onValue, update, get, child } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
     const firebaseConfig = {
@@ -152,8 +152,14 @@
     const USERS = ref(db, 'users');
 
     async function ensureSignedIn(){
-      if(auth.currentUser) return auth.currentUser;
-      try{ await signInWithPopup(auth, new GoogleAuthProvider()); }
+      return new Promise(res=>{
+        onAuthStateChanged(auth, u=>{
+          if(u){ authInfo.textContent = u.email ? `Prijavljen: ${u.email}` : 'Prijavljen'; }
+          else { authInfo.textContent = 'Ni aktivne prijave (uporabljam obstoječo sejo, brez vsiljene prijave).'; }
+          res(u || null);
+        });
+      });
+    }
       catch(e){ await signInAnonymously(auth); }
       return new Promise(res=>{ onAuthStateChanged(auth, u=> u && res(u)); });
     }
@@ -376,7 +382,12 @@
 
     // Boot
     (async ()=>{
-      await ensureSignedIn();
+      const u = await ensureSignedIn();
+      if(!u){
+        // Ne forsiramo prijave: samo prikažemo stanje in ne delamo nič nevarnega
+        console.warn('Uporabnik ni prijavljen. Čakam na obstoječo sejo...');
+        return; // ali tukaj lahko omogočiš gumb "Pojdi na prijavo"
+      }
       liveBind();
       refreshFriends();
       refreshRequests();
