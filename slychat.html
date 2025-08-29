@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="sl">
 <head>
@@ -476,18 +477,6 @@ width: 100%;
 
   const messageInput = document.getElementById("messageInput");  
 
-// Slychat.html
-const params   = new URLSearchParams(window.location.search);
-const chatId   = params.get('chat');          // npr. uidA_uidB
-const peerUid  = params.get('peer') || null;  // opcijsko
-
-if(!chatId){
-  alert('Manjka chatId v URL-ju.');
-  // po želji: window.location = '/';
-}
-
-// referenca na točen room
-const chatRef = db.ref(`messages/${chatId}`);
 
 
   let currentChatPartner = null;  
@@ -671,9 +660,10 @@ messageInput.placeholder = "Vnesi sporočilo...";
 messageInput.dataset.nameConfirm = "0";
 }
 
-// 🎯 Poslušaj nova sporočila kronološko (room-aware, brez FriendFilter)
-roomRef.orderByChild("timestamp").on("child_added", snapshot => {
+// 🎯 Poslušaj nova sporočila kronološko
+db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
+
 
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
@@ -698,116 +688,138 @@ roomRef.orderByChild("timestamp").on("child_added", snapshot => {
     return;
   }
 
-  // 🔒 Zasebna sporočila:
-  // Če smo v "roomu" (chatId), NI treba filtrirati po privateUid (room že izolira).
-  // Če NISMO v roomu (globalni stream), ohrani tvojo staro privateUid logiko.
-  if (!chatId) {
-    if (currentChatPartner) {
-      const isPrivateMatch =
-        (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
-        (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
-      if (!isPrivateMatch) return;
-    } else {
-      if (msg.privateUid) return;
-    }
+  // 🔒 Zasebna sporočila
+  if (currentChatPartner) {
+    const isPrivateMatch =
+      (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
+      (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
+    if (!isPrivateMatch) return;
+  } else {
+    if (msg.privateUid) return;
   }
 
-  // 🪙 Kovanci (pusti ali odstrani po želji)
+  // 🪙 Kovanci
   if (msg.uid === currentUser.uid) {
     const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
-    userCoinsRef.once('value').then(s => {
-      const currentCoins = s.val() || 0;
+    userCoinsRef.once('value').then(snapshot => {
+      const currentCoins = snapshot.val() || 0;
       userCoinsRef.set(currentCoins + 1);
     });
   }
 
   // 🔧 Nastavitve uporabnika
   const displayName = userNamesCache[msg.uid] || "Anonimen";
-  const isOnline    = userStatusCache[msg.uid]?.online;
-  const color       = userColorsCache[msg.uid] || null;
-  const effects     = userEffectsCache[msg.uid] || null;
+  const isOnline = userStatusCache[msg.uid]?.online;
+  const color = userColorsCache[msg.uid] || null;
+  const effects = userEffectsCache[msg.uid] || null;
 
   const div = document.createElement("div");
-  div.classList.add("messageContainer");
-  div.dataset.key = snapshot.key;
+div.classList.add("messageContainer");
+div.dataset.key = snapshot.key;
 
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-  const avatarUrl     = users[msg.uid]?.avatarURL2 || defaultAvatar;
+ const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "avatar-wrapper";
-  wrapper.style.cssText = `
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    ${isOnline ? "border: 2px solid green;" : ""}
-  `;
-  wrapper.innerHTML = `
-    <model-viewer
-      src="${avatarUrl}"
-      camera-controls
-      auto-rotate
-      disable-zoom
-      disable-pan
-      disable-tap
-      interaction-prompt="none"
-      camera-target="0m 1.6m 0m"
-      min-camera-orbit="0deg 90deg 1.3m"
-      max-camera-orbit="0deg 90deg 1.3m"
-      field-of-view="20deg"
-      style="width:120%;height:120%;margin-left:-10%;margin-top:-15%;">
-    </model-viewer>
-  `;
-  wrapper.addEventListener("click", () => {
-    prepareReply(msg, snapshot.key, div);
+const wrapper = document.createElement("div");
+wrapper.className = "avatar-wrapper";
+wrapper.style.cssText = `
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  ${isOnline ? "border: 2px solid green;" : ""}
+`;
+
+wrapper.innerHTML = `
+  <model-viewer
+    src="${avatarUrl}"
+    camera-controls
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    interaction-prompt="none"
+    camera-target="0m 1.6m 0m"
+    min-camera-orbit="0deg 90deg 1.3m"
+    max-camera-orbit="0deg 90deg 1.3m"
+    field-of-view="20deg"
+    style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
+  </model-viewer>
+`;
+
+
+wrapper.addEventListener("click", () => {
+  prepareReply(msg, snapshot.key, div);
+});
+
+div.appendChild(wrapper);
+
+// Ime pošiljatelja
+const senderSpan = document.createElement("span");
+senderSpan.classList.add("sender");
+
+if (color === "none") {
+  senderSpan.style.display = "none";
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
+
+if (effects === "hacker") {
+  senderSpan.classList.add("hackerEffect");
+}
+
+senderSpan.textContent = displayName + ": ";
+
+// Dodaj v sporočilo
+div.appendChild(wrapper);
+div.appendChild(senderSpan);
+if (msg.replyTo) {
+  const replyBox = document.createElement("div");
+  replyBox.classList.add("replyBox");
+  replyBox.style.borderLeft = "3px solid #888";
+  replyBox.style.background = "#f9f9f9";
+  replyBox.style.padding = "6px 10px";
+  replyBox.style.marginBottom = "6px";
+  replyBox.style.fontSize = "13px";
+  replyBox.style.color = "#555";
+  replyBox.style.cursor = "pointer";
+  replyBox.style.borderRadius = "6px";
+
+  // Samo preview, brez imena
+  replyBox.textContent = msg.replyTo.preview;
+
+  replyBox.addEventListener("click", () => {
+    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+    if (original) {
+      original.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      original.classList.add("blink");
+      setTimeout(() => {
+        original.classList.remove("blink");
+      }, 1500);
+    }
   });
 
-  // Ime pošiljatelja
-  const senderSpan = document.createElement("span");
-  senderSpan.classList.add("sender");
-  if (color === "none") {
-    senderSpan.style.display = "none";
-  } else if (color === "rainbow") {
-    senderSpan.classList.add("rainbow");
-  } else if (color) {
-    senderSpan.style.color = color;
-  }
-  if (effects === "hacker") senderSpan.classList.add("hackerEffect");
-  senderSpan.textContent = displayName + ": ";
+  div.appendChild(replyBox);
+}
 
-  // Reply preview
-  if (msg.replyTo) {
-    const replyBox = document.createElement("div");
-    replyBox.classList.add("replyBox");
-    replyBox.style.borderLeft = "3px solid #888";
-    replyBox.style.background = "#f9f9f9";
-    replyBox.style.padding = "6px 10px";
-    replyBox.style.marginBottom = "6px";
-    replyBox.style.fontSize = "13px";
-    replyBox.style.color = "#555";
-    replyBox.style.cursor = "pointer";
-    replyBox.style.borderRadius = "6px";
-    replyBox.textContent = msg.replyTo.preview;
-    replyBox.addEventListener("click", () => {
-      const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
-      if (original) {
-        original.scrollIntoView({ behavior: "smooth", block: "center" });
-        original.classList.add("blink");
-        setTimeout(() => original.classList.remove("blink"), 1500);
-      }
-    });
-    div.appendChild(replyBox);
-  }
-
-  // Besedilo sporočila (s prevodom)
+  // Sporočilo
   const realText = document.createElement("span");
-  realText.classList.add("realText");
-  translateText(msg.text, selectedLanguage).then(translated => {
-    realText.textContent = translated;
-  });
-  if (effects === "hacker") realText.classList.add("hackerEffect");
+realText.classList.add("realText");
+
+// Prevedi besedilo
+translateText(msg.text, selectedLanguage).then(translated => {
+  realText.textContent = translated;
+});
+  // 🛠️ Efekti na sporočilu
+  if (effects === "hacker") {
+    realText.classList.add("hackerEffect");
+  }
+
+  // 📝 Če je sporočilo bilo urejeno
   if (msg.edited) {
     const editedMark = document.createElement("span");
     editedMark.textContent = " (urejeno)";
@@ -816,22 +828,21 @@ roomRef.orderByChild("timestamp").on("child_added", snapshot => {
     realText.appendChild(editedMark);
   }
 
-  // Render
-  div.appendChild(wrapper);
-  div.appendChild(senderSpan);
+  // 🕵️‍♂️ Skrito sporočilo
   if (msg.hidden) {
     const hiddenText = document.createElement("span");
     hiddenText.classList.add("hiddenText");
     hiddenText.textContent = "Zasebno sporočilo";
     div.classList.add("hiddenMessage");
     div.appendChild(hiddenText);
+    div.appendChild(realText);
+  } else {
+    div.appendChild(realText);
   }
-  div.appendChild(realText);
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
-
 
 
 
@@ -1109,9 +1120,10 @@ async function sendMessage(isReply = false) {
     };
   }
 
-  const messageRef = await db.ref(`messages/${chatId}`).push(newMessageData);
+  const messageRef = await db.ref("messages").push(newMessageData);
 
-  await db.ref(`users/${currentUser.uid}/lastMessageId`).set(messageRef.key);
+  // Shrani ID zadnjega sporočila uporabnika
+  await db.ref("users/" + currentUser.uid + "/lastMessageId").set(messageRef.key);
 
   // Po pošiljanju očistimo ustrezni input
   if (isReply) {
