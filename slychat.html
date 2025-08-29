@@ -155,6 +155,2908 @@
 
 #hiddenToggleBtn,
 #privateToggleBtn,
+#getCoinsBtn
+     {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#hiddenToggleBtn.active,
+#privateToggleBtn.active {
+  background-color: rgba(255, 255, 255, 0.6);
+  color: black;
+}
+
+    .btn {
+width: 100%;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+
+.btn1 { width: 100%;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn1:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .actions {
+        flex-direction: column;
+      }
+    }
+
+
+#openMapBtn {
+  display: none;
+}
+
+.messageContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
+  object-fit: cover;
+}
+
+  .sparkle-effect {
+      animation: sparkle 1s ease-in-out;
+    }
+
+    .zoom-effect {
+      animation: zoomIn 0.3s ease;
+    }
+
+    @keyframes sparkle {
+      0% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.5; transform: scale(1); }
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .gold { border: 3px solid gold; }
+    .neon { border: 3px solid #0ff; box-shadow: 0 0 10px #0ff; }
+
+
+
+.name-pulse {
+  animation: pulseName 1.5s infinite;
+}
+@keyframes pulseName {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.6; }
+}
+
+.name-glow {
+  color: #fff;
+  text-shadow: 0 0 5px #fff, 0 0 10px #0ff, 0 0 20px #0ff;
+}
+
+.name-fire {
+  animation: fireEffect 2s infinite;
+  background: linear-gradient(to top, #ff6600, #ff3300, #ff0000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@keyframes fireEffect {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+
+
+
+.typing-container {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid #ccc;
+  margin-top: 5px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.typing-avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.typing-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #4caf50;
+  object-fit: cover;
+}
+
+.typing-name {
+  font-size: 11px;
+  margin-top: 2px;
+  background: #eee;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: #333;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
+
+
+#languageSelector {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 14px;
+  text-align: center;
+  color: white;
+  font-family: sans-serif;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  z-index: 9999;
+}
+
+.slider-container {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+#languageSlider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+#languageSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffcc00;
+  cursor: pointer;
+  box-shadow: 0 0 3px #000;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+  </style>
+
+<body>
+<div class="container">
+  <h2>Slychat</h2>
+  <div id="chatBox">
+
+</div>
+
+
+  <div class="message-input-container" style="position: relative;">
+    <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
+
+    <div class="message-input-btn-container">
+      <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+<button  id="getCoinsBtn">💰</button>
+<button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
+
+
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="sendMessage()">Pošlji</button>
+    <button class="btn" id="openMapBtn" style="display:none;">🗺️ Zemljevid</button>
+   <button class="btn" onclick="returnToPublicChat()">Javni klepet</button>
+
+  </div>
+<div id="languageSliderContainer">
+  <div id="currentLang">Jezik: Slovenščina</div>
+  <input type="range" id="languageSlider" min="0" max="6" value="0" step="1">
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm"></script>
+<script>
+  let aiEngine = null;
+
+  async function initAI() {
+    if (!("gpu" in navigator)) {
+      alert("Ta brskalnik ne podpira WebGPU. AI asistent ne bo deloval.");
+      return null;
+    }
+    if (!aiEngine) {
+      try {
+        aiEngine = await webllm.createEngine("Llama-2-7b-chat-hf-q4f16_1");
+      } catch (e) {
+        console.error("Napaka pri inicializaciji AI:", e);
+        alert("AI model se ni uspel zagnati.");
+        return null;
+      }
+    }
+    return aiEngine;
+  }
+
+  async function askAI(question) {
+    const engine = await initAI();
+    if (!engine) return "AI ni na voljo v tem brskalniku.";
+    const reply = await engine.chat.completion([{role:"user", content: question}]);
+    return reply.choices[0].message.content;
+  }
+</script>
+<script>  
+
+  const firebaseConfig = {  
+
+    apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",  
+
+    authDomain: "chater-cf682.firebaseapp.com",  
+
+    databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",  
+
+    projectId: "chater-cf682",  
+
+    storageBucket: "chater-cf682.appspot.com",  
+
+    messagingSenderId: "233632075480",  
+
+    appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"  
+
+  };  
+
+
+
+  firebase.initializeApp(firebaseConfig);  
+
+  const auth = firebase.auth();  
+
+  const db = firebase.database();  
+
+
+
+  const chatBox = document.getElementById("chatBox");  
+
+  const messageInput = document.getElementById("messageInput");  
+
+
+
+  let currentChatPartner = null;  
+
+  let currentUser = null;  
+
+  let userNamesCache = {};  
+
+  let userStatusCache = {};  
+
+  let isHiddenMode = false;  
+
+  let userColorsCache = {}; // Za shranjevanje barv uporabnikov  
+
+
+
+
+let userEffectsCache = {}; // 🎯 Dodano
+
+
+let currentReply = null;
+let replyPreviewDiv = null;
+
+
+let users = {};
+
+
+  // DODANO: animacija mavrične barve (rainbow)  
+
+  const style = document.createElement('style');  
+
+  style.textContent = `  
+  
+    @keyframes rainbow {  
+  
+      0%, 100% { color: red; }  
+  
+      15% { color: orange; }  
+  
+      30% { color: yellow; }  
+  
+      45% { color: green; }  
+  
+      60% { color: blue; }  
+  
+      75% { color: indigo; }  
+  
+      90% { color: violet; }  
+  
+    }  
+  
+    .rainbow {  
+  
+      animation: rainbow 3s linear infinite;  
+  
+      font-weight: bold;  
+  
+    }  
+  
+  `;  
+
+  document.head.appendChild(style);  
+
+
+
+  function toggleHidden() {  
+
+    isHiddenMode = !isHiddenMode;  
+
+    const btn = document.getElementById("hiddenToggleBtn");  
+
+    if (isHiddenMode) {  
+
+      btn.classList.add("active");  
+
+      btn.title = "Skrito vklopljeno";  
+
+    } else {  
+
+      btn.classList.remove("active");  
+
+      btn.title = "Skrito izklopljeno";  
+
+    }  
+
+  }  
+let messagesRef = null;
+
+function loadMessages() {
+  if (messagesRef) messagesRef.off(); // Odstrani starega listenerja, če obstaja
+
+  messagesRef = db.ref("messages");
+  messagesRef.on("value", snapshot => {
+    chatBox.innerHTML = ""; // počisti chat
+
+    snapshot.forEach(child => {
+      const msg = child.val();
+
+      const isPublic = !msg.privateUid;
+      const isRelevantPrivate = currentChatPartner && (
+        (msg.privateUid === currentUser.uid && msg.uid === currentChatPartner) ||
+        (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner)
+      );
+
+      if ((!currentChatPartner && isPublic) || isRelevantPrivate) {
+        const name = userNamesCache[msg.uid] || "Uporabnik";
+        const div = document.createElement("div");
+        div.textContent = name + ": " + msg.text + (msg.edited ? " (popravljeno)" : "");
+        chatBox.appendChild(div);
+      }
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+
+auth.onAuthStateChanged(async user => {
+if (!user) {
+window.location.href = "auth.html";
+return;
+}
+
+currentUser = user;
+
+document.getElementById("getCoinsBtn").addEventListener("click", async () => {
+const userRef = db.ref("users/" + currentUser.uid);
+const snapshot = await userRef.once("value");
+const userData = snapshot.val() || {};
+
+const today = new Date().toISOString().split("T")[0];  
+const lastClaim = userData.lastCoinClaim || null;  
+
+if (lastClaim === today) {  
+  alert("Danes si že dobil kovance. Poskusi znova jutri!");  
+  return;  
+}  
+
+const currentCoins = userData.coins || 0;  
+const newCoins = currentCoins + Math.floor(Math.random() * 10) + 1;  
+
+await userRef.update({  
+  coins: newCoins,  
+  lastCoinClaim: today  
+});  
+
+alert(`Dobil si ${newCoins - currentCoins} kovancev! Skupaj: ${newCoins}`);
+
+});
+
+// Nastavi online status
+const userStatusRef = db.ref("status/" + user.uid);
+userStatusRef.set({ online: true });
+userStatusRef.onDisconnect().set({ online: false });
+
+// Naloži vse uporabnike + cache
+const usersSnapshot = await db.ref('users').once('value');
+const users = usersSnapshot.val() || {};
+
+for (const uid in users) {
+userNamesCache[uid] = users[uid].displayName || "Anonimen";
+userColorsCache[uid] = users[uid].color || null;
+userEffectsCache[uid] = users[uid].effects || null; // 🎯 Shrani učinke
+}
+
+
+
+// Posodobi online status cache
+db.ref("status").on("value", snapshot => {
+userStatusCache = snapshot.val() || {};
+});
+
+// Preveri potrditev imena
+const userData = users?.[currentUser.uid];
+if (!userData || !userData.displayName) {
+messageInput.placeholder = "Potrdi ime";
+messageInput.dataset.nameConfirm = "1";
+return;
+} else {
+messageInput.placeholder = "Vnesi sporočilo...";
+messageInput.dataset.nameConfirm = "0";
+}
+
+// 🎯 Poslušaj nova sporočila kronološko
+db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
+  const msg = snapshot.val();
+
+
+  // 🟢 Sistem: zasebno obvestilo
+  if (msg.system && msg.privateUid === currentUser.uid) {
+    const systemDiv = document.createElement("div");
+    systemDiv.style.fontStyle = "italic";
+    systemDiv.style.color = "#90ee90";
+    const senderName = users[msg.uid]?.displayName || "Uporabnik";
+    systemDiv.textContent = `${senderName} ${msg.text}`;
+    chatBox.appendChild(systemDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return;
+  }
+
+  // 🟠 Povabilo v klepet
+  if (msg.invite && msg.privateUid === currentUser.uid) {
+    const inviterName = users[msg.uid]?.displayName || "Anonimen";
+    const inviteDiv = document.createElement("div");
+    inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.
+      <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
+    chatBox.appendChild(inviteDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return;
+  }
+
+  // 🔒 Zasebna sporočila
+  if (currentChatPartner) {
+    const isPrivateMatch =
+      (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
+      (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
+    if (!isPrivateMatch) return;
+  } else {
+    if (msg.privateUid) return;
+  }
+
+  // 🪙 Kovanci
+  if (msg.uid === currentUser.uid) {
+    const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
+    userCoinsRef.once('value').then(snapshot => {
+      const currentCoins = snapshot.val() || 0;
+      userCoinsRef.set(currentCoins + 1);
+    });
+  }
+
+  // 🔧 Nastavitve uporabnika
+  const displayName = userNamesCache[msg.uid] || "Anonimen";
+  const isOnline = userStatusCache[msg.uid]?.online;
+  const color = userColorsCache[msg.uid] || null;
+  const effects = userEffectsCache[msg.uid] || null;
+
+  const div = document.createElement("div");
+div.classList.add("messageContainer");
+div.dataset.key = snapshot.key;
+
+ const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
+
+const wrapper = document.createElement("div");
+wrapper.className = "avatar-wrapper";
+wrapper.style.cssText = `
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  ${isOnline ? "border: 2px solid green;" : ""}
+`;
+
+wrapper.innerHTML = `
+  <model-viewer
+    src="${avatarUrl}"
+    camera-controls
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    interaction-prompt="none"
+    camera-target="0m 1.6m 0m"
+    min-camera-orbit="0deg 90deg 1.3m"
+    max-camera-orbit="0deg 90deg 1.3m"
+    field-of-view="20deg"
+    style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
+  </model-viewer>
+`;
+
+
+wrapper.addEventListener("click", () => {
+  prepareReply(msg, snapshot.key, div);
+});
+
+div.appendChild(wrapper);
+
+// Ime pošiljatelja
+const senderSpan = document.createElement("span");
+senderSpan.classList.add("sender");
+
+if (color === "none") {
+  senderSpan.style.display = "none";
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
+
+if (effects === "hacker") {
+  senderSpan.classList.add("hackerEffect");
+}
+
+senderSpan.textContent = displayName + ": ";
+
+// Dodaj v sporočilo
+div.appendChild(wrapper);
+div.appendChild(senderSpan);
+if (msg.replyTo) {
+  const replyBox = document.createElement("div");
+  replyBox.classList.add("replyBox");
+  replyBox.style.borderLeft = "3px solid #888";
+  replyBox.style.background = "#f9f9f9";
+  replyBox.style.padding = "6px 10px";
+  replyBox.style.marginBottom = "6px";
+  replyBox.style.fontSize = "13px";
+  replyBox.style.color = "#555";
+  replyBox.style.cursor = "pointer";
+  replyBox.style.borderRadius = "6px";
+
+  // Samo preview, brez imena
+  replyBox.textContent = msg.replyTo.preview;
+
+  replyBox.addEventListener("click", () => {
+    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+    if (original) {
+      original.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      original.classList.add("blink");
+      setTimeout(() => {
+        original.classList.remove("blink");
+      }, 1500);
+    }
+  });
+
+  div.appendChild(replyBox);
+}
+
+  // Sporočilo
+  const realText = document.createElement("span");
+realText.classList.add("realText");
+
+// Prevedi besedilo
+translateText(msg.text, selectedLanguage).then(translated => {
+  realText.textContent = translated;
+});
+  // 🛠️ Efekti na sporočilu
+  if (effects === "hacker") {
+    realText.classList.add("hackerEffect");
+  }
+
+  // 📝 Če je sporočilo bilo urejeno
+  if (msg.edited) {
+    const editedMark = document.createElement("span");
+    editedMark.textContent = " (urejeno)";
+    editedMark.style.fontStyle = "italic";
+    editedMark.style.color = "#999";
+    realText.appendChild(editedMark);
+  }
+
+  // 🕵️‍♂️ Skrito sporočilo
+  if (msg.hidden) {
+    const hiddenText = document.createElement("span");
+    hiddenText.classList.add("hiddenText");
+    hiddenText.textContent = "Zasebno sporočilo";
+    div.classList.add("hiddenMessage");
+    div.appendChild(hiddenText);
+    div.appendChild(realText);
+  } else {
+    div.appendChild(realText);
+  }
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+
+
+// 🔁 Poslušaj spremembe sporočil (npr. popravljeno sporočilo)
+db.ref("messages").on("child_changed", snapshot => {
+  const updatedMsg = snapshot.val();
+  const msgKey = snapshot.key;
+
+  // Poišči in posodobi obstoječe sporočilo
+  const allMessages = chatBox.querySelectorAll(".messageContainer");
+  allMessages.forEach(div => {
+    if (div.dataset.key === msgKey) {
+      const textSpan = div.querySelector(".realText");
+      if (textSpan) textSpan.textContent = updatedMsg.text;
+
+      // Če je sporočilo zdaj skrito
+      if (updatedMsg.hidden) {
+        if (!div.classList.contains("hiddenMessage")) {
+          const hiddenText = document.createElement("span");
+          hiddenText.classList.add("hiddenText");
+          hiddenText.textContent = "Zasebno sporočilo";
+          div.insertBefore(hiddenText, textSpan);
+          div.classList.add("hiddenMessage");
+        }
+      } else {
+        // Odstrani skrito obnašanje če je bil odstranjen "hidden"
+        const hiddenEl = div.querySelector(".hiddenText");
+        if (hiddenEl) hiddenEl.remove();
+        div.classList.remove("hiddenMessage");
+      }
+    }
+  });
+});
+});
+
+
+
+
+
+// Posodobi seznam aktivnih uporabnikov
+function updateActiveUsersList() {
+  const activeUsersDiv = document.getElementById("activeUsers");
+  activeUsersDiv.innerHTML = "";
+
+  for (const uid in userStatusCache) {
+    if (userStatusCache[uid]?.online) {
+      const userDiv = document.createElement("div");
+      userDiv.textContent = userNamesCache[uid] || "Anonimen";
+      if (userColorsCache[uid] && userColorsCache[uid] !== "none") {
+        userDiv.style.color = userColorsCache[uid];
+      }
+      activeUsersDiv.appendChild(userDiv);
+    }
+  }
+}
+
+
+
+
+
+
+
+  function acceptInvite(inviterUid) {  
+
+    currentChatPartner = inviterUid;  
+
+    chatBox.innerHTML = "";  
+
+    alert("Sprejel si povabilo. Zdaj si v zasebnem klepetu.");  
+
+
+
+    db.ref("messages").push({  
+
+      uid: currentUser.uid,  
+
+      text: "sprejel je tvoje povabilo v zasebni klepet.",  
+
+      system: true,  
+
+      privateUid: inviterUid  
+
+    });  
+
+  }  
+
+
+
+
+
+async function sendMessage(isReply = false) {
+  if (!currentUser) return;
+
+  // Če je reply, beremo vrednost iz reply inputa
+  let textRaw;
+  if (isReply) {
+    const replyInput = document.getElementById("replyInput");
+    if (!replyInput) return; // reply input ni prisoten
+    textRaw = replyInput.value.trim();
+  } else {
+    textRaw = messageInput.value.trim();
+  }
+
+
+
+
+
+
+  if (!textRaw) return;
+
+  // Če še nima imena - potrdi
+  if (!isReply && messageInput.dataset.nameConfirm === "1") {
+    await db.ref("users/" + currentUser.uid).update({
+      displayName: textRaw
+    });
+    userNamesCache[currentUser.uid] = textRaw;
+    messageInput.placeholder = "Vnesi sporočilo...";
+    messageInput.dataset.nameConfirm = "";
+    alert("Ime potrjeno: " + textRaw);
+    messageInput.value = "";
+    return;
+  }
+
+  // Ukaz za spremembo imena: *name*novoime
+  if (!isReply && textRaw.startsWith("*name*")) {
+    const newName = textRaw.slice(6).trim();
+    if (!newName) {
+      alert("Vpiši novo ime za spremembo.");
+      if (!isReply) messageInput.value = "";
+      return;
+    }
+    await db.ref("users/" + currentUser.uid).update({ displayName: newName });
+    userNamesCache[currentUser.uid] = newName;
+    alert("Ime je bilo spremenjeno na: " + newName);
+    if (!isReply) messageInput.value = "";
+    return;
+  }
+
+  // Ukaz za spremembo barve imena: *color*barva
+  if (!isReply && textRaw.startsWith("*color*")) {
+    const colorVal = textRaw.slice(7).trim().toLowerCase();
+    if (!colorVal) {
+      alert("Vpiši barvo ali 'rainbow' za mavrično animacijo.");
+      if (!isReply) messageInput.value = "";
+      return;
+    }
+    if (colorVal === "rainbow") {
+      await db.ref("users/" + currentUser.uid).update({ color: "rainbow" });
+      userColorsCache[currentUser.uid] = "rainbow";
+      alert("Barva imena nastavljena na mavrično (rainbow).");
+    } else if (colorVal === "none") {
+      await db.ref("users/" + currentUser.uid).update({ color: "none" });
+      userColorsCache[currentUser.uid] = "none";
+      alert("Ime bo zdaj nevidno.");
+    } else {
+      const s = new Option().style;
+      s.color = colorVal;
+      if (s.color === "") {
+        alert("Neveljavna barva.");
+        if (!isReply) messageInput.value = "";
+        return;
+      }
+      await db.ref("users/" + currentUser.uid).update({ color: colorVal });
+      userColorsCache[currentUser.uid] = colorVal;
+      alert("Barva imena nastavljena na: " + colorVal);
+    }
+    if (!isReply) messageInput.value = "";
+    return;
+  }
+
+  if (!isReply && textRaw === "/public") {
+    currentChatPartner = null;
+    chatBox.innerHTML = "";
+    messageInput.value = "";
+    alert("Zdaj si v javnem klepetu.");
+    setTimeout(() => location.reload(), 10);
+    return;
+  }
+
+  if (!isReply && textRaw === "/clearchat") {
+    db.ref("messages").remove().then(() => {
+      alert("Klepetalnica je bila pobrisana.");
+      location.reload();
+    }).catch(error => alert("Napaka pri brisanju: " + error.message));
+    messageInput.value = "";
+    return;
+  }
+
+  if (!isReply && textRaw.startsWith("/@")) {
+    const invitesText = textRaw.slice(1).trim();
+    const inviteNames = invitesText.split(" ").filter(n => n.startsWith("@")).map(n => n.slice(1).toLowerCase());
+    if (inviteNames.length === 0) {
+      alert("Vpiši uporabniška imena za povabilo, npr. /@ime1 @ime2");
+      messageInput.value = "";
+      return;
+    }
+    let notFoundUsers = [];
+    let invitedUids = [];
+    inviteNames.forEach(name => {
+      let foundUid = null;
+      for (const uid in userNamesCache) {
+        if (userNamesCache[uid].toLowerCase() === name) {
+          foundUid = uid;
+          break;
+        }
+      }
+      if (foundUid) {
+        invitedUids.push(foundUid);
+      } else {
+        notFoundUsers.push(name);
+      }
+    });
+    if (notFoundUsers.length > 0) {
+      alert("Uporabniki niso najdeni: " + notFoundUsers.join(", "));
+    }
+    invitedUids.forEach(uid => {
+      db.ref("messages").push({
+        uid: currentUser.uid,
+        text: "Povabilo v zasebni klepet",
+        invite: true,
+        privateUid: uid
+      });
+    });
+    if (invitedUids.length > 0) {
+      currentChatPartner = invitedUids[0];
+      chatBox.innerHTML = "";
+      alert("Vstopil si v zasebni pogovor z: " + invitedUids.map(uid => userNamesCache[uid]).join(", "));
+    }
+    messageInput.value = "";
+    return;
+  }
+
+  // Popravljanje zadnjega sporočila
+  const isEdit = textRaw.endsWith("**");
+  if (isEdit) {
+    const newText = textRaw.slice(0, -2).trim();
+    const lastMsgIdRef = db.ref("users/" + currentUser.uid + "/lastMessageId");
+    const lastMsgIdSnap = await lastMsgIdRef.once("value");
+    const lastMsgId = lastMsgIdSnap.val();
+
+    if (!lastMsgId) {
+      alert("Ni sporočila za popravek.");
+      if (!isReply) messageInput.value = "";
+      return;
+    }
+
+    await db.ref("messages/" + lastMsgId).update({
+      text: newText,
+      edited: true
+    });
+
+    if (!isReply) messageInput.value = "";
+    return;
+  }
+
+  // Priprava podatkov za novo sporočilo
+  const hidden = isHiddenMode;
+  const text = textRaw;
+
+  // Če je reply, dodamo reply metapodatke
+  const newMessageData = {
+    uid: currentUser.uid,
+    text: text,
+    hidden: hidden,
+    privateUid: currentChatPartner || null
+  };
+
+  if (isReply && currentReply) {
+    newMessageData.replyTo = {
+      toUid: currentReply.toUid,
+      messageKey: currentReply.messageKey,
+      preview: currentReply.preview,
+      name: currentReply.name
+    };
+  }
+
+  const messageRef = await db.ref("messages").push(newMessageData);
+
+  // Shrani ID zadnjega sporočila uporabnika
+  await db.ref("users/" + currentUser.uid + "/lastMessageId").set(messageRef.key);
+
+  // Po pošiljanju očistimo ustrezni input
+  if (isReply) {
+    const replyInput = document.getElementById("replyInput");
+    if (replyInput) replyInput.value = "";
+  } else {
+    messageInput.value = "";
+  }
+}
+
+
+  function logout() {  
+
+    auth.signOut().then(() => {  
+
+      window.location.href = "auth.html";  
+
+    });  
+
+  }  
+
+
+
+  messageInput.addEventListener("keydown", function (e) {  
+
+    if (e.key === "Enter") {  
+
+      sendMessage();  
+
+    }  
+
+  });  
+
+
+function sendReplyMessage() {
+  const replyInput = document.getElementById("replyInput");
+  const odgovor = replyInput ? replyInput.value.trim() : "";
+
+  if (!odgovor) {
+    alert("Prosim, vpiši sporočilo za odgovor.");
+    return;
+  }
+
+  if (!currentReply) {
+    alert("Ni podatkov za odgovor.");
+    return;
+  }
+
+  const messageData = {
+    uid: currentUser.uid,
+    text: odgovor,
+    timestamp: Date.now(),
+    replyTo: {
+      toUid: currentReply.toUid,
+      messageKey: currentReply.messageKey,
+      preview: currentReply.preview,
+      name: currentReply.name,
+    }
+  };
+
+  firebase.database().ref("messages").push(messageData);
+}
+
+
+// === ELEMENTI ===
+const btnZ = document.getElementById('privateToggleBtn');
+const btnH = document.getElementById('hiddenToggleBtn');
+const container = document.querySelector('.message-input-btn-container');
+
+
+// === SPLOŠNE SPREMENLJIVKE ===
+let rotationDegree = 0;
+const rotationStep = 12;
+let moves = [];
+const maxMoves = 8;
+
+let selfDestructActive = false;
+let selfDestructEndTimestamp = null;
+let selfDestructUnlimited = false;
+let masterControlActive = false;
+let currentUserId = null;  // trenutno prijavljeni uporabnik
+
+// === FIREBASE REALTIME REFERENCA ===
+const database = firebase.database();
+const selfDestructRef = database.ref('system/selfDestruct');
+
+// === INICIALIZACIJA DOKUMENTA (ENKRATNO BERE) ===
+async function initializeSelfDestructDoc() {
+  const snapshot = await selfDestructRef.once('value');
+  if (!snapshot.exists()) {
+    await selfDestructRef.set({
+      active: false,
+      unlimited: false,
+      endTimestamp: null
+    });
+    console.log("Self destruct dokument je bil ustvarjen v Realtime Database.");
+  } else {
+    const data = snapshot.val();
+    selfDestructActive = data.active;
+    selfDestructUnlimited = data.unlimited;
+    selfDestructEndTimestamp = data.endTimestamp;
+
+    if (selfDestructActive) {
+      disableChat();
+      if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+        startSelfDestructTimer();
+      }
+    }
+    console.log("Self destruct dokument že obstaja in je stanje naloženo.");
+  }
+}
+
+// --- POSLUŠANJE V REALNEM ČASU za selfDestruct ---
+selfDestructRef.on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (!data) return;
+
+  selfDestructActive = data.active;
+  selfDestructUnlimited = data.unlimited;
+  selfDestructEndTimestamp = data.endTimestamp;
+
+  if (selfDestructActive) {
+    disableChat();
+    if (!selfDestructUnlimited && selfDestructEndTimestamp) {
+      startSelfDestructTimer();
+    }
+  } else {
+    enableChat();
+    clearInterval(window.selfDestructInterval);
+  }
+});
+
+// === FUNKCIJA ZA NALAGANJE MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ===
+async function loadUserMasterControl() {
+  if (!currentUserId) return;
+  const snapshot = await database.ref(`users/${currentUserId}/masterControl`).once('value');
+  masterControlActive = snapshot.val() || false;
+  console.log("Master control za uporabnika:", masterControlActive);
+}
+
+// --- POSLUŠANJE SPREMEMB MASTER CONTROL ZA TRENUTNEGA UPORABNIKA ---
+function listenUserMasterControl() {
+  if (!currentUserId) return;
+  database.ref(`users/${currentUserId}/masterControl`).on('value', (snapshot) => {
+    masterControlActive = snapshot.val() || false;
+    console.log("Master control posodobljen:", masterControlActive);
+  });
+}
+
+// === SELF DESTRUCT FUNKCIJE ===
+async function activateSelfDestruct(duration = 60 * 60 * 1000) {
+  if (!masterControlActive) {
+    alert("Self destruct lahko aktivira samo master control!");
+    return;
+  }
+
+  if (selfDestructActive && !selfDestructUnlimited) {
+    // Preklop na neomejen self destruct
+    selfDestructUnlimited = true;
+    selfDestructEndTimestamp = null;
+    await selfDestructRef.update({
+      active: true,
+      unlimited: true,
+      endTimestamp: null
+    });
+
+    disableChat();
+    clearInterval(window.selfDestructInterval);
+    alert("Self destruct nastavljen na neomejen čas!");
+    return;
+  }
+
+  selfDestructActive = true;
+  selfDestructUnlimited = false;
+  selfDestructEndTimestamp = Date.now() + duration;
+
+  await selfDestructRef.update({
+    active: true,
+    unlimited: false,
+    endTimestamp: selfDestructEndTimestamp
+  });
+
+  disableChat();
+  startSelfDestructTimer();
+  alert("Self destruct aktiviran za 1 uro.");
+}
+
+function disableChat() {
+  messageInput.disabled = true;
+  chatBox.style.opacity = '0.6';
+  messageInput.placeholder = "Chat je onemogočen zaradi self destruct.";
+}
+
+function enableChat() {
+  messageInput.disabled = false;
+  chatBox.style.opacity = '1';
+  messageInput.placeholder = "Vpiši sporočilo...";
+}
+
+function startSelfDestructTimer() {
+  clearInterval(window.selfDestructInterval);
+  window.selfDestructInterval = setInterval(async () => {
+    if (!selfDestructEndTimestamp || selfDestructUnlimited) return;
+    if (Date.now() >= selfDestructEndTimestamp) {
+      selfDestructActive = false;
+      selfDestructEndTimestamp = null;
+      selfDestructUnlimited = false;
+
+      await selfDestructRef.update({
+        active: false,
+        unlimited: false,
+        endTimestamp: null
+      });
+
+      enableChat();
+      clearInterval(window.selfDestructInterval);
+      alert("Self destruct se je iztekel. Chat je spet omogočen.");
+    }
+  }, 1000);
+}
+
+async function cancelSelfDestruct() {
+  if (!selfDestructActive) return alert("Self destruct ni aktiven.");
+  if (!masterControlActive) return alert("Preklic samo z master control!");
+
+  selfDestructActive = false;
+  selfDestructUnlimited = false;
+  selfDestructEndTimestamp = null;
+
+  await selfDestructRef.update({
+    active: false,
+    unlimited: false,
+    endTimestamp: null
+  });
+
+  clearInterval(window.selfDestructInterval);
+  enableChat();
+  alert("Self destruct je bil deaktiviran.");
+}
+
+
+
+async function activateSelfDestructForUser(username) {
+  try {
+    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) {
+      alert("Uporabnik ni bil najden.");
+      return;
+    }
+
+    const userId = Object.keys(snapshot.val())[0];
+    await database.ref(`userSelfDestruct/${userId}`).set({
+      active: true,
+      timestamp: Date.now(),
+      duration: 60 * 60 * 1000
+    });
+
+    alert(`Self destruct za uporabnika ${username} aktiviran za 1 uro.`);
+  } catch (error) {
+    console.error("Napaka pri aktivaciji self destruct za uporabnika:", error);
+  }
+}
+
+async function cancelSelfDestructForUser(username) {
+  try {
+    const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
+    if (!snapshot.exists()) {
+      alert("Uporabnik ni bil najden.");
+      return;
+    }
+
+    const userId = Object.keys(snapshot.val())[0];
+    await database.ref(`userSelfDestruct/${userId}`).remove();
+
+    alert(`Self destruct za uporabnika ${username} preklican.`);
+  } catch (error) {
+    console.error("Napaka pri preklicu self destruct za uporabnika:", error);
+  }
+}
+
+
+
+
+
+// === ROTACIJSKI GESTURE DESKTOP ===
+btnZ.addEventListener('wheel', function (event) {
+  event.preventDefault();
+  if (selfDestructActive && !masterControlActive) return;
+
+  rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
+  moves.push(event.deltaY < 0 ? 'L' : 'R');
+  if (moves.length > maxMoves) moves.shift();
+  btnZ.style.transform = `rotate(${rotationDegree}deg)`;
+
+  interpretCode();
+});
+
+// === GESTURE ZA MOBILNI DOTIK ===
+(function () {
+  let isDragging = false;
+  let startX = 0;
+  let currentX = 0;
+  let zActive = false;
+
+  function resetPosition() {
+    btnZ.style.transition = 'transform 0.3s ease';
+    btnZ.style.transform = 'translateX(0px)';
+    setTimeout(() => { btnZ.style.transition = ''; }, 300);
+  }
+
+  function handleSwipe() {
+    const deltaX = currentX - startX;
+    if (Math.abs(deltaX) > 40) {
+      const move = deltaX < 0 ? 'L' : 'R';
+      moves.push(move);
+      if (moves.length > maxMoves) moves.shift();
+      interpretCode();
+    }
+    resetPosition();
+  }
+
+  function addTouchEvents() {
+    btnZ.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      startX = e.touches[0].clientX;
+    });
+
+    btnZ.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX;
+      const deltaX = currentX - startX;
+      const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
+      btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
+    });
+
+    btnZ.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      handleSwipe();
+    });
+  }
+
+  function toggleZMobile() {
+    zActive = !zActive;
+    btnZ.classList.toggle('active', zActive);
+    btnH.style.display = zActive ? 'none' : 'inline-block';
+  }
+
+  btnZ.addEventListener('click', toggleZMobile);
+
+  window.addEventListener('resize', () => {
+    btnH.style.display = 'inline-block';
+    container.appendChild(btnZ);
+  });
+
+  window.addEventListener('load', () => {
+    addTouchEvents();
+  });
+})();
+
+// === DEKODIRANJE GESTURE KODE ===
+function interpretCode() {
+  const code = moves.join('');
+
+  if (code === 'LRLRLRLR') {
+    if (selfDestructActive && !masterControlActive) {
+      alert("Ni mogoče vključiti master control med aktivnim self destruct.");
+      return;
+    }
+    masterControlActive = !masterControlActive;
+
+    if (currentUserId) {
+      database.ref(`users/${currentUserId}/masterControl`).set(masterControlActive)
+        .catch(err => console.error("Napaka pri posodobitvi masterControl:", err));
+    }
+
+    alert(masterControlActive ? "Master control VKLOPLJEN." : "Master control IZKLOPLJEN.");
+
+  } else if (code === 'RRLLRRRL') {
+    if (!masterControlActive) {
+      alert("Self destruct zahteva master control.");
+      return;
+    }
+    if (!selfDestructActive) {
+      activateSelfDestruct(); // vklop za 1 uro
+    } else if (!selfDestructUnlimited) {
+      activateSelfDestruct(); // preklop v unlimited
+    }
+
+  } else if (code === 'LLRRLLLR') {
+    if (selfDestructActive && selfDestructUnlimited) {
+      activateSelfDestruct(60 * 60 * 1000);
+    } else if (selfDestructActive) {
+      if (!masterControlActive) {
+        alert("Preklic zahteva master control.");
+        return;
+      }
+      cancelSelfDestruct();
+    }
+
+  } else if (code === 'LLLRLLRL') {
+    const targetUser = messageInput.value.trim();
+    if (!targetUser) {
+      alert("Vnesi ime uporabnika v vnosno polje!");
+      return;
+    }
+    if (!masterControlActive) {
+      alert("Self destruct za uporabnika zahteva master control.");
+      return;
+    }
+    activateSelfDestructForUser(targetUser);
+
+  } else if (code === 'RRRLRRLR') {
+    const targetUser = messageInput.value.trim();
+    if (!targetUser) {
+      alert("Vnesi ime uporabnika za preklic self destruct!");
+      return;
+    }
+    if (!masterControlActive) {
+      alert("Preklic za uporabnika zahteva master control.");
+      return;
+    }
+    cancelSelfDestructForUser(targetUser);
+  }
+}
+// === CHAT FUNKCIJE ===
+function displayMessage(sender, message) {
+  const el = document.createElement('div');
+  el.innerHTML = `<strong>${sender}:</strong> ${message}`;
+  chatBox.appendChild(el);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function handleIncomingMessage(msg) {
+  if (!selfDestructActive) displayMessage(msg.sender, msg.text);
+}
+
+async function onUserSendMessage(sender, message) {
+  if (selfDestructActive) return;
+  displayMessage(sender, message);
+  try {
+    await firebase.firestore().collection('messages').add({
+      sender: sender,
+      text: message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Napaka pri shranjevanju:", err);
+  }
+}
+
+// === OB ZAGONU ===
+window.addEventListener('load', () => {
+  // Firestore dokument že naložen v initializeSelfDestructDoc
+  // Ta del lahko po potrebi odstraniš
+
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      currentUserId = user.uid;
+      loadUserMasterControl();
+      listenUserMasterControl();
+    } else {
+      currentUserId = null;
+      masterControlActive = false;
+    }
+  });
+
+  initializeSelfDestructDoc().catch(console.error);
+});
+
+
+
+
+
+
+
+
+const topContainer = document.createElement("div");
+topContainer.style.position = "fixed";
+topContainer.style.top = "0";
+topContainer.style.left = "0";
+topContainer.style.width = "100%";
+topContainer.style.maxHeight = "40px";
+topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+topContainer.style.backdropFilter = "blur(8px)";
+topContainer.style.webkitBackdropFilter = "blur(8px)";
+topContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+topContainer.style.display = "flex";
+topContainer.style.flexDirection = "column";
+topContainer.style.zIndex = "9999";
+topContainer.style.transition = "max-height 0.4s ease";
+topContainer.style.boxSizing = "border-box";
+topContainer.style.padding = "0 15px";
+topContainer.style.overflow = "hidden";
+document.body.appendChild(topContainer);
+
+// Prva vrstica (čas + baterija)
+const topRow = document.createElement("div");
+topRow.style.display = "flex";
+topRow.style.justifyContent = "space-between";
+topRow.style.alignItems = "center";
+topRow.style.width = "100%";
+topRow.style.height = "40px";
+topContainer.appendChild(topRow);
+
+const clockSpan = document.createElement("span");
+clockSpan.style.fontWeight = "bold";
+clockSpan.style.fontSize = "1.2em";
+topRow.appendChild(clockSpan);
+
+const batterySpan = document.createElement("span");
+batterySpan.style.fontWeight = "bold";
+batterySpan.style.fontSize = "1.2em";
+topRow.appendChild(batterySpan);
+// Nastavi URL kamor naj vodi klik
+const targetURL = "avatar1.html"; // <-- zamenjaj s svojo povezavo
+
+batterySpan.style.cursor = "pointer";
+batterySpan.addEventListener("click", () => {
+  window.location.href = targetURL;
+});
+
+
+// Aktivni uporabniki
+const activeUsersContainer = document.createElement("div");
+activeUsersContainer.style.width = "100%";
+activeUsersContainer.style.flexDirection = "column";
+activeUsersContainer.style.flexGrow = "1";
+activeUsersContainer.style.display = "none";
+activeUsersContainer.style.padding = "10px";
+activeUsersContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+activeUsersContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+activeUsersContainer.style.borderRadius = "10px";
+activeUsersContainer.style.overflowY = "auto";
+activeUsersContainer.style.gap = "10px";
+activeUsersContainer.style.boxSizing = "border-box";
+topContainer.appendChild(activeUsersContainer);
+
+// Logout container, vedno na začetku skrit
+const logoutContainer = document.createElement("div");
+logoutContainer.style.width = "100%";
+logoutContainer.style.display = "none"; // SKRITO na začetku, ne odpre se ob onAuthStateChanged
+logoutContainer.style.flexDirection = "row";
+logoutContainer.style.alignItems = "center";
+logoutContainer.style.justifyContent = "space-between";
+logoutContainer.style.padding = "10px 20px";
+logoutContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+logoutContainer.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+logoutContainer.style.borderRadius = "10px";
+logoutContainer.style.boxSizing = "border-box";
+logoutContainer.style.color = "white";
+logoutContainer.style.fontFamily = "Arial, sans-serif";
+logoutContainer.style.textAlign = "left";
+logoutContainer.style.height = "140px";
+
+topContainer.appendChild(logoutContainer);
+
+const avatarWrapper = document.createElement("div");
+avatarWrapper.className = "avatar-wrapper";
+avatarWrapper.style.cssText = `
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+`;
+
+const modelViewer = document.createElement("model-viewer");
+modelViewer.setAttribute("camera-controls", "");
+modelViewer.setAttribute("auto-rotate", "");
+modelViewer.setAttribute("disable-zoom", "");
+modelViewer.setAttribute("disable-pan", "");
+modelViewer.setAttribute("disable-tap", "");
+modelViewer.setAttribute("min-camera-orbit", "0deg 87deg 1.1m");
+modelViewer.setAttribute("max-camera-orbit", "360deg 87deg 1.1m");
+modelViewer.setAttribute("camera-target", "0m 1.7m 0m");
+modelViewer.setAttribute("field-of-view", "22deg");
+modelViewer.style.width = "100%";
+modelViewer.style.height = "100%";
+
+avatarWrapper.appendChild(modelViewer);
+
+// Klik za preusmeritev
+avatarWrapper.addEventListener("click", () => {
+  window.location.href = "profile.html";
+});
+
+const userInfo = document.createElement("div");
+userInfo.style.flexGrow = "1";
+userInfo.style.display = "flex";
+userInfo.style.flexDirection = "column";
+userInfo.style.justifyContent = "center";
+
+const userName = document.createElement("div");
+userName.style.fontSize = "1.2em";
+userName.style.fontWeight = "bold";
+
+const userEmail = document.createElement("div");
+userEmail.style.marginTop = "4px";
+userEmail.style.fontSize = "0.9em";
+userEmail.style.opacity = "0.8";
+
+userInfo.appendChild(userName);
+userInfo.appendChild(userEmail);
+
+const logoutBtn = document.createElement("button");
+logoutBtn.className = "btn1";
+logoutBtn.textContent = "×"; // križec kot gumb za odjavo
+logoutBtn.style.padding = "6px 10px";
+logoutBtn.style.borderRadius = "50%";
+logoutBtn.style.border = "none";
+logoutBtn.style.backgroundColor = "#ff5555";
+logoutBtn.style.color = "white";
+logoutBtn.style.cursor = "pointer";
+logoutBtn.style.fontWeight = "bold";
+logoutBtn.style.fontSize = "1.2em";
+logoutBtn.style.flexShrink = "0";
+logoutBtn.style.width = "32px";
+logoutBtn.style.height = "32px";
+logoutBtn.style.display = "flex";
+logoutBtn.style.alignItems = "center";
+logoutBtn.style.justifyContent = "center";
+
+logoutBtn.onmouseover = () => {
+  logoutBtn.style.backgroundColor = "#ff2222";
+};
+logoutBtn.onmouseout = () => {
+  logoutBtn.style.backgroundColor = "#ff5555";
+};
+
+logoutBtn.onclick = () => {
+  auth.signOut().then(() => {
+    window.location.href = "auth.html";
+  }).catch((error) => {
+    console.error("Napaka pri odjavi:", error);
+  });
+};
+
+logoutContainer.appendChild(avatarWrapper);
+logoutContainer.appendChild(userInfo);
+logoutContainer.appendChild(logoutBtn);
+
+
+// Ob prijavi naloži podatke in avatar, vendar **NE prikaže** logoutContainer, ker boš ti to naredil sam
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    const ime = user.displayName ? user.displayName : "Brez imena";
+    const mail = user.email ? user.email : "Brez emaila";
+    userName.textContent = ime;
+    userEmail.textContent = mail;
+
+    db.ref("users/" + user.uid + "/avatarURL2").once("value").then(snapshot => {
+  const url = snapshot.val();
+  if (url) {
+    modelViewer.setAttribute("src", url);
+  } else {
+    modelViewer.setAttribute("src", "default-avatar.glb");
+  }
+});
+  } else {
+    // ko ni userja, resetiraj podatke
+    userName.textContent = "";
+    userEmail.textContent = "";
+    userAvatar.src = "";
+    logoutContainer.style.display = "none"; // naj bo skrit
+  }
+});
+
+
+
+
+
+
+
+
+
+
+// Posodobi uro
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes().toString().padStart(2, '0');
+  clockSpan.textContent = `${h}:${m}`;
+}
+updateClock();
+setInterval(updateClock, 600);
+
+// Baterija - prikaz z znaki za polnjenje in nizko baterijo
+if (navigator.getBattery) {
+  navigator.getBattery().then(battery => {
+    function updateBattery() {
+      const pct = Math.round(battery.level * 100);
+      let symbol = "🔋";
+
+      if (battery.charging) {
+        symbol = "⚡️";  // polnjenje
+      } else if (pct <= 20) {
+        symbol = "🪫";   // prazna baterija (lahko zamenjaš emoji)
+      }
+
+      batterySpan.textContent = battery.charging ? `${symbol}${pct}%` : `${pct}%${symbol}`;
+    }
+    updateBattery();
+    battery.addEventListener('levelchange', updateBattery);
+    battery.addEventListener('chargingchange', updateBattery);
+  });
+} else {
+  batterySpan.textContent = "Ni podpore";
+}
+// Prikaz aktivnih uporabnikov
+let showAllUsers = false;
+let touchStartX = null;
+
+function showActiveUsers() {
+  activeUsersContainer.innerHTML = "";
+
+  // Naslov glede na stanje
+  const title = document.createElement("div");
+  title.textContent = showAllUsers ? "👥 Vsi uporabniki" : "🔵 Aktivni uporabniki";
+  title.style.fontWeight = "bold";
+  title.style.marginBottom = "6px";
+  activeUsersContainer.appendChild(title);
+
+  if (!showAllUsers) {
+    const active = Object.entries(userStatusCache)
+      .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+    if (active.length === 0) {
+      const msg = document.createElement("i");
+      msg.textContent = "Ni drugih aktivnih uporabnikov.";
+      activeUsersContainer.appendChild(msg);
+    } else {
+      active.forEach(([uid]) => {
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+
+        // Dodano za blur in okvir:
+        div.style.background = "rgba(255, 255, 255, 0.15)";
+        div.style.backdropFilter = "blur(8px)";
+        div.style.borderRadius = "10px";
+        div.style.padding = "6px 10px";
+        div.style.marginBottom = "4px";
+        div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+
+        // DODAJ DOGODEK KLIKA TUKAJ
+        div.addEventListener("click", () => {
+          startPrivateChatWith(uid, userNamesCache[uid] || "Anonimen");
+        });
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = userNamesCache[uid] || "Anonimen";
+
+        const batterySpan = document.createElement("span");
+        batterySpan.style.fontSize = "0.9em";
+        batterySpan.style.opacity = "0.8";
+
+        firebase.database().ref("batteries/" + uid).once("value").then(snapshot => {
+          const data = snapshot.val();
+          if (data) {
+            const level = data.level;
+            const charging = data.charging;
+            let symbol = "🔋";
+            if (charging) symbol = "⚡️";
+            else if (level <= 20) symbol = "🪫";
+            batterySpan.textContent = charging ? `${symbol}${level}%` : `${level}%${symbol}`;
+          } else {
+            batterySpan.textContent = "–";
+          }
+        });
+
+        div.appendChild(nameSpan);
+        div.appendChild(batterySpan);
+        activeUsersContainer.appendChild(div);
+      });
+    }
+
+  } else {
+    const allUsers = Object.entries(userNamesCache)
+      .filter(([uid]) => uid !== currentUser.uid)
+      .sort((a, b) => a[1].localeCompare(b[1]));
+
+    if (allUsers.length === 0) {
+      const msg = document.createElement("i");
+      msg.textContent = "Ni drugih uporabnikov.";
+      activeUsersContainer.appendChild(msg);
+    } else {
+      allUsers.forEach(([uid, name]) => {
+        const div = document.createElement("div");
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
+
+        // Dodano za blur in okvir:
+        div.style.background = "rgba(255, 255, 255, 0.15)";
+        div.style.backdropFilter = "blur(8px)";
+        div.style.borderRadius = "10px";
+        div.style.padding = "6px 10px";
+        div.style.marginBottom = "4px";
+        div.style.border = "1px solid rgba(255, 255, 255, 0.3)";
+
+        // DODAJ DOGODEK KLIKA TUKAJ
+        div.addEventListener("click", () => {
+          startPrivateChatWith(uid, name || "Anonimen");
+        });
+
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = name || "Anonimen";
+
+        const statusSpan = document.createElement("span");
+        statusSpan.style.fontSize = "0.8em";
+        statusSpan.style.opacity = "0.7";
+
+        const status = userStatusCache[uid];
+        if (status?.online) {
+          statusSpan.textContent = "🟢 online";
+        } else if (status?.lastChanged) {
+          const formatted = formatTimestamp(status.lastChanged);
+          statusSpan.textContent = `⚫ offline (${formatted})`;
+        } else {
+          statusSpan.textContent = "⚫ offline";
+        }
+
+        div.appendChild(nameSpan);
+        div.appendChild(statusSpan);
+        activeUsersContainer.appendChild(div);
+      });
+    }
+  }
+
+
+
+
+
+// Višina
+let contentHeight = activeUsersContainer.scrollHeight;
+if (contentHeight < 40) contentHeight = 80;
+if (contentHeight > 360) contentHeight = 360;
+
+logoutContainer.style.display = "none";
+activeUsersContainer.style.display = "flex";
+activeUsersContainer.style.flexDirection = "column";
+topContainer.style.maxHeight = (40 + contentHeight) + "px";
+expandedUsers = true;
+expandedLogout = false;
+}
+
+// Formatiranje datuma
+function formatTimestamp(timestamp) {
+const date = new Date(timestamp);
+return date.toLocaleString("sl-SI", {
+day: '2-digit',
+month: '2-digit',
+year: 'numeric',
+hour: '2-digit',
+minute: '2-digit'
+});
+}
+
+// 🎯 Swipe/touch zaznavanje
+activeUsersContainer.addEventListener("touchstart", e => {
+touchStartX = e.touches[0].clientX;
+});
+activeUsersContainer.addEventListener("touchend", e => {
+if (touchStartX === null) return;
+const diffX = e.changedTouches[0].clientX - touchStartX;
+if (diffX > 50) {
+showAllUsers = true;
+showActiveUsers();
+} else if (diffX < -50) {
+showAllUsers = false;
+showActiveUsers();
+}
+touchStartX = null;
+});
+
+// 🎯 Miškin kolešček za preklapljanje
+activeUsersContainer.addEventListener("wheel", e => {
+if (e.deltaY > 20) {
+showAllUsers = true;
+showActiveUsers();
+} else if (e.deltaY < -20) {
+showAllUsers = false;
+showActiveUsers();
+}
+}); 
+
+function closeActiveUsers() {
+  activeUsersContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+  expandedUsers = false;
+}
+
+function showLogoutButton() {
+  activeUsersContainer.style.display = "none";
+  logoutContainer.style.display = "flex";
+  topContainer.style.maxHeight = "120px";
+  expandedLogout = true;
+  expandedUsers = false;
+}
+
+function closeLogoutButton() {
+  logoutContainer.style.display = "none";
+  topContainer.style.maxHeight = "40px";
+  expandedLogout = false;
+}
+
+let startX = null;
+let expandedUsers = false;
+let expandedLogout = false;
+
+// Touch podrs
+topContainer.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+topContainer.addEventListener("touchmove", (e) => {
+  if (startX === null) return;
+  const currentX = e.touches[0].clientX;
+  const dx = currentX - startX;
+
+  if (dx > 40 && !expandedUsers && !expandedLogout) {
+    showActiveUsers();
+  } else if (dx < -40 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
+  }
+});
+
+topContainer.addEventListener("touchend", () => {
+  startX = null;
+});
+
+// Scroll z miško
+topContainer.addEventListener("wheel", (e) => {
+  if (e.deltaY > 0 && !expandedUsers && !expandedLogout) {
+    showActiveUsers();
+  } else if (e.deltaY < 0 && !expandedLogout && !expandedUsers) {
+    showLogoutButton();
+  }
+});
+
+// Dvojni klik = zapri
+topContainer.addEventListener("dblclick", () => {
+  if (expandedUsers) {
+    closeActiveUsers();
+  } else if (expandedLogout) {
+    closeLogoutButton();
+  }
+});
+
+// Klik zunaj = zapri
+document.addEventListener("click", (e) => {
+  if (!topContainer.contains(e.target)) {
+    if (expandedUsers) closeActiveUsers();
+    if (expandedLogout) closeLogoutButton();
+  }
+});
+
+
+
+
+
+
+
+// --- Obstoječa koda (ni ponovljena) ---
+
+
+
+// --- Spremenljivke in container za opomnike ---
+let remindersExpanded = false;
+let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+
+const reminderContainer = document.createElement("div");
+reminderContainer.style.display = "none";
+reminderContainer.style.flexDirection = "column";
+reminderContainer.style.padding = "10px";
+reminderContainer.style.border = "1px solid rgba(255, 255, 255, 0.2)";
+reminderContainer.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+reminderContainer.style.backdropFilter = "blur(8px)";
+reminderContainer.style.borderRadius = "10px";
+reminderContainer.style.marginTop = "5px";
+reminderContainer.style.maxHeight = "220px";
+reminderContainer.style.overflowY = "auto";
+reminderContainer.style.gap = "10px";
+reminderContainer.style.boxSizing = "border-box";
+topContainer.appendChild(reminderContainer);
+
+// Znak ‼️ za opozorilo
+const alertIcon = document.createElement("div");
+alertIcon.textContent = "‼️";
+alertIcon.style.position = "absolute";
+alertIcon.style.left = "50%";
+alertIcon.style.top = "50%";
+alertIcon.style.transform = "translate(-50%, -50%)";
+alertIcon.style.fontSize = "1.8em";
+alertIcon.style.color = "red";
+alertIcon.style.display = "none";
+topContainer.appendChild(alertIcon);
+
+// Inputi in gumbi za dodajanje opomnika
+const reminderInput = document.createElement("input");
+reminderInput.type = "text";
+reminderInput.placeholder = "Ime opomnika";
+reminderInput.style.marginBottom = "5px";
+reminderInput.style.padding = "5px";
+reminderInput.style.borderRadius = "5px";
+reminderInput.style.border = "1px solid #ccc";
+reminderContainer.appendChild(reminderInput);
+
+const datetimeInput = document.createElement("input");
+datetimeInput.type = "datetime-local";
+datetimeInput.style.marginBottom = "5px";
+datetimeInput.style.padding = "5px";
+datetimeInput.style.borderRadius = "5px";
+datetimeInput.style.border = "1px solid #ccc";
+reminderContainer.appendChild(datetimeInput);
+
+const createBtn = document.createElement("button");
+createBtn.textContent = "Ustvari";
+createBtn.style.padding = "5px 10px";
+createBtn.style.borderRadius = "5px";
+createBtn.style.border = "none";
+createBtn.style.backgroundColor = "#4CAF50";
+createBtn.style.color = "white";
+createBtn.style.cursor = "pointer";
+reminderContainer.appendChild(createBtn);
+
+const reminderList = document.createElement("div");
+reminderList.style.display = "flex";
+reminderList.style.flexDirection = "column";
+reminderList.style.gap = "5px";
+reminderList.style.marginTop = "10px";
+reminderContainer.appendChild(reminderList);
+
+// Funkcija za shranjevanje v localStorage
+function saveReminders() {
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+}
+
+// Funkcija za izris opomnikov
+function renderReminders() {
+  reminderList.innerHTML = "";
+  const now = Date.now();
+
+  reminders.forEach((r, i) => {
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.justifyContent = "space-between";
+    div.style.alignItems = "center";
+    div.style.padding = "5px";
+    div.style.borderRadius = "5px";
+    div.style.backgroundColor = "rgba(255,255,255,0.2)";
+    div.style.backdropFilter = "blur(4px)";
+
+    // Opomnik - ime + čas
+    const label = document.createElement("span");
+    label.textContent = `${r.name} - ${new Date(r.time).toLocaleString()}`;
+    if (r.triggered) label.style.fontWeight = "bold";
+
+    div.appendChild(label);
+
+    const buttonsDiv = document.createElement("div");
+
+    // Gumb za potrditev (prikaže se samo če je sprožen opomnik)
+    if (r.triggered) {
+      const confirmBtn = document.createElement("button");
+      confirmBtn.textContent = "✅️";
+      confirmBtn.style.marginRight = "5px";
+      confirmBtn.style.cursor = "pointer";
+      confirmBtn.onclick = () => {
+        reminders.splice(i, 1);
+        saveReminders();
+        renderReminders();
+        checkAlerts();
+      };
+      buttonsDiv.appendChild(confirmBtn);
+    }
+
+    // Gumb za brisanje
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "❌️";
+    deleteBtn.style.cursor = "pointer";
+    deleteBtn.onclick = () => {
+      reminders.splice(i, 1);
+      saveReminders();
+      renderReminders();
+      checkAlerts();
+    };
+    buttonsDiv.appendChild(deleteBtn);
+
+    div.appendChild(buttonsDiv);
+    reminderList.appendChild(div);
+  });
+}
+
+// Funkcija za preverjanje ali so opomniki sproženi in prikaz znaka ‼️
+function checkAlerts() {
+  const now = Date.now();
+  let anyTriggered = false;
+
+  reminders.forEach(r => {
+    if (!r.triggered && now >= r.time) {
+      r.triggered = true;
+      anyTriggered = true;
+    } else if (r.triggered) {
+      anyTriggered = true;
+    }
+  });
+
+  saveReminders();
+  renderReminders();
+
+  alertIcon.style.display = anyTriggered ? "block" : "none";
+}
+
+// Dodajanje opomnika
+createBtn.addEventListener("click", () => {
+  const name = reminderInput.value.trim();
+  const time = new Date(datetimeInput.value).getTime();
+
+  if (!name) {
+    alert("Vpiši ime opomnika.");
+    return;
+  }
+  if (isNaN(time) || time < Date.now()) {
+    alert("Izberi veljaven prihodnji datum in čas.");
+    return;
+  }
+
+  reminders.push({ name, time, triggered: false });
+  saveReminders();
+  renderReminders();
+
+  reminderInput.value = "";
+  datetimeInput.value = "";
+});
+
+// Toggle odprtje/zaprtje opomnikov na klik ure
+clockSpan.addEventListener("click", () => {
+  remindersExpanded = !remindersExpanded;
+
+  if (remindersExpanded) {
+    reminderContainer.style.display = "flex";
+    topContainer.style.maxHeight = "300px";
+    topContainer.style.backdropFilter = "blur(8px)";
+    topContainer.style.backgroundColor = "rgba(255, 255, 255, 0.15)";
+
+    activeUsersContainer.style.display = "none";
+    logoutContainer.style.display = "none";
+
+    alertIcon.style.display = "none"; // skrij opozorilo ko odpremo
+
+  } else {
+    reminderContainer.style.display = "none";
+    topContainer.style.maxHeight = "40px";
+    topContainer.style.backdropFilter = "none";
+    topContainer.style.backgroundColor = "transparent";
+
+    activeUsersContainer.style.display = "";
+    logoutContainer.style.display = "";
+
+    checkAlerts();
+  }
+});
+
+// Periodično preverjanje opomnikov
+setInterval(checkAlerts, 10 * 1000); // vsake 10 sekund
+
+// Inicialni izris in preverjanje
+renderReminders();
+checkAlerts();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let lastShake = 0;
+window.addEventListener("devicemotion", (event) => {
+  const acc = event.accelerationIncludingGravity;
+  const totalAcc = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+
+  const now = Date.now();
+  if (totalAcc > 30 && now - lastShake > 2000) {  // prag & debounce
+    lastShake = now;
+    showUserMapPopup();
+  }
+});
+document.getElementById("openMapBtn").addEventListener("click", () => {
+  showUserMapPopup();
+});
+function toggleMapButtonVisibility() {
+  const btn = document.getElementById("openMapBtn");
+  btn.style.display = window.innerWidth >= 900 ? "block" : "none";
+}
+
+window.addEventListener("resize", toggleMapButtonVisibility);
+window.addEventListener("load", toggleMapButtonVisibility);
+
+
+
+
+
+
+function showUserMapPopup() {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.backgroundColor = "rgba(0,0,0,0.7)";
+  overlay.style.display = "flex";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = 9999;
+
+  const mapContainer = document.createElement("div");
+  mapContainer.style.width = "90vw";
+  mapContainer.style.height = "80vh";
+  mapContainer.style.backgroundColor = "white";
+  mapContainer.style.borderRadius = "12px";
+  mapContainer.style.overflow = "hidden";
+  mapContainer.style.position = "relative";
+
+const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✖";
+  closeBtn.style.position = "absolute";
+  closeBtn.style.top = "10px";
+  closeBtn.style.right = "10px";
+  closeBtn.style.zIndex = 2;
+  closeBtn.style.background = "transparent";
+  closeBtn.style.border = "none";
+  closeBtn.style.fontSize = "20px";
+  closeBtn.style.cursor = "pointer";
+  closeBtn.addEventListener("click", () => overlay.remove());
+
+  mapContainer.appendChild(closeBtn);
+
+
+
+mapContainer.appendChild(closeBtn);
+   // Tukaj bo container za izbiro ikone
+  const iconChooser = document.createElement("div");
+  iconChooser.style.position = "absolute";
+  iconChooser.style.top = "50%";
+  iconChooser.style.left = "50%";
+  iconChooser.style.transform = "translate(-50%, -50%)";
+  iconChooser.style.background = "white";
+  iconChooser.style.padding = "20px";
+  iconChooser.style.borderRadius = "12px";
+  iconChooser.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+  iconChooser.style.zIndex = 5;
+  iconChooser.style.textAlign = "center";
+  iconChooser.style.maxWidth = "300px";
+
+  iconChooser.innerHTML = `
+    <h3>Izberi svojo ikono</h3>
+   <div style="font-size: 28px; margin: 10px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+  <button class="icon-btn" style="margin:4px;">🚗</button>
+  <button class="icon-btn" style="margin:4px;">🚀</button>
+  <button class="icon-btn" style="margin:4px;">🐱</button>
+  <button class="icon-btn" style="margin:4px;">🎯</button>
+  <button class="icon-btn" style="margin:4px;">🌟</button>
+  <button class="icon-btn" style="margin:4px;">🐉</button>
+  <button class="icon-btn" style="margin:4px;">🌈</button>
+  <button class="icon-btn" style="margin:4px;">🔥</button>
+  <button class="icon-btn" style="margin:4px;">🍀</button>
+  <button class="icon-btn" style="margin:4px;">⚡</button>
+  <button class="icon-btn" style="margin:4px;">🐢</button>
+  <button class="icon-btn" style="margin:4px;">🎵</button>
+  <button class="icon-btn" style="margin:4px;">🦄</button>
+  <button class="icon-btn" style="margin:4px;">🍎</button>
+  <button class="icon-btn" style="margin:4px;">🏀</button>
+  <button class="icon-btn" style="margin:4px;">💎</button>
+  <button class="icon-btn" style="margin:4px;">🌻</button>
+  <button class="icon-btn" style="margin:4px;">🚴</button>
+  <button class="icon-btn" style="margin:4px;">🎮</button>
+  <button class="icon-btn" style="margin:4px;">🌙</button>
+  <button class="icon-btn" style="margin:4px;">🐼</button>
+  <button class="icon-btn" style="margin:4px;">🦁</button>
+  <button class="icon-btn" style="margin:4px;">🍕</button>
+  <button class="icon-btn" style="margin:4px;">🏰</button>
+  <button class="icon-btn" style="margin:4px;">🎈</button>
+  <button class="icon-btn" style="margin:4px;">🚁</button>
+  <button class="icon-btn" style="margin:4px;">📚</button>
+  <button class="icon-btn" style="margin:4px;">🎤</button>
+  <button class="icon-btn" style="margin:4px;">🛸</button>
+  <button class="icon-btn" style="margin:4px;">🌍</button>
+  <button class="icon-btn" style="margin:4px;">🍓</button>
+  <button class="icon-btn" style="margin:4px;">🧩</button>
+  <button class="icon-btn" style="margin:4px;">🌺</button>
+  <button class="icon-btn" style="margin:4px;">🏝️</button>
+  <button class="icon-btn" style="margin:4px;">🎲</button>
+  <button class="icon-btn" style="margin:4px;">🐬</button>
+  <button class="icon-btn" style="margin:4px;">🚢</button>
+  <button class="icon-btn" style="margin:4px;">🦋</button>
+  <button class="icon-btn" style="margin:4px;">🌌</button>
+  <button class="icon-btn" style="margin:4px;">🥑</button>
+</div>
+
+    <button id="iconSaveBtn" disabled style="margin-top:10px; padding: 5px 10px;">Shrani</button>
+  `;
+
+  mapContainer.appendChild(iconChooser);
+
+  const mapDiv = document.createElement("div");
+  mapDiv.id = "userMap";
+  mapDiv.style.width = "100%";
+  mapDiv.style.height = "100%";
+  mapContainer.appendChild(mapDiv);
+
+  overlay.appendChild(mapContainer);
+  document.body.appendChild(overlay);
+
+  let selectedIcon = null;
+  const iconButtons = iconChooser.querySelectorAll(".icon-btn");
+  const saveBtn = iconChooser.querySelector("#iconSaveBtn");
+
+  iconButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedIcon = btn.textContent;
+      // Označi izbrano ikono (doda border)
+      iconButtons.forEach(b => b.style.border = "none");
+      btn.style.border = "2px solid blue";
+      saveBtn.disabled = false;
+    });
+  });
+
+  saveBtn.addEventListener("click", () => {
+    if (!selectedIcon) return;
+    // Shrani v Firebase pod userIcons/currentUser.uid
+    firebase.database().ref("userIcons/" + currentUser.uid).set(selectedIcon)
+      .then(() => {
+        iconChooser.style.display = "none";
+        initUserMap(selectedIcon); // Zdaj nariši zemljevid z izbrano ikono
+      })
+      .catch(err => {
+        alert("Napaka pri shranjevanju ikone: " + err.message);
+      });
+  });
+
+  // Preveri, če že ima uporabnik ikono v Firebase (enkratno)
+  firebase.database().ref("userIcons/" + currentUser.uid).once("value").then(snapshot => {
+    const icon = snapshot.val();
+    if (icon) {
+      selectedIcon = icon;
+      iconChooser.style.display = "none";
+      initUserMap(icon);
+    }
+    // Če nima, izbira ostane vidna in uporabnik mora izbrati
+  });
+}
+
+function initUserMap() {
+  const map = L.map('userMap').setView([46.05, 14.5], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // 🔄 OSVEŽUJ LOKACIJO
+  function updateMyLocation() {
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      firebase.database().ref("locations/" + currentUser.uid).set({ lat, lng });
+    });
+  }
+
+  updateMyLocation();
+  setInterval(updateMyLocation, 60000);
+
+  // 🧍 PRIKAŽI 3D AVATAR na tvoji lokaciji
+  const avatarContainer = document.createElement("div");
+  avatarContainer.style.position = "absolute";
+  avatarContainer.style.width = "80px";  // Manjši avatar
+  avatarContainer.style.height = "160px"; // Sorazmerno višji
+  avatarContainer.style.pointerEvents = "none";
+  avatarContainer.style.background = "transparent";
+  avatarContainer.style.zIndex = 9999;  // Najvišji sloj
+  avatarContainer.style.display = "none";
+
+  const modelViewer = document.createElement("model-viewer");
+  modelViewer.setAttribute("camera-controls", "");
+  modelViewer.setAttribute("auto-rotate", "");
+  modelViewer.setAttribute("disable-zoom", "");
+  modelViewer.setAttribute("disable-pan", "");
+  modelViewer.setAttribute("disable-tap", "");
+  modelViewer.setAttribute("min-camera-orbit", "auto 90deg auto");
+  modelViewer.setAttribute("max-camera-orbit", "auto 90deg auto");
+  modelViewer.style.width = "100%";
+  modelViewer.style.height = "100%";
+  modelViewer.style.background = "transparent";
+
+  avatarContainer.appendChild(modelViewer);
+  document.body.appendChild(avatarContainer);
+
+  let avatarHidden = false;
+
+  // Skrij avatar ob kliku na dinamični closeBtn (event delegation)
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "closeBtn") {
+      avatarHidden = true;
+      avatarContainer.style.display = "none";
+      console.log("Avatar skrit zaradi klika na closeBtn.");
+    }
+  });
+
+  function updateAvatarPosition(lat, lng) {
+    const point = map.latLngToContainerPoint([lat, lng]);
+    avatarContainer.style.left = (point.x - 40) + "px";  // Polovica širine (80/2=40)
+    avatarContainer.style.top = (point.y - 160) + "px";  // Višina avatarja
+  }
+
+  async function refreshAvatar() {
+    if (avatarHidden) return; // Če je skrit, nič ne delaj
+
+    try {
+      const [locSnap, avatarSnap] = await Promise.all([
+        firebase.database().ref("locations/" + currentUser.uid).once("value"),
+        firebase.database().ref("users/" + currentUser.uid + "/avatarURL2").once("value")
+      ]);
+
+      const loc = locSnap.val();
+      const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+
+      if (loc && loc.lat && loc.lng) {
+        modelViewer.setAttribute("src", avatarUrl);
+        updateAvatarPosition(loc.lat, loc.lng);
+        avatarContainer.style.display = "block";
+      } else {
+        avatarContainer.style.display = "none";
+      }
+    } catch (e) {
+      console.error("❌ Napaka pri avatarju:", e);
+    }
+  }
+
+  map.on("move", refreshAvatar);
+  map.on("zoom", refreshAvatar);
+
+  refreshAvatar();
+  setInterval(refreshAvatar, 30000);
+
+  // 🧍‍♂️ PRIKAŽI ostale aktivne uporabnike
+  const active = Object.entries(userStatusCache)
+    .filter(([uid, status]) => status.online && uid !== currentUser.uid);
+
+  active.forEach(([uid]) => {
+    Promise.all([
+      firebase.database().ref("locations/" + uid).once("value"),
+      firebase.database().ref("userIcons/" + uid).once("value")
+    ]).then(([locSnap, iconSnap]) => {
+      const loc = locSnap.val();
+      const iconEmoji = iconSnap.val() || '📍';
+      if (loc && loc.lat && loc.lng) {
+        const icon = L.divIcon({
+          html: `<div style="font-size: 36px;">${iconEmoji}</div>`,
+          className: ""
+        });
+        const name = userNamesCache[uid] || "Uporabnik";
+        L.marker([loc.lat, loc.lng], { icon }).addTo(map).bindPopup(`<b>${name}</b>`);
+      }
+    });
+  });
+}
+
+
+
+
+function startPrivateChatWith(uid, displayName) {
+  currentChatPartner = uid;
+
+  // Počisti chatBox
+  chatBox.innerHTML = "";
+
+  // Prikaži naziv zasebnega klepeta (če želiš)
+  const notice = document.createElement("div");
+  notice.style.fontStyle = "italic";
+  notice.style.color = "#ccc";
+  notice.textContent = `Zasebni klepet z ${displayName}`;
+  chatBox.appendChild(notice);
+
+  // Ponovno naloži sporočila (child_added se bo sprožil za nova in stara)
+  // Ne rabimo nič spreminjat, ker bo tvoj .on("child_added") že pravilno filtriral
+}
+
+function returnToPublicChat() {
+  currentChatPartner = null;
+  chatBox.innerHTML = "";
+
+  const notice = document.createElement("div");
+  notice.style.fontStyle = "italic";
+  notice.style.color = "#ccc";
+  notice.textContent = `Nazaj v javni klepet`;
+  chatBox.appendChild(notice);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+const chatId = "globalChat";
+const userId = "user_" + Math.floor(Math.random() * 10000);
+
+const inputField = document.getElementById('messageInput');
+const defaultPlaceholder = "Vpiši sporočilo...";
+
+let typingTimeout;
+
+// 🔹 Dodaj CSS za utripanje roba
+(function addBlinkCSS() {
+  if (document.getElementById('typing-blink-style')) return;
+  const style = document.createElement('style');
+  style.id = 'typing-blink-style';
+  style.textContent = `
+    @keyframes borderBlink {
+      0%, 100% { border-color: #4a90e2; }
+      50% { border-color: #e91e63; }
+    }
+    .typing-blink {
+      animation: borderBlink 1.2s infinite;
+      border-width: 2px !important;
+      border-style: solid !important;
+      outline: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// 🔹 Nastavi onDisconnect, da se status pobriše ob izgubi povezave
+firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
+
+// 🔹 Pošlji status tipkanja ob vnosu
+inputField.addEventListener('input', () => {
+  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
+
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+  }, 2000);
+});
+
+// 🔹 Resetiraj status ob zapiranju okna
+window.addEventListener('beforeunload', () => {
+  firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+});
+
+// 🔹 Pridobi prikazna imena uporabnikov
+async function getUserNames(userIds) {
+  const db = firebase.database();
+  const promises = userIds.map(id =>
+    db.ref(`users/${id}/displayName`).once('value').then(snap => snap.val())
+  );
+  return Promise.all(promises);
+}
+
+// 🔹 Spremljaj status tipkanja drugih uporabnikov
+firebase.database().ref(`typingStatus/${chatId}`).on('value', async snapshot => {
+  const typingUsers = snapshot.val() || {};
+  delete typingUsers[userId]; // odstrani sebe iz prikaza
+
+  const usersTyping = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
+
+  // 🔸 Prisilni reset po 10 sekundah za vsak "zataknjen" status
+  Object.entries(typingUsers).forEach(([uid, isTyping]) => {
+    if (isTyping) {
+      setTimeout(() => {
+        firebase.database().ref(`typingStatus/${chatId}/${uid}`).once('value').then(snap => {
+          if (snap.val() === true) {
+            firebase.database().ref(`typingStatus/${chatId}/${uid}`).set(false);
+          }
+        });
+      }, 10000);
+    }
+  });
+
+  if (usersTyping.length > 0) {
+    inputField.classList.add('typing-blink');
+
+    // Pridobi imena
+    const names = await getUserNames(usersTyping);
+    const cleanNames = names.filter(n => typeof n === 'string' && n.trim() !== '');
+
+    if (cleanNames.length === 1) {
+      inputField.placeholder = `${cleanNames[0]} tipka...`;
+    } else if (cleanNames.length > 1) {
+      inputField.placeholder = `${cleanNames.join(', ')} tipkajo...`;
+    } else {
+      inputField.placeholder = "Nekdo tipka...";
+    }
+  } else {
+    inputField.classList.remove('typing-blink');
+    inputField.placeholder = defaultPlaceholder;
+  }
+});
+
+
+
+
+function prepareReply(msg, messageKey, messageDiv) {  
+  if (replyPreviewDiv) {  
+    replyPreviewDiv.remove();  
+    replyPreviewDiv = null;  
+  }  
+
+  currentReply = {  
+    toUid: msg.uid,  
+    messageKey: messageKey,  
+    preview: msg.text.length > 100 ? msg.text.slice(0, 100) + "..." : msg.text,  
+    name: users[msg.uid]?.displayName || "Anonimen"  
+  };  
+
+  replyPreviewDiv = document.createElement("div");  
+  replyPreviewDiv.classList.add("replyPreviewMessage");  
+  replyPreviewDiv.style.background = "#f1f1f1";  
+  replyPreviewDiv.style.border = "1px solid #ccc";  
+  replyPreviewDiv.style.padding = "10px";  
+  replyPreviewDiv.style.margin = "10px 0";  
+  replyPreviewDiv.style.borderRadius = "10px";  
+  replyPreviewDiv.style.width = "100%";  
+  replyPreviewDiv.style.boxSizing = "border-box";  
+
+  // Vsebina originalnega sporočila  
+  const content = document.createElement("div");  
+  content.innerHTML = `  
+    <strong>Odgovarjaš:</strong> ${currentReply.name}<br>  
+    <em>${currentReply.preview}</em>  
+  `;  
+  replyPreviewDiv.appendChild(content);  
+
+  // Input za odgovor  
+  const replyInput = document.createElement("input");  
+  replyInput.type = "text";  
+  replyInput.id = "replyInput";  
+  replyInput.placeholder = "Napiši odgovor...";  
+  replyInput.style.width = "100%";  
+  replyInput.style.padding = "6px";  
+  replyInput.style.margin = "10px 0 0 0";  
+  replyInput.style.borderRadius = "6px";  
+  replyInput.style.border = "1px solid #ccc";  
+  replyPreviewDiv.appendChild(replyInput);  
+
+  // Gumbi spodaj  
+  const buttonRow = document.createElement("div");  
+  buttonRow.style.marginTop = "10px";  
+  buttonRow.style.display = "flex";  
+  buttonRow.style.gap = "10px";  
+
+  const cancelBtn = document.createElement("button");  
+  cancelBtn.textContent = "✖ Prekliči";  
+  cancelBtn.style.flex = "1";  
+  cancelBtn.style.padding = "6px 12px";  
+  cancelBtn.style.border = "none";  
+  cancelBtn.style.borderRadius = "6px";  
+  cancelBtn.style.backgroundColor = "#ccc";  
+  cancelBtn.style.cursor = "pointer";  
+  cancelBtn.onclick = cancelReply;  
+
+  const confirmBtn = document.createElement("button");  
+  confirmBtn.textContent = "✔ Potrdi odgovor";  
+  confirmBtn.style.flex = "2";  
+  confirmBtn.style.padding = "6px 12px";  
+  confirmBtn.style.border = "none";  
+  confirmBtn.style.borderRadius = "6px";  
+  confirmBtn.style.backgroundColor = "#4CAF50";  
+  confirmBtn.style.color = "white";  
+  confirmBtn.style.cursor = "pointer";  
+  confirmBtn.onclick = () => {  
+  sendMessage(true); // pove, da gre za reply, torej se pošlje iz replyInput  
+  cancelReply();     // počisti reply UI po pošiljanju  
+}; 
+
+  buttonRow.appendChild(cancelBtn);  
+  buttonRow.appendChild(confirmBtn);  
+  replyPreviewDiv.appendChild(buttonRow);  
+
+  // Dodamo pod originalno sporočilo  
+  messageDiv.insertAdjacentElement("afterend", replyPreviewDiv);  
+  chatBox.scrollTop = chatBox.scrollHeight;  
+
+  // Fokus na input za odgovor  
+  replyInput.focus();
+}
+
+function cancelReply() {
+  if (replyPreviewDiv) {
+    replyPreviewDiv.remove();
+    replyPreviewDiv = null;
+  }
+  currentReply = null;
+}
+
+
+
+const languages = [
+  { code: "sl", name: "Slovenščina" },
+  { code: "en", name: "English" },
+  { code: "de", name: "Deutsch" },
+  { code: "tr", name: "Türkçe" },
+  { code: "fr", name: "Français" },
+  { code: "it", name: "Italiano" },
+  { code: "es", name: "Español" }
+];
+
+const slider = document.getElementById("languageSlider");
+const langLabel = document.getElementById("currentLang");
+
+let selectedLangIndex = parseInt(localStorage.getItem("sliderLangIndex")) || 0;
+slider.value = selectedLangIndex;
+updateLang(selectedLangIndex);
+
+slider.addEventListener("input", (e) => {
+  selectedLangIndex = parseInt(e.target.value);
+  updateLang(selectedLangIndex);
+  localStorage.setItem("sliderLangIndex", selectedLangIndex);
+});
+
+function updateLang(index) {
+  const lang = languages[index];
+  langLabel.textContent = `Jezik: ${lang.name}`;
+  selectedLanguage = lang.code;
+  localStorage.setItem("preferredLang", selectedLanguage);
+}
+
+async function translateText(text, targetLang) {
+  const response = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLang + "&dt=t&q=" + encodeURIComponent(text));
+  const result = await response.json();
+  return result[0]?.map(t => t[0]).join("") || text;
+}
+
+
+
+
+function openPrivateChat(peerUid){
+  const me = auth.currentUser.uid;
+  const chatId = [me, peerUid].sort().join('_');
+  // primer za SPA:
+  window.history.pushState({}, "", `/chat/${chatId}?peer=${peerUid}`);
+  // ali tvoj router: router.navigate(`/chat/${chatId}?peer=${peerUid}`)
+}
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Slychat</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <link id="favicon" rel="icon" href="Slytherin.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1250">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+ <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+</head>
+
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: url('slika.png') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      width: 97%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 500;
+    }
+
+    #chatBox,
+#postBox {
+      height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #chatBox div {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 10px 15px;
+      color: #fff;
+      word-wrap: break-word;
+      font-size: 0.95em;
+      position: relative;
+    }
+
+
+
+.blink {
+  animation: blinkAnimation 1.5s ease;
+}
+
+@keyframes blinkAnimation {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: #ffeeba; }
+}
+
+
+
+    .sender {
+      font-weight: 600;
+      color: #ffd700;
+      margin-right: 6px;
+    }
+
+    .hiddenMessage .realText {
+      display: none;
+    }
+
+    .hiddenMessage:hover .realText {
+      display: inline;
+    }
+
+    .hiddenMessage:hover .hiddenText {
+      display: none;
+    }
+
+    .hiddenText {
+      font-style: italic;
+      color: #ccc;
+    }
+
+    .message-input-container {
+      position: relative;
+    }
+
+    #messageInput {
+      padding: 10px;
+      padding-right: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      color: white;
+      outline: none;
+      width: 100%;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+.message-input-btn-container {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  background-color: rgba(0,0,0,0.1);
+  border-radius: 20px;
+  padding: 3px 3px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  z-index: 10;
+  height: 27px;
+  min-width: 55px; /* prostor za oba gumba */
+  box-sizing: content-box;
+}
+
+
+
+#hiddenToggleBtn,
+#privateToggleBtn,
 #friendFilterBtn
      {
   width: 25px;
