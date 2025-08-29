@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sl">
 <head>
@@ -662,6 +663,7 @@ messageInput.dataset.nameConfirm = "0";
 db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
 
+
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
     const systemDiv = document.createElement("div");
@@ -711,207 +713,118 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const effects = userEffectsCache[msg.uid] || null;
 
   const div = document.createElement("div");
-  div.classList.add("messageContainer");
-  div.dataset.key = snapshot.key;
+div.classList.add("messageContainer");
+div.dataset.key = snapshot.key;
 
-  const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-  const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
+ const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
 
-  const wrapper = document.createElement("div");
-  wrapper.className = "avatar-wrapper";
-  wrapper.style.cssText = `
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    overflow: hidden;
-    position: relative;
-    ${isOnline ? "border: 2px solid green;" : ""}
-  `;
+const wrapper = document.createElement("div");
+wrapper.className = "avatar-wrapper";
+wrapper.style.cssText = `
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  ${isOnline ? "border: 2px solid green;" : ""}
+`;
 
-  wrapper.innerHTML = `
-    <model-viewer
-      src="${avatarUrl}"
-      camera-controls
-      auto-rotate
-      disable-zoom
-      disable-pan
-      disable-tap
-      interaction-prompt="none"
-      camera-target="0m 1.6m 0m"
-      min-camera-orbit="0deg 90deg 1.3m"
-      max-camera-orbit="0deg 90deg 1.3m"
-      field-of-view="20deg"
-      style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
-    </model-viewer>
-  `;
+wrapper.innerHTML = `
+  <model-viewer
+    src="${avatarUrl}"
+    camera-controls
+    auto-rotate
+    disable-zoom
+    disable-pan
+    disable-tap
+    interaction-prompt="none"
+    camera-target="0m 1.6m 0m"
+    min-camera-orbit="0deg 90deg 1.3m"
+    max-camera-orbit="0deg 90deg 1.3m"
+    field-of-view="20deg"
+    style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
+  </model-viewer>
+`;
 
-  wrapper.addEventListener("click", () => {
-    prepareReply(msg, snapshot.key, div);
+
+wrapper.addEventListener("click", () => {
+  prepareReply(msg, snapshot.key, div);
+});
+
+div.appendChild(wrapper);
+
+// Ime pošiljatelja
+const senderSpan = document.createElement("span");
+senderSpan.classList.add("sender");
+
+if (color === "none") {
+  senderSpan.style.display = "none";
+} else if (color === "rainbow") {
+  senderSpan.classList.add("rainbow");
+} else if (color) {
+  senderSpan.style.color = color;
+}
+
+if (effects === "hacker") {
+  senderSpan.classList.add("hackerEffect");
+}
+
+senderSpan.textContent = displayName + ": ";
+
+// Dodaj v sporočilo
+div.appendChild(wrapper);
+div.appendChild(senderSpan);
+if (msg.replyTo) {
+  const replyBox = document.createElement("div");
+  replyBox.classList.add("replyBox");
+  replyBox.style.borderLeft = "3px solid #888";
+  replyBox.style.background = "#f9f9f9";
+  replyBox.style.padding = "6px 10px";
+  replyBox.style.marginBottom = "6px";
+  replyBox.style.fontSize = "13px";
+  replyBox.style.color = "#555";
+  replyBox.style.cursor = "pointer";
+  replyBox.style.borderRadius = "6px";
+
+  // Samo preview, brez imena
+  replyBox.textContent = msg.replyTo.preview;
+
+  replyBox.addEventListener("click", () => {
+    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+    if (original) {
+      original.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      original.classList.add("blink");
+      setTimeout(() => {
+        original.classList.remove("blink");
+      }, 1500);
+    }
   });
 
-  // en sam append (prej je bil podvojen)
-  div.appendChild(wrapper);
+  div.appendChild(replyBox);
+}
 
-  // Ime pošiljatelja
-  const senderSpan = document.createElement("span");
-  senderSpan.classList.add("sender");
-
-  if (color === "none") {
-    senderSpan.style.display = "none";
-  } else if (color === "rainbow") {
-    senderSpan.classList.add("rainbow");
-  } else if (color) {
-    senderSpan.style.color = color;
-  }
-
-  if (effects === "hacker") {
-    senderSpan.classList.add("hackerEffect");
-  }
-
-  senderSpan.textContent = displayName + ": ";
-  div.appendChild(senderSpan);
-
-  // Reply preview (če obstaja)
-  if (msg.replyTo) {
-    const replyBox = document.createElement("div");
-    replyBox.classList.add("replyBox");
-    replyBox.style.borderLeft = "3px solid #888";
-    replyBox.style.background = "#f9f9f9";
-    replyBox.style.padding = "6px 10px";
-    replyBox.style.marginBottom = "6px";
-    replyBox.style.fontSize = "13px";
-    replyBox.style.color = "#555";
-    replyBox.style.cursor = "pointer";
-    replyBox.style.borderRadius = "6px";
-
-    // Samo preview, brez imena
-    replyBox.textContent = msg.replyTo.preview;
-
-    replyBox.addEventListener("click", () => {
-      const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
-      if (original) {
-        original.scrollIntoView({ behavior: "smooth", block: "center" });
-        original.classList.add("blink");
-        setTimeout(() => {
-          original.classList.remove("blink");
-        }, 1500);
-      }
-    });
-
-    div.appendChild(replyBox);
-  }
-
-  // -----------------------------
-  // 🔗 Link unfurl: funkcije
-  // -----------------------------
-  function prettyDomain(urlStr) {
-    try {
-      const u = new URL(urlStr);
-      let host = u.hostname.replace(/^www\./i, "");
-      return host;
-    } catch {
-      return urlStr;
-    }
-  }
-
-  async function fetchWithTimeout(resource, options = {}) {
-    const { timeout = 6000 } = options;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    try {
-      const response = await fetch(resource, { ...options, signal: controller.signal });
-      return response;
-    } finally {
-      clearTimeout(id);
-    }
-  }
-
-  // CORS-friendly prek AllOrigins
-  async function getPageTitle(url) {
-    try {
-      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const res = await fetchWithTimeout(proxy, { timeout: 7000 });
-      if (!res.ok) throw new Error("Bad status");
-      const data = await res.json();
-      const match = data.contents?.match(/<title[^>]*>([^<]*)<\/title>/i);
-      const title = match ? match[1].trim() : null;
-      if (title) return title;
-      // fallback: Open Graph
-      const og = data.contents?.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
-      if (og && og[1]) return og[1].trim();
-      return prettyDomain(url);
-    } catch {
-      return prettyDomain(url);
-    }
-  }
-
-  // Pretvorba besedila v DOM z linki; najprej hitro prikaže URL,
-  // nato v ozadju zamenja besedilo linka z <title>.
-  function parseMessageTextInstant(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-    let match;
-
-    while ((match = urlRegex.exec(text)) !== null) {
-      const [full] = match;
-      const start = match.index;
-
-      // navadno besedilo pred URL
-      if (start > lastIndex) {
-        fragment.appendChild(document.createTextNode(text.slice(lastIndex, start)));
-      }
-
-      // link element (začasno kaže domeno/URL)
-      const a = document.createElement("a");
-      a.href = full;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = prettyDomain(full);
-      a.style.textDecoration = "underline";
-      fragment.appendChild(a);
-
-      // v ozadju pridobi title in zamenjaj besedilo
-      getPageTitle(full).then(title => {
-        a.textContent = title || prettyDomain(full);
-      });
-
-      lastIndex = start + full.length;
-    }
-
-    // rep besedila
-    if (lastIndex < text.length) {
-      fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
-
-    return fragment;
-  }
-
-  // -----------------------------
   // Sporočilo
-  // -----------------------------
   const realText = document.createElement("span");
-  realText.classList.add("realText");
+realText.classList.add("realText");
 
-  // Prevedi besedilo in nato vključi link-unfurl
-  translateText(msg.text, selectedLanguage).then(translated => {
-    realText.innerHTML = ""; 
-    const frag = parseMessageTextInstant(translated);
-    realText.appendChild(frag);
-
-    // 📝 Če je sporočilo bilo urejeno – dodaj oznako
-    if (msg.edited) {
-      const editedMark = document.createElement("span");
-      editedMark.textContent = " (urejeno)";
-      editedMark.style.fontStyle = "italic";
-      editedMark.style.color = "#999";
-      realText.appendChild(editedMark);
-    }
-  });
-
+// Prevedi besedilo
+translateText(msg.text, selectedLanguage).then(translated => {
+  realText.textContent = translated;
+});
   // 🛠️ Efekti na sporočilu
   if (effects === "hacker") {
     realText.classList.add("hackerEffect");
+  }
+
+  // 📝 Če je sporočilo bilo urejeno
+  if (msg.edited) {
+    const editedMark = document.createElement("span");
+    editedMark.textContent = " (urejeno)";
+    editedMark.style.fontStyle = "italic";
+    editedMark.style.color = "#999";
+    realText.appendChild(editedMark);
   }
 
   // 🕵️‍♂️ Skrito sporočilo
@@ -928,6 +841,41 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
 
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+
+
+// 🔁 Poslušaj spremembe sporočil (npr. popravljeno sporočilo)
+db.ref("messages").on("child_changed", snapshot => {
+  const updatedMsg = snapshot.val();
+  const msgKey = snapshot.key;
+
+  // Poišči in posodobi obstoječe sporočilo
+  const allMessages = chatBox.querySelectorAll(".messageContainer");
+  allMessages.forEach(div => {
+    if (div.dataset.key === msgKey) {
+      const textSpan = div.querySelector(".realText");
+      if (textSpan) textSpan.textContent = updatedMsg.text;
+
+      // Če je sporočilo zdaj skrito
+      if (updatedMsg.hidden) {
+        if (!div.classList.contains("hiddenMessage")) {
+          const hiddenText = document.createElement("span");
+          hiddenText.classList.add("hiddenText");
+          hiddenText.textContent = "Zasebno sporočilo";
+          div.insertBefore(hiddenText, textSpan);
+          div.classList.add("hiddenMessage");
+        }
+      } else {
+        // Odstrani skrito obnašanje če je bil odstranjen "hidden"
+        const hiddenEl = div.querySelector(".hiddenText");
+        if (hiddenEl) hiddenEl.remove();
+        div.classList.remove("hiddenMessage");
+      }
+    }
+  });
+});
 });
 
 
