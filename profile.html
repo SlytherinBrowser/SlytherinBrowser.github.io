@@ -171,10 +171,14 @@
 
     function userPath(uid){ return child(USERS, uid); }
 
-    function renderOwnProfile(u, data){
+   function renderOwnProfile(u, data){
       displayNameEl.textContent = data?.displayName || u.displayName || ('Uporabnik-' + u.uid.slice(0,6));
       bioEl.value = data?.bio || '';
-      avatar.src = data?.photoURL || u.photoURL || 'https://i.pravatar.cc/600?u='+u.uid;
+      if(data?.avatarURL2){
+        avatar.src = data.avatarURL2;
+      }else{
+        avatar.src = '';
+      }
       authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
     }
 
@@ -182,7 +186,6 @@
       const uid = auth.currentUser.uid;
       await update(userPath(uid), updates);
     }
-
     // --- Editable name ---
     btnEditName.addEventListener('click', ()=>{
       displayNameEl.setAttribute('contenteditable','true');
