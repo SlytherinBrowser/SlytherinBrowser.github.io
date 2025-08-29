@@ -155,7 +155,7 @@
 
 #hiddenToggleBtn,
 #privateToggleBtn,
-#getCoinsBtn
+#friendFilterBtn
      {
   width: 25px;
   height: 25px;
@@ -169,7 +169,8 @@
 }
 
 #hiddenToggleBtn.active,
-#privateToggleBtn.active {
+#privateToggleBtn.active,
+    #friendFilterBtn.active{
   background-color: rgba(255, 255, 255, 0.6);
   color: black;
 }
@@ -395,13 +396,10 @@ width: 100%;
     <input type="text" id="messageInput" placeholder="Vpiši sporočilo..." />
 
     <div class="message-input-btn-container">
-      <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
-<button  id="getCoinsBtn">💰</button>
-<button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
-
-
-    </div>
-  </div>
+  <button id="hiddenToggleBtn" title="Skrito sporočilo" onclick="toggleHidden()">H</button>
+  <button id="friendFilterBtn" title="Pošlji samo prijateljem">👥</button>
+  <button id="privateToggleBtn" title="Funkcijski gumb">Z</button>
+</div>
 
   <div class="actions">
     <button class="btn" onclick="sendMessage()">Pošlji</button>
@@ -539,6 +537,20 @@ let users = {};
 
   document.head.appendChild(style);  
 
+let isFriendFilterOn = false;
+
+// cache tvojih prijateljev: { friendUid: true, ... }
+let myFriends = {};
+db.ref(`users/${currentUser.uid}/friends`).on('value', snap=>{
+  myFriends = snap.val() || {};
+});
+const friendFilterBtn = document.getElementById('friendFilterBtn');
+friendFilterBtn.addEventListener('click', ()=>{
+  isFriendFilterOn = !isFriendFilterOn;
+  friendFilterBtn.classList.toggle('active', isFriendFilterOn);
+  friendFilterBtn.title = isFriendFilterOn ? 'FriendFilter: VKLOPLJEN (sporočila vidijo samo prijatelji)'
+                                           : 'FriendFilter: IZKLOPLJEN';
+});
 
 
   function toggleHidden() {  
@@ -663,6 +675,13 @@ messageInput.dataset.nameConfirm = "0";
 db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
   const msg = snapshot.val();
 
+// 🎯 Friend-only filter: če sporočilo ni moje in nisem prijatelj pošiljatelja -> preskoči
+if (msg.friendOnly) {
+  const isMine = (msg.uid === currentUser.uid);
+  if (!isMine && !myFriends[msg.uid]) {
+    return; // ne prikazuj
+  }
+}
 
   // 🟢 Sistem: zasebno obvestilo
   if (msg.system && msg.privateUid === currentUser.uid) {
@@ -697,14 +716,7 @@ db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
     if (msg.privateUid) return;
   }
 
-  // 🪙 Kovanci
-  if (msg.uid === currentUser.uid) {
-    const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
-    userCoinsRef.once('value').then(snapshot => {
-      const currentCoins = snapshot.val() || 0;
-      userCoinsRef.set(currentCoins + 1);
-    });
-  }
+
 
   // 🔧 Nastavitve uporabnika
   const displayName = userNamesCache[msg.uid] || "Anonimen";
@@ -1108,6 +1120,7 @@ async function sendMessage(isReply = false) {
     text: text,
     hidden: hidden,
     privateUid: currentChatPartner || null
+     friendOnly: isFriendFilterOn   // <<< DODANO
   };
 
   if (isReply && currentReply) {
