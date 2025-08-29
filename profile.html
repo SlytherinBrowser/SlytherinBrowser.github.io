@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profil – Chat</title>
+  <style>
+    :root{
+      --bg:#0f1220; --card:#151a2e; --muted:#8b91a7; --text:#e9ecf3; --accent:#6aa6ff; --ok:#2ecc71; --warn:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Ubuntu,sans-serif}
+    a{color:var(--accent);text-decoration:none}
+    button{border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:white;cursor:pointer;font-weight:600}
+    button[disabled]{opacity:.5;cursor:not-allowed}
+    input,textarea{background:#0e1430;border:1px solid #273055;border-radius:12px;color:var(--text);padding:10px 12px;outline:none}
+    textarea{min-height:96px;resize:vertical}
+    .app{display:flex;min-height:100vh}
+
+    /* Left avatar panel */
+    .left{position:sticky;top:0;align-self:flex-start;width:36%;min-width:280px;max-width:520px;padding:24px;display:flex;flex-direction:column;gap:16px;background:linear-gradient(180deg,#10172d 0%,#0c1226 100%);border-right:1px solid #222b4a}
+    .avatar-wrap{flex:1;display:flex;align-items:center;justify-content:center}
+    .avatar{width:100%;aspect-ratio:3/4;max-height:78vh;object-fit:cover;border-radius:24px;border:1px solid #2a335a;background:#0b1022}
+    .upload{display:flex;gap:8px;align-items:center;justify-content:space-between}
+
+    /* Right content */
+    .right{flex:1;padding:28px;display:flex;flex-direction:column;gap:24px}
+    .card{background:var(--card);border:1px solid #222b4a;border-radius:16px;padding:18px}
+    .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .title{font-weight:700;font-size:24px}
+    .muted{color:var(--muted)}
+
+    .editable{display:flex;gap:10px;align-items:center}
+    .editable .value{font-weight:700;font-size:20px;padding:6px 10px;border-radius:10px}
+    .editable .value[contenteditable="true"]{outline:2px dashed #2c3966;background:#0e1533}
+
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+    .search-results,.friends,.requests{display:grid;gap:12px}
+    .person{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #222b4a;border-radius:12px;background:#101736}
+    .person img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid #2a335a}
+    .person .name{font-weight:700}
+    .person .bio{font-size:13px;color:var(--muted)}
+
+    .pill{border:1px solid #2a335a;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted)}
+
+    .inline-btns{display:flex;gap:8px;margin-left:auto}
+
+    .friend-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px dashed #283256;border-radius:12px}
+
+    @media (max-width: 980px){
+      .app{flex-direction:column}
+      .left{position:relative;width:100%;max-width:none}
+      .avatar{max-height:50vh}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT: Avatar full height -->
+    <aside class="left">
+      <div class="avatar-wrap">
+        <img id="avatar" class="avatar" alt="Avatar" src="" />
+      </div>
+      <div class="upload">
+        <input id="avatarFile" type="file" accept="image/*" />
+        <button id="btnUploadAvatar">Naloži avatar</button>
+      </div>
+      <div class="row muted" id="authInfo">Prijava...</div>
+    </aside>
+
+    <!-- RIGHT: Profile content -->
+    <main class="right">
+      <!-- Own profile header -->
+      <section class="card">
+        <div class="editable">
+          <span class="muted">Ime:</span>
+          <span id="displayName" class="value" title="Klikni za urejanje" contenteditable="false"></span>
+          <button id="btnEditName" title="Uredi ime">Uredi</button>
+          <button id="btnSaveName" style="display:none">Shrani</button>
+        </div>
+        <div style="height:10px"></div>
+        <label class="muted" for="bio">Bio:</label>
+        <textarea id="bio" placeholder="Napiši nekaj o sebi..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button id="btnSaveBio">Shrani bio</button>
+          <span id="saveStatus" class="muted"></span>
+        </div>
+      </section>
+
+      <!-- Search user / view profile -->
+      <section class="card">
+        <div class="title">Poišči prijatelja</div>
+        <div class="row" style="margin-top:8px">
+          <input id="search" placeholder="Vpiši ime uporabnika..." style="flex:1" />
+          <button id="btnSearch">Išči</button>
+          <span id="searchHint" class="pill">Prikaže javne profile</span>
+        </div>
+        <div id="results" class="search-results" style="margin-top:12px"></div>
+      </section>
+
+      <!-- Friend requests -->
+      <section class="card">
+        <div class="title">Prošnje za prijateljstvo</div>
+        <div id="requests" class="requests" style="margin-top:10px"></div>
+      </section>
+
+      <!-- Your friends -->
+      <section class="card">
+        <div class="title">Prijatelji</div>
+        <div id="friends" class="friends" style="margin-top:10px"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    // --- Firebase setup (Realtime Database + Auth + Storage) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInAnonymously, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getDatabase, ref, onValue, set, update, get, child, push, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+    import { getStorage, ref as sref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    // --- UI refs ---
+    const el = (id)=>document.getElementById(id);
+    const avatar = el('avatar');
+    const avatarFile = el('avatarFile');
+    const btnUploadAvatar = el('btnUploadAvatar');
+    const displayNameEl = el('displayName');
+    const btnEditName = el('btnEditName');
+    const btnSaveName = el('btnSaveName');
+    const bioEl = el('bio');
+    const btnSaveBio = el('btnSaveBio');
+    const saveStatus = el('saveStatus');
+    const authInfo = el('authInfo');
+    const searchInp = el('search');
+    const btnSearch = el('btnSearch');
+    const results = el('results');
+    const requests = el('requests');
+    const friends = el('friends');
+
+    const USERS = ref(db, 'users');
+
+    // --- Auth flow ---
+    async function ensureSignedIn(){
+      if(auth.currentUser) return auth.currentUser;
+      try{
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      }catch(e){
+        await signInAnonymously(auth);
+      }
+      return new Promise(res=>{
+        onAuthStateChanged(auth, u=> u && res(u));
+      });
+    }
+
+    function userPath(uid){ return child(USERS, uid); }
+
+    function renderOwnProfile(u, data){
+      displayNameEl.textContent = data?.displayName || u.displayName || ('Uporabnik-' + u.uid.slice(0,6));
+      bioEl.value = data?.bio || '';
+      avatar.src = data?.photoURL || u.photoURL || 'https://i.pravatar.cc/600?u='+u.uid;
+      authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
+    }
+
+    async function saveProfilePart(updates){
+      const uid = auth.currentUser.uid;
+      await update(userPath(uid), updates);
+    }
+
+    // --- Editable name ---
+    btnEditName.addEventListener('click', ()=>{
+      displayNameEl.setAttribute('contenteditable','true');
+      displayNameEl.focus();
+      btnEditName.style.display='none';
+      btnSaveName.style.display='inline-block';
+    });
+    btnSaveName.addEventListener('click', async ()=>{
+      const name = displayNameEl.textContent.trim().slice(0,40);
+      await saveProfilePart({ displayName: name });
+      try{ await updateProfile(auth.currentUser, { displayName: name }); }catch{}
+      displayNameEl.setAttribute('contenteditable','false');
+      btnSaveName.style.display='none';
+      btnEditName.style.display='inline-block';
+    });
+
+    // --- Bio ---
+    btnSaveBio.addEventListener('click', async ()=>{
+      saveStatus.textContent = 'Shranjujem...';
+      await saveProfilePart({ bio: bioEl.value.trim().slice(0,500) });
+      saveStatus.textContent = 'Shranjeno ✓';
+      setTimeout(()=> saveStatus.textContent='', 1500);
+    });
+
+    // --- Avatar upload ---
+    btnUploadAvatar.addEventListener('click', async ()=>{
+      const file = avatarFile.files?.[0];
+      if(!file){ alert('Izberi sliko.'); return; }
+      const uid = auth.currentUser.uid;
+      const dest = sref(storage, `avatars/${uid}`);
+      await uploadBytes(dest, file);
+      const url = await getDownloadURL(dest);
+      await saveProfilePart({ photoURL: url });
+      try{ await updateProfile(auth.currentUser, { photoURL: url }); }catch{}
+      avatar.src = url;
+    });
+
+    // --- Search users ---
+    btnSearch.addEventListener('click', ()=> searchUsers(searchInp.value.trim()));
+    searchInp.addEventListener('keydown', e=>{ if(e.key==='Enter') btnSearch.click(); });
+
+    async function searchUsers(q){
+      results.innerHTML = '';
+      const snap = await get(USERS);
+      if(!snap.exists()) return;
+      const me = auth.currentUser.uid;
+      const list = Object.entries(snap.val()).filter(([uid, u])=> uid!==me && (
+        (u.displayName||'').toLowerCase().includes(q.toLowerCase())
+      ));
+      if(list.length===0){ results.innerHTML = '<span class="muted">Ni zadetkov.</span>'; return; }
+      for(const [uid, u] of list){
+        results.appendChild(personRow(uid, u, { showAdd:true }));
+      }
+    }
+
+    // --- Person row (for search & friends) ---
+    function personRow(uid, u, opts={}){
+      const row = document.createElement('div');
+      row.className='person';
+      const img = document.createElement('img');
+      img.src = u.photoURL || 'https://i.pravatar.cc/100?u='+uid;
+      const col = document.createElement('div');
+      const name = document.createElement('div');
+      name.className='name';
+      name.textContent = u.displayName || ('Uporabnik-'+uid.slice(0,6));
+      const bio = document.createElement('div');
+      bio.className='bio'; bio.textContent = u.bio || '';
+      col.append(name,bio);
+      const btns = document.createElement('div');
+      btns.className='inline-btns';
+
+      if(opts.showAdd){
+        const b = document.createElement('button');
+        b.textContent = 'Dodaj prijatelja';
+        b.addEventListener('click', ()=> sendFriendRequest(uid));
+        btns.appendChild(b);
+      }
+
+      if(opts.openChat){
+        const b = document.createElement('button');
+        b.textContent = 'Odpri chat';
+        b.addEventListener('click', ()=> openPrivateChat(uid));
+        btns.appendChild(b);
+      }
+
+      row.append(img,col,btns);
+      return row;
+    }
+
+    // --- Friend requests (incoming) ---
+    async function refreshRequests(){
+      const uid = auth.currentUser.uid;
+      const reqRef = child(userPath(uid), 'friendRequests');
+      const snap = await get(reqRef);
+      requests.innerHTML = '';
+      if(!snap.exists()){ requests.innerHTML = '<span class="muted">Ni novih prošenj.</span>'; return; }
+      const reqs = snap.val();
+      for(const fromUid of Object.keys(reqs)){
+        const uSnap = await get(userPath(fromUid));
+        const u = uSnap.val();
+        const row = document.createElement('div');
+        row.className='friend-item';
+        row.appendChild(personRow(fromUid, u));
+        const accept = document.createElement('button'); accept.textContent='Sprejmi'; accept.style.background='var(--ok)';
+        const decline = document.createElement('button'); decline.textContent='Zavrni'; decline.style.background='var(--warn)';
+        accept.addEventListener('click', ()=> acceptRequest(fromUid));
+        decline.addEventListener('click', ()=> declineRequest(fromUid));
+        const btns=document.createElement('div'); btns.className='inline-btns'; btns.append(accept,decline);
+        row.appendChild(btns);
+        requests.appendChild(row);
+      }
+    }
+
+    async function sendFriendRequest(targetUid){
+      const me = auth.currentUser.uid;
+      if(me===targetUid) return;
+      // create entries
+      await update(userPath(targetUid), { [`friendRequests/${me}`]: true });
+      await update(userPath(me), { [`outgoingRequests/${targetUid}`]: true });
+      alert('Prošnja poslana.');
+    }
+
+    async function declineRequest(fromUid){
+      const me = auth.currentUser.uid;
+      await update(userPath(me), { [`friendRequests/${fromUid}`]: null });
+      await update(userPath(fromUid), { [`outgoingRequests/${me}`]: null });
+      refreshRequests();
+    }
+
+    async function acceptRequest(fromUid){
+      const me = auth.currentUser.uid;
+      // add both ways
+      await update(userPath(me), { [`friends/${fromUid}`]: true, [`friendRequests/${fromUid}`]: null });
+      await update(userPath(fromUid), { [`friends/${me}`]: true, [`outgoingRequests/${me}`]: null });
+      await refreshFriends();
+      await refreshRequests();
+    }
+
+    // --- Friends list ---
+    async function refreshFriends(){
+      const me = auth.currentUser.uid;
+      const snap = await get(child(userPath(me), 'friends'));
+      friends.innerHTML='';
+      if(!snap.exists()){ friends.innerHTML = '<span class="muted">Še nimaš prijateljev.</span>'; return; }
+      for(const uid of Object.keys(snap.val())){
+        const u = (await get(userPath(uid))).val();
+        const row = personRow(uid, u, { openChat:true });
+        friends.appendChild(row);
+      }
+    }
+
+    // --- Open private chat ---
+    function openPrivateChat(friendUid){
+      // Deterministic chat id (sorted uids)
+      const me = auth.currentUser.uid;
+      const chatId = [me, friendUid].sort().join('_');
+      // Redirect to your private chat page (adjust URL as needed)
+      window.location.href = `/Slychat.html?chat=${encodeURIComponent(chatId)}&peer=${encodeURIComponent(friendUid)}`;
+    }
+
+    // --- Live sync of own user node ---
+    function liveBind(){
+      const uid = auth.currentUser.uid;
+      onValue(userPath(uid), snap=>{
+        const data = snap.val() || {};
+        // Ensure user node exists with minimal public profile
+        if(!data.createdAt){
+          update(userPath(uid), {
+            createdAt: Date.now(),
+            displayName: data.displayName || auth.currentUser.displayName || ('Uporabnik-' + uid.slice(0,6)),
+            photoURL: data.photoURL || auth.currentUser.photoURL || '',
+          });
+        }
+        renderOwnProfile(auth.currentUser, data);
+      });
+    }
+
+    // --- Boot ---
+    (async ()=>{
+      const user = await ensureSignedIn();
+      liveBind();
+      refreshFriends();
+      refreshRequests();
+    })();
+  </script>
+</body>
+</html>
