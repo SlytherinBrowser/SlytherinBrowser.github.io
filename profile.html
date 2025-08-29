@@ -275,51 +275,58 @@ model-viewer.avatar{
       }
     }
 
-    // Person row: prefer 3D model from u.avatarURL2 (RPM), fallback to photoURL/img
     function personRow(uid, u, opts={}){
-      const row = document.createElement('div');
-      row.className='person';
+  const row = document.createElement('div');
+  row.className='person';
 
-      let thumb;
-      if(u?.avatarURL2 && /\.(glb)($|\?)/i.test(u.avatarURL2)){
-        thumb = document.createElement('model-viewer');
-        thumb.setAttribute('src', u.avatarURL2);
-        thumb.setAttribute('crossorigin','anonymous');
-        thumb.setAttribute('camera-controls','');
-        thumb.setAttribute('auto-rotate','');
-      } else {
-        thumb = document.createElement('img');
-        thumb.src = u?.photoURL || 'https://i.pravatar.cc/100?u='+uid;
-        thumb.alt = 'Avatar';
-      }
+  let thumb;
+  if(u?.avatarURL2 && /\.(glb)($|\?)/i.test(u.avatarURL2)){
+    thumb = document.createElement('model-viewer');
+    thumb.setAttribute('src', u.avatarURL2);
+    thumb.setAttribute('crossorigin','anonymous');
+    thumb.setAttribute('camera-controls','');
+    thumb.setAttribute('auto-rotate','');
+  } else {
+    thumb = document.createElement('img');
+    thumb.src = u?.photoURL || 'https://i.pravatar.cc/100?u='+uid;
+    thumb.alt = 'Avatar';
+  }
 
-      const col = document.createElement('div');
-      const name = document.createElement('div');
-      name.className='name';
-      name.textContent = u?.displayName || ('Uporabnik-'+uid.slice(0,6));
-      const bio = document.createElement('div');
-      bio.className='bio'; bio.textContent = u?.bio || '';
-      col.append(name,bio);
+  const col = document.createElement('div');
+  const name = document.createElement('div');
+  name.className='name';
+  name.textContent = u?.displayName || ('Uporabnik-'+uid.slice(0,6));
+  const bio = document.createElement('div');
+  bio.className='bio'; bio.textContent = u?.bio || '';
+  col.append(name,bio);
 
-      const btns = document.createElement('div');
-      btns.className='inline-btns';
+  const btns = document.createElement('div');
+  btns.className='inline-btns';
 
-      if(opts.showAdd){
-        const b = document.createElement('button');
-        b.textContent = 'Dodaj prijatelja';
-        b.addEventListener('click', ()=> sendFriendRequest(uid));
-        btns.appendChild(b);
-      }
-      if(opts.openChat){
-        const b = document.createElement('button');
-        b.textContent = 'Odpri chat';
-        b.addEventListener('click', ()=> openPrivateChat(uid));
-        btns.appendChild(b);
-      }
+  if(opts.showAdd){
+    const alreadyFriend   = myProfileData.friends && myProfileData.friends[uid];
+    const alreadyOutgoing = myProfileData.outgoingRequests && myProfileData.outgoingRequests[uid];
+    const alreadyIncoming = myProfileData.friendRequests && myProfileData.friendRequests[uid];
 
-      row.append(thumb,col,btns);
-      return row;
+    if(!alreadyFriend && !alreadyOutgoing && !alreadyIncoming){
+      const b = document.createElement('button');
+      b.textContent = 'Dodaj prijatelja';
+      b.addEventListener('click', ()=> sendFriendRequest(uid));
+      btns.appendChild(b);
     }
+  }
+
+  if(opts.openChat){
+    const b = document.createElement('button');
+    b.textContent = 'Odpri chat';
+    b.addEventListener('click', ()=> openPrivateChat(uid));
+    btns.appendChild(b);
+  }
+
+  row.append(thumb,col,btns);
+  return row;
+}
+
 
     // Friend requests
     async function refreshRequests(){
@@ -417,17 +424,13 @@ function openPrivateChat(friendUid){
       });
     }
 
-    // Boot
     (async ()=>{
-      const u = await ensureSignedIn();
-      if(!u){
-        console.warn('Uporabnik ni prijavljen. Čakam na obstoječo sejo...');
-        return;
-      }
-      liveBind();
-      refreshFriends();
-      refreshRequests();
-    })();
+  const u = await ensureSignedIn();
+  watchMyProfile();   // da sproti osvežuje friends/requests
+  refreshFriends();
+  refreshRequests();
+})();
+
   </script>
 </body>
 </html>
