@@ -345,6 +345,16 @@ model-viewer.avatar{
       }
     }
 
+ // Ko je DOM pripravljen
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const avatar = document.getElementById("avatar");
+    avatar.style.cursor = "pointer"; // da je jasno, da je klikabilen
+    avatar.addEventListener("click", ()=>{
+      window.location.href = "avatar1.html";
+    });
+  });
+
+    
     async function sendFriendRequest(targetUid){
       const me = auth.currentUser.uid;
       if(me===targetUid) return;
