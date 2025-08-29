@@ -398,7 +398,7 @@ function openPrivateChat(friendUid){
   const chatId = [me, friendUid].sort().join('_');
 
   // preusmeritev na Slychat z istim chatId za oba
-  window.location.href = `/Slychat.html?chat=${encodeURIComponent(chatId)}`;
+  window.location.href = `/private-chat.html?chat=${encodeURIComponent(chatId)}`;
 }
 
     // Live bind own user
