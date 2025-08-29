@@ -18,7 +18,7 @@
     textarea{min-height:96px;resize:vertical}
     .app{display:flex;min-height:100vh}
 
-   /* Left avatar panel */
+  /* Left avatar panel */
 .left{
   position:sticky;
   top:0;
@@ -38,7 +38,7 @@
 /* Okno za avatar znotraj panela */
 .avatar-wrap{
   flex:1;
-  height:96%;                /* zavzame skoraj celo višino panela */
+  height:96%;                /* skoraj vsa višina panela */
   display:flex;
   align-items:center;
   justify-content:center;
@@ -46,13 +46,14 @@
 
 /* Model-viewer sam */
 model-viewer.avatar{
-  width:auto;                 /* prilagodi širino po potrebi */
-  height:100%;                /* raztegne se do višine avatar-wrap */
-  max-height:96%;             /* varnostna rezerva */
+  width:95%;                /* zdaj se raztegne čez celotno širino */
+  height:95%;               /* in čez celotno višino avatar-wrap */
   border-radius:24px;
   border:1px solid #2a335a;
   background:#0b1022;
+  object-fit:contain;        /* ohrani razmerje modela */
 }
+
 
     /* Right content */
     .right{flex:1;padding:28px;display:flex;flex-direction:column;gap:24px}
