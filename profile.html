@@ -6,6 +6,7 @@
   <title>Profil – Chat</title>
   <!-- 3D avatar viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script nomodule src="https://unpkg.com/@google/model-viewer/dist/model-viewer-legacy.js"></script>
   <style>
     :root{ --bg:#0f1220; --card:#151a2e; --muted:#8b91a7; --text:#e9ecf3; --accent:#6aa6ff; --ok:#2ecc71; --warn:#ff6b6b; }
     *{box-sizing:border-box}
@@ -47,13 +48,6 @@
     .inline-btns{display:flex;gap:8px;margin-left:auto}
 
     .friend-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px dashed #283256;border-radius:12px}
-
-    /* RPM modal */
-    .rpm-modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:50}
-    .rpm-card{width:min(1000px,95vw);height:min(700px,90vh);background:#0b1022;border:1px solid #283256;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-    .rpm-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #283256}
-    .rpm-body{flex:1}
-    .rpm-body iframe{width:100%;height:100%;border:0}
 
     @media (max-width: 980px){
       .app{flex-direction:column}
@@ -111,7 +105,6 @@
       </section>
     </main>
   </div>
-  </div>
 
   <!-- Firebase + logic -->
   <script type="module">
@@ -148,9 +141,10 @@
     const requests = el('requests');
     const friends = el('friends');
 
-    
     const USERS = ref(db, 'users');
+    function userPath(uid){ return child(USERS, uid); }
 
+    // Detect existing session only (no forced sign-in)
     async function ensureSignedIn(){
       return new Promise(res=>{
         onAuthStateChanged(auth, u=>{
@@ -160,18 +154,14 @@
         });
       });
     }
-      catch(e){ await signInAnonymously(auth); }
-      return new Promise(res=>{ onAuthStateChanged(auth, u=> u && res(u)); });
-    }
 
-    function userPath(uid){ return child(USERS, uid); }
-
-    // OWN PROFILE: reads users/{uid}/avatarURL2 (RPM .glb) and displays in <model-viewer>
+    // OWN PROFILE: read users/{uid}/avatarURL2 (RPM .glb) and display in <model-viewer>
     function renderOwnProfile(u, data){
       displayNameEl.textContent = data?.displayName || u.displayName || ('Uporabnik-' + u.uid.slice(0,6));
       bioEl.value = data?.bio || '';
+
       const rpmGlb = data?.avatarURL2 || '';
-      if(/\.glb($|\?)/i.test(rpmGlb)){
+      if(/\.(glb)($|\?)/i.test(rpmGlb)){
         avatar.setAttribute('src', rpmGlb);
         avatar.setAttribute('crossorigin','anonymous');
         avatar.setAttribute('reveal','auto');
@@ -181,8 +171,7 @@
         console.warn('avatarURL2 ni .glb URL (Ready Player Me). Trenutna vrednost:', rpmGlb);
         avatar.removeAttribute('src');
       }
-      authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
-    }
+
       authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
     }
 
@@ -215,24 +204,24 @@
       setTimeout(()=> saveStatus.textContent='', 1500);
     });
 
-        window.addEventListener('message', async (event)=>{
-      const isRpm = typeof event.data === 'object' && event.data?.source === 'readyplayerme';
-      if(!isRpm) return;
-      const { eventName, data } = event.data;
-      // Handshake: subscribe to events
-      if(eventName === 'v1.frame.ready'){
-        rpmFrame.contentWindow.postMessage({ target:'readyplayerme', type:'subscribe', eventName:'v1.**' }, '*');
-      }
-      // Avatar exported -> we get GLB URL
-      if(eventName === 'v1.avatar.exported'){
-        const glbUrl = data?.glbUrl || data?.url || '';
-        if(glbUrl){
-          await ensureSignedIn();
-          await saveProfilePart({ avatarURL2: glbUrl });
-          avatar.src = glbUrl;
+    // Ready Player Me postMessage listener – zapis v DB + prikaz (brez iframa; pričakujemo, da pride iz zunanjega okna)
+    window.addEventListener('message', async (event)=>{
+      try{
+        const payload = (typeof event.data === 'string') ? JSON.parse(event.data) : event.data;
+        if(payload?.source !== 'readyplayerme') return;
+
+        if(payload?.eventName === 'v1.avatar.exported'){
+          const glbUrl = payload?.data?.glbUrl || payload?.data?.url || '';
+          if(glbUrl){
+            const u = auth.currentUser || await ensureSignedIn();
+            if(u){
+              await update(userPath(u.uid), { avatarURL2: glbUrl });
+              avatar.setAttribute('src', glbUrl);
+            }
+          }
         }
-        rpmModal.style.display='none';
-        rpmFrame.src='about:blank';
+      }catch(err){
+        console.warn('Neveljavno sporočilo ali format.', err);
       }
     });
 
@@ -244,7 +233,7 @@
       results.innerHTML = '';
       const snap = await get(USERS);
       if(!snap.exists()) return;
-      const me = auth.currentUser.uid;
+      const me = auth.currentUser?.uid;
       const list = Object.entries(snap.val()).filter(([uid, u])=> uid!==me && (
         (u.displayName||'').toLowerCase().includes(q.toLowerCase())
       ));
@@ -260,7 +249,7 @@
       row.className='person';
 
       let thumb;
-      if(u?.avatarURL2 && /\.glb($|\?)/i.test(u.avatarURL2)){
+      if(u?.avatarURL2 && /\.(glb)($|\?)/i.test(u.avatarURL2)){
         thumb = document.createElement('model-viewer');
         thumb.setAttribute('src', u.avatarURL2);
         thumb.setAttribute('crossorigin','anonymous');
@@ -306,7 +295,7 @@
       const reqRef = child(userPath(uid), 'friendRequests');
       const snap = await get(reqRef);
       requests.innerHTML = '';
-      if(!snap.exists()){ requests.innerHTML = '<span class="muted">Ni novih prošenj.</span>'; return; }
+      if(!snap.exists()){ results.innerHTML = ''; requests.innerHTML = '<span class="muted">Ni novih prošenj.</span>'; return; }
       const reqs = snap.val();
       for(const fromUid of Object.keys(reqs)){
         const uSnap = await get(userPath(fromUid));
@@ -387,9 +376,8 @@
     (async ()=>{
       const u = await ensureSignedIn();
       if(!u){
-        // Ne forsiramo prijave: samo prikažemo stanje in ne delamo nič nevarnega
         console.warn('Uporabnik ni prijavljen. Čakam na obstoječo sejo...');
-        return; // ali tukaj lahko omogočiš gumb "Pojdi na prijavo"
+        return;
       }
       liveBind();
       refreshFriends();
