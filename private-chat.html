@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zasebni klepet</title>
+  <!-- 3D avatarji -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    :root{ --bg:#0f1220; --card:#151a2e; --muted:#8b91a7; --text:#e9ecf3; --accent:#6aa6ff; }
+    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Ubuntu,sans-serif}
+    .app{display:flex;flex-direction:column;height:100%}
+    .topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0b1022;border-bottom:1px solid #283256}
+    .topbar .peer{display:flex;align-items:center;gap:10px}
+    .topbar .peer .name{font-weight:700}
+    .topbar .peer .status{font-size:12px;color:var(--muted)}
+    .chat{flex:1;overflow:auto;padding:12px 16px}
+    .msg{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+    .msg.me{flex-direction:row-reverse;text-align:right}
+    .bubble{max-width:68ch;padding:10px 12px;border-radius:14px;background:var(--card);border:1px solid #283256}
+    .meta{font-size:12px;color:var(--muted);margin-top:4px}
+    .inputbar{display:flex;gap:10px;padding:12px 16px;border-top:1px solid #283256;background:#0b1022}
+    .inputbar input{flex:1;background:#0e1430;border:1px solid #273055;border-radius:12px;color:var(--text);padding:10px 12px;outline:none}
+    .inputbar button{border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:white;cursor:pointer;font-weight:600}
+    .avatar-sm{width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #2a335a;flex:0 0 auto}
+    .avatar-sm model-viewer{width:125%;height:125%;margin-left:-12%;margin-top:-18%}
+    .pill{font-size:12px;color:var(--muted);border:1px solid #283256;border-radius:999px;padding:2px 8px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button id="backBtn" title="Nazaj" style="background:#223; border:1px solid #334; border-radius:10px; padding:8px 10px; color:#cfe;">
+        ← Nazaj
+      </button>
+      <div class="peer">
+        <div class="avatar-sm"><model-viewer id="peerAvatar" disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer></div>
+        <div>
+          <div class="name" id="peerName">Prijatelj</div>
+          <div class="status"><span class="pill" id="roomIdPill"></span></div>
+        </div>
+      </div>
+      <div style="margin-left:auto" class="pill">Zasebni chat</div>
+    </div>
+
+    <div id="chatBox" class="chat"></div>
+
+    <div class="inputbar">
+      <input id="msgInput" placeholder="Napiši sporočilo…"/>
+      <button id="sendBtn">Pošlji</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // --- Firebase (isti projekt) ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getDatabase, ref, onValue, update, push, orderByChild, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // --- UI refs ---
+    const chatBox  = document.getElementById('chatBox');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn  = document.getElementById('sendBtn');
+    const backBtn  = document.getElementById('backBtn');
+    const peerNameEl   = document.getElementById('peerName');
+    const peerAvatarEl = document.getElementById('peerAvatar');
+    const roomIdPill   = document.getElementById('roomIdPill');
+
+    // --- Params ---
+    const params  = new URLSearchParams(location.search);
+    const chatId  = params.get('chat');          // deterministični room id (uidA_uidB)
+    const peerUid = params.get('peer');          // opcijsko, za prikaz
+
+    if(!chatId){
+      alert('Manjka chat parameter.');
+    }
+    roomIdPill.textContent = `Room: ${chatId}`;
+
+    backBtn.addEventListener('click', ()=> {
+      // vrni se na profil ali na Slychat – prilagodi po potrebi
+      history.length > 1 ? history.back() : location.href = '/profile.html';
+    });
+
+    // --- Helpers ---
+    function renderAvatar(el, url){
+      if(url && /\.glb($|\?)/i.test(url)){
+        el.setAttribute('src', url);
+        el.setAttribute('camera-target','0m 1.6m 0m');
+        el.setAttribute('min-camera-orbit','0deg 90deg 1.3m');
+        el.setAttribute('max-camera-orbit','0deg 90deg 1.3m');
+        el.setAttribute('auto-rotate','');
+        el.setAttribute('crossorigin','anonymous');
+      } else {
+        // nič – (lahko dodaš fallback PNG z <img>)
+      }
+    }
+
+    function msgBubble({me,text,ts}){
+      const wrap = document.createElement('div');
+      wrap.className = 'msg' + (me ? ' me' : '');
+      const av = document.createElement('div');
+      av.className = 'avatar-sm';
+      av.innerHTML = '<model-viewer disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>';
+      const mv = av.firstElementChild;
+
+      const bub = document.createElement('div');
+      bub.className = 'bubble';
+      bub.textContent = text;
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const d = new Date(ts||Date.now());
+      meta.textContent = d.toLocaleString();
+
+      const col = document.createElement('div');
+      col.append(bub, meta);
+
+      if(me){
+        wrap.append(col, av);
+      }else{
+        wrap.append(av, col);
+      }
+
+      return {wrap, mv};
+    }
+
+    // --- Auth & boot ---
+    onAuthStateChanged(auth, async (u)=>{
+      if(!u){ chatBox.innerHTML = '<div class="meta">Ni prijave.</div>'; return; }
+
+      // naloži peer podatke (ime + avatar)
+      if(peerUid){
+        const peerRef = ref(db, `users/${peerUid}`);
+        onValue(peerRef, snap=>{
+          const data = snap.val() || {};
+          peerNameEl.textContent = data.displayName || 'Uporabnik';
+          renderAvatar(peerAvatarEl, data.avatarURL2);
+        });
+      }
+
+      // poslušaj sporočila iz zasebnega rooma
+      const roomRef = ref(db, `messages_private/${chatId}`);
+      const q = query(roomRef, orderByChild('timestamp'), limitToLast(300));
+      onValue(q, (snap)=>{
+        // poln refresh (enostavno, stabilno)
+        chatBox.innerHTML = '';
+        const all = snap.val() || {};
+        const keys = Object.keys(all).sort((a,b)=> (all[a].timestamp||0)-(all[b].timestamp||0));
+        for(const k of keys){
+          const m = all[k];
+          const me = m.uid === u.uid;
+          const {wrap, mv} = msgBubble({me, text:m.text, ts:m.timestamp});
+          // naloži avatar za vsako sporočilo
+          const userRef = ref(db, `users/${m.uid}`);
+          onValue(userRef, us=>{
+            const ud = us.val()||{};
+            renderAvatar(mv, ud.avatarURL2);
+          }, {onlyOnce:true});
+          chatBox.appendChild(wrap);
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      // pošiljanje
+      async function send(){
+        const t = (msgInput.value||'').trim();
+        if(!t) return;
+        const data = {
+          uid: u.uid,
+          text: t,
+          timestamp: Date.now()
+        };
+        await push(ref(db, `messages_private/${chatId}`), data);
+        await update(ref(db, `users/${u.uid}`), { lastMessageId: true }); // po potrebi
+        msgInput.value='';
+      }
+      sendBtn.addEventListener('click', send);
+      msgInput.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey) send(); });
+    });
+  </script>
+</body>
+</html>
