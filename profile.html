@@ -391,12 +391,15 @@ model-viewer.avatar{
       }
     }
 
-    // Open private chat
-    function openPrivateChat(friendUid){
-      const me = auth.currentUser.uid;
-      const chatId = [me, friendUid].sort().join('_');
-      window.location.href = `/Slychat.html?chat=${encodeURIComponent(chatId)}&peer=${encodeURIComponent(friendUid)}`;
-    }
+   // Odpri zaseben klepet z določenim prijateljem
+function openPrivateChat(friendUid){
+  const me = auth.currentUser.uid;
+  // vedno isti ID, ne glede na vrstni red
+  const chatId = [me, friendUid].sort().join('_');
+
+  // preusmeritev na Slychat z istim chatId za oba
+  window.location.href = `/Slychat.html?chat=${encodeURIComponent(chatId)}`;
+}
 
     // Live bind own user
     function liveBind(){
