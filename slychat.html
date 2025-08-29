@@ -2882,6 +2882,13 @@ async function translateText(text, targetLang) {
 
 
 
+function openPrivateChat(peerUid){
+  const me = auth.currentUser.uid;
+  const chatId = [me, peerUid].sort().join('_');
+  // primer za SPA:
+  window.history.pushState({}, "", `/chat/${chatId}?peer=${peerUid}`);
+  // ali tvoj router: router.navigate(`/chat/${chatId}?peer=${peerUid}`)
+}
 
 
 
