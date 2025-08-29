@@ -395,7 +395,7 @@ model-viewer.avatar{
     function openPrivateChat(friendUid){
       const me = auth.currentUser.uid;
       const chatId = [me, friendUid].sort().join('_');
-      window.location.href = `/private-chat.html?chat=${encodeURIComponent(chatId)}&peer=${encodeURIComponent(friendUid)}`;
+      window.location.href = `/Slychat.html?chat=${encodeURIComponent(chatId)}&peer=${encodeURIComponent(friendUid)}`;
     }
 
     // Live bind own user
