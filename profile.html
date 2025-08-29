@@ -171,15 +171,18 @@
       displayNameEl.textContent = data?.displayName || u.displayName || ('Uporabnik-' + u.uid.slice(0,6));
       bioEl.value = data?.bio || '';
       const rpmGlb = data?.avatarURL2 || '';
-      if(rpmGlb){
+      if(/\.glb($|\?)/i.test(rpmGlb)){
         avatar.setAttribute('src', rpmGlb);
         avatar.setAttribute('crossorigin','anonymous');
         avatar.setAttribute('reveal','auto');
         avatar.setAttribute('shadow-intensity','1');
         avatar.setAttribute('camera-orbit','0deg 75deg 2.5m');
       } else {
+        console.warn('avatarURL2 ni .glb URL (Ready Player Me). Trenutna vrednost:', rpmGlb);
         avatar.removeAttribute('src');
       }
+      authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
+    }
       authInfo.textContent = u.isAnonymous ? 'Prijava: anonimno' : (u.email ? `Prijavljen: ${u.email}` : 'Prijavljen');
     }
 
