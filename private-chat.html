@@ -8,7 +8,8 @@
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     :root{ --bg:#0f1220; --card:#151a2e; --muted:#8b91a7; --text:#e9ecf3; --accent:#6aa6ff; }
-    *{box-sizing:border-box} html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Ubuntu,sans-serif}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,Segoe UI,Roboto,Ubuntu,sans-serif}
     .app{display:flex;flex-direction:column;height:100%}
     .topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#0b1022;border-bottom:1px solid #283256}
     .topbar .peer{display:flex;align-items:center;gap:10px}
@@ -22,6 +23,26 @@
     .inputbar{display:flex;gap:10px;padding:12px 16px;border-top:1px solid #283256;background:#0b1022}
     .inputbar input{flex:1;background:#0e1430;border:1px solid #273055;border-radius:12px;color:var(--text);padding:10px 12px;outline:none}
     .inputbar button{border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:white;cursor:pointer;font-weight:600}
+
+    /* NOVO: pravokotna, širša kartica z dvema avatarjema */
+    .avatar-duo{
+      width:120px;           /* širše od prejšnjega kroga */
+      height:48px;
+      border-radius:12px;    /* pravokotno (ne krog) */
+      overflow:hidden;
+      border:1px solid #2a335a;
+      display:grid;
+      grid-template-columns: 1fr 1fr; /* dva avatarja drug ob drugem */
+      background:#0e1430;
+    }
+    .avatar-duo model-viewer{
+      width:100%;
+      height:100%;
+      /* malo “zoom-a”, da zapolni višino */
+      --mv-scale: 1.15;
+      transform: scale(var(--mv-scale));
+    }
+
     .avatar-sm{width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #2a335a;flex:0 0 auto}
     .avatar-sm model-viewer{width:125%;height:125%;margin-left:-12%;margin-top:-18%}
     .pill{font-size:12px;color:var(--muted);border:1px solid #283256;border-radius:999px;padding:2px 8px}
@@ -33,13 +54,21 @@
       <button id="backBtn" title="Nazaj" style="background:#223; border:1px solid #334; border-radius:10px; padding:8px 10px; color:#cfe;">
         ← Nazaj
       </button>
+
       <div class="peer">
-        <div class="avatar-sm"><model-viewer id="peerAvatar" disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer></div>
+        <!-- NOVO: dvojni, pravokotni avatar (TI + SOGOVORNIK) -->
+        <div class="avatar-duo">
+          <model-viewer id="meAvatarTop"   disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>
+          <model-viewer id="peerAvatarTop" disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>
+        </div>
+
         <div>
-          <div class="name" id="peerName">Prijatelj</div>
+          <!-- Namesto 'Prijatelj' pokažemo ime sogovornika -->
+          <div class="name" id="peerName">Uporabnik</div>
           <div class="status"><span class="pill" id="roomIdPill"></span></div>
         </div>
       </div>
+
       <div style="margin-left:auto" class="pill">Zasebni chat</div>
     </div>
 
@@ -76,14 +105,15 @@
     const msgInput = document.getElementById('msgInput');
     const sendBtn  = document.getElementById('sendBtn');
     const backBtn  = document.getElementById('backBtn');
-    const peerNameEl   = document.getElementById('peerName');
-    const peerAvatarEl = document.getElementById('peerAvatar');
-    const roomIdPill   = document.getElementById('roomIdPill');
+    const peerNameEl     = document.getElementById('peerName');
+    const meAvatarTopEl  = document.getElementById('meAvatarTop');
+    const peerAvatarTopEl= document.getElementById('peerAvatarTop');
+    const roomIdPill     = document.getElementById('roomIdPill');
 
     // --- Params ---
     const params  = new URLSearchParams(location.search);
     const chatId  = params.get('chat');          // deterministični room id (uidA_uidB)
-    const peerUid = params.get('peer');          // opcijsko, za prikaz
+    const peerUid = params.get('peer');          // uid sogovornika (za ime in avatar)
 
     if(!chatId){
       alert('Manjka chat parameter.');
@@ -91,7 +121,6 @@
     roomIdPill.textContent = `Room: ${chatId}`;
 
     backBtn.addEventListener('click', ()=> {
-      // vrni se na profil ali na Slychat – prilagodi po potrebi
       history.length > 1 ? history.back() : location.href = '/profile.html';
     });
 
@@ -105,7 +134,7 @@
         el.setAttribute('auto-rotate','');
         el.setAttribute('crossorigin','anonymous');
       } else {
-        // nič – (lahko dodaš fallback PNG z <img>)
+        // tu lahko dodaš fallback <img> po želji
       }
     }
 
@@ -129,11 +158,7 @@
       const col = document.createElement('div');
       col.append(bub, meta);
 
-      if(me){
-        wrap.append(col, av);
-      }else{
-        wrap.append(av, col);
-      }
+      if(me){ wrap.append(col, av); } else { wrap.append(av, col); }
 
       return {wrap, mv};
     }
@@ -142,21 +167,29 @@
     onAuthStateChanged(auth, async (u)=>{
       if(!u){ chatBox.innerHTML = '<div class="meta">Ni prijave.</div>'; return; }
 
-      // naloži peer podatke (ime + avatar)
+      // NALOŽI MOJ AVATAR (levo v pravokotni kartici)
+      const meRef = ref(db, `users/${u.uid}`);
+      onValue(meRef, snap=>{
+        const me = snap.val() || {};
+        renderAvatar(meAvatarTopEl, me.avatarURL2);
+      }, {onlyOnce:true});
+
+      // NALOŽI PEER PODATKE: ime + avatar (desno v pravokotni kartici)
       if(peerUid){
         const peerRef = ref(db, `users/${peerUid}`);
         onValue(peerRef, snap=>{
           const data = snap.val() || {};
           peerNameEl.textContent = data.displayName || 'Uporabnik';
-          renderAvatar(peerAvatarEl, data.avatarURL2);
+          renderAvatar(peerAvatarTopEl, data.avatarURL2);
         });
+      } else {
+        peerNameEl.textContent = 'Uporabnik';
       }
 
       // poslušaj sporočila iz zasebnega rooma
       const roomRef = ref(db, `messages_private/${chatId}`);
       const q = query(roomRef, orderByChild('timestamp'), limitToLast(300));
       onValue(q, (snap)=>{
-        // poln refresh (enostavno, stabilno)
         chatBox.innerHTML = '';
         const all = snap.val() || {};
         const keys = Object.keys(all).sort((a,b)=> (all[a].timestamp||0)-(all[b].timestamp||0));
@@ -164,7 +197,7 @@
           const m = all[k];
           const me = m.uid === u.uid;
           const {wrap, mv} = msgBubble({me, text:m.text, ts:m.timestamp});
-          // naloži avatar za vsako sporočilo
+          // naloži avatar pošiljatelja za bublikone
           const userRef = ref(db, `users/${m.uid}`);
           onValue(userRef, us=>{
             const ud = us.val()||{};
@@ -179,11 +212,7 @@
       async function send(){
         const t = (msgInput.value||'').trim();
         if(!t) return;
-        const data = {
-          uid: u.uid,
-          text: t,
-          timestamp: Date.now()
-        };
+        const data = { uid: u.uid, text: t, timestamp: Date.now() };
         await push(ref(db, `messages_private/${chatId}`), data);
         await update(ref(db, `users/${u.uid}`), { lastMessageId: true }); // po potrebi
         msgInput.value='';
