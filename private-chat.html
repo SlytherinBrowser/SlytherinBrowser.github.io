@@ -24,27 +24,26 @@
     .inputbar input{flex:1;background:#0e1430;border:1px solid #273055;border-radius:12px;color:var(--text);padding:10px 12px;outline:none}
     .inputbar button{border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:white;cursor:pointer;font-weight:600}
 
-    /* NOVO: pravokotna, širša kartica z dvema avatarjema */
+    /* Pravokotna dvojna kartica za avatarje (TI + SOGOVORNIK) */
     .avatar-duo{
-      width:120px;           /* širše od prejšnjega kroga */
-      height:48px;
-      border-radius:12px;    /* pravokotno (ne krog) */
+      width:140px;
+      height:52px;
+      border-radius:12px;
       overflow:hidden;
       border:1px solid #2a335a;
       display:grid;
-      grid-template-columns: 1fr 1fr; /* dva avatarja drug ob drugem */
+      grid-template-columns: 1fr 1fr;
       background:#0e1430;
     }
-    .avatar-duo model-viewer{
-      width:100%;
-      height:100%;
-      /* malo “zoom-a”, da zapolni višino */
-      --mv-scale: 1.15;
-      transform: scale(var(--mv-scale));
+    .avatar-slot{ position:relative; width:100%; height:100%; }
+    .avatar-slot model-viewer,
+    .avatar-slot img{
+      width:100%; height:100%; display:block; object-fit:cover;
     }
 
     .avatar-sm{width:42px;height:42px;border-radius:50%;overflow:hidden;border:1px solid #2a335a;flex:0 0 auto}
-    .avatar-sm model-viewer{width:125%;height:125%;margin-left:-12%;margin-top:-18%}
+    .avatar-sm model-viewer,
+    .avatar-sm img{width:125%;height:125%;margin-left:-12%;margin-top:-18%;object-fit:cover}
     .pill{font-size:12px;color:var(--muted);border:1px solid #283256;border-radius:999px;padding:2px 8px}
   </style>
 </head>
@@ -56,14 +55,14 @@
       </button>
 
       <div class="peer">
-        <!-- NOVO: dvojni, pravokotni avatar (TI + SOGOVORNIK) -->
+        <!-- DVOJNI PRAVOKOTNI AVATAR: levo TI, desno SOGOVORNIK -->
         <div class="avatar-duo">
-          <model-viewer id="meAvatarTop"   disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>
-          <model-viewer id="peerAvatarTop" disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>
+          <div id="meAvatarTop"   class="avatar-slot"></div>
+          <div id="peerAvatarTop" class="avatar-slot"></div>
         </div>
 
         <div>
-          <!-- Namesto 'Prijatelj' pokažemo ime sogovornika -->
+          <!-- Namesto 'Prijatelj' pokažemo pravo ime sogovornika -->
           <div class="name" id="peerName">Uporabnik</div>
           <div class="status"><span class="pill" id="roomIdPill"></span></div>
         </div>
@@ -84,7 +83,7 @@
     // --- Firebase (isti projekt) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { getDatabase, ref, onValue, update, push, orderByChild, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+    import { getDatabase, ref, onValue, get, update, push, orderByChild, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
@@ -105,46 +104,62 @@
     const msgInput = document.getElementById('msgInput');
     const sendBtn  = document.getElementById('sendBtn');
     const backBtn  = document.getElementById('backBtn');
-    const peerNameEl     = document.getElementById('peerName');
-    const meAvatarTopEl  = document.getElementById('meAvatarTop');
-    const peerAvatarTopEl= document.getElementById('peerAvatarTop');
-    const roomIdPill     = document.getElementById('roomIdPill');
+    const peerNameEl        = document.getElementById('peerName');
+    const meAvatarTopSlot   = document.getElementById('meAvatarTop');
+    const peerAvatarTopSlot = document.getElementById('peerAvatarTop');
+    const roomIdPill        = document.getElementById('roomIdPill');
 
     // --- Params ---
     const params  = new URLSearchParams(location.search);
-    const chatId  = params.get('chat');          // deterministični room id (uidA_uidB)
-    const peerUid = params.get('peer');          // uid sogovornika (za ime in avatar)
+    const chatId  = params.get('chat');   // deterministični room id (uidA_uidB)
+    let   peerUid = params.get('peer');   // opcijsko; če manjka, ga razberemo
 
-    if(!chatId){
-      alert('Manjka chat parameter.');
-    }
-    roomIdPill.textContent = `Room: ${chatId}`;
+    if(!chatId){ alert('Manjka chat parameter.'); }
+    roomIdPill.textContent = `Room: ${chatId || '—'}`;
 
     backBtn.addEventListener('click', ()=> {
       history.length > 1 ? history.back() : location.href = '/profile.html';
     });
 
     // --- Helpers ---
-    function renderAvatar(el, url){
+    function mountAvatar(slotEl, url){
+      slotEl.innerHTML = '';
       if(url && /\.glb($|\?)/i.test(url)){
-        el.setAttribute('src', url);
-        el.setAttribute('camera-target','0m 1.6m 0m');
-        el.setAttribute('min-camera-orbit','0deg 90deg 1.3m');
-        el.setAttribute('max-camera-orbit','0deg 90deg 1.3m');
-        el.setAttribute('auto-rotate','');
-        el.setAttribute('crossorigin','anonymous');
+        const mv = document.createElement('model-viewer');
+        mv.setAttribute('disable-zoom','');
+        mv.setAttribute('disable-pan','');
+        mv.setAttribute('disable-tap','');
+        mv.setAttribute('interaction-prompt','none');
+        mv.setAttribute('src', url);
+        mv.setAttribute('camera-target','0m 1.6m 0m');
+        mv.setAttribute('min-camera-orbit','0deg 90deg 1.3m');
+        mv.setAttribute('max-camera-orbit','0deg 90deg 1.3m');
+        mv.setAttribute('auto-rotate','');
+        mv.setAttribute('crossorigin','anonymous');
+        slotEl.appendChild(mv);
+      } else if (url){
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = 'avatar';
+        img.referrerPolicy = 'no-referrer';
+        slotEl.appendChild(img);
       } else {
-        // tu lahko dodaš fallback <img> po želji
+        const p = document.createElement('div');
+        p.style.width='100%'; p.style.height='100%';
+        p.style.background='linear-gradient(135deg,#1a2140,#111833)';
+        slotEl.appendChild(p);
       }
     }
 
     function msgBubble({me,text,ts}){
       const wrap = document.createElement('div');
       wrap.className = 'msg' + (me ? ' me' : '');
+
       const av = document.createElement('div');
       av.className = 'avatar-sm';
-      av.innerHTML = '<model-viewer disable-zoom disable-pan disable-tap interaction-prompt="none"></model-viewer>';
-      const mv = av.firstElementChild;
+      const avSlot = document.createElement('div');
+      avSlot.style.width='100%'; avSlot.style.height='100%';
+      av.appendChild(avSlot);
 
       const bub = document.createElement('div');
       bub.className = 'bubble';
@@ -160,61 +175,112 @@
 
       if(me){ wrap.append(col, av); } else { wrap.append(av, col); }
 
-      return {wrap, mv};
+      return {wrap, avSlot};
+    }
+
+    function pickDisplayName(data){
+      return data?.displayName || data?.username || data?.name || data?.nick || 'Uporabnik';
+    }
+
+    async function resolvePeerUid(db, myUid, chatId){
+      // 1) Iz chatId (format: uidA_uidB)
+      if (chatId && chatId.includes('_')){
+        const [a,b] = chatId.split('_');
+        const candidate = (a === myUid) ? b : (b === myUid ? a : null);
+        if (candidate){
+          const snap = await get(ref(db, `users/${candidate}`));
+          if (snap.exists()) return candidate;
+        }
+        // Če kandidat ne obstaja v users, preveri oba
+        for (const id of [a,b]){
+          if (id !== myUid){
+            const s = await get(ref(db, `users/${id}`));
+            if (s.exists()) return id;
+          }
+        }
+      }
+      // 2) Fallback: iz sporočil razberi udeležence
+      if (chatId){
+        const msgs = await get(ref(db, `messages_private/${chatId}`));
+        if (msgs.exists()){
+          const by = new Set();
+          Object.values(msgs.val()||{}).forEach(m => m?.uid && by.add(m.uid));
+          for (const id of by){
+            if (id !== myUid){
+              const us = await get(ref(db, `users/${id}`));
+              if (us.exists()) return id;
+            }
+          }
+        }
+      }
+      return null;
     }
 
     // --- Auth & boot ---
     onAuthStateChanged(auth, async (u)=>{
       if(!u){ chatBox.innerHTML = '<div class="meta">Ni prijave.</div>'; return; }
 
-      // NALOŽI MOJ AVATAR (levo v pravokotni kartici)
-      const meRef = ref(db, `users/${u.uid}`);
-      onValue(meRef, snap=>{
-        const me = snap.val() || {};
-        renderAvatar(meAvatarTopEl, me.avatarURL2);
-      }, {onlyOnce:true});
+      // Moj avatar (levo)
+      try{
+        const meSnap = await get(ref(db, `users/${u.uid}`));
+        const me = meSnap.val() || {};
+        mountAvatar(meAvatarTopSlot, me.avatarURL2 || me.avatar || me.photoURL);
+      }catch(e){ console.warn('Napaka pri branju mojega profila:', e); }
 
-      // NALOŽI PEER PODATKE: ime + avatar (desno v pravokotni kartici)
-      if(peerUid){
-        const peerRef = ref(db, `users/${peerUid}`);
-        onValue(peerRef, snap=>{
-          const data = snap.val() || {};
-          peerNameEl.textContent = data.displayName || 'Uporabnik';
-          renderAvatar(peerAvatarTopEl, data.avatarURL2);
-        });
+      // Zanesljivo določi peerUid iz users/chatId
+      try{
+        const resolved = await resolvePeerUid(db, u.uid, chatId);
+        peerUid = resolved || peerUid || null;
+      }catch(e){ console.warn('resolvePeerUid error:', e); }
+
+      // Peer ime + avatar (desno)
+      if (peerUid){
+        try{
+          const peerSnap = await get(ref(db, `users/${peerUid}`));
+          const pdata = peerSnap.val() || {};
+          peerNameEl.textContent = pickDisplayName(pdata);
+          mountAvatar(peerAvatarTopSlot, pdata.avatarURL2 || pdata.avatar || pdata.photoURL);
+        }catch(e){
+          console.warn('Peer profil napaka:', e);
+          peerNameEl.textContent = 'Uporabnik';
+          mountAvatar(peerAvatarTopSlot, null);
+        }
       } else {
         peerNameEl.textContent = 'Uporabnik';
+        mountAvatar(peerAvatarTopSlot, null);
       }
 
-      // poslušaj sporočila iz zasebnega rooma
+      // Poslušaj sporočila iz zasebnega rooma
       const roomRef = ref(db, `messages_private/${chatId}`);
       const q = query(roomRef, orderByChild('timestamp'), limitToLast(300));
-      onValue(q, (snap)=>{
+      onValue(q, async (snap)=>{
         chatBox.innerHTML = '';
         const all = snap.val() || {};
         const keys = Object.keys(all).sort((a,b)=> (all[a].timestamp||0)-(all[b].timestamp||0));
         for(const k of keys){
           const m = all[k];
-          const me = m.uid === u.uid;
-          const {wrap, mv} = msgBubble({me, text:m.text, ts:m.timestamp});
-          // naloži avatar pošiljatelja za bublikone
-          const userRef = ref(db, `users/${m.uid}`);
-          onValue(userRef, us=>{
+          const isMe = m.uid === u.uid;
+          const {wrap, avSlot} = msgBubble({me:isMe, text:m.text, ts:m.timestamp});
+          // avatar pošiljatelja za oblaček
+          try{
+            const us = await get(ref(db, `users/${m.uid}`));
             const ud = us.val()||{};
-            renderAvatar(mv, ud.avatarURL2);
-          }, {onlyOnce:true});
+            mountAvatar(avSlot, ud.avatarURL2 || ud.avatar || ud.photoURL);
+          }catch(e){
+            mountAvatar(avSlot, null);
+          }
           chatBox.appendChild(wrap);
         }
         chatBox.scrollTop = chatBox.scrollHeight;
       });
 
-      // pošiljanje
+      // Pošiljanje
       async function send(){
         const t = (msgInput.value||'').trim();
         if(!t) return;
         const data = { uid: u.uid, text: t, timestamp: Date.now() };
         await push(ref(db, `messages_private/${chatId}`), data);
-        await update(ref(db, `users/${u.uid}`), { lastMessageId: true }); // po potrebi
+        await update(ref(db, `users/${u.uid}`), { lastMessageId: true }).catch(()=>{});
         msgInput.value='';
       }
       sendBtn.addEventListener('click', send);
