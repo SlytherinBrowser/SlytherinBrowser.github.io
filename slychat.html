@@ -2319,7 +2319,8 @@ checkAlerts();
 
 
 
-  // ====== Nastavitve ======
+
+  // ========== Nastavitve ==========
   const SHAKE_THRESHOLD = 30;
   const SHAKE_DEBOUNCE_MS = 2000;
 
@@ -2329,9 +2330,9 @@ checkAlerts();
     maximumAge: 5000    // do 5 s star podatek
   };
 
-  const MIN_MOVE_METERS = 10; // posodobi lokacijo le ob premiku >10 m
+  const MIN_MOVE_METERS = 10; // filtriranje šuma: posodobi le ob premiku >= 10 m
 
-  // ====== Shake trigger ======
+  // ========== Shake trigger ==========
   let lastShake = 0;
   function onShake(totalAcc) {
     const now = Date.now();
@@ -2350,7 +2351,7 @@ checkAlerts();
   window.addEventListener("resize", toggleMapButtonVisibility);
   window.addEventListener("load", toggleMapButtonVisibility);
 
-  // ====== Pomožne: razdalja v metrih (Haversine) ======
+  // ========== Pomožna: razdalja (Haversine) ==========
   function distanceMeters(a, b) {
     if (!a || !b) return Infinity;
     const toRad = d => d * Math.PI / 180;
@@ -2362,35 +2363,39 @@ checkAlerts();
     return 2 * R * Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
   }
 
-  // ====== Globalne reference za cleanup ======
-  let popupState = null; // { overlay, map, watchers... }
+  // ========== Globalno stanje popup-a (za cleanup) ==========
+  let popupState = null; // { overlay, map, avatarContainer, modelViewer, geoWatchId, refreshTimer, moveHandler, zoomHandler, lastSentCoords, locationEnabled, toggleBtn }
 
   function showUserMapPopup() {
-    // Če že odprto, nič
+    // Če je že odprt, nič
     if (popupState?.overlay?.isConnected) return;
 
-    // --- overlay ---
+    // --- Overlay ---
     const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.inset = "0";
-    overlay.style.width = "100vw";
-    overlay.style.height = "100vh";
-    overlay.style.backgroundColor = "rgba(0,0,0,0.7)";
-    overlay.style.display = "flex";
-    overlay.style.justifyContent = "center";
-    overlay.style.alignItems = "center";
-    overlay.style.zIndex = 9999;
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: 0,
+      width: "100vw",
+      height: "100vh",
+      backgroundColor: "rgba(0,0,0,0.7)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999
+    });
 
-    // --- map container ---
+    // --- Map container ---
     const mapContainer = document.createElement("div");
-    mapContainer.style.width = "90vw";
-    mapContainer.style.height = "80vh";
-    mapContainer.style.background = "white";
-    mapContainer.style.borderRadius = "12px";
-    mapContainer.style.overflow = "hidden";
-    mapContainer.style.position = "relative";
+    Object.assign(mapContainer.style, {
+      width: "90vw",
+      height: "80vh",
+      background: "white",
+      borderRadius: "12px",
+      overflow: "hidden",
+      position: "relative"
+    });
 
-    // --- close gumb ---
+    // --- Close gumb (zgoraj desno) ---
     const closeBtn = document.createElement("button");
     closeBtn.id = "closeMapBtn";
     closeBtn.textContent = "✖";
@@ -2406,10 +2411,30 @@ checkAlerts();
       cursor: "pointer"
     });
     closeBtn.addEventListener("click", cleanupMapPopup);
-
     mapContainer.appendChild(closeBtn);
 
-    // --- izbirnik ikon ---
+    // --- Toggle lokacije (levo spodaj) ---
+    const toggleLocationBtn = document.createElement("button");
+    toggleLocationBtn.id = "toggleLocationBtn";
+    toggleLocationBtn.textContent = "📍 ON";
+    toggleLocationBtn.setAttribute("aria-pressed", "true");
+    Object.assign(toggleLocationBtn.style, {
+      position: "absolute",
+      left: "10px",
+      bottom: "10px",
+      zIndex: 2,
+      background: "transparent",
+      border: "none",
+      fontSize: "16px",
+      cursor: "pointer",
+      padding: "6px 10px",
+      borderRadius: "8px",
+      boxShadow: "0 0 8px rgba(0,0,0,0.2)",
+      backdropFilter: "blur(2px)"
+    });
+    mapContainer.appendChild(toggleLocationBtn);
+
+    // --- Izbirnik ikon ---
     const iconChooser = document.createElement("div");
     Object.assign(iconChooser.style, {
       position: "absolute",
@@ -2424,28 +2449,40 @@ checkAlerts();
       textAlign: "center",
       maxWidth: "320px"
     });
-
     iconChooser.innerHTML = `
       <h3>Izberi svojo ikono</h3>
       <div style="font-size:28px; margin:10px 0; display:flex; flex-wrap:wrap; justify-content:center; gap:8px;">
-        ${["🚗","🚀","🐱","🎯","🌟","🐉","🌈","🔥","🍀","⚡","🐢","🎵","🦄","🍎","🏀","💎","🌻","🚴","🎮","🌙","🐼","🦁","🍕","🏰","🎈","🚁","📚","🎤","🛸","🌍","🍓","🧩","🌺","🏝️","🎲","🐬","🚢","🦋","🌌","🥑"]
-           .map(e => `<button class="icon-btn" style="margin:4px">${e}</button>`).join("")}
+        ${["🚗","🚀","🐱","🎯","🌟","🐉","🌈","🔥","🍀","⚡","🐢","🎵","🦄","🍎","🏀","💎","🌻","🚴","🎮","🌙","🐼","🦁","🍕","🏰","🎈","🚁","📚","🎤","🛸","🌍","🍓","🧩","🌺","🏝️","🎲","🐬","🚢","🦋","🌌","🥑"].map(e => `<button class="icon-btn" style="margin:4px">${e}</button>`).join("")}
       </div>
       <button id="iconSaveBtn" disabled style="margin-top:10px; padding:6px 12px;">Shrani</button>
     `;
     mapContainer.appendChild(iconChooser);
 
-    // --- div za mapo ---
+    // --- Div za mapo ---
     const mapDiv = document.createElement("div");
     mapDiv.id = "userMap";
-    mapDiv.style.width = "100%";
-    mapDiv.style.height = "100%";
+    Object.assign(mapDiv.style, { width: "100%", height: "100%" });
     mapContainer.appendChild(mapDiv);
 
     overlay.appendChild(mapContainer);
     document.body.appendChild(overlay);
 
-    // --- logika izbire ikone ---
+    // --- Stanje popup-a ---
+    popupState = {
+      overlay,
+      map: null,
+      avatarContainer: null,
+      modelViewer: null,
+      geoWatchId: null,
+      refreshTimer: null,
+      moveHandler: null,
+      zoomHandler: null,
+      lastSentCoords: null,
+      locationEnabled: true,   // privzeto ON
+      toggleBtn: toggleLocationBtn
+    };
+
+    // --- Logika izbire ikone ---
     let selectedIcon = null;
     const iconButtons = iconChooser.querySelectorAll(".icon-btn");
     const saveBtn = iconChooser.querySelector("#iconSaveBtn");
@@ -2457,7 +2494,6 @@ checkAlerts();
         saveBtn.disabled = false;
       });
     });
-
     saveBtn.addEventListener("click", () => {
       if (!selectedIcon) return;
       firebase.database().ref("userIcons/" + currentUser.uid).set(selectedIcon)
@@ -2478,37 +2514,28 @@ checkAlerts();
       }
     });
 
-    // --- stanje za cleanup ---
-    popupState = {
-      overlay,
-      map: null,
-      avatarContainer: null,
-      modelViewer: null,
-      geoWatchId: null,
-      refreshTimer: null,
-      moveHandler: null,
-      zoomHandler: null,
-      lastSentCoords: null
-    };
-
-    // ====== init user map ======
+    // ====== initUserMap ======
     function initUserMap(userIcon) {
       // Leaflet
       const map = L.map('userMap').setView([46.05, 14.5], 7);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
       popupState.map = map;
 
-      // ====== Avatar (3D) ======
+      // ====== Avatar (3D) – robusten na zoom ======
+      const avatarPane = map.createPane('avatarPane');
+      avatarPane.style.zIndex = 850; // nad markerji
+      avatarPane.style.pointerEvents = 'none';
+
       const avatarContainer = document.createElement("div");
       Object.assign(avatarContainer.style, {
         position: "absolute",
         width: "80px",
         height: "160px",
-        pointerEvents: "none",
-        background: "transparent",
-        zIndex: 9999,
+        willChange: "transform",
+        transform: "translate(-50%, -100%)",
         display: "none"
       });
+      avatarPane.appendChild(avatarContainer);
 
       const modelViewer = document.createElement("model-viewer");
       modelViewer.setAttribute("camera-controls", "");
@@ -2521,34 +2548,45 @@ checkAlerts();
       modelViewer.style.width = "100%";
       modelViewer.style.height = "100%";
       modelViewer.style.background = "transparent";
-
       avatarContainer.appendChild(modelViewer);
-      // Pomembno: avatar je znotraj overlay-a, da ga lahko skrijemo ob zaprtju
-      overlay.appendChild(avatarContainer);
 
       popupState.avatarContainer = avatarContainer;
       popupState.modelViewer = modelViewer;
 
-      // Posodobi pozicijo avatarja
-      function updateAvatarPosition(lat, lng) {
-        const point = map.latLngToContainerPoint([lat, lng]);
-        avatarContainer.style.left = (point.x - 40) + "px";  // center
-        avatarContainer.style.top = (point.y - 160) + "px";  // nad markerjem
+      let currentLatLng = null;
+      function setAvatarLatLng(lat, lng) {
+        currentLatLng = L.latLng(lat, lng);
+        positionAvatar();
+      }
+      function positionAvatar() {
+        if (!currentLatLng) return;
+        const lp = map.latLngToLayerPoint(currentLatLng);
+        L.DomUtil.setTransform(avatarContainer, lp, 1);
       }
 
+      const reproject = () => positionAvatar();
+      map.on("move", reproject);
+      map.on("zoom", reproject);
+      map.on("zoomend", reproject);
+      map.on("viewreset", reproject);
+      map.on("resize", () => { map.invalidateSize(); reproject(); });
+
+      popupState.moveHandler = reproject;
+      popupState.zoomHandler = reproject;
+
+      // ====== Osveževanje avatarja (tudi URL modela) ======
       async function refreshAvatar() {
         try {
           const [locSnap, avatarSnap] = await Promise.all([
             firebase.database().ref("locations/" + currentUser.uid).once("value"),
             firebase.database().ref("users/" + currentUser.uid + "/avatarURL2").once("value")
           ]);
-
           const loc = locSnap.val();
           const avatarUrl = avatarSnap.val() || "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
           if (loc && typeof loc.lat === "number" && typeof loc.lng === "number") {
             modelViewer.setAttribute("src", avatarUrl);
-            updateAvatarPosition(loc.lat, loc.lng);
+            setAvatarLatLng(loc.lat, loc.lng);
             avatarContainer.style.display = "block";
           } else {
             avatarContainer.style.display = "none";
@@ -2557,19 +2595,10 @@ checkAlerts();
           console.error("❌ Napaka pri avatarju:", e);
         }
       }
-
-      // Premik / zoom map-e naj posodobi projekcijo avatarja
-      const moveHandler = () => refreshAvatar();
-      const zoomHandler = () => refreshAvatar();
-      map.on("move", moveHandler);
-      map.on("zoom", zoomHandler);
-      popupState.moveHandler = moveHandler;
-      popupState.zoomHandler = zoomHandler;
-
       refreshAvatar();
       popupState.refreshTimer = setInterval(refreshAvatar, 30000);
 
-      // ====== Geolokacija z visoko natančnostjo ======
+      // ====== Geolokacija (toggle ON/OFF) ======
       let lastCoords = null;
 
       function maybeSendPosition(lat, lng) {
@@ -2578,32 +2607,76 @@ checkAlerts();
         if (moved >= MIN_MOVE_METERS) {
           lastCoords = newC;
           popupState.lastSentCoords = newC;
-          firebase.database().ref("locations/" + currentUser.uid).set(newC);
+          if (popupState.locationEnabled) {
+            firebase.database().ref("locations/" + currentUser.uid).set(newC);
+          }
         }
       }
 
-      // Začetni ping (fallback, če watch pozno zažene)
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const { latitude: lat, longitude: lng } = pos.coords;
-          maybeSendPosition(lat, lng);
-        },
-        err => console.warn("Geolokacija (getCurrentPosition) napaka:", err),
-        GEO_OPTS
-      );
+      // Start ali stop spremljanja glede na stanje
+      function startWatching() {
+        if (popupState.geoWatchId != null) return; // že teče
+        // Začetni ping
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const { latitude: lat, longitude: lng } = pos.coords;
+            maybeSendPosition(lat, lng);
+          },
+          err => console.warn("Geolokacija (getCurrentPosition) napaka:", err),
+          GEO_OPTS
+        );
+        // Stalno opazovanje
+        popupState.geoWatchId = navigator.geolocation.watchPosition(
+          pos => {
+            if (!popupState.locationEnabled) return;
+            const { latitude: lat, longitude: lng } = pos.coords;
+            maybeSendPosition(lat, lng);
+          },
+          err => console.warn("Geolokacija (watchPosition) napaka:", err),
+          GEO_OPTS
+        );
+      }
+      function stopWatching(removeFromDb = false) {
+        if (popupState.geoWatchId != null) {
+          try { navigator.geolocation.clearWatch(popupState.geoWatchId); } catch {}
+          popupState.geoWatchId = null;
+        }
+        if (removeFromDb) {
+          firebase.database().ref("locations/" + currentUser.uid).remove().catch(()=>{});
+        }
+      }
 
-      // Stalno opazovanje
-      const watchId = navigator.geolocation.watchPosition(
-        pos => {
-          const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-          // Po želji lahko pokažeš natančnost:
-          // console.log("Acc:", Math.round(accuracy), "m");
-          maybeSendPosition(lat, lng);
-        },
-        err => console.warn("Geolokacija (watchPosition) napaka:", err),
-        GEO_OPTS
-      );
-      popupState.geoWatchId = watchId;
+      // Privzeto ON → zaženemo
+      startWatching();
+
+      // UI toggle gumb
+      function updateToggleUi() {
+        if (popupState.locationEnabled) {
+          toggleLocationBtn.textContent = "📍 ON";
+          toggleLocationBtn.setAttribute("aria-pressed", "true");
+          toggleLocationBtn.style.opacity = "1";
+        } else {
+          toggleLocationBtn.textContent = "📍 OFF";
+          toggleLocationBtn.setAttribute("aria-pressed", "false");
+          toggleLocationBtn.style.opacity = "0.75";
+        }
+      }
+      updateToggleUi();
+
+      toggleLocationBtn.addEventListener("click", async () => {
+        popupState.locationEnabled = !popupState.locationEnabled;
+        updateToggleUi();
+
+        if (popupState.locationEnabled) {
+          // Ponovno začni spremljati
+          startWatching();
+        } else {
+          // Ustavi in odstrani lokacijo iz baze
+          stopWatching(true);
+          // Skrij tudi avatar (da je jasno, da si offline)
+          avatarContainer.style.display = "none";
+        }
+      });
 
       // ====== Ostali aktivni uporabniki ======
       const active = Object.entries(userStatusCache)
@@ -2629,23 +2702,23 @@ checkAlerts();
     } // end initUserMap
   } // end showUserMapPopup
 
-  // ====== Cleanup (zapri zemljevid + skrij avatar) ======
+  // ========== Cleanup (zapri zemljevid + skrij avatar + ustavi geolokacijo) ==========
   function cleanupMapPopup() {
     if (!popupState) return;
 
-    // Ustavi geolokacijo
-    if (popupState.geoWatchId !== null) {
+    // Geolokacija
+    if (popupState.geoWatchId != null) {
       try { navigator.geolocation.clearWatch(popupState.geoWatchId); } catch {}
       popupState.geoWatchId = null;
     }
 
-    // Ustavi interval za avatar
+    // Interval avatarja
     if (popupState.refreshTimer) {
       clearInterval(popupState.refreshTimer);
       popupState.refreshTimer = null;
     }
 
-    // Odstrani event listenerje z mape
+    // Leaflet event-i in mapa
     if (popupState.map) {
       if (popupState.moveHandler) popupState.map.off("move", popupState.moveHandler);
       if (popupState.zoomHandler) popupState.map.off("zoom", popupState.zoomHandler);
@@ -2653,7 +2726,7 @@ checkAlerts();
       popupState.map = null;
     }
 
-    // Skrij in odstrani avatar
+    // Avatar
     if (popupState.avatarContainer) {
       popupState.avatarContainer.style.display = "none";
       popupState.avatarContainer.remove();
@@ -2670,7 +2743,7 @@ checkAlerts();
     popupState = null;
   }
 
-  // ====== Primer: klic na “shake” dogodku ======
+  // ====== (neobvezno) primer “shake” dogodka ======
   // window.addEventListener('devicemotion', (e) => {
   //   const ax = e.accelerationIncludingGravity.x || 0;
   //   const ay = e.accelerationIncludingGravity.y || 0;
@@ -2678,6 +2751,8 @@ checkAlerts();
   //   const totalAcc = Math.sqrt(ax*ax + ay*ay + az*az);
   //   onShake(totalAcc);
   // });
+
+
 
 
 
