@@ -1,166 +1,229 @@
 <!DOCTYPE html>
-
 <html lang="sl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dejanski AI v brskalniku (brez kamere)</title>
-  <style>
-    :root{--bg:#0b0f14;--fg:#e8f0ff;--mut:#9db1c9;--card:#111a22;--b:#213245}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial}
-    header{padding:14px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center}
-    h1{font-size:18px;margin:0} .pill{font-size:12px;background:#8fd3ff;color:#0b0f14;padding:6px 10px;border-radius:999px}
-    main{max-width:900px;margin:0 auto;padding:16px;display:grid;gap:12px}
-    .card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:14px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
-    textarea,input,button{width:100%;background:#0e1620;color:var(--fg);border:1px solid var(--b);border-radius:12px;padding:12px;font-size:15px}
-    button{cursor:pointer} .row{display:grid;gap:10px}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:800px){.grid{grid-template-columns:1fr 1fr}}
-    .out{white-space:pre-wrap;background:#0e1620;border:1px dashed var(--b);border-radius:12px;padding:12px;color:#cfe9ff;min-height:54px}
-    .hint{color:var(--mut);font-size:13px}
-    .badge{display:inline-block;font-size:12px;color:var(--mut);border:1px solid var(--b);border-radius:10px;padding:4px 8px;margin-left:6px}
-    .inline{display:flex;gap:8px;align-items:center}
-  </style>
-
-  <!-- Transformers.js (Xenova) – teče v brskalniku -->
-  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1/dist/transformers.min.js" defer></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pogled v prihodnost</title>
+<style>
+  body { background:#0f1220; color:#f0f0f0; font:16px/1.6 system-ui, sans-serif; margin:0; }
+  h1 { text-align:center; margin:20px 0; }
+  .container { max-width:1000px; margin:0 auto; padding:20px; }
+  .card { background:#171a2b; padding:20px; border-radius:10px; margin-bottom:20px; }
+  input,button { padding:10px; border-radius:6px; border:none; }
+  input { width:100%; margin-bottom:10px; }
+  button { background:#7aa2ff; color:#000; font-weight:bold; cursor:pointer; }
+  .event { background:#101328; border:1px solid #2a2e52; border-radius:8px; padding:12px; margin-bottom:8px; }
+  .event h3 { margin:0 0 4px; font-size:18px; }
+  .muted { color:#9aa3b2; }
+  .slider-wrap { margin:20px 0; }
+  input[type="range"] { width:100%; }
+</style>
 </head>
 <body>
-<header>
-  <h1>Dejanski AI v brskalniku (brez kamere)</h1>
-  <span class="pill">On-device NLP</span>
-</header>
-
-<main>
-  <div class="card">
-    <div class="inline">
-      <strong>Stanje:</strong><span id="status" class="badge">Nalagam knjižnico…</span>
-    </div>
-    <p class="hint">Vsi modeli se poganjajo lokalno v brskalniku. Prvi zagon prenese uteži (cache).</p>
-  </div>
-
-  <div class="grid">
-    <!-- Sentiment -->
+  <h1>✨ Pogled v prihodnost</h1>
+  <div class="container">
     <div class="card">
-      <h3>1) Analiza sentimenta</h3>
-      <p class="hint">Večjezični model (deluje tudi za slovenščino/turščino, a najboljši je za kratka besedila).</p>
-      <div class="row">
-        <textarea id="sentText" rows="4" placeholder="Vnesi besedilo…"></textarea>
-        <button id="sentBtn">Analiziraj</button>
-        <div id="sentOut" class="out"></div>
+      <input id="ime" type="text" placeholder="Ime">
+      <input id="priimek" type="text" placeholder="Priimek">
+      <label>Datum rojstva:</label>
+      <input id="rojstvo" type="date">
+      <button id="generiraj">Ustvari časovnico</button>
+    </div>
+    <div id="rezultat" class="card" style="display:none;">
+      <h2 id="naslov"></h2>
+      <p id="info"></p>
+      <div class="slider-wrap">
+        <label for="letoRange">Premakni leto: <span id="letoIzpis"></span></label>
+        <input type="range" id="letoRange" min="0" max="0" value="0">
       </div>
-    </div>
-
-    <!-- Zero-shot klasifikacija -->
-    <div class="card">
-      <h3>2) Klasifikacija brez učenja (zero-shot)</h3>
-      <p class="hint">Besedilo razvrstiš v svoje kategorije (etikete) brez dodatnega učenja.</p>
-      <div class="row">
-        <textarea id="zsText" rows="4" placeholder="Besedilo za razvrstitev…"></textarea>
-        <input id="zsLabels" placeholder="Etikete (npr.: šport, politika, tehnologija)" />
-        <button id="zsBtn">Razvrsti</button>
-        <div id="zsOut" class="out"></div>
-      </div>
+      <div id="currentEvent" class="event"></div>
+      <h3>Vsa leta:</h3>
+      <div id="timeline"></div>
     </div>
   </div>
-
-  <!-- Question Answering -->
-  <div class="card">
-    <h3>3) Vprašanje → Odgovor (na osnovi podanega konteksta)</h3>
-    <p class="hint">Model odgovori na vprašanje iz tvojega konteksta (ni iskanja po spletu).</p>
-    <div class="row">
-      <textarea id="qaContext" rows="5" placeholder="Kontekst (članek/besedilo)…"></textarea>
-      <input id="qaQuestion" placeholder="Vprašanje (npr.: Kdo je avtor?)" />
-      <button id="qaBtn">Odgovori</button>
-      <div id="qaOut" class="out"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>Nasveti za telefon</h3>
-    <ul class="hint">
-      <li>Prvi zagon je lahko počasnejši (prenos modela). Naslednjič je hitro (cache).</li>
-      <li>Za najboljšo hitrost uporabi Chrome (Android) ali Safari (iOS, iOS 16+).</li>
-      <li>Če želiš še hitreje, lahko pozneje dodava WebGPU backend.</li>
-    </ul>
-  </div>
-</main>
 
 <script>
-const { pipeline } = window.transformers;
-const statusEl = document.getElementById('status');
-
-let sentPipe, zsPipe, qaPipe;
-
-(async () => {
-  try {
-    statusEl.textContent = 'Inicializiram…';
-
-    // 1) Sentiment – večjezični model
-    //   (nlptown/bert-base-multilingual-uncased-sentiment -> 1-5 zvezdic)
-    sentPipe = await pipeline('text-classification', 'Xenova/nlptown-bert-multilingual-uncased-sentiment');
-
-    // 2) Zero-shot klasifikacija (angl. razlage; dela solidno tudi večjezično)
-    //   (facebook/bart-large-mnli je privzet pri Transformers.js kot "zero-shot-classification")
-    zsPipe = await pipeline('zero-shot-classification', 'Xenova/bart-large-mnli');
-
-    // 3) Question Answering (SQuAD2)
-    qaPipe = await pipeline('question-answering', 'Xenova/deepset-roberta-base-squad2');
-
-    statusEl.textContent = 'Pripravljeno ✅';
-  } catch (e) {
-    console.error(e);
-    statusEl.textContent = 'Napaka pri inicializaciji';
+// --- RNG helper ---
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
   }
-})();
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  };
+}
+function mulberry32(a) {
+  return function() {
+    let t = (a += 0x6D2B79F5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seededRngFromKey(key) {
+  const seedgen = xmur3(key);
+  return mulberry32(seedgen());
+}
 
-// UI handlers
-document.getElementById('sentBtn').addEventListener('click', async () => {
-  const text = document.getElementById('sentText').value.trim();
-  const out = document.getElementById('sentOut');
-  if (!text) return out.textContent = 'Vnesi besedilo.';
-  out.textContent = 'Analiziram…';
-  try {
-    const res = await sentPipe(text);
-    // Primer izpisa: label: "5 stars", score: 0.76
-    const best = Array.isArray(res) ? res[0] : res;
-    out.textContent = `Ocena: ${best.label}  (zaupanje: ${(best.score*100).toFixed(1)}%)`;
-  } catch (e) {
-    console.error(e); out.textContent = 'Napaka pri analizi.';
+// --- Utility ---
+function parseDateInput(val) {
+  const d = new Date(val);
+  return isNaN(d) ? null : d;
+}
+function yearsBetween(a, b) {
+  let years = b.getFullYear() - a.getFullYear();
+  const mA = a.getMonth(), mB = b.getMonth();
+  const dA = a.getDate(), dB = b.getDate();
+  if (mB < mA || (mB === mA && dB < dA)) years--;
+  return years;
+}
+
+// --- Dogodki (60+ različnih) ---
+const DOGODKI = [
+  "spoznaš novega prijatelja", "zaljubiš se na prvi pogled", "menjaš kariero",
+  "se poročiš", "odpreš svoje podjetje", "postaneš starš", "potuješ v tujino",
+  "napišeš knjigo", "začneš nov hobi", "osvojiš planinski vrh",
+  "imaš uspešen projekt", "preživiš težko leto", "najdeš notranji mir",
+  "dobiš hišnega ljubljenčka", "narediš dobro naložbo", "izgubiš prijatelja",
+  "učiš se novega jezika", "odkriješ talent", "postaneš mentor",
+  "zboliš, a ozdraviš", "začneš meditirati", "premagaš strah",
+  "osvojiš nagrado", "narediš veliko napako", "najdeš novo veselje",
+  "doživiš romantičen zmenek", "zamenjaš mesto bivanja", "zgradiš hišo",
+  "zmanjšaš dolgove", "pridobiš priznanje", "doživiš razočaranje",
+  "prijatelj ti reši težavo", "preživiš leto brez večjih sprememb",
+  "imaš finančne skrbi", "učiš se kuhati", "učiš se igrati instrument",
+  "doživiš razhod", "izgubiš službo", "najdeš novo službo",
+  "postaneš znan v svoji stroki", "tvoj projekt propade",
+  "obiščeš eksotično državo", "pomagaš človeku v stiski",
+  "postaneš prostovoljec", "spoznaš vplivno osebo",
+  "začneš z jogo", "izgubiš stik s prijateljem",
+  "spet se povežeš s sorodniki", "doživiš nesrečo, a preživiš",
+  "preseliš se na podeželje", "učiš se programiranja",
+  "prijateljstvo se poglobi", "najdeš novega partnerja",
+  "začneš športati", "učiš druge", "odkriješ novo strast",
+  "postaneš bolj samozavesten", "narediš dobro delo",
+  "najdeš smisel v življenju", "uživaš v mirnem letu"
+];
+
+const DENIS_DOGODKI = [
+  "ljubezni ne najdeš, ostane praznina",
+  "služba ti ne prinese zadovoljstva",
+  "prijatelji se oddaljijo",
+  "osamljenost postaja večja",
+  "čas beži brez uresničenih sanj",
+  "leto mine brez veselja",
+  "več razmerij se hitro konča",
+  "stagnacija v karieri",
+  "težko zaupaš ljudem",
+  "žalostno leto brez sprememb"
+];
+
+// --- Generatorji ---
+function jeDenis(ime, priimek, roj) {
+  return ime.trim().toLowerCase() === "denis" &&
+         priimek.trim().toLowerCase() === "robinek" &&
+         roj.getFullYear() === 2004 &&
+         roj.getMonth() === 11 &&
+         roj.getDate() === 22;
+}
+
+function izracunZivljenjskeDobe(rng) {
+  const r = rng();
+  return Math.floor(60 + Math.sqrt(r) * 45); // 60..105
+}
+
+function zgradiDogodke(ime, priimek, roj) {
+  const zdaj = new Date();
+  const starost = yearsBetween(roj, zdaj);
+  const startYear = zdaj.getFullYear();
+
+  if (jeDenis(ime, priimek, roj)) {
+    const lifeSpan = 40;
+    const dogodki = [];
+    for (let i = 0; i <= lifeSpan - starost; i++) {
+      const leto = startYear + i;
+      const absolutnaStarost = starost + i;
+      let opis = (absolutnaStarost === 40)
+        ? "Življenje se konča prezgodaj pri 40 letih."
+        : DENIS_DOGODKI[i % DENIS_DOGODKI.length];
+      dogodki.push({ leto, starost: absolutnaStarost, opis });
+    }
+    return { lifeSpan, dogodki };
   }
+
+  const key = ime + priimek + roj.toISOString().slice(0,10);
+  const rng = seededRngFromKey(key);
+  const lifeSpan = izracunZivljenjskeDobe(rng);
+  const dogodki = [];
+  for (let i = 0; i <= lifeSpan - starost; i++) {
+    const leto = startYear + i;
+    const absolutnaStarost = starost + i;
+    const opis = DOGODKI[Math.floor(rng() * DOGODKI.length)];
+    dogodki.push({ leto, starost: absolutnaStarost, opis });
+  }
+  return { lifeSpan, dogodki };
+}
+
+// --- UI ---
+const imeEl = document.getElementById("ime");
+const priimekEl = document.getElementById("priimek");
+const rojEl = document.getElementById("rojstvo");
+const gumb = document.getElementById("generiraj");
+const rezultatEl = document.getElementById("rezultat");
+const naslovEl = document.getElementById("naslov");
+const infoEl = document.getElementById("info");
+const timelineEl = document.getElementById("timeline");
+const letoRange = document.getElementById("letoRange");
+const letoIzpis = document.getElementById("letoIzpis");
+const currentEventEl = document.getElementById("currentEvent");
+
+let trenutniModel = null;
+
+gumb.addEventListener("click", () => {
+  const ime = imeEl.value;
+  const priimek = priimekEl.value;
+  const roj = parseDateInput(rojEl.value);
+  if (!ime || !priimek || !roj) {
+    alert("Izpolni vsa polja.");
+    return;
+  }
+
+  const { lifeSpan, dogodki } = zgradiDogodke(ime, priimek, roj);
+  trenutniModel = { lifeSpan, dogodki };
+
+  rezultatEl.style.display = "block";
+  naslovEl.textContent = `${ime} ${priimek}`;
+  infoEl.textContent = `Življenjska doba: ${lifeSpan} let.`;
+
+  // slider setup
+  letoRange.max = dogodki.length - 1;
+  letoRange.value = 0;
+  prikaziDogodek(0);
+
+  // timeline
+  timelineEl.innerHTML = "";
+  dogodki.forEach(d => {
+    const div = document.createElement("div");
+    div.className = "event";
+    div.innerHTML = `<h3>${d.leto} (starost ${d.starost})</h3><p class="muted">${d.opis}</p>`;
+    timelineEl.appendChild(div);
+  });
 });
 
-document.getElementById('zsBtn').addEventListener('click', async () => {
-  const text = document.getElementById('zsText').value.trim();
-  const labels = document.getElementById('zsLabels').value.split(',').map(s => s.trim()).filter(Boolean);
-  const out = document.getElementById('zsOut');
-  if (!text) return out.textContent = 'Vnesi besedilo.';
-  if (labels.length < 2) return out.textContent = 'Vnesi vsaj dve etiketi, ločeni z vejico.';
-  out.textContent = 'Razvrščam…';
-  try {
-    const res = await zsPipe(text, labels, { multi_label: false });
-    const lines = res.labels.map((lab, i) => `${lab}: ${(res.scores[i]*100).toFixed(1)}%`);
-    out.textContent = lines.join('\n');
-  } catch (e) {
-    console.error(e); out.textContent = 'Napaka pri razvrstitvi.';
-  }
+letoRange.addEventListener("input", () => {
+  prikaziDogodek(parseInt(letoRange.value));
 });
 
-document.getElementById('qaBtn').addEventListener('click', async () => {
-  const context = document.getElementById('qaContext').value.trim();
-  const question = document.getElementById('qaQuestion').value.trim();
-  const out = document.getElementById('qaOut');
-  if (!context) return out.textContent = 'Vnesi kontekst.';
-  if (!question) return out.textContent = 'Vnesi vprašanje.';
-  out.textContent = 'Iščem odgovor…';
-  try {
-    const res = await qaPipe({ question, context });
-    if (!res.answer || res.score < 0.1) out.textContent = 'Ne najdem zanesljivega odgovora v podanem kontekstu.';
-    else out.textContent = `Odgovor: ${res.answer}\nZaupanje: ${(res.score*100).toFixed(1)}%`;
-  } catch (e) {
-    console.error(e); out.textContent = 'Napaka pri Q&A.';
-  }
-});
+function prikaziDogodek(i) {
+  if (!trenutniModel) return;
+  const d = trenutniModel.dogodki[i];
+  letoIzpis.textContent = `${d.leto} (starost ${d.starost})`;
+  currentEventEl.innerHTML = `<h3>${d.leto} – starost ${d.starost}</h3><p class="muted">${d.opis}</p>`;
+}
 </script>
 </body>
 </html>
