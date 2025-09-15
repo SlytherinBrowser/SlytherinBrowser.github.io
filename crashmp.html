@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crash Multiplayer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{ --bg:#0b1020; --panel:#111936; --muted:#a9b6d6; --txt:#ecf2ff; --acc:#4a90e2; --ok:#20c997; --bad:#ef476f; }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:12px 14px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    header h1{font-size:18px;margin:0 10px 0 0}
+    .tag{font-size:12px;background:#16244c;padding:2px 6px;border-radius:6px;border:1px solid #273b7d}
+    .muted{color:var(--muted)}
+    main{padding:14px;display:grid;gap:14px;grid-template-columns:320px 1fr 360px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:12px}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--txt)}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .sep{height:1px;background:#1b264b;margin:8px 0}
+    .list{max-height:400px;overflow:auto}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #1d2852;border-radius:10px;background:#0d1530}
+    .meter{height:54px;border-radius:12px;border:1px solid #24325c;background:#0d1530;display:flex;align-items:center;justify-content:center;font-size:26px}
+    .meter.live{outline:2px solid var(--acc)}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
+    .oktxt{color:var(--ok)} .badtxt{color:var(--bad)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .right{ text-align:right }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚀 Crash Multiplayer</h1>
+    <span class="tag">Uporabnik: <b id="meName">-</b></span>
+    <span class="tag">Kovanci: <b id="meCoins">0</b></span>
+    <span class="tag">Moja soba: <b id="roomIdHdr">–</b></span>
+    <div style="margin-left:auto" class="row">
+      <button onclick="window.location.href='index.html'">🏠 Domov</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEVO: ustvarjanje in seznam sob -->
+    <aside class="panel">
+      <h2>🔧 Sobe</h2>
+      <div class="stack">
+        <div class="row">
+          <label>Ime sobe: <input id="roomName" placeholder="npr. Raketa #1" style="width:160px"></label>
+        </div>
+        <div class="row">
+          <label>Min stava: <input id="minBet" type="number" min="10" value="10" style="width:120px"></label>
+          <label>Max igralcev: <input id="maxPlayers" type="number" min="2" max="20" value="8" style="width:120px"></label>
+        </div>
+        <button id="createRoom" class="ok">Ustvari sobo</button>
+      </div>
+      <div class="sep"></div>
+      <h3>Aktivne sobe</h3>
+      <div id="roomsList" class="list stack"></div>
+    </aside>
+
+    <!-- SREDINA: UI sobe (host ali igralec) -->
+    <section class="panel">
+      <div id="noRoom">
+        <div class="muted">Ustvari sobo ali se pridruži iz seznama levo.</div>
+      </div>
+
+      <div id="roomUI" style="display:none">
+        <div class="row">
+          <h2 id="roomTitle">Soba</h2>
+          <span class="pill" id="roomStatus">lobby</span>
+        </div>
+
+        <div class="grid2">
+          <div class="stack">
+            <div class="meter" id="meter">1.00×</div>
+            <div id="roundMsg" class="muted">Čakanje na start…</div>
+          </div>
+          <div class="stack">
+            <div class="kv"><div>Moja stava</div><div><b id="myBetLbl">0</b></div></div>
+            <div class="row">
+              <input id="betInput" type="number" min="10" step="1" value="10" style="width:120px">
+              <button id="placeBet" class="ok">Nastavi stavo</button>
+            </div>
+            <div class="row">
+              <button id="cashOut" class="primary" disabled>💸 CASH OUT</button>
+              <span id="myState" class="pill">waiting</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="row">
+          <h3>Igralci</h3>
+          <span class="muted">(cash-out višine, stanje)</span>
+        </div>
+        <div id="playersBox" class="list stack"></div>
+
+        <div class="sep"></div>
+
+        <!-- HOST UI -->
+        <div id="hostUI" style="display:none">
+          <h3>Host nadzor</h3>
+          <div class="row">
+            <button id="startCountdown" class="ok">Začni odštevanje</button>
+            <button id="startRound" class="primary" disabled>Začni rundo</button>
+            <button id="endRoom" class="danger">Zapri sobo</button>
+          </div>
+          <div class="muted">Flow: odštevanje (5s) → začneš rundo → množilnik raste do skrite crash točke → poračun.</div>
+        </div>
+
+        <!-- PLAYER UI (ne-host) -->
+        <div id="playerUI" style="display:none">
+          <h3>Navodila</h3>
+          <div class="muted">Host vodi rundo. Nastavi stavo in izplačaj se pravočasno.</div>
+          <button id="leaveRoom" class="warn">Zapusti sobo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DESNO: zgodovina & pravila -->
+    <aside class="panel">
+      <h2>Zadnje runde</h2>
+      <div id="historyBox" class="list stack"></div>
+      <div class="sep"></div>
+      <h3>Pravila “Winner takes profits”</h3>
+      <div class="stack">
+        <div>• Vsi vplačajo stavo ob začetku runde.</div>
+        <div>• Vsak lahko kadarkoli klikne <b>CASH OUT</b> (če še ni crashnilo).</div>
+        <div>• <b>Zmagovalec</b> je tisti z <b>najvišjim cash-outom</b>. Ob izenačitvi si delijo.</div>
+        <div>• Vsi, ki cash-outajo, dobijo <b>svojo stavo + svoj osnovni profit</b> (bet×(mult−1)).</div>
+        <div>• Zmagovalec poleg tega <b>pobere vse tuje profite</b> in <b>vse izgubljene stave</b> (od crashanih), enakomerno med zmagovalce, če jih je več.</div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // ================= Firebase =================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    // ================= UI refs =================
+    const meName = document.getElementById('meName');
+    const meCoins= document.getElementById('meCoins');
+    const roomIdHdr = document.getElementById('roomIdHdr');
+
+    const roomName = document.getElementById('roomName');
+    const minBet = document.getElementById('minBet');
+    const maxPlayers = document.getElementById('maxPlayers');
+    const createRoom = document.getElementById('createRoom');
+    const roomsList = document.getElementById('roomsList');
+
+    const noRoom = document.getElementById('noRoom');
+    const roomUI = document.getElementById('roomUI');
+    const roomTitle = document.getElementById('roomTitle');
+    const roomStatus = document.getElementById('roomStatus');
+
+    const meter = document.getElementById('meter');
+    const roundMsg = document.getElementById('roundMsg');
+    const betInput = document.getElementById('betInput');
+    const placeBet = document.getElementById('placeBet');
+    const cashOut = document.getElementById('cashOut');
+    const myState = document.getElementById('myState');
+    const myBetLbl= document.getElementById('myBetLbl');
+    const playersBox = document.getElementById('playersBox');
+
+    const hostUI = document.getElementById('hostUI');
+    const playerUI = document.getElementById('playerUI');
+    const startCountdown = document.getElementById('startCountdown');
+    const startRound = document.getElementById('startRound');
+    const endRoom = document.getElementById('endRoom');
+    const leaveRoom = document.getElementById('leaveRoom');
+
+    const historyBox = document.getElementById('historyBox');
+
+    // ================= State =================
+    let user=null, uid=null, coinsUnsub=null;
+    let myRoomId=null, iAmHost=false;
+    let roomUnsubs = [];
+    let currentMultiplier = 1.00;
+    let roundTimer = null; // host loop
+    let currentCrashPoint = null;
+
+    // ================= Auth =================
+    auth.onAuthStateChanged(async (_u)=>{
+      if(!_u){ window.location.href='index.html'; return; }
+      user=_u; uid=user.uid;
+      meName.textContent = user.displayName || user.email;
+
+      if(coinsUnsub) db.ref(`users/${uid}/coins`).off('value', coinsUnsub);
+      coinsUnsub = (snap)=> meCoins.textContent = (snap.val()??0);
+      db.ref(`users/${uid}/coins`).on('value', coinsUnsub);
+
+      // naloži sezname sob
+      watchRooms();
+      loadHistory();
+    });
+
+    // ================= Rooms list =================
+    function watchRooms(){
+      db.ref('crashmp/rooms').on('value', snap=>{
+        const data = snap.val()||{};
+        roomsList.innerHTML = '';
+        Object.entries(data).forEach(([rid,r])=>{
+          if(r.closed) return;
+          const div=document.createElement('div');
+          div.className='kv';
+          const players = r.players ? Object.keys(r.players).length : 0;
+          div.innerHTML = `
+            <div>
+              <b>${r.name||rid}</b> • status: ${r.status||'lobby'}
+              <div class="muted">Min: ${r.minBet||10} • Max igralcev: ${r.maxPlayers||8}</div>
+              <div class="muted">Igralci: ${players}</div>
+            </div>
+            <div><button class="primary">Pridruži se</button></div>
+          `;
+          div.querySelector('button').onclick = ()=> joinRoom(rid);
+          roomsList.appendChild(div);
+        });
+      });
+    }
+
+    // ================= Create / Join / Leave =================
+    createRoom.onclick = async ()=>{
+      const name = (roomName.value||'Soba') + '';
+      const min = Math.max(10, +minBet.value||10);
+      const maxP= Math.min(20, Math.max(2, +maxPlayers.value||8));
+
+      const rid = 'room_'+Date.now();
+      const base = {
+        name, hostUid: uid, status:'lobby', minBet:min, maxPlayers:maxP, createdAt: Date.now(),
+        round: null, closed: false
+      };
+      await db.ref(`crashmp/rooms/${rid}`).set(base);
+      await joinRoom(rid); // tudi host se pridruži
+    };
+
+    async function joinRoom(rid){
+      // preveri kapaciteto
+      const snap = await db.ref(`crashmp/rooms/${rid}`).once('value');
+      if(!snap.exists()) return alert('Soba ne obstaja.');
+      const room = snap.val();
+      if(room.closed) return alert('Soba je zaprta.');
+      const players = room.players ? Object.keys(room.players).length : 0;
+      if(players >= (room.maxPlayers||8)) return alert('Soba je polna.');
+
+      const entry = {
+        displayName: user.displayName || user.email,
+        bet: 0,
+        state: 'waiting', // waiting|cashed|crashed
+        cashAt: null
+      };
+      await db.ref(`crashmp/rooms/${rid}/players/${uid}`).set(entry);
+
+      // set local state + UI
+      myRoomId = rid;
+      iAmHost = room.hostUid === uid;
+      enterRoomUI(rid);
+    }
+
+    async function leaveCurrentRoom(){
+      if(!myRoomId) return;
+      const ref = db.ref(`crashmp/rooms/${myRoomId}`);
+      const snap = await ref.once('value');
+      if(snap.exists()){
+        const r = snap.val();
+        await db.ref(`crashmp/rooms/${myRoomId}/players/${uid}`).remove();
+        // Če je host zapustil, zapri sobo
+        if(r.hostUid === uid){
+          await ref.update({ closed: true, status:'closed' });
+        }
+      }
+      exitRoomUI();
+    }
+
+    leaveRoom.onclick = leaveCurrentRoom;
+    endRoom.onclick = async ()=>{
+      if(!iAmHost) return;
+      await db.ref(`crashmp/rooms/${myRoomId}`).update({ closed:true, status:'closed' });
+      exitRoomUI();
+    };
+
+    // ================= Room UI attach/detach =================
+    function clearRoomListeners(){
+      roomUnsubs.forEach(u => u && u.off && u.off());
+      roomUnsubs = [];
+    }
+
+    function enterRoomUI(rid){
+      roomIdHdr.textContent = rid;
+      roomTitle.textContent = 'Soba ' + rid.slice(-6);
+      noRoom.style.display='none';
+      roomUI.style.display='';
+      hostUI.style.display = iAmHost ? '' : 'none';
+      playerUI.style.display = iAmHost ? 'none' : '';
+
+      // reset meter
+      meter.textContent = '1.00×';
+      meter.classList.remove('live');
+      roundMsg.textContent = 'Čakanje na start…';
+      cashOut.disabled = true;
+      myState.textContent = 'waiting';
+      myBetLbl.textContent = '0';
+
+      // listen room
+      const roomRef = db.ref(`crashmp/rooms/${rid}`);
+      roomRef.on('value', snap=>{
+        const r = snap.val(); if(!r) return;
+        roomStatus.textContent = r.status;
+        if(r.status==='running'){
+          meter.classList.add('live');
+        } else {
+          meter.classList.remove('live');
+        }
+        // round meter (live value)
+        if(r.round && typeof r.round.liveMult === 'number'){
+          currentMultiplier = r.round.liveMult;
+          meter.textContent = currentMultiplier.toFixed(2) + '×';
+        }
+        // update players box
+        renderPlayers(r.players||{});
+        // host-only buttons
+        if(iAmHost){
+          startRound.disabled = !(r.status==='countdown_done' || r.status==='countdown'); // upravljanje spodaj
+        }
+      });
+      roomUnsubs.push(roomRef);
+
+      // my player ref for state
+      const meRef = db.ref(`crashmp/rooms/${rid}/players/${uid}`);
+      meRef.on('value', snap=>{
+        const me = snap.val()||{};
+        myBetLbl.textContent = me.bet||0;
+        myState.textContent = me.state||'waiting';
+        // cash button enabled if running and not cashed/crashed
+      });
+      roomUnsubs.push(meRef);
+
+      // host controls disabling/enabling
+      if(iAmHost){
+        startCountdown.onclick = ()=> hostCountdown();
+        startRound.onclick = ()=> hostStartRound();
+      }
+
+      placeBet.onclick = ()=> doSetBet();
+      cashOut.onclick = ()=> doCashOut();
+    }
+
+    function exitRoomUI(){
+      clearRoomListeners();
+      myRoomId = null;
+      iAmHost = false;
+      roomIdHdr.textContent = '–';
+      roomUI.style.display='none';
+      noRoom.style.display='';
+    }
+
+    function renderPlayers(players){
+      playersBox.innerHTML = '';
+      Object.entries(players).forEach(([pid,p])=>{
+        const div=document.createElement('div');
+        div.className='kv';
+        const cashTxt = p.cashAt ? (p.cashAt.toFixed ? p.cashAt.toFixed(2)+'×' : p.cashAt+'×') : '—';
+        div.innerHTML = `
+          <div>
+            <b>${p.displayName||pid.slice(-6)}</b>
+            <div class="muted">Stava: ${p.bet||0} • Cash-out: ${cashTxt}</div>
+          </div>
+          <div><span class="pill ${p.state==='cashed'?'oktxt':p.state==='crashed'?'badtxt':''}">${p.state||'waiting'}</span></div>
+        `;
+        playersBox.appendChild(div);
+      });
+    }
+
+    // ================= Bet & Cashout =================
+    async function doSetBet(){
+      if(!myRoomId) return;
+      const b = Math.max(10, Math.floor(+betInput.value||0));
+      const roomSnap = await db.ref(`crashmp/rooms/${myRoomId}`).once('value');
+      const r = roomSnap.val(); if(!r) return;
+      if(r.status!=='lobby' && r.status!=='countdown' && r.status!=='countdown_done') return alert('Stave zaklenjene.');
+      if(b < (r.minBet||10)) return alert('Prenizka stava.');
+      await db.ref(`crashmp/rooms/${myRoomId}/players/${uid}/bet`).set(b);
+      roundMsg.textContent = 'Stava nastavljena.';
+    }
+
+    async function doCashOut(){
+      if(!myRoomId) return;
+      const path = `crashmp/rooms/${myRoomId}`;
+      const [roomSnap, meSnap] = await Promise.all([
+        db.ref(path).once('value'),
+        db.ref(`${path}/players/${uid}`).once('value')
+      ]);
+      const r = roomSnap.val(); const me = meSnap.val();
+      if(!r || !me) return;
+      if(r.status!=='running') return;
+      if(me.state==='cashed' || me.state==='crashed') return;
+      // zapiši cash-out multiplier
+      await db.ref(`${path}/players/${uid}`).update({
+        cashAt: r.round.liveMult,
+        state: 'cashed'
+      });
+      roundMsg.textContent = `Cash-out @ ${r.round.liveMult.toFixed(2)}×`;
+      cashOut.disabled = true;
+    }
+
+    // ================= Host flow =================
+    async function hostCountdown(){
+      if(!iAmHost || !myRoomId) return;
+      const ref = db.ref(`crashmp/rooms/${myRoomId}`);
+      const snap = await ref.once('value'); const r = snap.val(); if(!r) return;
+      if(r.status!=='lobby') return alert('Ne morem odštevati zdaj.');
+      await ref.update({ status:'countdown' });
+      roundMsg.textContent = 'Odštevanje 5s…';
+      startRound.disabled = true;
+
+      // Deduct bets immediately (lock-in), abort if kdo brez kovancev
+      const players = r.players||{};
+      for(const [pid,p] of Object.entries(players)){
+        const bet = Math.max(r.minBet||10, +p.bet||0);
+        if(bet<=0) { await db.ref(`crashmp/rooms/${myRoomId}/players/${pid}/bet`).set(0); continue; }
+        const tx = await db.ref(`users/${pid}/coins`).transaction(c=>{
+          c=(+c||0); if(c<bet) return; return c - bet;
+        });
+        if(!tx.committed){
+          // odstrani premajhne
+          await db.ref(`crashmp/rooms/${myRoomId}/players/${pid}`).update({ bet:0, state:'waiting' });
+        }
+      }
+
+      // Little 5s countdown state machine
+      let left=5;
+      const t=setInterval(async ()=>{
+        left--;
+        roundMsg.textContent = `Začetek čez ${left}s…`;
+        if(left<=0){
+          clearInterval(t);
+          await ref.update({ status:'countdown_done' });
+          startRound.disabled = false;
+        }
+      },1000);
+    }
+
+    function rndCrashPoint(){
+      // Povsem odjemalsko: eksponentna porazdelitev z minimalno 1.05×, rep do ~50×
+      // (za produkcijo naredi “provably fair” s serverSeed + hash)
+      const base = 1.05;
+      const x = -Math.log(1-Math.random()); // Exp(1)
+      return Math.min(50, base + x* (Math.random()*2 + 0.5)); // 1.05..~50
+    }
+
+    async function hostStartRound(){
+      if(!iAmHost || !myRoomId) return;
+      const ref = db.ref(`crashmp/rooms/${myRoomId}`);
+      const snap = await ref.once('value'); const r = snap.val(); if(!r) return;
+      if(r.status!=='countdown_done' && r.status!=='countdown') return alert('Najprej odštevanje.');
+      // zakleni stave: igr. z bet=0 ostanejo gledalci
+      await ref.update({ status:'running', round:{ id:'round_'+Date.now(), startAt:Date.now(), liveMult:1.00 } });
+
+      // Reset states
+      const players = r.players||{};
+      for(const [pid,p] of Object.entries(players)){
+        await db.ref(`crashmp/rooms/${myRoomId}/players/${pid}`).update({ state:'waiting', cashAt:null });
+      }
+
+      currentMultiplier = 1.00;
+      currentCrashPoint = rndCrashPoint();
+      meter.classList.add('live');
+      cashOut.disabled = false;
+      roundMsg.textContent = 'V teku…';
+
+      // host loop: posodabljaj multiplier
+      if(roundTimer) clearInterval(roundTimer);
+      roundTimer = setInterval(async ()=>{
+        currentMultiplier = +(currentMultiplier + Math.max(0.005, currentMultiplier*0.012)).toFixed(3); // rast
+        await db.ref(`crashmp/rooms/${myRoomId}/round/liveMult`).set(currentMultiplier);
+
+        if(currentMultiplier >= currentCrashPoint){
+          clearInterval(roundTimer); roundTimer=null;
+          await db.ref(`crashmp/rooms/${myRoomId}`).update({ status:'settling' });
+          meter.classList.remove('live');
+          roundMsg.textContent = `CRASH @ ${currentMultiplier.toFixed(2)}×`;
+          await settleRound();
+        }
+      }, 120);
+    }
+
+    // ================= Settlement (winner takes profits) =================
+    async function settleRound(){
+      if(!myRoomId) return;
+      const path = `crashmp/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value');
+      const r = snap.val()||{};
+      const players = r.players||{};
+      const liveMult = r.round?.liveMult || 1.00;
+      const crashAt = currentCrashPoint || liveMult;
+
+      // Označi “crashed” vse, ki še niso cashed
+      for(const [pid,p] of Object.entries(players)){
+        if((p.state||'waiting')==='waiting'){
+          await db.ref(`${path}/players/${pid}`).update({ state:'crashed' });
+        }
+      }
+
+      // Preberi znova
+      const snap2 = await db.ref(path).once('value');
+      const pl = snap2.val().players||{};
+
+      // Izračun osnovnih izplačil
+      // cashed: baseReturn = bet, baseProfit = floor(bet*(cashAt-1))
+      // crashed: loss = bet  (gre v pool)
+      let poolFromLosses = 0;
+      let othersProfitPool = 0;
+      let winners = []; let bestMult = 0;
+
+      for(const [pid,p] of Object.entries(pl)){
+        const bet = +p.bet||0;
+        if(bet<=0) continue;
+
+        if(p.state==='cashed'){
+          const m = +p.cashAt||1;
+          const profit = Math.max(0, Math.floor(bet * (m-1)));
+          // zabeleži najboljšega
+          if(m > bestMult){ bestMult = m; winners = [pid]; }
+          else if(m === bestMult){ winners.push(pid); }
+          // izplačaj base: vrni bet + njegov profit
+          if(bet>0) await db.ref(`users/${pid}/coins`).transaction(c=>(+c||0)+bet+profit);
+          othersProfitPool += profit; // to bo šlo zmagovalcu, minus njegov del (odštejemo spodaj)
+        } else if(p.state==='crashed'){
+          // izgubil svojo stavo
+          poolFromLosses += bet;
+          // (stave so že odštete v countdownu)
+        }
+      }
+
+      // Od “othersProfitPool” moramo odšteti profit zmagovalcev, da jim ne podarimo dvakrat
+      let winnersBaseProfit = 0;
+      for(const wid of winners){
+        const wp = pl[wid]; if(!wp) continue;
+        const bet = +wp.bet||0; const m = +wp.cashAt||1;
+        const profit = Math.max(0, Math.floor(bet*(m-1)));
+        winnersBaseProfit += profit;
+      }
+      const distributable = Math.max(0, othersProfitPool - winnersBaseProfit) + poolFromLosses;
+      const share = winners.length>0 ? Math.floor(distributable / winners.length) : 0;
+
+      for(const wid of winners){
+        if(share>0){
+          await db.ref(`users/${wid}/coins`).transaction(c=>(+c||0)+share);
+        }
+      }
+
+      // Zapiši history vsem
+      const ts = Date.now();
+      for(const [pid,p] of Object.entries(pl)){
+        const bet = +p.bet||0; if(bet<=0) continue;
+        let payout = 0, note='';
+        if(p.state==='cashed'){
+          const m = +p.cashAt||1;
+          const profit = Math.max(0, Math.floor(bet*(m-1)));
+          const extra = winners.includes(pid) ? share : 0;
+          payout = bet + profit + extra;
+          note = `CASH ${m.toFixed(2)}× | base ${bet+profit}` + (extra? ` + win-share ${extra}`:'');
+        } else {
+          // crashed: nič ne dobi (stavo je oddal že prej)
+          payout = 0;
+          note = 'CRASH';
+        }
+        const delta = payout; // ker smo stavo pobrali pred rundo
+        const key = db.ref().push().key;
+        await db.ref(`casino/history/${pid}/${key}`).set({ ts, game:'CrashMP', bet, payout, delta, note });
+      }
+
+      await db.ref(path).update({ status:'lobby', round:null });
+      roundMsg.textContent = winners.length ? `Zmagovalec: ${winners.length>1?'(več zmagovalcev)':pl[winners[0]]?.displayName||winners[0].slice(-6)}` : 'Ni zmagovalca';
+      cashOut.disabled = true;
+    }
+
+    // ================= History (zadnjih 12) =================
+    function loadHistory(){
+      db.ref(`casino/history/${uid}`).limitToLast(12).on('value', snap=>{
+        const data = snap.val()||{};
+        const entries = Object.entries(data).sort((a,b)=>a[0].localeCompare(b[0])).reverse();
+        historyBox.innerHTML = '';
+        entries.forEach(([,h])=>{
+          const div=document.createElement('div');
+          div.className='kv';
+          const sign = h.delta>=0?'+':'';
+          div.innerHTML = `<div>
+            <div class="muted">${new Date(h.ts).toLocaleString()}</div>
+            <div><b>${h.game}</b> – stava ${h.bet}, izplačilo ${h.payout} (${sign}${h.delta})</div>
+            <div class="muted">${h.note||''}</div>
+          </div>`;
+          historyBox.appendChild(div);
+        });
+      });
+    }
+
+  </script>
+</body>
+</html>
