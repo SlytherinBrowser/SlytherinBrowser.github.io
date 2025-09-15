@@ -31,18 +31,15 @@
     button:hover{background-color:rgba(255,255,255,.25)}
     .toggle{text-align:center;margin-top:15px;cursor:pointer;color:#ddd;font-size:.9em;text-decoration:underline}
     .hidden{display:none}
-    .row{display:flex;gap:8px}
 
     /* Split button */
     .split-wrap{margin-top:6px;display:flex;width:100%}
     .split-main{flex:1 1 auto;border-radius:8px 0 0 8px;border-right:none}
     .split-toggle{width:48px;border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:center;padding:0}
     .split-toggle::after{content:"▾";font-size:14px}
-    .menu{
-      position:relative;width:100%
-    }
+    .menu{position:relative;width:100%}
     .menu-list{
-      position:absolute;right:0;top:6px;z-index:10;min-width:220px;
+      position:absolute;right:0;top:6px;z-index:10;min-width:240px;
       background:rgba(10,13,25,.95);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
       border-radius:10px;display:none;overflow:hidden
     }
@@ -61,7 +58,7 @@
     <!-- PRIJAVA -->
     <div id="loginForm">
       <h2>Prijava</h2>
-      <input type="email" id="logEmail" placeholder="Email (za Loterijo lahko dodaš /admin)" />
+      <input type="email" id="logEmail" placeholder="Email (za Loterijo/Casino lahko dodaš /admin)" />
       <input type="password" id="logPass" placeholder="Geslo" />
 
       <!-- En dinamični gumb z izbiro destinacije -->
@@ -82,6 +79,9 @@
           </div>
           <div class="menu-item" data-dest="teste.html" data-name="Loterija">
             🎟️ <div>Loterija<br><small>Srečke & žrebanje (admin: /admin)</small></div>
+          </div>
+          <div class="menu-item" data-dest="casino.html" data-name="Casino">
+            🎰 <div>Casino<br><small>Poker, konji, sloti, plinko (admin: /admin)</small></div>
           </div>
         </div>
       </div>
@@ -192,17 +192,30 @@
           await auth.signInWithEmailAndPassword(email, pass);
         }
 
-        // /admin velja samo za Loterijo (teste.html)
-        if(isAdmin && dest === 'teste.html'){
-          const adminSnap = await db.ref('lottery/adminUid').once('value');
-          const currentAdmin = adminSnap.val();
-          const uid = auth.currentUser.uid;
-          if (!currentAdmin) {
-            await db.ref('lottery/adminUid').set(uid);
-            await db.ref('lottery/adminSince').set(Date.now());
-            alert("Uspešno nastavljen kot ADMIN loterije.");
-          } else if (currentAdmin !== uid) {
-            alert("Admin je že nastavljen. Nadaljujem kot navaden igralec.");
+        const uid = auth.currentUser.uid;
+
+        // /admin velja za izbran modul
+        if(isAdmin){
+          if(dest === 'teste.html'){ // LOTERIJA
+            const adminSnap = await db.ref('lottery/adminUid').once('value');
+            const currentAdmin = adminSnap.val();
+            if (!currentAdmin) {
+              await db.ref('lottery/adminUid').set(uid);
+              await db.ref('lottery/adminSince').set(Date.now());
+              alert("Uspešno nastavljen kot ADMIN loterije.");
+            } else if (currentAdmin !== uid) {
+              alert("Admin loterije je že nastavljen. Nadaljujem kot navaden igralec.");
+            }
+          } else if(dest === 'casino.html'){ // CASINO
+            const adminSnapC = await db.ref('casino/adminUid').once('value');
+            const currentAdminC = adminSnapC.val();
+            if (!currentAdminC) {
+              await db.ref('casino/adminUid').set(uid);
+              await db.ref('casino/adminSince').set(Date.now());
+              alert("Uspešno nastavljen kot ADMIN casinoja.");
+            } else if (currentAdminC !== uid) {
+              alert("Admin casinoja je že nastavljen. Nadaljujem kot navaden igralec.");
+            }
           }
         }
 
