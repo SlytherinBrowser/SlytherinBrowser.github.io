@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
   <meta charset="utf-8" />
-  <title>Blackjack – Lobby + Potrditev + Kovanci iz baze</title>
+  <title>Blackjack – Lobby + Potrditev + Kovanci iz baze + Zapri sobo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase (compat) -->
@@ -69,7 +69,7 @@
   </header>
 
   <main>
-    <!-- ============ LOBBY: seznam host sob (vidno vsem ne-hostom) ============ -->
+    <!-- ============ LOBBY: seznam host sob (vidno vsem) ============ -->
     <section id="lobbyView" class="panel">
       <h2>🧭 Seznam host sob (zahteva potrditev)</h2>
       <div class="note">Klikneš <em>Zahtevaj vstop</em>, host te mora potrditi. Ročni vnos ID-ja sobe prav tako pošlje zahtevo (ni auto vstopa).</div>
@@ -186,7 +186,7 @@
     </section>
   </main>
 
-  <footer>Min. stava = <b>10</b>. Seznam sob je viden vsem; vstop je možen le po <b>potrditvi hosta</b>. Denar = <code>users/{uid}/coins</code>.</footer>
+  <footer>Min. stava = <b>10</b>. Seznam sob je viden vsem; vstop je možen le po <b>potrditvi hosta</b>. Denar = <code>users/{uid}/coins</code>. Host lahko sobo tudi <b>zapre</b>.</footer>
 
   <script>
     /* =========================
@@ -495,11 +495,25 @@
     }
 
     /* =========================
-       Render (role-based)
+       Render (role-based) + guard za zaprto sobo
     ========================== */
     function drawState(snap){
-      const st = snap.val(); currentState = st;
-      if(!st) return;
+      const st = snap.val();
+
+      // ⬇️ Guard: če je soba izbrisana (zapri sobo), vrni vse v lobby
+      if(st == null){
+        currentState = null;
+        if(roomRefValue){ roomRefValue.off(); roomRefValue = null; }
+        roomId = null;
+        isHost = false;
+        // pokaži lobby, skrij ostalo
+        lobbyView.classList.remove('hidden');
+        hostView.classList.add('hidden');
+        playerView.classList.add('hidden');
+        return;
+      }
+
+      currentState = st;
 
       // osveži directory state
       db.ref(`blackjackRooms/${snap.key}/state`).set(st.state || 'lobby');
@@ -599,6 +613,7 @@
         hostControls.appendChild(addBtn('Naslednji krog','primary', nextRound));
       }
       hostControls.appendChild(addBtn('Reset sobo','danger', hardReset));
+      hostControls.appendChild(addBtn('Zapri sobo','danger', closeRoom)); // ⬅️ NOVO
     }
 
     function renderPlayer(st){
@@ -764,6 +779,40 @@
       });
     }
 
+    // ⬇️ NOVO: Zapri sobo (popoln izbris in povratek v lobby)
+    async function closeRoom(){
+      if(!isHost || !roomId) return;
+      if(!confirm('Res želiš zapreti sobo? Vsi bodo vrnjeni v lobby.')) return;
+
+      // 1) Odklopi room listener
+      if(roomRefValue) { roomRefValue.off(); roomRefValue = null; }
+
+      // 2) Pobriši sobo iz igre in imenika
+      const rid = roomId;
+      try {
+        await Promise.all([
+          db.ref(`blackjack/${rid}`).remove(),
+          db.ref(`blackjackRooms/${rid}`).remove()
+        ]);
+      } catch (e) {
+        console.error('Zapiranje sobe neuspešno:', e);
+        alert('Napaka pri zapiranju sobe.');
+        return;
+      }
+
+      // 3) Počisti lokalno stanje in pokaži lobby
+      roomId = null;
+      currentState = null;
+      isHost = false;
+
+      // pokaži lobby, skrij host/player poglede
+      lobbyView.classList.remove('hidden');
+      hostView.classList.add('hidden');
+      playerView.classList.add('hidden');
+
+      alert('Soba je zaprta.');
+    }
+
     /* =========================
        Player actions
     ========================== */
@@ -880,7 +929,7 @@
         else if(v<dVal){ delta=-bet; result='lose'; }
         else { delta=0; result='push'; }
 
-        const newCoins = await applyCoinDelta(roomId, uid, delta);
+        await applyCoinDelta(roomId, uid, delta);
         await db.ref(`blackjack/${roomId}/players/${uid}/status`).set(result);
         hostDelta -= delta;
       }
