@@ -83,6 +83,10 @@
           <div class="menu-item" data-dest="casino.html" data-name="Casino">
             🎰 <div>Casino<br><small>Poker, konji, sloti, plinko (admin: /admin)</small></div>
           </div>
+          <!-- ➕ DODANO: Multiplayer Crash (brez admina) -->
+          <div class="menu-item" data-dest="crashmp.html" data-name="Crash (MP)">
+            🚀 <div>Crash (MP)<br><small>Multiplayer runda, winner-takes-profits</small></div>
+          </div>
         </div>
       </div>
 
@@ -194,7 +198,7 @@
 
         const uid = auth.currentUser.uid;
 
-        // /admin velja za izbran modul
+        // /admin velja SAMO za Loterijo in Casino; Crash (MP) NIMA admina
         if(isAdmin){
           if(dest === 'teste.html'){ // LOTERIJA
             const adminSnap = await db.ref('lottery/adminUid').once('value');
@@ -217,6 +221,7 @@
               alert("Admin casinoja je že nastavljen. Nadaljujem kot navaden igralec.");
             }
           }
+          // crashmp.html: brez admin logike
         }
 
         window.location.href = dest;
