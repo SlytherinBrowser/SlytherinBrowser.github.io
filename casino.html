@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Casino</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111936; --panel2:#0e1530;
+      --text:#ecf2ff; --muted:#a9b6d6; --acc:#4a90e2; --ok:#20c997; --warn:#ffb703; --bad:#ef476f;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:14px 16px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    header h1{font-size:18px;margin:0 10px 0 0}
+    .tag{font-size:12px;background:#16244c;padding:2px 6px;border-radius:6px;border:1px solid #273b7d}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
+    .muted{color:var(--muted)}
+    main{padding:16px;display:grid;gap:16px;grid-template-columns:280px 1fr 380px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:14px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--text)}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 10px;border-radius:10px;border:1px solid #273b7d;background:#0c1533;cursor:pointer}
+    .tab.active{outline:2px solid var(--acc)}
+    .sep{height:1px;background:#1b264b;margin:10px 0}
+    .table{background:var(--panel2);border:1px solid #223064;border-radius:12px;padding:12px}
+    .money{font-weight:700}
+
+    /* Poker */
+    .cards{display:flex;gap:8px;flex-wrap:wrap}
+    .card{width:72px;height:98px;border-radius:10px;border:1px solid #29407e;background:#0e1530;display:grid;place-items:center;font-weight:700;cursor:pointer}
+    .card.hold{outline:2px solid #26a169;box-shadow:0 0 0 3px rgba(38,161,105,.3)}
+    .payout{display:grid;grid-template-columns:1fr auto;gap:6px}
+
+    /* Slots */
+    .reels{display:grid;grid-template-columns:repeat(3,84px);gap:8px;justify-content:flex-start}
+    .cell{width:84px;height:84px;border-radius:10px;border:1px solid #29407e;background:#0e1530;display:grid;place-items:center;font-size:26px}
+
+    /* Horses */
+    .track{display:grid;gap:10px}
+    .lane{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center}
+    .bar{height:16px;background:#0e1530;border:1px solid #273b7d;border-radius:999px;overflow:hidden}
+    .prog{height:100%;background:linear-gradient(90deg,#3c7df0,#26a169)}
+    .horseName{font-size:14px}
+
+    /* Plinko */
+    .plinkoBoard{display:grid;grid-template-rows:repeat(8,24px);gap:8px;align-items:center}
+    .rowDots{display:flex;gap:18px;justify-content:center}
+    .dot{width:8px;height:8px;border-radius:50%;background:#99a9ff}
+    .slots{display:flex;gap:10px;justify-content:center;margin-top:8px}
+    .slot{width:52px;height:32px;border-radius:8px;border:1px solid #29407e;background:#0e1530;display:grid;place-items:center;font-size:14px}
+
+    footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎰 Casino</h1>
+    <div class="row">
+      <span class="tag">Uporabnik: <b id="meName">-</b></span>
+      <span class="tag">Kovanci: <b id="meCoins">0</b></span>
+      <span class="tag">Admin: <b id="adminTag">ne</b></span>
+    </div>
+    <div class="row" style="margin-left:auto">
+      <button onclick="window.location.href='index.html'">🏠 Domov</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEVA: izbira igre & stava -->
+    <aside class="panel">
+      <h2>Izberi igro</h2>
+      <div class="tabs">
+        <div class="tab active" data-game="poker">🃏 Poker</div>
+        <div class="tab" data-game="horses">🐎 Konjske dirke</div>
+        <div class="tab" data-game="slots">🎰 Slot</div>
+        <div class="tab" data-game="plinko">🟡 Plinko</div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="stack">
+        <label>Znesek stave:
+          <input id="betInput" type="number" min="10" step="1" value="10" style="width:140px">
+        </label>
+        <div class="muted">Min: <b id="minBetLbl">10</b> • Max: <b id="maxBetLbl">1000</b></div>
+        <div class="row">
+          <button id="playBtn" class="primary">Igraj rundo</button>
+          <span id="roundMsg" class="pill">Pripravljen</span>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="stack">
+        <h3>Nastavitve igre (povzetek)</h3>
+        <div id="gameSummary" class="table muted" style="white-space:pre-line"></div>
+      </div>
+    </aside>
+
+    <!-- SREDINA: UI igre -->
+    <section id="gameArea" class="panel">
+      <!-- POKER -->
+      <div id="uiPoker" class="stack">
+        <h2>Video Poker – Jacks or Better (1 draw)</h2>
+        <div class="row">
+          <button id="pokerDeal" class="ok">Deli</button>
+          <button id="pokerDraw" class="primary" disabled>Menjaj (Draw)</button>
+          <span class="pill">Klikni karto za HOLD</span>
+        </div>
+        <div id="pokerHand" class="cards"></div>
+        <div class="table">
+          <div><b>Izplačila (x stava)</b></div>
+          <div id="pokerPayout" class="payout muted"></div>
+        </div>
+      </div>
+
+      <!-- HORSES -->
+      <div id="uiHorses" class="stack" style="display:none">
+        <h2>Konjske dirke</h2>
+        <div class="row">
+          <label>Izberi konja:
+            <select id="horseSel"></select>
+          </label>
+          <button id="raceStart" class="primary">Začni dirko</button>
+        </div>
+        <div id="tracks" class="track"></div>
+        <div class="muted">Izplačilo = stava × kvota izbranega konja, če zmaga.</div>
+      </div>
+
+      <!-- SLOTS -->
+      <div id="uiSlots" class="stack" style="display:none">
+        <h2>Slot Machine (3×3, 1 linija – srednja)</h2>
+        <div class="reels" id="reels">
+          <div class="cell">–</div><div class="cell">–</div><div class="cell">–</div>
+          <div class="cell">–</div><div class="cell">–</div><div class="cell">–</div>
+          <div class="cell">–</div><div class="cell">–</div><div class="cell">–</div>
+        </div>
+        <div class="table">
+          <div><b>Simboli in množilniki (3 v vrsti, srednja linija)</b></div>
+          <div id="slotInfo" class="payout muted"></div>
+        </div>
+      </div>
+
+      <!-- PLINKO -->
+      <div id="uiPlinko" class="stack" style="display:none">
+        <h2>Plinko</h2>
+        <div class="row">
+          <label>Težavnost:
+            <select id="plinkoMode">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+          <button id="plinkoDrop" class="primary">Spusti žogico</button>
+        </div>
+        <div class="plinkoBoard" id="plinkoBoard">
+          <!-- vizual: samo peg vrstice -->
+          <div class="rowDots"><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="rowDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </div>
+        <div id="plinkoSlots" class="slots"></div>
+        <div class="muted">Dobitek = stava × množilnik ciljne reže.</div>
+      </div>
+    </section>
+
+    <!-- DESNO: admin & zgodovina -->
+    <aside class="panel">
+      <h2>🔧 Admin</h2>
+      <div id="adminBox" class="stack muted">
+        <div>Za admina se prijaviš na login strani z emailom + <b>/admin</b> (za Casino).</div>
+      </div>
+
+      <div id="adminControls" class="stack hidden" style="margin-top:8px">
+        <div class="row">
+          <label>Min bet: <input id="cfgMinBet" type="number" min="1" value="10" style="width:120px"></label>
+          <label>Max bet: <input id="cfgMaxBet" type="number" min="10" value="1000" style="width:120px"></label>
+        </div>
+        <div class="row">
+          <label>House edge (%): <input id="cfgEdge" type="number" min="0" max="20" value="3" style="width:120px"></label>
+          <span class="muted">Negativno = boljše za igralca (ne priporočam)</span>
+        </div>
+        <div class="sep"></div>
+
+        <details>
+          <summary>⚙️ Poker – paytable (x stava)</summary>
+          <textarea id="cfgPoker" rows="6" style="width:100%;background:#0e1530;color:#fff;border:1px solid #273b7d;border-radius:10px"></textarea>
+          <div class="muted">Ključi: royalFlush, straightFlush, fourKind, fullHouse, flush, straight, threeKind, twoPair, jacksOrBetter</div>
+        </details>
+
+        <details>
+          <summary>⚙️ Slots – simboli (množilnik za 3 v vrsti)</summary>
+          <textarea id="cfgSlots" rows="6" style="width:100%;background:#0e1530;color:#fff;border:1px solid #273b7d;border-radius:10px"></textarea>
+          <div class="muted">Primer: {"🍒":5,"🍋":8,"🔔":15,"⭐":25,"7️⃣":50}</div>
+        </details>
+
+        <details>
+          <summary>⚙️ Konji – kvote</summary>
+          <textarea id="cfgHorses" rows="4" style="width:100%;background:#0e1530;color:#fff;border:1px solid #273b7d;border-radius:10px"></textarea>
+          <div class="muted">Array konjev: [{name:"Blisk",odds:2.2},{name:"Strela",odds:3.0}, ...]</div>
+        </details>
+
+        <details>
+          <summary>⚙️ Plinko – multiplikatorji (po težavnosti, leve→desne reže)</summary>
+          <textarea id="cfgPlinko" rows="6" style="width:100%;background:#0e1530;color:#fff;border:1px solid #273b7d;border-radius:10px"></textarea>
+          <div class="muted">Ključi: easy, medium, hard; primer: {"easy":[0,0.5,0.8,1,1,0.8,0.5,0],"medium":[0,0.7,0.9,1.2,1.2,0.9,0.7,0],"hard":[0,0.5,0.8,1.5,1.5,0.8,0.5,0]}</div>
+        </details>
+
+        <div class="row">
+          <button id="saveCfg" class="ok">Shrani nastavitve</button>
+          <button id="resetAdmin" class="danger">Ponastavi admin</button>
+        </div>
+        <div class="sep"></div>
+        <div id="adminMeta" class="muted"></div>
+      </div>
+
+      <div class="sep"></div>
+      <h3>Zadnje runde</h3>
+      <div id="historyBox" class="stack"></div>
+    </aside>
+  </main>
+
+  <footer>© Casino • Vse transakcije kovancev gredo preko Firebase <i>transaction</i>. RNG je odjemalski (za resno produkcijo premakni logiko na backend).</footer>
+
+  <script>
+    /* =========================
+       Firebase init
+    ========================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    /* =========================
+       UI refs
+    ========================== */
+    const meName = document.getElementById('meName');
+    const meCoins = document.getElementById('meCoins');
+    const adminTag = document.getElementById('adminTag');
+
+    // left panel
+    const tabs = document.querySelectorAll('.tab');
+    const betInput = document.getElementById('betInput');
+    const playBtn = document.getElementById('playBtn');
+    const roundMsg = document.getElementById('roundMsg');
+    const minBetLbl = document.getElementById('minBetLbl');
+    const maxBetLbl = document.getElementById('maxBetLbl');
+    const gameSummary = document.getElementById('gameSummary');
+
+    // poker
+    const uiPoker = document.getElementById('uiPoker');
+    const pokerDeal = document.getElementById('pokerDeal');
+    const pokerDraw = document.getElementById('pokerDraw');
+    const pokerHandDiv = document.getElementById('pokerHand');
+    const pokerPayoutDiv = document.getElementById('pokerPayout');
+
+    // horses
+    const uiHorses = document.getElementById('uiHorses');
+    const horseSel = document.getElementById('horseSel');
+    const tracks = document.getElementById('tracks');
+    const raceStart = document.getElementById('raceStart');
+
+    // slots
+    const uiSlots = document.getElementById('uiSlots');
+    const reelsDiv = document.getElementById('reels');
+    const slotInfo = document.getElementById('slotInfo');
+
+    // plinko
+    const uiPlinko = document.getElementById('uiPlinko');
+    const plinkoMode = document.getElementById('plinkoMode');
+    const plinkoDrop = document.getElementById('plinkoDrop');
+    const plinkoSlots = document.getElementById('plinkoSlots');
+
+    // right/admin
+    const adminBox = document.getElementById('adminBox');
+    const adminControls = document.getElementById('adminControls');
+    const cfgMinBet = document.getElementById('cfgMinBet');
+    const cfgMaxBet = document.getElementById('cfgMaxBet');
+    const cfgEdge   = document.getElementById('cfgEdge');
+    const cfgPoker  = document.getElementById('cfgPoker');
+    const cfgSlots  = document.getElementById('cfgSlots');
+    const cfgHorses = document.getElementById('cfgHorses');
+    const cfgPlinko = document.getElementById('cfgPlinko');
+    const saveCfg   = document.getElementById('saveCfg');
+    const resetAdmin= document.getElementById('resetAdmin');
+    const adminMeta = document.getElementById('adminMeta');
+    const historyBox= document.getElementById('historyBox');
+
+    /* =========================
+       State & defaults
+    ========================== */
+    let user=null, uid=null, coinsUnsub=null;
+    let adminUid = null;
+
+    const DEFAULTS = {
+      minBet: 10, maxBet: 1000, houseEdgePct: 3,
+      pokerPaytable: {
+        royalFlush: 250, straightFlush: 50, fourKind: 25, fullHouse: 9,
+        flush: 6, straight: 4, threeKind: 3, twoPair: 2, jacksOrBetter: 1
+      },
+      slotsSymbols: { "🍒":5, "🍋":8, "🔔":15, "⭐":25, "7️⃣":50 },
+      horses: [
+        { name:"Blisk",  odds:2.2 },
+        { name:"Strela", odds:3.0 },
+        { name:"Turbo",  odds:3.8 },
+        { name:"Senca",  odds:5.0 }
+      ],
+      plinko: {
+        easy:   [0,0.5,0.8,1,1,0.8,0.5,0],
+        medium: [0,0.7,0.9,1.2,1.2,0.9,0.7,0],
+        hard:   [0,0.5,0.8,1.5,1.5,0.8,0.5,0]
+      }
+    };
+
+    let CFG = JSON.parse(JSON.stringify(DEFAULTS));
+
+    let currentGame = 'poker';
+    let roundLock = false; // prepreči spam
+
+    /* =========================
+       Auth
+    ========================== */
+    auth.onAuthStateChanged(async (_u)=>{
+      if(!_u){ window.location.href='index.html'; return; }
+      user=_u; uid=user.uid;
+
+      meName.textContent = user.displayName || user.email;
+      if(coinsUnsub) db.ref(`users/${uid}/coins`).off('value', coinsUnsub);
+      coinsUnsub = (snap)=> meCoins.textContent = (snap.val()??0);
+      db.ref(`users/${uid}/coins`).on('value', coinsUnsub);
+
+      // preberi admina in config
+      const [adminSnap, cfgSnap] = await Promise.all([
+        db.ref('casino/adminUid').once('value'),
+        db.ref('casino/config').once('value'),
+      ]);
+      adminUid = adminSnap.val() || null;
+      adminTag.textContent = (uid===adminUid) ? 'da' : 'ne';
+      if(cfgSnap.exists()) CFG = {...DEFAULTS, ...cfgSnap.val()};
+
+      initAdminUI();
+      renderGameSummary();
+      initGamesUI();
+      loadHistory();
+    });
+
+    /* =========================
+       Admin UI
+    ========================== */
+    function initAdminUI(){
+      if(uid===adminUid){
+        adminControls.classList.remove('hidden');
+        adminBox.classList.add('hidden');
+        cfgMinBet.value = CFG.minBet;
+        cfgMaxBet.value = CFG.maxBet;
+        cfgEdge.value   = CFG.houseEdgePct;
+
+        cfgPoker.value  = JSON.stringify(CFG.pokerPaytable, null, 2);
+        cfgSlots.value  = JSON.stringify(CFG.slotsSymbols,  null, 2);
+        cfgHorses.value = JSON.stringify(CFG.horses,        null, 2);
+        cfgPlinko.value = JSON.stringify(CFG.plinko,        null, 2);
+
+        adminMeta.textContent = `Admin UID: ${adminUid}`;
+      } else {
+        adminControls.classList.add('hidden');
+        adminBox.classList.remove('hidden');
+      }
+    }
+
+    saveCfg.onclick = async ()=>{
+      if(uid!==adminUid) return alert('Nisi admin.');
+      try{
+        const newCfg = {
+          minBet: +cfgMinBet.value||10,
+          maxBet: +cfgMaxBet.value||1000,
+          houseEdgePct: Math.max(0, Math.min(20, +cfgEdge.value||0)),
+          pokerPaytable: JSON.parse(cfgPoker.value||'{}'),
+          slotsSymbols:  JSON.parse(cfgSlots.value||'{}'),
+          horses:        JSON.parse(cfgHorses.value||'[]'),
+          plinko:        JSON.parse(cfgPlinko.value||'{}'),
+        };
+        CFG = {...CFG, ...newCfg};
+        await db.ref('casino/config').set(CFG);
+        renderGameSummary();
+        initGamesUI();
+        alert('Nastavitve shranjene.');
+      }catch(e){ alert('Napaka v JSON: '+e.message); }
+    };
+
+    resetAdmin.onclick = async ()=>{
+      if(uid!==adminUid) return alert('Nisi admin.');
+      if(!confirm('Ponastavi admina za Casino?')) return;
+      await db.ref('casino/adminUid').remove();
+      alert('Admin ponastavljen. Naslednji, ki se prijavi z /admin, postane admin.');
+      adminControls.classList.add('hidden');
+      adminBox.classList.remove('hidden');
+      adminTag.textContent = 'ne';
+    };
+
+    /* =========================
+       Tabs
+    ========================== */
+    tabs.forEach(t=>{
+      t.onclick = ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        setGame(t.getAttribute('data-game'));
+      };
+    });
+
+    function setGame(g){
+      currentGame = g;
+      // show/hide UIs
+      uiPoker.style.display  = (g==='poker')  ? '' : 'none';
+      uiHorses.style.display = (g==='horses') ? '' : 'none';
+      uiSlots.style.display  = (g==='slots')  ? '' : 'none';
+      uiPlinko.style.display = (g==='plinko') ? '' : 'none';
+      renderGameSummary();
+    }
+
+    function renderGameSummary(){
+      minBetLbl.textContent = CFG.minBet;
+      maxBetLbl.textContent = CFG.maxBet;
+      if(currentGame==='poker'){
+        const p = CFG.pokerPaytable;
+        gameSummary.textContent =
+`Video Poker – Jacks or Better
+Izplačila (x stava):
+Royal Flush: ${p.royalFlush}
+Straight Flush: ${p.straightFlush}
+Four of a Kind: ${p.fourKind}
+Full House: ${p.fullHouse}
+Flush: ${p.flush}, Straight: ${p.straight}
+Three of a Kind: ${p.threeKind}
+Two Pair: ${p.twoPair}
+Jacks or Better: ${p.jacksOrBetter}`;
+      } else if(currentGame==='horses'){
+        gameSummary.textContent = 'Konji: \n' + CFG.horses.map(h=>`${h.name}: kvota ${h.odds}x`).join('\n');
+      } else if(currentGame==='slots'){
+        gameSummary.textContent = 'Slots (srednja linija):\n' + Object.entries(CFG.slotsSymbols).map(([s,m])=>`${s} = x${m}`).join('\n');
+      } else if(currentGame==='plinko'){
+        gameSummary.textContent =
+          'Plinko multiplikatorji (levo→desno):\n' +
+          Object.entries(CFG.plinko).map(([k,arr])=>`${k}: ${arr.join(' , ')}`).join('\n');
+      }
+    }
+
+    /* =========================
+       History (zadnjih 12)
+    ========================== */
+    function loadHistory(){
+      db.ref(`casino/history/${uid}`).limitToLast(12).on('value', snap=>{
+        const data = snap.val()||{};
+        const entries = Object.entries(data).sort((a,b)=>a[0].localeCompare(b[0]));
+        historyBox.innerHTML = '';
+        entries.reverse().forEach(([,h])=>{
+          const div = document.createElement('div');
+          div.className='table';
+          const sign = h.delta>=0 ? '+' : '';
+          div.innerHTML = `<div class="muted">${new Date(h.ts).toLocaleString()}</div>
+          <div><b>${h.game}</b> – stava: ${h.bet}, izplačilo: ${h.payout} (${sign}${h.delta})</div>
+          <div class="muted">${h.note||''}</div>`;
+          historyBox.appendChild(div);
+        });
+      });
+    }
+
+    async function logHistory(entry){
+      const key = db.ref().push().key;
+      await db.ref(`casino/history/${uid}/${key}`).set(entry);
+    }
+
+    /* =========================
+       Coins helpers
+    ========================== */
+    async function deductBet(bet){
+      const ref = db.ref(`users/${uid}/coins`);
+      const tx = await ref.transaction(c=>{
+        c = (+c||0);
+        if(c<bet) return; // abort
+        return c - bet;
+      });
+      return tx.committed;
+    }
+    async function payWin(amount){
+      await db.ref(`users/${uid}/coins`).transaction(c=>(+c||0)+(+amount||0));
+    }
+
+    function clampBet(){
+      let b = Math.floor(+betInput.value||0);
+      b = Math.max(CFG.minBet, Math.min(CFG.maxBet, b));
+      betInput.value = b;
+      return b;
+    }
+
+    function withEdge(mult){
+      // enostavno: rahlo znižaj multiplikator glede na houseEdgePct
+      const edge = Math.max(0, Math.min(20, CFG.houseEdgePct||0));
+      return +(mult * (1 - edge/100)).toFixed(3);
+    }
+
+    function srandInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+    /* =========================
+       POKER (Video Poker – 5 kart, 1 draw)
+    ========================== */
+    const SUITS = ['♠','♥','♦','♣'];
+    const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+
+    function newDeck(){
+      const d=[];
+      for(const s of SUITS) for(const r of RANKS) d.push(r+s);
+      for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+      return d;
+    }
+    function rankVal(r){ return RANKS.indexOf(r)+2; }
+    function parseCard(c){
+      const s = c.slice(-1);
+      const r = c.slice(0,-1);
+      return {r,s};
+    }
+
+    function isFlush(cards){
+      const s = cards.map(c=>parseCard(c).s);
+      return s.every(x=>x===s[0]);
+    }
+    function isStraight(values){
+      const v = [...new Set(values)].sort((a,b)=>a-b);
+      if(v.length!==5) return false;
+      // normal
+      if(v[4]-v[0]===4) return true;
+      // wheel A-2-3-4-5
+      if(JSON.stringify(v)==='[2,3,4,5,14]') return true;
+      return false;
+    }
+    function countRanks(cards){
+      const m={};
+      for(const c of cards){ const {r}=parseCard(c); m[r]=(m[r]||0)+1; }
+      return m;
+    }
+    function evaluatePoker(cards){
+      // vrne {name, mult}
+      const p = CFG.pokerPaytable;
+      const ranks = cards.map(c=>parseCard(c).r);
+      const values = ranks.map(rankVal);
+      const flush = isFlush(cards);
+      const straight = isStraight(values);
+      const counts = Object.values(countRanks(cards)).sort((a,b)=>b-a); // npr. [3,2]
+
+      // royal flush (10-J-Q-K-A iste barve)
+      const isRoyal = flush && straight && Math.min(...values)>=10;
+      if(isRoyal) return { name:'Royal Flush', mult: p.royalFlush };
+
+      if(flush && straight) return { name:'Straight Flush', mult: p.straightFlush };
+      if(counts[0]===4)     return { name:'Four of a Kind',  mult: p.fourKind };
+      if(counts[0]===3 && counts[1]===2) return { name:'Full House', mult: p.fullHouse };
+      if(flush)    return { name:'Flush',    mult: p.flush };
+      if(straight) return { name:'Straight', mult: p.straight };
+      if(counts[0]===3) return { name:'Three of a Kind', mult: p.threeKind };
+      if(counts[0]===2 && counts[1]===2) return { name:'Two Pair', mult: p.twoPair };
+
+      // Jacks or Better
+      if(counts[0]===2){
+        // preveri ali par J,Q,K,A
+        const pairs = Object.entries(countRanks(cards)).filter(([,n])=>n===2).map(([r])=>r);
+        if(pairs.some(r=>['J','Q','K','A'].includes(r))) return { name:'Jacks or Better', mult: p.jacksOrBetter };
+      }
+      return { name:'Ni dobitka', mult: 0 };
+    }
+
+    let pokerDeck=[], pokerHand=[], pokerHold=[false,false,false,false,false], pokerStage='idle';
+    function renderPokerHand(){
+      pokerHandDiv.innerHTML = '';
+      pokerHand.forEach((c,i)=>{
+        const d=document.createElement('div');
+        d.className='card' + (pokerHold[i]?' hold':'');
+        d.textContent=c;
+        if(c.includes('♥')||c.includes('♦')) d.style.color='#ef476f';
+        d.onclick=()=>{
+          if(pokerStage!=='deal') return;
+          pokerHold[i]=!pokerHold[i];
+          renderPokerHand();
+        };
+        pokerHandDiv.appendChild(d);
+      });
+    }
+    function renderPokerPaytable(){
+      pokerPayoutDiv.innerHTML = '';
+      const p = CFG.pokerPaytable;
+      const order = [
+        ['Royal Flush', p.royalFlush],
+        ['Straight Flush', p.straightFlush],
+        ['Four of a Kind', p.fourKind],
+        ['Full House', p.fullHouse],
+        ['Flush', p.flush],
+        ['Straight', p.straight],
+        ['Three of a Kind', p.threeKind],
+        ['Two Pair', p.twoPair],
+        ['Jacks or Better', p.jacksOrBetter],
+      ];
+      order.forEach(([n,m])=>{
+        const a=document.createElement('div'); a.textContent=n;
+        const b=document.createElement('div'); b.textContent='x'+m;
+        pokerPayoutDiv.appendChild(a); pokerPayoutDiv.appendChild(b);
+      });
+    }
+
+    pokerDeal.onclick = async ()=>{
+      if(roundLock) return;
+      const bet = clampBet(); if(bet<CFG.minBet||bet>CFG.maxBet) return alert('Napačna stava.');
+      roundLock = true; playBtn.disabled = true; roundMsg.textContent='...';
+      if(!(await deductBet(bet))){ roundLock=false; playBtn.disabled=false; roundMsg.textContent='Premalo kovancev'; return; }
+
+      // nova roka
+      pokerDeck=newDeck();
+      pokerHand=[pokerDeck.pop(),pokerDeck.pop(),pokerDeck.pop(),pokerDeck.pop(),pokerDeck.pop()];
+      pokerHold=[false,false,false,false,false];
+      pokerStage='deal';
+      pokerDraw.disabled=false;
+      renderPokerHand();
+
+      // log partial
+      await logHistory({ ts:Date.now(), game:'Poker', bet, payout:0, delta:-bet, note:'Deal' });
+
+      roundMsg.textContent='Izberi HOLD, nato Draw';
+      roundLock=false; playBtn.disabled=false;
+    };
+
+    pokerDraw.onclick = async ()=>{
+      if(pokerStage!=='deal' || roundLock) return;
+      roundLock=true; playBtn.disabled=true; pokerDraw.disabled=true; roundMsg.textContent='Obračun...';
+      // zamenjaj ne-HOLD karte
+      for(let i=0;i<5;i++){ if(!pokerHold[i]) pokerHand[i]=pokerDeck.pop(); }
+      renderPokerHand();
+
+      const res = evaluatePoker(pokerHand);
+      const bet = clampBet();
+      const mult = withEdge(res.mult);
+      const payout = Math.floor(bet * mult);
+
+      if(payout>0) await payWin(payout);
+      await logHistory({ ts:Date.now(), game:'Poker', bet, payout, delta:(payout), note: res.name });
+
+      roundMsg.textContent = res.name + (payout>0? ` (+${payout})` : ' (0)');
+      pokerStage='idle';
+      roundLock=false; playBtn.disabled=false;
+    };
+
+    /* =========================
+       HORSES
+    ========================== */
+    function initHorsesUI(){
+      horseSel.innerHTML='';
+      CFG.horses.forEach((h,idx)=>{
+        const o=document.createElement('option');
+        o.value=idx; o.textContent=`${h.name} (x${h.odds})`;
+        horseSel.appendChild(o);
+      });
+      tracks.innerHTML='';
+      CFG.horses.forEach((h,i)=>{
+        const lane=document.createElement('div'); lane.className='lane';
+        const left=document.createElement('div'); left.className='horseName'; left.textContent = `${h.name} (x${h.odds})`;
+        const bar=document.createElement('div'); bar.className='bar';
+        const prog=document.createElement('div'); prog.className='prog'; prog.style.width='0%'; prog.id=`prog_${i}`;
+        bar.appendChild(prog);
+        lane.appendChild(left); lane.appendChild(bar);
+        tracks.appendChild(lane);
+      });
+    }
+
+    raceStart.onclick = async ()=>{
+      if(roundLock) return;
+      const bet = clampBet(); if(bet<CFG.minBet||bet>CFG.maxBet) return alert('Napačna stava.');
+      const pick = +horseSel.value||0;
+
+      roundLock=true; playBtn.disabled=true; raceStart.disabled=true; roundMsg.textContent='Dirka...';
+      if(!(await deductBet(bet))){ roundLock=false; playBtn.disabled=false; raceStart.disabled=false; roundMsg.textContent='Premalo kovancev'; return; }
+
+      // simulacija dirke
+      const progress = CFG.horses.map(()=>0);
+      const timer=setInterval(()=>{
+        let finished=-1;
+        for(let i=0;i<progress.length;i++){
+          progress[i] = Math.min(100, progress[i] + srandInt(1,5));
+          const el=document.getElementById(`prog_${i}`);
+          if(el) el.style.width = progress[i]+'%';
+          if(progress[i]===100 && finished<0) finished=i;
+        }
+        if(finished>=0){
+          clearInterval(timer);
+          const winner = finished;
+          const chosenWin = (winner===pick);
+          let payout = 0;
+          if(chosenWin){
+            const mult = withEdge(CFG.horses[winner].odds);
+            payout = Math.floor(bet * mult);
+          }
+          (async ()=>{
+            if(payout>0) await payWin(payout);
+            await logHistory({ ts:Date.now(), game:'Horses', bet, payout, delta:payout, note:`Zmagal: ${CFG.horses[winner].name}` });
+            roundMsg.textContent = chosenWin? `Bravo! +${payout}` : `Zmagal je ${CFG.horses[winner].name}`;
+            roundLock=false; playBtn.disabled=false; raceStart.disabled=false;
+          })();
+        }
+      }, 100);
+    };
+
+    /* =========================
+       SLOTS (3x3, 1 line payout)
+    ========================== */
+    function initSlotsUI(){
+      slotInfo.innerHTML='';
+      for(const [sym,m] of Object.entries(CFG.slotsSymbols)){
+        const a=document.createElement('div'); a.textContent=sym;
+        const b=document.createElement('div'); b.textContent='x'+m;
+        slotInfo.appendChild(a); slotInfo.appendChild(b);
+      }
+      // reset reels
+      const cells = reelsDiv.querySelectorAll('.cell');
+      cells.forEach(c=>c.textContent='–');
+    }
+
+    function spinReel(){
+      const syms = Object.keys(CFG.slotsSymbols);
+      return [0,1,2].map(()=> syms[srandInt(0, syms.length-1)]); // 3 symbols per reel (top/mid/bottom)
+    }
+
+    async function playSlots(){
+      const bet = clampBet(); if(bet<CFG.minBet||bet>CFG.maxBet) return alert('Napačna stava.');
+      roundLock=true; playBtn.disabled=true; roundMsg.textContent='Vrtenje...';
+      if(!(await deductBet(bet))){ roundLock=false; playBtn.disabled=false; roundMsg.textContent='Premalo kovancev'; return; }
+
+      // naključno "zasukaj" – prikažemo 3×3
+      const r1 = spinReel(), r2 = spinReel(), r3 = spinReel();
+      const grid = [
+        [r1[0], r2[0], r3[0]],
+        [r1[1], r2[1], r3[1]],
+        [r1[2], r2[2], r3[2]],
+      ];
+      const cells = reelsDiv.querySelectorAll('.cell');
+      let k=0; for(let i=0;i<3;i++) for(let j=0;j<3;j++) cells[k++].textContent = grid[i][j];
+
+      // Plača samo srednja linija (row 1)
+      const a=grid[1][0], b=grid[1][1], c=grid[1][2];
+      let payout=0, note='Ni dobitka';
+      if(a===b && b===c){
+        const mult = withEdge(CFG.slotsSymbols[a]||0);
+        payout = Math.floor(bet * mult);
+        note = `3× ${a} (x${mult})`;
+      }
+      if(payout>0) await payWin(payout);
+      await logHistory({ ts:Date.now(), game:'Slots', bet, payout, delta:payout, note });
+
+      roundMsg.textContent = payout>0? `+${payout}` : '0';
+      roundLock=false; playBtn.disabled=false;
+    }
+
+    /* =========================
+       PLINKO
+    ========================== */
+    function initPlinkoUI(){
+      // render slot labels
+      plinkoSlots.innerHTML='';
+      const arr = CFG.plinko[plinkoMode.value] || CFG.plinko.medium;
+      arr.forEach(m=>{
+        const d=document.createElement('div'); d.className='slot'; d.textContent = 'x'+m;
+        plinkoSlots.appendChild(d);
+      });
+    }
+    plinkoMode.onchange = initPlinkoUI;
+
+    async function playPlinko(){
+      const bet = clampBet(); if(bet<CFG.minBet||bet>CFG.maxBet) return alert('Napačna stava.');
+      roundLock=true; playBtn.disabled=true; plinkoDrop.disabled=true; roundMsg.textContent='Spuščam...';
+      if(!(await deductBet(bet))){ roundLock=false; playBtn.disabled=false; plinkoDrop.disabled=false; roundMsg.textContent='Premalo kovancev'; return; }
+
+      const arr = CFG.plinko[plinkoMode.value] || CFG.plinko.medium;
+      // enostaven model: 7 odločitev L/R -> indeks 0..7
+      let idx = 0;
+      for(let i=0;i<7;i++){
+        if(Math.random()<0.5) idx = Math.max(0, idx-1);
+        else idx = Math.min(arr.length-1, idx+1);
+      }
+      const mult = withEdge(arr[idx]||0);
+      const payout = Math.floor(bet * mult);
+
+      if(payout>0) await payWin(payout);
+      await logHistory({ ts:Date.now(), game:'Plinko', bet, payout, delta:payout, note:`Slot #${idx+1} (x${mult})` });
+
+      roundMsg.textContent = payout>0? `+${payout}` : '0';
+      roundLock=false; playBtn.disabled=false; plinkoDrop.disabled=false;
+    }
+
+    /* =========================
+       Shared "Igraj rundo" dispatcher
+    ========================== */
+    playBtn.onclick = ()=>{
+      if(currentGame==='poker'){ pokerDeal.click(); }
+      else if(currentGame==='horses'){ raceStart.click(); }
+      else if(currentGame==='slots'){ playSlots(); }
+      else if(currentGame==='plinko'){ plinkoDrop.click(); }
+    };
+
+    /* =========================
+       Init UIs after config
+    ========================== */
+    function initGamesUI(){
+      renderPokerPaytable();
+      renderPokerHand(); // empty
+      initHorsesUI();
+      initSlotsUI();
+      initPlinkoUI();
+    }
+
+    /* =========================
+       Admin claim (from index.html using /admin)
+       NOTE: tukaj ne prevzemamo admina. To storiš na login strani:
+       email "/admin" za CASINO -> index login koda naj zapiše `casino/adminUid`
+    ========================== */
+  </script>
+</body>
+</html>
