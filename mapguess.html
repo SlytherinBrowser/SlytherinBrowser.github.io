@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>MapGuess (Leaflet, MP)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{ --bg:#0b1020; --panel:#111936; --muted:#a9b6d6; --txt:#ecf2ff; --acc:#4a90e2; --ok:#20c997; --bad:#ef476f; }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:12px 14px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    header h1{font-size:18px;margin:0 10px 0 0}
+    .tag{font-size:12px;background:#16244c;padding:2px 6px;border-radius:6px;border:1px solid #273b7d}
+    .muted{color:var(--muted)}
+    main{padding:14px;display:grid;gap:14px;grid-template-columns:320px 1fr 360px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:12px}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--txt)}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .sep{height:1px;background:#1b264b;margin:8px 0}
+    .list{max-height:400px;overflow:auto}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #1d2852;border-radius:10px;background:#0d1530}
+    #map{width:100%;height:520px;border-radius:12px;border:1px solid #223064}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
+    .oktxt{color:var(--ok)} .badtxt{color:var(--bad)}
+    .right{text-align:right}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🗺️ MapGuess (Leaflet)</h1>
+    <span class="tag">Uporabnik: <b id="meName">-</b></span>
+    <span class="tag">Kovanci: <b id="meCoins">0</b></span>
+    <span class="tag">Soba: <b id="roomIdHdr">–</b></span>
+    <div style="margin-left:auto" class="row">
+      <button onclick="window.location.href='index.html'">🏠 Domov</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Levo: sobe -->
+    <aside class="panel">
+      <h2>🔧 Sobe</h2>
+      <div class="stack">
+        <label>Ime sobe: <input id="roomName" placeholder="npr. Geoguess #1"></label>
+        <div class="row">
+          <label>Min stava: <input id="minBet" type="number" min="10" value="10" style="width:120px"></label>
+          <label>Max igralcev: <input id="maxPlayers" type="number" min="2" max="20" value="8" style="width:120px"></label>
+        </div>
+        <button id="createRoom" class="ok">Ustvari sobo</button>
+      </div>
+      <div class="sep"></div>
+      <h3>Aktivne sobe</h3>
+      <div id="roomsList" class="list stack"></div>
+    </aside>
+
+    <!-- Sredina: zemljevid + runda -->
+    <section class="panel">
+      <div id="noRoom">
+        <div class="muted">Ustvari ali se pridruži sobi levo.</div>
+      </div>
+
+      <div id="roomUI" style="display:none">
+        <div class="row">
+          <h2 id="roomTitle">Soba</h2>
+          <span class="pill" id="roomStatus">lobby</span>
+        </div>
+        <div class="row">
+          <div class="tag">Vloga v tej rundi: <b id="myRole">–</b></div>
+          <div class="tag">Izbirač: <b id="chooserName">–</b></div>
+          <div class="tag">Pot: <b id="potLbl">0</b></div>
+        </div>
+        <div class="sep"></div>
+
+        <div id="map"></div>
+
+        <div class="row" style="margin-top:8px">
+          <div id="chooserUI" class="row" style="display:none">
+            <span class="pill">Klikni na zemljevid za cilj, nato potrdi:</span>
+            <button id="setTarget" class="primary" disabled>🔒 Potrdi cilj</button>
+          </div>
+          <div id="guesserUI" class="row" style="display:none">
+            <span class="pill">En poskus: klikni svojo lokacijo, potem potrdi:</span>
+            <button id="submitGuess" class="ok" disabled>✅ Oddaj ugib</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <span id="roundMsg" class="muted">Čakanje…</span>
+          <span id="countdown" class="pill"></span>
+        </div>
+
+        <div class="sep"></div>
+        <div class="row">
+          <button id="startRound" class="primary">Začni rundo</button>
+          <button id="leaveRoom" class="warn">Zapusti sobo</button>
+          <button id="closeRoom" class="danger">Zapri sobo</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Desno: igralci & zgodovina -->
+    <aside class="panel">
+      <h2>Igralci</h2>
+      <div id="playersBox" class="list stack"></div>
+      <div class="sep"></div>
+      <h2>Zgodovina</h2>
+      <div id="historyBox" class="list stack"></div>
+      <div class="sep"></div>
+      <h3>Pravila</h3>
+      <div class="stack">
+        <div>• V vsaki rundi sistem naključno izbere <b>Izbirača</b>.</div>
+        <div>• Izbirač na zemljevidu klikne <b>cilj</b> (skrito za ostale) in potrdi.</div>
+        <div>• Ostali imajo <b>en poskus</b> (klik + oddaja).</div>
+        <div>• Ko se runda zaključi, se razkrije cilj; <b>najbližji</b> pobere <b>pot</b>.</div>
+        <div>• Izbirač je <b>nevtralen</b> (ne plača, nič ne dobi).</div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    // ===== Firebase =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    // ===== UI refs =====
+    const meName = document.getElementById('meName');
+    const meCoins= document.getElementById('meCoins');
+    const roomIdHdr = document.getElementById('roomIdHdr');
+
+    const roomName = document.getElementById('roomName');
+    const minBet = document.getElementById('minBet');
+    const maxPlayers = document.getElementById('maxPlayers');
+    const createRoom = document.getElementById('createRoom');
+    const roomsList = document.getElementById('roomsList');
+
+    const noRoom = document.getElementById('noRoom');
+    const roomUI = document.getElementById('roomUI');
+    const roomTitle = document.getElementById('roomTitle');
+    const roomStatus = document.getElementById('roomStatus');
+
+    const playersBox = document.getElementById('playersBox');
+    const historyBox = document.getElementById('historyBox');
+
+    const mapDiv = document.getElementById('map');
+    const chooserUI = document.getElementById('chooserUI');
+    const setTargetBtn = document.getElementById('setTarget');
+    const guesserUI = document.getElementById('guesserUI');
+    const submitGuessBtn = document.getElementById('submitGuess');
+    const roundMsg = document.getElementById('roundMsg');
+    const countdownEl = document.getElementById('countdown');
+    const startRoundBtn = document.getElementById('startRound');
+    const leaveRoomBtn = document.getElementById('leaveRoom');
+    const closeRoomBtn = document.getElementById('closeRoom');
+    const myRoleEl = document.getElementById('myRole');
+    const chooserNameEl = document.getElementById('chooserName');
+    const potLbl = document.getElementById('potLbl');
+
+    // ===== State =====
+    let user=null, uid=null;
+    let myRoomId=null, iAmHost=false;
+    let map, targetMarker=null, guessMarker=null, revealTargetMarker=null, revealLineLayer=null;
+    let roomListener=null, myPlayerListener=null;
+    let roundTimer=null;
+
+    // ===== Auth =====
+    auth.onAuthStateChanged(async (_u)=>{
+      if(!_u){ window.location.href='index.html'; return; }
+      user=_u; uid=user.uid;
+      meName.textContent = user.displayName || user.email;
+      db.ref(`users/${uid}/coins`).on('value', s=> meCoins.textContent = (s.val()??0));
+      watchRooms();
+      loadHistory();
+      initMap();
+    });
+
+    // ===== Leaflet init =====
+    function initMap(){
+      if(map) return;
+      map = L.map('map', { zoomControl:true }).setView([20, 0], 2);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      map.on('click', (e)=>{
+        const latlng = e.latlng;
+        if(!myRoomId) return;
+
+        // Če sem izbirač in runda je "select": označi tarčo (lokalno) in omogoči gumb
+        if(chooserUI.style.display !== 'none' && setTargetBtn.disabled!==undefined){
+          if(targetMarker) map.removeLayer(targetMarker);
+          targetMarker = L.marker(latlng, { draggable:false }).addTo(map).bindPopup('Cilj').openPopup();
+          setTargetBtn.disabled = false;
+          setTargetBtn.dataset.lat = latlng.lat;
+          setTargetBtn.dataset.lng = latlng.lng;
+        }
+
+        // Če sem ugibalec in runda je "guess": označi svoj guess in omogoči oddajo
+        if(guesserUI.style.display !== 'none' && submitGuessBtn.disabled!==undefined){
+          if(guessMarker) map.removeLayer(guessMarker);
+          guessMarker = L.marker(latlng, { draggable:false, icon: L.divIcon({className:'', html:'📍', iconSize:[24,24]}) })
+                        .addTo(map).bindPopup('Tvoj ugib').openPopup();
+          submitGuessBtn.disabled = false;
+          submitGuessBtn.dataset.lat = latlng.lat;
+          submitGuessBtn.dataset.lng = latlng.lng;
+        }
+      });
+    }
+
+    // ===== Rooms list =====
+    function watchRooms(){
+      db.ref('geomap/rooms').on('value', snap=>{
+        const data = snap.val()||{};
+        roomsList.innerHTML='';
+        Object.entries(data).forEach(([rid,r])=>{
+          if(r.closed) return;
+          const div=document.createElement('div');
+          const count = r.players ? Object.keys(r.players).length : 0;
+          div.className='kv';
+          div.innerHTML = `
+            <div>
+              <b>${r.name||rid}</b> • status: ${r.status||'lobby'}
+              <div class="muted">Min stava: ${r.minBet||10} • Max: ${r.maxPlayers||8}</div>
+              <div class="muted">Igralci: ${count}</div>
+            </div>
+            <div><button class="primary">Pridruži se</button></div>
+          `;
+          div.querySelector('button').onclick = ()=> joinRoom(rid);
+          roomsList.appendChild(div);
+        });
+      });
+    }
+
+    // ===== Create / join / leave =====
+    createRoom.onclick = async ()=>{
+      const name = (roomName.value||'Soba')+'';
+      const min = Math.max(10, +minBet.value||10);
+      const maxP= Math.min(20, Math.max(2, +maxPlayers.value||8));
+      const rid = 'room_'+Date.now();
+      await db.ref(`geomap/rooms/${rid}`).set({
+        name, hostUid: uid, status:'lobby', minBet:min, maxPlayers:maxP, createdAt: Date.now(),
+        chooserUid: null, round: null, pot: 0, closed: false
+      });
+      await joinRoom(rid);
+    };
+
+    async function joinRoom(rid){
+      const ref = db.ref(`geomap/rooms/${rid}`);
+      const snap = await ref.once('value');
+      if(!snap.exists()) return alert('Soba ne obstaja.');
+      const r = snap.val();
+      if(r.closed) return alert('Soba je zaprta.');
+      const count = r.players ? Object.keys(r.players).length : 0;
+      if(count >= (r.maxPlayers||8)) return alert('Soba je polna.');
+
+      await db.ref(`geomap/rooms/${rid}/players/${uid}`).set({
+        name: user.displayName || user.email, state:'idle', bet:0, guess:null, dist:null
+      });
+
+      myRoomId = rid;
+      iAmHost = r.hostUid === uid;
+      enterRoomUI(rid);
+    }
+
+    async function leaveRoom(){
+      if(!myRoomId) return;
+      const path = `geomap/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value');
+      const r = snap.val();
+      await db.ref(`${path}/players/${uid}`).remove();
+      if(r && r.hostUid===uid){
+        await db.ref(path).update({ closed:true, status:'closed' });
+      }
+      exitRoomUI();
+    }
+
+    leaveRoomBtn.onclick = leaveRoom;
+    closeRoomBtn.onclick = async ()=>{
+      if(!myRoomId) return; const path=`geomap/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value');
+      if(snap.exists()){
+        const r=snap.val();
+        if(r.hostUid!==uid) return alert('Samo host lahko zapre sobo.');
+        await db.ref(path).update({ closed:true, status:'closed' });
+      }
+      exitRoomUI();
+    };
+
+    // ===== UI attach/detach =====
+    function enterRoomUI(rid){
+      roomIdHdr.textContent = rid;
+      roomTitle.textContent = 'Soba ' + rid.slice(-6);
+      noRoom.style.display='none';
+      roomUI.style.display='';
+      startRoundBtn.onclick = hostStartRound;
+
+      // listeners
+      if(roomListener) db.ref(`geomap/rooms/${rid}`).off('value', roomListener);
+      roomListener = (snap)=>{
+        const r = snap.val(); if(!r) return;
+        roomStatus.textContent = r.status;
+        potLbl.textContent = r.pot||0;
+        const chooserUid = r.chooserUid || null;
+        chooserNameEl.textContent = chooserUid && r.players && r.players[chooserUid] ? (r.players[chooserUid].name||chooserUid) : '–';
+
+        // moja vloga
+        const myRole = chooserUid===uid ? 'Izbirač' : 'Igralec';
+        myRoleEl.textContent = myRole;
+
+        // prikaz kontrol
+        chooserUI.style.display = (myRole==='Izbirač' && r.status==='select') ? '' : 'none';
+        guesserUI.style.display = (myRole!=='Izbirač' && r.status==='guess') ? '' : 'none';
+        setTargetBtn.disabled = true;
+        submitGuessBtn.disabled = true;
+
+        roundMsg.textContent = msgForStatus(r.status);
+        renderPlayers(r.players||{});
+
+        // reveal vizual
+        if(revealTargetMarker){ map.removeLayer(revealTargetMarker); revealTargetMarker=null; }
+        if(revealLineLayer){ map.removeLayer(revealLineLayer); revealLineLayer=null; }
+
+        if(r.status==='reveal' || r.status==='settle'){
+          if(r.round && r.round.target){
+            const {lat,lng}=r.round.target;
+            revealTargetMarker = L.marker([lat,lng], {icon: L.divIcon({className:'',html:'🎯',iconSize:[24,24]})})
+                                    .addTo(map).bindPopup('Cilj').openPopup();
+
+            // Če imam svoj guess, potegni črto do cilja
+            const me = r.players && r.players[uid];
+            if(me && me.guess && me.guess.lat){
+              revealLineLayer = L.polyline([[me.guess.lat, me.guess.lng],[lat,lng]], {color:'#4a90e2'}).addTo(map);
+              map.fitBounds(revealLineLayer.getBounds(), {padding:[30,30]});
+            } else {
+              map.setView([lat,lng], 4);
+            }
+          }
+        }
+
+        // countdown prikaz
+        if(r.round && r.round.endsAt){
+          const left = Math.max(0, Math.floor((r.round.endsAt - Date.now())/1000));
+          countdownEl.textContent = left ? (left+'s') : '';
+        } else {
+          countdownEl.textContent = '';
+        }
+      };
+      db.ref(`geomap/rooms/${rid}`).on('value', roomListener);
+
+      // moj player listener
+      if(myPlayerListener) db.ref(`geomap/rooms/${rid}/players/${uid}`).off('value', myPlayerListener);
+      myPlayerListener = (snap)=>{
+        const me = snap.val()||{};
+        // nič posebnega tukaj; UI že kontroliramo preko room statusa
+      };
+      db.ref(`geomap/rooms/${rid}/players/${uid}`).on('value', myPlayerListener);
+    }
+
+    function exitRoomUI(){
+      if(roomListener) db.ref(`geomap/rooms/${myRoomId}`).off('value', roomListener);
+      if(myPlayerListener) db.ref(`geomap/rooms/${myRoomId}/players/${uid}`).off('value', myPlayerListener);
+      myRoomId=null; iAmHost=false;
+      roomIdHdr.textContent='–';
+      roomUI.style.display='none';
+      noRoom.style.display='';
+      if(targetMarker){ map.removeLayer(targetMarker); targetMarker=null; }
+      if(guessMarker){ map.removeLayer(guessMarker); guessMarker=null; }
+      if(revealTargetMarker){ map.removeLayer(revealTargetMarker); revealTargetMarker=null; }
+      if(revealLineLayer){ map.removeLayer(revealLineLayer); revealLineLayer=null; }
+      countdownEl.textContent='';
+    }
+
+    function renderPlayers(players){
+      playersBox.innerHTML='';
+      Object.entries(players).forEach(([pid,p])=>{
+        const d=document.createElement('div');
+        d.className='kv';
+        const distTxt = (p.dist!=null) ? (Math.round(p.dist)+' m') : '—';
+        d.innerHTML = `<div><b>${p.name||pid}</b>
+          <div class="muted">Stava: ${p.bet||0} • Razdalja: ${distTxt}</div></div>
+          <div><span class="pill">${p.state||'idle'}</span></div>`;
+        playersBox.appendChild(d);
+      });
+    }
+
+    function msgForStatus(s){
+      switch(s){
+        case 'lobby': return 'V lobbyju. Host lahko začne rundo.';
+        case 'select': return 'Izbirač postavlja cilj…';
+        case 'guess': return 'Oddaj svoj ugib (en poskus).';
+        case 'reveal': return 'Razkritje cilja…';
+        case 'settle': return 'Poračun…';
+        default: return '';
+      }
+    }
+
+    // ===== Round flow (host) =====
+    startRoundBtn.onclick = hostStartRound;
+
+    async function hostStartRound(){
+      if(!myRoomId) return;
+      const path = `geomap/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value'); const r = snap.val(); if(!r) return;
+      if(r.hostUid !== uid) return alert('Samo host lahko začne rundo.');
+      if(r.status!=='lobby') return alert('Runda že teče.');
+
+      const players = r.players||{};
+      const ids = Object.keys(players);
+      if(ids.length < 2) return alert('Potrebna sta vsaj 2 igralca.');
+
+      // Naključno izberi Izbirača
+      const chooserUid = ids[Math.floor(Math.random()*ids.length)];
+
+      // Reset stanj
+      for(const pid of ids){
+        await db.ref(`${path}/players/${pid}`).update({ state:'idle', guess:null, dist:null });
+      }
+
+      await db.ref(path).update({
+        chooserUid,
+        round: { target:null, endsAt: Date.now()+30*1000 }, // 30s za izbiro cilja
+        status:'select'
+      });
+
+      // Po izbiri cilja (ali timeout) → guess faza
+      setTimeout(async ()=>{
+        const snap2 = await db.ref(path).once('value'); const r2 = snap2.val()||{};
+        if(r2.status!=='select') return;
+        if(r2.round && r2.round.target){
+          await startGuessPhase(path, r2);
+        } else {
+          // Ni izbran cilj → naključno postavi blizu središča (fallback)
+          const lat = (Math.random()*140 - 70); // -70..70
+          const lng = (Math.random()*360 - 180); // -180..180
+          await db.ref(path+'/round/target').set({lat,lng});
+          await startGuessPhase(path, r2);
+        }
+      }, 30*1000);
+    }
+
+    async function startGuessPhase(path, r){
+      // Pobiranje stav od vseh NE-izbiračev
+      const minBet = r.minBet||10;
+      const chooserUid = r.chooserUid;
+      const players = r.players||{};
+
+      for(const [pid,p] of Object.entries(players)){
+        const isChooser = pid===chooserUid;
+        const bet = isChooser ? 0 : Math.max(minBet, +p.bet||minBet);
+        if(isChooser){
+          await db.ref(`${path}/players/${pid}/bet`).set(0);
+          continue;
+        }
+        const tx = await db.ref(`users/${pid}/coins`).transaction(c=>{
+          c=(+c||0); if(c<bet) return; return c - bet;
+        });
+        if(!tx.committed){
+          await db.ref(`${path}/players/${pid}`).update({ bet:0, state:'idle' });
+        } else {
+          await db.ref(path+'/pot').transaction(x=>(+x||0)+bet);
+        }
+      }
+
+      await db.ref(path).update({
+        status:'guess',
+        round:{ ...(r.round||{}), endsAt: Date.now()+40*1000 } // 40s za ugib
+      });
+
+      // Timeout -> na reveal/settle
+      setTimeout(async ()=>{
+        const s = await db.ref(path).once('value'); const rr=s.val()||{};
+        if(rr.status==='guess'){ await revealAndSettle(path); }
+      }, 40*1000);
+    }
+
+    // ===== Izbirač akcija: potrdi cilj =====
+    setTargetBtn.onclick = async ()=>{
+      if(!myRoomId) return;
+      const lat = +setTargetBtn.dataset.lat, lng = +setTargetBtn.dataset.lng;
+      if(!lat && !lng && lng!==0) return;
+      const path = `geomap/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value'); const r=snap.val()||{};
+      if(r.status!=='select' || r.chooserUid!==uid) return;
+      await db.ref(path+'/round/target').set({lat,lng});
+      setTargetBtn.disabled = true;
+      roundMsg.textContent = 'Cilj zaklenjen. Počakaj na začetek ugibanja.';
+    };
+
+    // ===== Ugibalec: oddaj ugib =====
+    submitGuessBtn.onclick = async ()=>{
+      if(!myRoomId) return;
+      const lat = +submitGuessBtn.dataset.lat, lng = +submitGuessBtn.dataset.lng;
+      if(!lat && !lng && lng!==0) return;
+      const path = `geomap/rooms/${myRoomId}`;
+      const snap = await db.ref(path).once('value'); const r=snap.val()||{};
+      if(r.status!=='guess' || r.chooserUid===uid) return;
+
+      // Shrani guess
+      await db.ref(`${path}/players/${uid}/guess`).set({lat,lng});
+      await db.ref(`${path}/players/${uid}/state`).set('guessed');
+      submitGuessBtn.disabled = true;
+
+      // Če so vsi (ne-izbirači) oddali, pojdi naprej
+      const players = r.players||{};
+      let all=true;
+      for(const [pid,p] of Object.entries(players)){
+        if(pid===r.chooserUid) continue;
+        const psnap = await db.ref(`${path}/players/${pid}/guess`).once('value');
+        if(!psnap.exists()){ all=false; break; }
+      }
+      if(all){ await revealAndSettle(path); }
+    };
+
+    // ===== Reveal & settle =====
+    function haversine(lat1,lng1,lat2,lng2){
+      const R=6371000; // m
+      const toRad = d=> d*Math.PI/180;
+      const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+      return 2*R*Math.asin(Math.sqrt(a));
+    }
+
+    async function revealAndSettle(path){
+      const snap = await db.ref(path).once('value'); const r = snap.val()||{};
+      if(!r.round || !r.round.target) return;
+      await db.ref(path).update({ status:'reveal', round:{...r.round, endsAt: Date.now()+6*1000} });
+
+      // Izračun razdalj za vse, ki so ugibali
+      const {lat:TLAT, lng:TLNG} = r.round.target;
+      const players = r.players||{};
+      for(const [pid,p] of Object.entries(players)){
+        if(pid===r.chooserUid) { await db.ref(`${path}/players/${pid}/dist`).set(null); continue; }
+        if(p.guess && typeof p.guess.lat==='number'){
+          const d = Math.floor(haversine(p.guess.lat,p.guess.lng, TLAT,TLNG));
+          await db.ref(`${path}/players/${pid}/dist`).set(d);
+        } else {
+          // ni ugibal -> velika kazen (obravnavamo kot najdlje)
+          await db.ref(`${path}/players/${pid}/dist`).set(99999999);
+        }
+      }
+
+      // Po 6s poračun
+      setTimeout(async ()=>{
+        const s2 = await db.ref(path).once('value'); const rr=s2.val()||{};
+        if(rr.status!=='reveal') return;
+        await settlePayouts(path, rr);
+      }, 6000);
+    }
+
+    async function settlePayouts(path, r){
+      await db.ref(path).update({ status:'settle' });
+      const players=r.players||{};
+      const chooser=r.chooserUid;
+      // Najmanjša razdalja med ne-izbirači
+      let bestDist=Infinity, winners=[];
+      for(const [pid,p] of Object.entries(players)){
+        if(pid===chooser) continue;
+        const d = (p.dist!=null)? +p.dist : Infinity;
+        if(d < bestDist-1){ bestDist=d; winners=[pid]; }
+        else if(Math.abs(d-bestDist) <= 1){ winners.push(pid); }
+      }
+
+      const pot = +r.pot||0;
+      const share = winners.length ? Math.floor(pot / winners.length) : 0;
+      for(const wid of winners){
+        if(share>0){
+          await db.ref(`users/${wid}/coins`).transaction(c=>(+c||0)+share);
+        }
+      }
+
+      // zapis zgodovine
+      const ts = Date.now();
+      for(const [pid,p] of Object.entries(players)){
+        const isChooser = (pid===chooser);
+        const bet = isChooser ? 0 : (+p.bet||r.minBet||10);
+        let payout = 0, note='';
+        if(isChooser){
+          payout = 0; note='Izbirač (nevtralen)';
+        } else {
+          const win = winners.includes(pid);
+          payout = win ? share : 0;
+          note = win ? `Zmage share ${share}, dist ${p.dist}m` : `Izguba, dist ${p.dist}m`;
+        }
+        const key=db.ref().push().key;
+        await db.ref(`casino/history/${pid}/${key}`).set({ ts, game:'MapGuess', bet, payout, delta:(payout - bet), note });
+        // reset bet za naslednjo rundo
+        await db.ref(`${path}/players/${pid}/bet`).set(0);
+      }
+
+      // reset pot in preklop nazaj v lobby
+      await db.ref(path).update({ status:'lobby', pot:0, round:null, chooserUid:null });
+    }
+
+    // ===== Kontrole v fazah (enable/disable) – prek status listenerja =====
+    // (že opravljeno skozi UI logiko in roomListener)
+
+    // ===== History =====
+    function loadHistory(){
+      db.ref(`casino/history/${uid}`).limitToLast(12).on('value', snap=>{
+        const data=snap.val()||{};
+        const arr=Object.entries(data).sort((a,b)=>a[0].localeCompare(b[0])).reverse();
+        historyBox.innerHTML='';
+        arr.forEach(([,h])=>{
+          const d=document.createElement('div'); d.className='kv';
+          const sign=h.delta>=0?'+':'';
+          d.innerHTML = `<div>
+            <div class="muted">${new Date(h.ts).toLocaleString()}</div>
+            <div><b>${h.game}</b> – stava ${h.bet}, izplačilo ${h.payout} (${sign}${h.delta})</div>
+            <div class="muted">${h.note||''}</div>
+          </div>`;
+          historyBox.appendChild(d);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
