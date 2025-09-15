@@ -2993,19 +2993,30 @@ function cancelReply() {
 
 
 const languages = [
+  { code: "none", name: "Brez prevoda" }, // prva možnost
   { code: "sl", name: "Slovenščina" },
   { code: "en", name: "English" },
   { code: "de", name: "Deutsch" },
   { code: "tr", name: "Türkçe" },
   { code: "fr", name: "Français" },
   { code: "it", name: "Italiano" },
-  { code: "es", name: "Español" }
+  { code: "es", name: "Español" },
+  { code: "pt", name: "Português" },
+  { code: "ru", name: "Русский" },
+  { code: "zh-CN", name: "中文 (简体)" },
+  { code: "ja", name: "日本語" },
+  { code: "ar", name: "العربية" },
+  { code: "nl", name: "Nederlands" },
+  { code: "pl", name: "Polski" },
+  { code: "sv", name: "Svenska" },
+  { code: "cs", name: "Čeština" }
 ];
 
 const slider = document.getElementById("languageSlider");
 const langLabel = document.getElementById("currentLang");
 
 let selectedLangIndex = parseInt(localStorage.getItem("sliderLangIndex")) || 0;
+slider.max = languages.length - 1; // prilagodimo max vrednost sliderja
 slider.value = selectedLangIndex;
 updateLang(selectedLangIndex);
 
@@ -3023,9 +3034,17 @@ function updateLang(index) {
 }
 
 async function translateText(text, targetLang) {
-  const response = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + targetLang + "&dt=t&q=" + encodeURIComponent(text));
+  if (targetLang === "none") {
+    return text; // če je "Brez prevoda", samo vrnemo original
+  }
+  const response = await fetch(
+    "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
+      targetLang +
+      "&dt=t&q=" +
+      encodeURIComponent(text)
+  );
   const result = await response.json();
-  return result[0]?.map(t => t[0]).join("") || text;
+  return result[0]?.map((t) => t[0]).join("") || text;
 }
 
 
