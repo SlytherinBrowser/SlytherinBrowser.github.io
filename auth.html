@@ -39,7 +39,7 @@
     .split-toggle::after{content:"▾";font-size:14px}
     .menu{position:relative;width:100%}
     .menu-list{
-      position:absolute;right:0;top:6px;z-index:10;min-width:240px;
+      position:absolute;right:0;top:6px;z-index:10;min-width:260px;
       background:rgba(10,13,25,.95);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
       border-radius:10px;display:none;overflow:hidden
     }
@@ -83,9 +83,12 @@
           <div class="menu-item" data-dest="casino.html" data-name="Casino">
             🎰 <div>Casino<br><small>Poker, konji, sloti, plinko (admin: /admin)</small></div>
           </div>
-          <!-- ➕ DODANO: Multiplayer Crash (brez admina) -->
           <div class="menu-item" data-dest="crashmp.html" data-name="Crash (MP)">
-            🚀 <div>Crash (MP)<br><small>Multiplayer runda, winner-takes-profits</small></div>
+            🚀 <div>Crash (MP)<br><small>Multiplayer, winner-takes-profits</small></div>
+          </div>
+          <!-- NOVO: MapGuess (Leaflet, MP) brez admina -->
+          <div class="menu-item" data-dest="mapguess.html" data-name="MapGuess (MP)">
+            🗺️ <div>MapGuess (MP)<br><small>Izbirač skrije lokacijo, najbližji zmaga</small></div>
           </div>
         </div>
       </div>
@@ -198,7 +201,7 @@
 
         const uid = auth.currentUser.uid;
 
-        // /admin velja SAMO za Loterijo in Casino; Crash (MP) NIMA admina
+        // /admin velja SAMO za Loterijo in Casino; Crash (MP) in MapGuess NIMATA admina
         if(isAdmin){
           if(dest === 'teste.html'){ // LOTERIJA
             const adminSnap = await db.ref('lottery/adminUid').once('value');
@@ -221,7 +224,7 @@
               alert("Admin casinoja je že nastavljen. Nadaljujem kot navaden igralec.");
             }
           }
-          // crashmp.html: brez admin logike
+          // crashmp.html & mapguess.html: brez admin logike
         }
 
         window.location.href = dest;
