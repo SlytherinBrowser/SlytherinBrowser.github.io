@@ -39,7 +39,7 @@
     .split-toggle::after{content:"▾";font-size:14px}
     .menu{position:relative;width:100%}
     .menu-list{
-      position:absolute;right:0;top:6px;z-index:10;min-width:260px;
+      position:absolute;right:0;top:6px;z-index:10;min-width:280px;
       background:rgba(10,13,25,.95);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
       border-radius:10px;display:none;overflow:hidden
     }
@@ -50,7 +50,9 @@
     .menu-item:last-child{border-bottom:none}
     .menu-item:hover{background:rgba(255,255,255,.08)}
     .menu-item small{opacity:.8}
+    .menu-item .status{margin-left:auto;display:flex;gap:6px;align-items:center;font-size:12px;opacity:.9}
     .app-pill{display:inline-flex;gap:8px;align-items:center}
+    .note{font-size:.9em;color:#ddd;margin-top:6px}
   </style>
 </head>
 <body>
@@ -71,29 +73,37 @@
         </div>
 
         <div id="menuList" class="menu-list" role="menu" aria-label="Izberi aplikacijo">
-          <div class="menu-item" data-dest="slychat.html" data-name="Chat">
+          <div class="menu-item" data-key="chat" data-dest="slychat.html" data-name="Chat">
             💬 <div>Chat<br><small>Klepet z uporabniki</small></div>
+            <div class="status"><span class="lock">✅</span><span class="price">Brezplačno</span></div>
           </div>
-          <div class="menu-item" data-dest="blackj.html" data-name="Blackjack">
+          <div class="menu-item" data-key="blackjack" data-dest="blackj.html" data-name="Blackjack">
             🂡 <div>Blackjack<br><small>Igra & sobe z gostiteljem</small></div>
+            <div class="status"><span class="lock">🔒</span><span class="price">200</span></div>
           </div>
-          <div class="menu-item" data-dest="teste.html" data-name="Loterija">
+          <div class="menu-item" data-key="lottery" data-dest="teste.html" data-name="Loterija">
             🎟️ <div>Loterija<br><small>Srečke & žrebanje (admin: /admin)</small></div>
+            <div class="status"><span class="lock">🔒</span><span class="price">150</span></div>
           </div>
-          <div class="menu-item" data-dest="casino.html" data-name="Casino">
+          <div class="menu-item" data-key="casino" data-dest="casino.html" data-name="Casino">
             🎰 <div>Casino<br><small>Poker, konji, sloti, plinko (admin: /admin)</small></div>
+            <div class="status"><span class="lock">🔒</span><span class="price">300</span></div>
           </div>
-          <div class="menu-item" data-dest="crashmp.html" data-name="Crash (MP)">
+          <div class="menu-item" data-key="crashmp" data-dest="crashmp.html" data-name="Crash (MP)">
             🚀 <div>Crash (MP)<br><small>Multiplayer, winner-takes-profits</small></div>
+            <div class="status"><span class="lock">🔒</span><span class="price">250</span></div>
           </div>
-          <!-- NOVO: MapGuess (Leaflet, MP) brez admina -->
-          <div class="menu-item" data-dest="mapguess.html" data-name="MapGuess (MP)">
+          <div class="menu-item" data-key="mapguess" data-dest="mapguess.html" data-name="MapGuess (MP)">
             🗺️ <div>MapGuess (MP)<br><small>Izbirač skrije lokacijo, najbližji zmaga</small></div>
-          </div><div class="menu-item" data-dest="hacker.html" data-name="Hacker Game">
-  🧑‍💻 <div>Hacker Game<br><small>Napadi, obramba, kraja % kovancev</small></div>
-</div>
+            <div class="status"><span class="lock">🔒</span><span class="price">120</span></div>
+          </div>
+          <div class="menu-item" data-key="hacker" data-dest="hacker.html" data-name="Hacker Game">
+            🧑‍💻 <div>Hacker Game<br><small>Napadi, obramba, kraja % kovancev</small></div>
+            <div class="status"><span class="lock">🔒</span><span class="price">180</span></div>
+          </div>
         </div>
       </div>
+      <div class="note">Opomba: če igra ni odklenjena, jo lahko ob kliku odkleniš za vedno (odšteje se cena v kovancih).</div>
 
       <button onclick="resetPassword()" style="margin-top:8px;background-color:rgba(255,255,255,.1);font-size:.9em;">Pozabil/a geslo?</button>
       <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
@@ -124,15 +134,27 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    // ====== KONFIG IGER (ključ -> cena in destinacija) ======
+    const GAME_CATALOG = {
+      chat:     { name:'Chat',        dest:'slychat.html', price:0 },
+      blackjack:{ name:'Blackjack',   dest:'blackj.html',  price:200 },
+      lottery:  { name:'Loterija',    dest:'teste.html',   price:150, adminPath:'lottery' },
+      casino:   { name:'Casino',      dest:'casino.html',  price:300, adminPath:'casino' },
+      crashmp:  { name:'Crash (MP)',  dest:'crashmp.html', price:250 },
+      mapguess: { name:'MapGuess',    dest:'mapguess.html',price:120 },
+      hacker:   { name:'Hacker Game', dest:'hacker.html',  price:180 }
+    };
+
     // UI refs
     const goBtn = document.getElementById('goBtn');
     const toggleBtn = document.getElementById('toggleBtn');
     const menuList = document.getElementById('menuList');
     const appNameEl = document.getElementById('appName');
 
-    // Privzeta destinacija
-    let selectedDest = 'slychat.html';
-    let selectedName = 'Chat';
+    // Privzeta destinacija -> Chat
+    let selectedKey  = 'chat';
+    let selectedDest = GAME_CATALOG.chat.dest;
+    let selectedName = GAME_CATALOG.chat.name;
 
     // A11y toggle
     function openMenu(state){
@@ -150,6 +172,7 @@
     // Izbira aplikacije
     menuList.querySelectorAll('.menu-item').forEach(item=>{
       item.addEventListener('click', ()=>{
+        selectedKey  = item.getAttribute('data-key');
         selectedDest = item.getAttribute('data-dest');
         selectedName = item.getAttribute('data-name');
         appNameEl.textContent = selectedName;
@@ -157,18 +180,16 @@
       });
     });
 
-    // Klik na glavni del – prijava in preusmeritev v izbran app
-    goBtn.addEventListener('click', ()=> loginAndGo(selectedDest));
+    // Klik na glavni del – prijava in preusmeritev v izbran app (z odklepom)
+    goBtn.addEventListener('click', ()=> loginAndEnter(selectedKey));
 
     // Auth state – brez auto preusmeritev
-    auth.onAuthStateChanged(()=>{ /* namenoma prazno */ });
+    auth.onAuthStateChanged((u)=>{
+      // ko je login, osvežimo prikaz zaklenjeno/odklenjeno
+      if(u){ refreshLocksUI(u.uid); }
+    });
 
-    function sanitizeEmailForAdmin(raw){
-      const isAdmin = raw.endsWith('/admin');
-      const email = isAdmin ? raw.replace(/\/admin$/,'') : raw;
-      return { email, isAdmin };
-    }
-
+    // ===== Registracija =====
     async function register() {
       const name = document.getElementById("regName").value.trim();
       const email = document.getElementById("regEmail").value.trim();
@@ -179,20 +200,31 @@
         const cred = await auth.createUserWithEmailAndPassword(email, pass);
         await cred.user.updateProfile({ displayName: name });
         await db.ref("users/" + cred.user.uid).set({
-          displayName: name, email: email, coins: 0
+          displayName: name, email: email, coins: 0,
+          unlocked: { chat: true } // Chat je privzeto odklenjen
         });
         alert("Registracija uspešna! Zdaj klikni na gumb in izberi aplikacijo.");
+        refreshLocksUI(cred.user.uid);
       }catch(e){
         alert(e.message);
       }
     }
 
-    async function loginAndGo(dest){
+    // ===== Login + odklep =====
+    function sanitizeEmailForAdmin(raw){
+      const isAdmin = raw.endsWith('/admin');
+      const email = isAdmin ? raw.replace(/\/admin$/,'') : raw;
+      return { email, isAdmin };
+    }
+
+    async function loginAndEnter(gameKey){
       const raw = document.getElementById("logEmail").value.trim();
       const pass = document.getElementById("logPass").value;
       if(!raw || !pass) return alert("Vnesi email in geslo.");
 
       const { email, isAdmin } = sanitizeEmailForAdmin(raw);
+      const game = GAME_CATALOG[gameKey];
+      if(!game) return alert("Neznana igra.");
 
       try{
         const current = auth.currentUser;
@@ -200,41 +232,102 @@
           if(current && current.email !== email){ await auth.signOut(); }
           await auth.signInWithEmailAndPassword(email, pass);
         }
-
         const uid = auth.currentUser.uid;
 
-        // /admin velja SAMO za Loterijo in Casino; Crash (MP) in MapGuess NIMATA admina
-        if(isAdmin){
-          if(dest === 'teste.html'){ // LOTERIJA
-            const adminSnap = await db.ref('lottery/adminUid').once('value');
-            const currentAdmin = adminSnap.val();
-            if (!currentAdmin) {
-              await db.ref('lottery/adminUid').set(uid);
-              await db.ref('lottery/adminSince').set(Date.now());
-              alert("Uspešno nastavljen kot ADMIN loterije.");
-            } else if (currentAdmin !== uid) {
-              alert("Admin loterije je že nastavljen. Nadaljujem kot navaden igralec.");
-            }
-          } else if(dest === 'casino.html'){ // CASINO
-            const adminSnapC = await db.ref('casino/adminUid').once('value');
-            const currentAdminC = adminSnapC.val();
-            if (!currentAdminC) {
-              await db.ref('casino/adminUid').set(uid);
-              await db.ref('casino/adminSince').set(Date.now());
-              alert("Uspešno nastavljen kot ADMIN casinoja.");
-            } else if (currentAdminC !== uid) {
-              alert("Admin casinoja je že nastavljen. Nadaljujem kot navaden igralec.");
-            }
+        // /admin velja SAMO za module z adminPath (loterija, casino)
+        if(isAdmin && game.adminPath){
+          const adminSnap = await db.ref(`${game.adminPath}/adminUid`).once('value');
+          const currentAdmin = adminSnap.val();
+          if (!currentAdmin) {
+            await db.ref(`${game.adminPath}/adminUid`).set(uid);
+            await db.ref(`${game.adminPath}/adminSince`).set(Date.now());
+            alert(`Uspešno nastavljen kot ADMIN (${game.name}).`);
+          } else if (currentAdmin !== uid) {
+            alert(`Admin (${game.name}) je že nastavljen. Nadaljujem kot navaden igralec.`);
           }
-          // crashmp.html & mapguess.html: brez admin logike
         }
 
-        window.location.href = dest;
+        // Preveri/odkleni igro
+        const ok = await ensureUnlockedOrBuy(uid, gameKey);
+        if(!ok) return; // premalo kovancev ali preklic
+
+        // Vstop
+        window.location.href = game.dest;
+
       }catch(e){
         alert(e.message);
       }
     }
 
+    // ===== Odklep igre =====
+    async function ensureUnlockedOrBuy(uid, key){
+      const game = GAME_CATALOG[key];
+      if(!game) return false;
+
+      // Chat je vedno odklenjen
+      if(game.price === 0) return true;
+
+      const uSnap = await db.ref(`users/${uid}`).once('value');
+      const u = uSnap.val()||{};
+      const unlocked = (u.unlocked||{});
+      if(unlocked[key]) return true;
+
+      const coins = +(u.coins||0);
+      if(coins < game.price){
+        alert(`Za odklep "${game.name}" potrebuješ ${game.price} kovancev. Trenutno: ${coins}.`);
+        return false;
+      }
+
+      const confirmBuy = confirm(`Odkleni "${game.name}" za ${game.price} kovancev? Odklep je trajen.`);
+      if(!confirmBuy) return false;
+
+      // Odštej kovance in označi kot odklenjeno (atomicno)
+      const dec = await db.ref(`users/${uid}/coins`).transaction(c=>{
+        c=(+c||0); if(c < game.price) return; return c - game.price;
+      });
+      if(!dec.committed){
+        alert("Ni uspelo odšteti kovancev (morda premalo).");
+        return false;
+      }
+      await db.ref(`users/${uid}/unlocked/${key}`).set(true);
+
+      // Osveži UI značke
+      refreshLocksUI(uid);
+      alert(`"${game.name}" je odklenjen!`);
+      return true;
+    }
+
+    // ===== Prikaz ključavnic in cen v meniju =====
+    async function refreshLocksUI(uid){
+      const uSnap = await db.ref(`users/${uid}/unlocked`).once('value');
+      const unlocked = uSnap.val()||{ chat:true };
+
+      menuList.querySelectorAll('.menu-item').forEach(item=>{
+        const key = item.getAttribute('data-key');
+        const lockEl = item.querySelector('.status .lock');
+        const priceEl= item.querySelector('.status .price');
+        const game   = GAME_CATALOG[key];
+
+        if(!game){ return; }
+        if(game.price === 0){
+          lockEl.textContent = '✅';
+          priceEl.textContent = 'Brezplačno';
+          return;
+        }
+        if(unlocked[key]){
+          lockEl.textContent = '✅';
+          priceEl.textContent = 'Odklenjeno';
+        }else{
+          lockEl.textContent = '🔒';
+          priceEl.textContent = String(game.price);
+        }
+      });
+
+      // posodobi napis na gumbu (če se vmes spremeni igra)
+      appNameEl.textContent = selectedName;
+    }
+
+    // ===== Reset gesla =====
     async function resetPassword() {
       const raw = document.getElementById("logEmail").value.trim();
       if (!raw) return alert("Vnesi email.");
@@ -247,10 +340,14 @@
       }
     }
 
+    // ===== Preklop prijava/registracija =====
     function toggleForms() {
       document.getElementById("loginForm").classList.toggle("hidden");
       document.getElementById("registerForm").classList.toggle("hidden");
     }
+
+    // Po prvem renderju nastavi naslov gumba na Chat
+    appNameEl.textContent = selectedName;
   </script>
 </body>
 </html>
