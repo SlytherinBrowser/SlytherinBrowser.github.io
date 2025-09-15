@@ -32,6 +32,28 @@
     .toggle{text-align:center;margin-top:15px;cursor:pointer;color:#ddd;font-size:.9em;text-decoration:underline}
     .hidden{display:none}
     .row{display:flex;gap:8px}
+
+    /* Split button */
+    .split-wrap{margin-top:6px;display:flex;width:100%}
+    .split-main{flex:1 1 auto;border-radius:8px 0 0 8px;border-right:none}
+    .split-toggle{width:48px;border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:center;padding:0}
+    .split-toggle::after{content:"▾";font-size:14px}
+    .menu{
+      position:relative;width:100%
+    }
+    .menu-list{
+      position:absolute;right:0;top:6px;z-index:10;min-width:220px;
+      background:rgba(10,13,25,.95);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);
+      border-radius:10px;display:none;overflow:hidden
+    }
+    .menu-list.open{display:block}
+    .menu-item{
+      display:flex;gap:10px;align-items:center;padding:10px 12px;color:#fff;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.08)
+    }
+    .menu-item:last-child{border-bottom:none}
+    .menu-item:hover{background:rgba(255,255,255,.08)}
+    .menu-item small{opacity:.8}
+    .app-pill{display:inline-flex;gap:8px;align-items:center}
   </style>
 </head>
 <body>
@@ -42,11 +64,26 @@
       <input type="email" id="logEmail" placeholder="Email (za Loterijo lahko dodaš /admin)" />
       <input type="password" id="logPass" placeholder="Geslo" />
 
-      <!-- Navigacija – ob kliku najprej prijavi, nato odpelje -->
-      <div class="row">
-        <button onclick="loginAndGo('slychat.html')">Chat</button>
-        <button onclick="loginAndGo('blackj.html')">Blackjack</button>
-        <button onclick="loginAndGo('teste.html')">Loterija</button>
+      <!-- En dinamični gumb z izbiro destinacije -->
+      <div class="menu">
+        <div class="split-wrap">
+          <button id="goBtn" class="split-main">
+            Prijava v <span id="appName" class="app-pill">Loterija</span>
+          </button>
+          <button id="toggleBtn" class="split-toggle" aria-haspopup="true" aria-expanded="false" title="Izberi aplikacijo"></button>
+        </div>
+
+        <div id="menuList" class="menu-list" role="menu" aria-label="Izberi aplikacijo">
+          <div class="menu-item" data-dest="slychat.html" data-name="Chat">
+            💬 <div>Chat<br><small>Klepet z uporabniki</small></div>
+          </div>
+          <div class="menu-item" data-dest="blackj.html" data-name="Blackjack">
+            🂡 <div>Blackjack<br><small>Igra & sobe z gostiteljem</small></div>
+          </div>
+          <div class="menu-item" data-dest="teste.html" data-name="Loterija">
+            🎟️ <div>Loterija<br><small>Srečke & žrebanje (admin: /admin)</small></div>
+          </div>
+        </div>
       </div>
 
       <button onclick="resetPassword()" style="margin-top:8px;background-color:rgba(255,255,255,.1);font-size:.9em;">Pozabil/a geslo?</button>
@@ -78,8 +115,44 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // NE delaj nobenih auto-preusmeritev tukaj
-    auth.onAuthStateChanged(() => { /* namenoma prazno */ });
+    // UI refs
+    const goBtn = document.getElementById('goBtn');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const menuList = document.getElementById('menuList');
+    const appNameEl = document.getElementById('appName');
+
+    // Privzeta destinacija
+    let selectedDest = 'teste.html';
+    let selectedName = 'Loterija';
+
+    // A11y toggle
+    function openMenu(state){
+      menuList.classList.toggle('open', state);
+      toggleBtn.setAttribute('aria-expanded', state ? 'true' : 'false');
+    }
+    toggleBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openMenu(!menuList.classList.contains('open'));
+    });
+    document.addEventListener('click', (e)=>{
+      if(!menuList.contains(e.target) && e.target!==toggleBtn) openMenu(false);
+    });
+
+    // Izbira aplikacije
+    menuList.querySelectorAll('.menu-item').forEach(item=>{
+      item.addEventListener('click', ()=>{
+        selectedDest = item.getAttribute('data-dest');
+        selectedName = item.getAttribute('data-name');
+        appNameEl.textContent = selectedName;
+        openMenu(false);
+      });
+    });
+
+    // Klik na glavni del – prijava in preusmeritev v izbran app
+    goBtn.addEventListener('click', ()=> loginAndGo(selectedDest));
+
+    // Auth state – brez auto preusmeritev
+    auth.onAuthStateChanged(()=>{ /* namenoma prazno */ });
 
     function sanitizeEmailForAdmin(raw){
       const isAdmin = raw.endsWith('/admin');
@@ -99,8 +172,7 @@
         await db.ref("users/" + cred.user.uid).set({
           displayName: name, email: email, coins: 0
         });
-        alert("Registracija uspešna! Zdaj klikni, kam želiš iti (Chat/Blackjack/Loterija).");
-        // ostanemo na strani – uporabnik izbere destinacijo
+        alert("Registracija uspešna! Zdaj klikni na gumb in izberi aplikacijo.");
       }catch(e){
         alert(e.message);
       }
@@ -114,15 +186,13 @@
       const { email, isAdmin } = sanitizeEmailForAdmin(raw);
 
       try{
-        // Če smo že prijavljeni z istim mailom, preskoči login
         const current = auth.currentUser;
         if(!current || current.email !== email){
-          // če je prijavljen z drugim računom, ga odjavi
           if(current && current.email !== email){ await auth.signOut(); }
           await auth.signInWithEmailAndPassword(email, pass);
         }
 
-        // Posebno: /admin velja samo za Loterijo
+        // /admin velja samo za Loterijo (teste.html)
         if(isAdmin && dest === 'teste.html'){
           const adminSnap = await db.ref('lottery/adminUid').once('value');
           const currentAdmin = adminSnap.val();
@@ -133,14 +203,10 @@
             alert("Uspešno nastavljen kot ADMIN loterije.");
           } else if (currentAdmin !== uid) {
             alert("Admin je že nastavljen. Nadaljujem kot navaden igralec.");
-          } else {
-            // si že admin
           }
         }
 
-        // gremo na ciljno stran
         window.location.href = dest;
-
       }catch(e){
         alert(e.message);
       }
