@@ -3126,25 +3126,209 @@ function openPrivateChat(peerUid){
 }
 
 
-const ChatUI = (() => {
-    const chatBox = document.getElementById('chatBox');
-    const typingLayer = document.getElementById('typingLayer');
+// chatAvatarTyping.logic.js — čista logika (brez CSS/HTML in brez testnih klicev)
 
-    const users = new Map();          // userId -> { avatarURL2, side }
-    const typingTimers = new Map();   // userId -> timeoutId
+(function (global) {
+  let _mvLoaderPromise = null;
 
-    function registerUser(userId, { avatarURL2, side = 'left' }) {
-      users.set(userId, { avatarURL2, side });
-      ensureTypingNode(userId);
+  function loadModelViewer() {
+    if (window.customElements && customElements.get('model-viewer')) {
+      return Promise.resolve();
+    }
+    if (_mvLoaderPromise) return _mvLoaderPromise;
+    _mvLoaderPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.type = 'module';
+      s.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('[cat] Ne morem naložiti @google/model-viewer'));
+      document.head.appendChild(s);
+    });
+    return _mvLoaderPromise;
+  }
+
+  class Avatar3D {
+    constructor({ classNameAvatar3D, size, cameraControls = false, autoRotate = true, disableZoom = true } = {}) {
+      this.mv = document.createElement('model-viewer');
+      if (classNameAvatar3D) this.mv.className = classNameAvatar3D;
+      if (typeof size === 'number') {
+        this.mv.style.width = size + 'px';
+        this.mv.style.height = size + 'px';
+      }
+      this.mv.setAttribute('interaction-prompt', 'none');
+      this.mv.setAttribute('exposure', '1');
+      this.mv.crossOrigin = 'anonymous';
+      if (cameraControls) this.mv.setAttribute('camera-controls', '');
+      if (autoRotate)     this.mv.setAttribute('auto-rotate', '');
+      if (disableZoom)    this.mv.setAttribute('disable-zoom', '');
+    }
+    mount(el) { el.appendChild(this.mv); }
+    async setModel(url) { this.mv.setAttribute('src', url); await this.mv.updateComplete; }
+    setEnvironment(hdrUrl) { this.mv.setAttribute('environment-image', hdrUrl); }
+    async applyImageToMesh(meshName, imageUrl) {
+      await this.mv.updateComplete;
+      const sg = this.mv.sceneGraph;
+      if (!sg) throw new Error('[cat] sceneGraph ni na voljo');
+      const node = sg.getNodeByName(meshName);
+      if (!node || !node.material) throw new Error(`[cat] Mesh "${meshName}" ni najden ali nima materiala`);
+      const tex = await this.mv.createTexture(imageUrl);
+      const pbr = node.material.pbrMetallicRoughness;
+      pbr.baseColorTexture.setTexture(tex);
+      pbr.setBaseColorFactor([1,1,1,1]);
+    }
+    setCamera({ target, orbit, fieldOfView } = {}) {
+      if (target)      this.mv.setAttribute('camera-target', Array.isArray(target) ? target.join(' ') : String(target));
+      if (orbit)       this.mv.setAttribute('camera-orbit', String(orbit));
+      if (fieldOfView) this.mv.setAttribute('field-of-view', String(fieldOfView));
+    }
+    destroy() { this.mv.remove(); }
+  }
+
+  /**
+   * Ustvari managerja za chat + tipkanje + 3D avatarje.
+   *
+   * @param {Object} cfg
+   * @param {HTMLElement|string} cfg.chatBoxEl       - obstoječi element ali selektor (za sporočila)
+   * @param {HTMLElement|string} cfg.typingLayerEl   - obstoječi element ali selektor (za indikatorje tipkanja)
+   * @param {Object} [cfg.classes]                   - imena CSS razredov (brez stilov)
+   * @param {string} [cfg.classes.message='cat-msg']
+   * @param {string} [cfg.classes.messageMe='me']
+   * @param {string} [cfg.classes.bubble='cat-bubble']
+   * @param {string} [cfg.classes.typing='cat-typing']
+   * @param {string} [cfg.classes.typingLeft='left']
+   * @param {string} [cfg.classes.typingRight='right']
+   * @param {string} [cfg.classes.avatar3D='cat-avatar3d']
+   * @param {string} [cfg.classes.typingBubble='cat-typing-bubble']
+   * @param {string} [cfg.classes.dots='cat-dots']
+   * @param {number} [cfg.typingAvatarSize=96]
+   * @returns {Promise<Object>} API
+   */
+  async function createChatAvatarTypingLogic(cfg = {}) {
+    await loadModelViewer();
+
+    const chatBox = typeof cfg.chatBoxEl === 'string' ? document.querySelector(cfg.chatBoxEl) : cfg.chatBoxEl;
+    const typingLayer = typeof cfg.typingLayerEl === 'string' ? document.querySelector(cfg.typingLayerEl) : cfg.typingLayerEl;
+    if (!chatBox)      throw new Error('[cat] chatBoxEl ni najden');
+    if (!typingLayer)  throw new Error('[cat] typingLayerEl ni najden');
+
+    const classes = Object.assign({
+      message: 'cat-msg',
+      messageMe: 'me',
+      bubble: 'cat-bubble',
+      typing: 'cat-typing',
+      typingLeft: 'left',
+      typingRight: 'right',
+      avatar3D: 'cat-avatar3d',
+      typingBubble: 'cat-typing-bubble',
+      dots: 'cat-dots'
+    }, cfg.classes || {});
+
+    const typingAvatarSize = cfg.typingAvatarSize ?? 96;
+
+    const users = new Map();    // userId -> { side, avatarModelUrl, hdrUrl, camera, billboardMesh, avatarImageUrl, avatar3dTyping }
+    const typingTimers = new Map();
+
+    function ensureTypingNode(userId) {
+      let node = typingLayer.querySelector(`#cat-typing-${CSS.escape(userId)}`);
+      const u = users.get(userId);
+      if (!u) return null;
+
+      if (!node) {
+        node = document.createElement('div');
+        node.id = `cat-typing-${userId}`;
+        node.className = `${classes.typing} ${u.side === 'right' ? classes.typingRight : classes.typingLeft}`;
+
+        const avContainer = document.createElement('div');
+        avContainer.className = classes.avatar3D;
+        avContainer.style.width = typingAvatarSize + 'px';
+        avContainer.style.height = typingAvatarSize + 'px';
+
+        const bubble = document.createElement('div');
+        bubble.className = classes.typingBubble;
+        const dots = document.createElement('div');
+        dots.className = classes.dots;
+        dots.innerHTML = '<span></span><span></span><span></span>';
+        bubble.appendChild(dots);
+
+        node.appendChild(avContainer);
+        node.appendChild(bubble);
+        typingLayer.appendChild(node);
+
+        const av = new Avatar3D({ classNameAvatar3D: null, size: typingAvatarSize, cameraControls: false, autoRotate: true, disableZoom: true });
+        av.mount(avContainer);
+        u.avatar3dTyping = av;
+
+        if (u.avatarModelUrl) av.setModel(u.avatarModelUrl);
+        if (u.hdrUrl)         av.setEnvironment(u.hdrUrl);
+        if (u.camera)         av.setCamera(u.camera);
+        if (u.avatarImageUrl && u.billboardMesh) {
+          av.applyImageToMesh(u.billboardMesh, u.avatarImageUrl).catch(()=>{});
+        }
+      } else {
+        node.className = `${classes.typing} ${u.side === 'right' ? classes.typingRight : classes.typingLeft}`;
+      }
+      return node;
+    }
+
+    // —————— JAVNI API ——————
+    function registerUser(userId, { side = 'left', avatarModelUrl, environmentUrl, camera, billboardMesh, avatarImageUrl } = {}) {
+      users.set(userId, {
+        side,
+        avatarModelUrl: avatarModelUrl || null,
+        hdrUrl: environmentUrl || null,
+        camera: camera || null,
+        billboardMesh: billboardMesh || null,
+        avatarImageUrl: avatarImageUrl || null,
+        avatar3dTyping: null
+      });
+    }
+
+    function setUserSide(userId, side) {
+      const u = users.get(userId);
+      if (!u) return;
+      u.side = side === 'right' ? 'right' : 'left';
+      const node = typingLayer.querySelector(`#cat-typing-${CSS.escape(userId)}`);
+      if (node) node.className = `${classes.typing} ${u.side === 'right' ? classes.typingRight : classes.typingLeft}`;
+    }
+
+    async function setUserModel(userId, glbUrl) {
+      const u = users.get(userId);
+      if (!u) return;
+      u.avatarModelUrl = glbUrl;
+      if (u.avatar3dTyping) await u.avatar3dTyping.setModel(glbUrl);
+    }
+
+    function setUserEnvironment(userId, hdrUrl) {
+      const u = users.get(userId);
+      if (!u) return;
+      u.hdrUrl = hdrUrl;
+      if (u.avatar3dTyping) u.avatar3dTyping.setEnvironment(hdrUrl);
+    }
+
+    function setUserCamera(userId, cameraOptions) {
+      const u = users.get(userId);
+      if (!u) return;
+      u.camera = cameraOptions || null;
+      if (u.avatar3dTyping) u.avatar3dTyping.setCamera(cameraOptions);
+    }
+
+    async function applyUserImageToMesh(userId, meshName, imageUrl) {
+      const u = users.get(userId);
+      if (!u) return;
+      u.billboardMesh = meshName;
+      u.avatarImageUrl = imageUrl;
+      if (u.avatar3dTyping) {
+        try { await u.avatar3dTyping.applyImageToMesh(meshName, imageUrl); } catch(e){}
+      }
     }
 
     function addMessage(userId, text) {
       const u = users.get(userId);
       if (!u) return;
       const row = document.createElement('div');
-      row.className = 'message' + (u.side === 'right' ? ' me' : '');
+      row.className = `${classes.message} ${u.side === 'right' ? classes.messageMe : ''}`.trim();
       const bubble = document.createElement('div');
-      bubble.className = 'bubble';
+      bubble.className = classes.bubble;
       bubble.textContent = text;
       row.appendChild(bubble);
       chatBox.appendChild(row);
@@ -3152,66 +3336,53 @@ const ChatUI = (() => {
       hideTyping(userId);
     }
 
-    function showTyping(userId) {
+    function showTyping(userId, { keepAliveMs = 2000 } = {}) {
       const u = users.get(userId);
       if (!u) return;
       const node = ensureTypingNode(userId);
+      if (!node) return;
       node.style.display = 'flex';
-
       clearTimeout(typingTimers.get(userId));
-      const t = setTimeout(() => hideTyping(userId), 2000);
+      const t = setTimeout(() => hideTyping(userId), keepAliveMs);
       typingTimers.set(userId, t);
     }
 
     function hideTyping(userId) {
-      const node = document.getElementById('typing-' + userId);
+      const node = typingLayer.querySelector(`#cat-typing-${CSS.escape(userId)}`);
       if (node) node.style.display = 'none';
       clearTimeout(typingTimers.get(userId));
       typingTimers.delete(userId);
     }
 
-    // ===== internal =====
-    function ensureTypingNode(userId) {
-      let node = document.getElementById('typing-' + userId);
-      const u = users.get(userId);
-      if (!u) return null;
-
-      if (!node) {
-        node = document.createElement('div');
-        node.id = 'typing-' + userId;
-        node.className = 'typing-indicator ' + (u.side === 'right' ? 'typing-right' : 'typing-left');
-
-        const avatar = document.createElement('div');
-        avatar.className = 'typing-avatar';
-        avatar.style.backgroundImage = `url(${u.avatarURL2})`;
-
-        const bubble = document.createElement('div');
-        bubble.className = 'typing-bubble';
-        bubble.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div>`;
-
-        node.appendChild(avatar);
-        node.appendChild(bubble);
-        typingLayer.appendChild(node);
-      } else {
-        // če se je avatar ali stran spremenila, posodobi
-        const newSideClass = u.side === 'right' ? 'typing-right' : 'typing-left';
-        node.className = 'typing-indicator ' + newSideClass;
-        const avatar = node.querySelector('.typing-avatar');
-        if (avatar) avatar.style.backgroundImage = `url(${u.avatarURL2})`;
+    function destroy() {
+      for (const t of typingTimers.values()) clearTimeout(t);
+      typingTimers.clear();
+      for (const u of users.values()) {
+        if (u.avatar3dTyping) u.avatar3dTyping.destroy();
       }
-      return node;
+      users.clear();
+      // ničesar ne odstranjujem iz DOM, ker elemente priskrbiš ti
+      // po potrebi lahko ročno počistiš children v chatBox/typingLayer
     }
 
-    return { registerUser, addMessage, showTyping, hideTyping };
-  })();
+    return {
+      registerUser,
+      setUserSide,
+      setUserModel,
+      setUserEnvironment,
+      setUserCamera,
+      applyUserImageToMesh,
+      addMessage,
+      showTyping,
+      hideTyping,
+      destroy
+    };
+  }
 
-  // ====== EXPORT NA WINDOW (po potrebi) ======
-  window.registerUser = ChatUI.registerUser;
-  window.addMessage = ChatUI.addMessage;
-  window.showTyping = ChatUI.showTyping;
-  window.hideTyping = ChatUI.hideTyping;
+  // export
+  global.createChatAvatarTypingLogic = createChatAvatarTypingLogic;
 
-
+})(window);
 
 
 
