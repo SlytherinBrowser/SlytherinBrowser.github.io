@@ -3126,27 +3126,27 @@ function openPrivateChat(peerUid){
 }
 
 
-// === NOV DODATEK: tipkanje + avatar v <model-viewer> (BREZ tvojega obstoječega listenerja) ===
+// === TYPING-ONLY LOGIKA (brez sporočil) ================================
+// Prikaže, kdo tipka, z avatarjem v <model-viewer>.
+// Uporablja obstoječe globalne: db, currentUser, currentChatPartner, users (če obstaja).
+// Ne dodaja CSS/HTML – pričakuje, da imaš <div id="typingLayer"> v DOM in svoje stile.
 
-// -- konfiguracija poti za tipkanje (prilagodi, če imaš drugače) --
+// — nastavitve poti v bazi (prilagodi po potrebi) —
 const TYPING_PATH_PUBLIC  = "typing/public";   // typing/public/{uid}: true|false
 const TYPING_PATH_PRIVATE = "typing/private";  // typing/private/{chatKey}/{uid}: true|false
 const defaultAvatarIMG = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
 
-// -- helper za ključ zasebnega chata --
+// — pomožne reference/cache —
+const typingLayer = document.getElementById("typingLayer");
+window.users = window.users || {};
+const userNamesCache = window.userNamesCache || {};
+
+// — util: ključ zasebnega chata (če uporabljaš drugače, zamenjaj) —
 function getPrivateChatKey(uidA, uidB) {
   return [uidA, uidB].sort().join("_");
 }
 
-// -- reference in lokalni cache-i (uporabi tvoje globalne, če obstajajo) --
-const typingLayer = document.getElementById("typingLayer");
-window.users = window.users || {};
-const userNamesCache   = window.userNamesCache || {};
-const userStatusCache  = window.userStatusCache || {};
-const userColorsCache  = window.userColorsCache || {};
-const userEffectsCache = window.userEffectsCache || {};
-
-// -- naloži <model-viewer> (enkrat), če še ni na strani --
+// — util: naloži <model-viewer> enkrat —
 let _mvLoaderPromise = null;
 function loadModelViewer() {
   if (window.customElements && customElements.get('model-viewer')) return Promise.resolve();
@@ -3162,10 +3162,7 @@ function loadModelViewer() {
   return _mvLoaderPromise;
 }
 
-// -- utilji --
-function isGLTF(url) {
-  return typeof url === "string" && (url.endsWith(".glb") || url.endsWith(".gltf"));
-}
+// — util: preberi profil iz Firebase, če še ni v cache-u —
 async function ensureUserCached(uid) {
   if (!uid) return null;
   if (users[uid]?.displayName && (users[uid]?.avatarURL2 || users[uid]?.avatarModelUrl)) return users[uid];
@@ -3176,21 +3173,30 @@ async function ensureUserCached(uid) {
     if (data.displayName) userNamesCache[uid] = data.displayName;
     return users[uid];
   } catch (e) {
-    console.error("[typing] Ne morem prebrati users/" + uid, e);
+    console.error("[typing] users/" + uid, e);
     return users[uid] || null;
   }
 }
+
+function isGLTF(url) {
+  return typeof url === "string" && (url.endsWith(".glb") || url.endsWith(".gltf"));
+}
+
+// — izberi stran (left/right) – po želji spremeni na 'left' za vse —
 function sideFor(uid) {
   return uid === currentUser?.uid ? "right" : "left";
 }
+
+// — ID elementa indikatorja tipkanja —
 function typingElementId(uid) {
   return `typing-${uid}`;
 }
 
-// -- ustvarjanje/posodabljanje indikatorja tipkanja (DOM) --
+// — poskrbi, da obstaja DOM node za indikator (brez stilov) —
 function ensureTypingNode(uid) {
   let node = document.getElementById(typingElementId(uid));
   const side = sideFor(uid);
+
   if (!node) {
     node = document.createElement("div");
     node.id = typingElementId(uid);
@@ -3215,13 +3221,16 @@ function ensureTypingNode(uid) {
   return node;
 }
 
-// -- v indikator vgradi <model-viewer> z modelom ali posterjem iz Firebase profila --
+// — vgradi/posodobi <model-viewer> v indikatorju za dani uid —
 async function updateTypingAvatarModelViewer(uid) {
   await loadModelViewer();
+  await ensureUserCached(uid);
+
   const node = ensureTypingNode(uid);
   const container = node.querySelector(".avatar3d");
   if (!container) return;
 
+  // odstrani stari viewer (če obstaja)
   let mv = container.querySelector("model-viewer");
   if (mv) container.removeChild(mv);
 
@@ -3238,23 +3247,23 @@ async function updateTypingAvatarModelViewer(uid) {
   mv.setAttribute("field-of-view", "20deg");
   mv.crossOrigin = "anonymous";
 
-  const u = await ensureUserCached(uid);
-  const modelUrl = u?.avatarModelUrl;
-  const imageUrl = u?.avatarURL2 || defaultAvatarIMG;
+  const u = users[uid] || {};
+  const modelUrl = u.avatarModelUrl;
+  const imageUrl = u.avatarURL2 || defaultAvatarIMG;
 
   if (isGLTF(modelUrl)) {
     mv.setAttribute("src", modelUrl);
     if (imageUrl) mv.setAttribute("poster", imageUrl);
   } else {
-    mv.setAttribute("poster", imageUrl);
+    mv.setAttribute("poster", imageUrl); // brez .glb: prikaži poster
   }
+
   container.appendChild(mv);
 }
 
-// -- prikaz/skrivanje indikatorja tipkanja --
+// — prikaz/skrivanje indikatorja tipkanja (auto-hide) —
 const typingTimers = new Map(); // uid -> timeout
 async function showTyping(uid, keepAliveMs = 2000) {
-  await ensureUserCached(uid);
   await updateTypingAvatarModelViewer(uid);
   const node = ensureTypingNode(uid);
   node.style.display = "flex";
@@ -3262,6 +3271,7 @@ async function showTyping(uid, keepAliveMs = 2000) {
   const t = setTimeout(() => hideTyping(uid), keepAliveMs);
   typingTimers.set(uid, t);
 }
+
 function hideTyping(uid) {
   const node = document.getElementById(typingElementId(uid));
   if (node) node.style.display = "none";
@@ -3269,14 +3279,16 @@ function hideTyping(uid) {
   typingTimers.delete(uid);
 }
 
-// -- poslušanje tipkanja (public in private) --
+// — poslušanje javnega tipkanja —
 function listenTypingPublic() {
   const ref = db.ref(TYPING_PATH_PUBLIC);
+
   ref.on("child_changed", async (snap) => {
     if (currentChatPartner) return; // če si v zasebnem, ignoriraj javni kanal
     const uid = snap.key, isTyping = !!snap.val();
     if (isTyping) showTyping(uid); else hideTyping(uid);
   });
+
   ref.on("child_added", async (snap) => {
     if (currentChatPartner) return;
     const uid = snap.key, isTyping = !!snap.val();
@@ -3284,14 +3296,11 @@ function listenTypingPublic() {
   });
 }
 
+// — poslušanje zasebnega tipkanja (en par naenkrat) —
 let _privateTypingRef = null;
 function listenTypingPrivate() {
-  if (!_privateTypingRef && (!currentUser?.uid || !currentChatPartner)) return;
-  // odklopi prejšnji, če obstaja
-  if (_privateTypingRef) {
-    _privateTypingRef.off();
-    _privateTypingRef = null;
-  }
+  // odklopi prejšnje
+  if (_privateTypingRef) { _privateTypingRef.off(); _privateTypingRef = null; }
   if (!currentUser?.uid || !currentChatPartner) return;
 
   const chatKey = getPrivateChatKey(currentUser.uid, currentChatPartner);
@@ -3302,6 +3311,7 @@ function listenTypingPrivate() {
     if (uid !== currentUser.uid && uid !== currentChatPartner) return;
     if (isTyping) showTyping(uid); else hideTyping(uid);
   });
+
   _privateTypingRef.on("child_added", async (snap) => {
     const uid = snap.key, isTyping = !!snap.val();
     if (uid !== currentUser.uid && uid !== currentChatPartner) return;
@@ -3309,16 +3319,16 @@ function listenTypingPrivate() {
   });
 }
 
-// -- kliči to, ko zamenjaš partnerja (preklop kanalov) --
-function onChatPartnerChanged(newPartnerUid) {
+// — pokliči, ko zamenjaš partnerja (preklop kanalov tipkanja) —
+function onChatPartnerChanged() {
   // skrij vse aktivne indikatorje
   Object.keys(users).forEach(uid => hideTyping(uid));
-  // znova priklopi listenerje
+  // znova priklopi
   listenTypingPublic();
   listenTypingPrivate();
 }
 
-// -- helper za zapis svojega stanja tipkanja (pokliči ob input/keyup in ob pošiljanju) --
+// — helper: zapis svojega stanja tipkanja (pokliči ob input/key, in ob pošiljanju) —
 async function setTypingState(isTyping) {
   if (!currentUser?.uid) return;
   if (currentChatPartner) {
@@ -3329,12 +3339,11 @@ async function setTypingState(isTyping) {
   }
 }
 
-// -- inicializiraj poslušalce tipkanja (pokliči enkrat po inicializaciji aplikacije) --
+// — inicializacija poslušalcev (pokliči enkrat po bootu appa) —
 listenTypingPublic();
 listenTypingPrivate();
 
-// === konec dodatka ===
-
+// ======================================================================
 
 
 
