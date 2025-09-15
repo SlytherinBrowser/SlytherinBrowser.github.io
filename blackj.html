@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
   <meta charset="utf-8" />
-  <title>Blackjack – Dealer & Igralec (kovanci iz baze)</title>
+  <title>Blackjack – ločen UI + kovanci + lobby s potrjevanjem</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase (compat) -->
@@ -45,7 +45,8 @@
     footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
     main{padding:14px}
     #hostView {display:grid;grid-template-columns: 360px 1fr;gap:14px}
-    #playerView {max-width: 980px;margin: 0 auto}
+    #playerView {max-width: 1100px;margin: 0 auto}
+    .roomRow{display:flex;align-items:center;justify-content:space-between;background:#0e1530;border:1px solid #223064;border-radius:10px;padding:8px 10px}
   </style>
 </head>
 <body>
@@ -55,12 +56,13 @@
       <input id="displayName" placeholder="Tvoje ime" />
       <input id="roomId" placeholder="ID sobe (npr. room1)" />
       <button id="hostBtn" class="primary">Ustvari / Host</button>
-      <button id="joinBtn">Pridruži se</button>
+      <button id="joinBtn">Pridruži se (direkt, brez potrditve)</button>
       <span id="whoami" class="pill">Nisi povezan</span>
     </div>
     <div class="row">
       <span class="pill">H = Hit</span>
       <span class="pill">S = Stand</span>
+      <span class="pill">Min stava = 10</span>
     </div>
   </header>
 
@@ -71,6 +73,12 @@
         <h2>👥 Igralci v sobi</h2>
         <div id="hostRoomMeta" class="muted small"></div>
         <div class="playersList" id="hostPlayers"></div>
+
+        <div class="panel" style="margin-top:10px">
+          <h2 style="border:none;padding:0">📥 Prošnje za vstop</h2>
+          <div id="hostJoinReqs" class="stack"></div>
+        </div>
+
         <div class="panel" style="margin-top:10px">
           <h2 style="border:none;padding:0">🏆 Lestvica</h2>
           <div id="hostLeaderboard" class="leader"></div>
@@ -108,7 +116,7 @@
 
     <!-- ================= PLAYER UI (vsi igralci isto) ================= -->
     <section id="playerView" class="hidden">
-      <div class="grid" style="grid-template-columns: 1fr 300px">
+      <div class="grid" style="grid-template-columns: 1fr 320px">
         <section class="panel">
           <div class="row" style="justify-content:space-between">
             <div class="row">
@@ -142,9 +150,9 @@
               <div class="hand" id="plMyHand" style="margin-top:8px"></div>
 
               <div class="row" style="margin-top:8px">
-                <input id="betInput" type="number" min="1" step="1" value="10" style="width:120px" />
+                <input id="betInput" type="number" min="10" step="1" value="10" style="width:120px" />
                 <button id="betBtn" class="ok">Stavi</button>
-                <span class="pill" id="turnHint">Na potezi: <span id="turnName">-</span></span>
+                <span class="pill">Na potezi: <span id="turnName">-</span></span>
                 <span class="pill">Tipke: H/S</span>
               </div>
               <div class="row" style="margin-top:8px">
@@ -156,8 +164,12 @@
         </section>
 
         <aside class="panel">
-          <h2>🏆 Lestvica</h2>
-          <div id="plLeaderboard" class="leader"></div>
+          <h2>🧭 Sobe (hosti)</h2>
+          <div id="roomsList" class="stack"></div>
+          <div class="panel" style="margin-top:10px">
+            <h2 style="border:none;padding:0">🏆 Lestvica</h2>
+            <div id="plLeaderboard" class="leader"></div>
+          </div>
           <div class="panel" style="margin-top:10px">
             <h2 style="border:none;padding:0">👥 Igralci</h2>
             <div id="plPlayers" class="playersList"></div>
@@ -167,7 +179,10 @@
     </section>
   </main>
 
-  <footer>Denar v igri = <strong>coins</strong> iz <code>users/{uid}/coins</code>. Hiša (host) in igralci uporabljajo isti saldo kot v chatu.</footer>
+  <footer>
+    Denar v igri = <strong>coins</strong> iz <code>users/{uid}/coins</code>. <br/>
+    Seznam host sob je v <code>/blackjackLobby/rooms</code>. Klik iz seznama → prošnja za vstop (host potrdi). Direkt vnos ID (gumb “Pridruži se”) → brez potrditve.
+  </footer>
 
   <script>
     /* =========================
@@ -210,6 +225,7 @@
     const hostRoomId = $('hostRoomId'), hostRound = $('hostRound'), hostState = $('hostState');
     const hostDealerHand = $('hostDealerHand'), hostDealerVal = $('hostDealerVal'), hostTurnName = $('hostTurnName');
     const hostPlayers = $('hostPlayers'), hostLeaderboard = $('hostLeaderboard'), hostControls = $('hostControls'), hostRoomMeta = $('hostRoomMeta');
+    const hostJoinReqs = $('hostJoinReqs');
 
     // player UI refs
     const plRoomId = $('plRoomId'), plRound = $('plRound'), plState = $('plState'), plMsg = $('plMsg');
@@ -217,6 +233,7 @@
     const plMyHand = $('plMyHand'), plMyVal = $('plMyVal'), plMyBet = $('plMyBet'), plMyMoney = $('plMyMoney');
     const plLeaderboard = $('plLeaderboard'), plPlayers = $('plPlayers'), turnNameEl = $('turnName');
     const betInput = $('betInput'), betBtn = $('betBtn'), hitBtn = $('hitBtn'), standBtn = $('standBtn');
+    const roomsList = $('roomsList');
 
     // auth required
     auth.onAuthStateChanged(async (user)=>{
@@ -228,6 +245,9 @@
       userId = user.uid;
       if(!displayNameEl.value) displayNameEl.value = user.displayName || ('Uporabnik_'+user.uid.slice(-4));
       whoami.textContent = 'Prijavljen: ' + (user.displayName || user.email);
+
+      // Po prijavi začnemo poslušat lobby (seznam host sob) – za igralce
+      startRoomsLobbyListener();
     });
 
     /* =========================
@@ -255,8 +275,6 @@
 
     /* =========================
        Coins sync helpers
-       - players money in room mirrors users/{uid}/coins
-       - deltas applied via transactions
     ========================== */
     async function readUserCoins(uid){
       const snap = await db.ref(`users/${uid}/coins`).once('value');
@@ -275,7 +293,6 @@
       });
     }
 
-    // Apply delta to users/{uid}/coins using transaction, mirror to room players/{uid}/money
     async function applyCoinDelta(rid, uid, delta){
       const userRef = db.ref(`users/${uid}/coins`);
       const tx = await userRef.transaction(curr => {
@@ -287,18 +304,112 @@
       return newVal;
     }
 
-    // Keep players money synced to users coins when safe (not during 'playing'/'dealer')
     function startSafeCoinsMirror(rid, uid){
       const userCoinsRef = db.ref(`users/${uid}/coins`);
       userCoinsRef.on('value', snap=>{
         const coins = +snap.val() || 0;
         const st = currentState;
         if(!st) return;
-        // Update in lobby/betting/settle only, to avoid mid-turn cheating effects
         if(['lobby','betting','settle'].includes(st.state)){
           db.ref(`blackjack/${rid}/players/${uid}/money`).set(coins);
         }
       });
+    }
+
+    /* =========================
+       LOBBY: seznam host sob + join requesti
+    ========================== */
+    let roomsRef = null;
+    function startRoomsLobbyListener(){
+      if(roomsRef) roomsRef.off();
+      roomsRef = db.ref('blackjackLobby/rooms');
+      roomsRef.on('value', snap=>{
+        const rooms = snap.val() || {};
+        roomsList.innerHTML = '';
+        Object.values(rooms).forEach(r=>{
+          // pokažemo le aktivne sobe
+          const row = document.createElement('div'); row.className = 'roomRow';
+          const left = document.createElement('div');
+          left.innerHTML = `<strong>${r.roomId}</strong><br/><span class="muted small">host: ${r.hostName||r.hostId}</span>`;
+          const right = document.createElement('div');
+          const btn = document.createElement('button');
+          btn.className = 'ok';
+          btn.textContent = 'Zahtevaj vstop';
+          btn.onclick = ()=>requestJoinRoom(r.roomId);
+          right.appendChild(btn);
+          row.appendChild(left); row.appendChild(right);
+          roomsList.appendChild(row);
+        });
+        if(!Object.keys(rooms).length){
+          roomsList.innerHTML = `<div class="muted">Ni aktivnih sob. Ustvari eno ali počakaj na hosta.</div>`;
+        }
+      });
+    }
+
+    async function requestJoinRoom(rid){
+      const name = displayNameEl.value.trim() || ('Igralec_'+userId.slice(-4));
+      // vpis v joinRequests – host mora potrditi
+      await db.ref(`blackjackLobby/rooms/${rid}/joinRequests/${userId}`).set({
+        name,
+        uid: userId,
+        requestedAt: Date.now(),
+        status: 'pending'
+      });
+      alert('Prošnja za vstop poslana hostu.');
+    }
+
+    async function registerRoomInLobby(rid, hostName){
+      const ref = db.ref(`blackjackLobby/rooms/${rid}`);
+      await ref.set({
+        roomId: rid,
+        hostId: userId,
+        hostName: hostName || userId,
+        createdAt: Date.now()
+      });
+      // auto remove na disconnect
+      ref.onDisconnect().remove();
+    }
+    async function unregisterRoomInLobby(rid){
+      await db.ref(`blackjackLobby/rooms/${rid}`).remove();
+    }
+
+    function startJoinRequestsListenerForHost(rid){
+      const reqRef = db.ref(`blackjackLobby/rooms/${rid}/joinRequests`);
+      reqRef.on('value', snap=>{
+        const reqs = snap.val() || {};
+        hostJoinReqs.innerHTML = '';
+        const keys = Object.keys(reqs);
+        if(!keys.length){
+          hostJoinReqs.innerHTML = `<div class="muted">Ni čakajočih prošenj.</div>`;
+          return;
+        }
+        keys.forEach(uid=>{
+          const r = reqs[uid];
+          const row = document.createElement('div'); row.className = 'row';
+          row.innerHTML = `<strong>${r.name||uid}</strong> <span class="pill">status: ${r.status}</span>`;
+          const ok = document.createElement('button'); ok.className='ok'; ok.textContent='Odobri';
+          const no = document.createElement('button'); no.className='danger'; no.textContent='Zavrni';
+          ok.onclick = ()=>approveJoin(rid, uid, r.name||uid);
+          no.onclick = ()=>rejectJoin(rid, uid);
+          row.appendChild(ok); row.appendChild(no);
+          hostJoinReqs.appendChild(row);
+        });
+      });
+    }
+
+    async function approveJoin(rid, uid, name){
+      // doda igralca v room + v order, pobriše request
+      await upsertPlayerWithCoins(rid, uid, name);
+      const orderSnap = await db.ref(`blackjack/${rid}/order`).once('value');
+      const order = orderSnap.val()||[];
+      if(!order.includes(uid)){ order.push(uid); await db.ref(`blackjack/${rid}/order`).set(order); }
+      await db.ref(`blackjackLobby/rooms/${rid}/joinRequests/${uid}/status`).set('approved');
+      // opcijsko počisti request:
+      setTimeout(()=> db.ref(`blackjackLobby/rooms/${rid}/joinRequests/${uid}`).remove(), 1500);
+    }
+    async function rejectJoin(rid, uid){
+      await db.ref(`blackjackLobby/rooms/${rid}/joinRequests/${uid}/status`).set('rejected');
+      setTimeout(()=> db.ref(`blackjackLobby/rooms/${rid}/joinRequests/${uid}`).remove(), 1500);
     }
 
     /* =========================
@@ -326,16 +437,24 @@
         }
       });
 
+      // vpiši sobo v globalni lobby (tukaj host potrjuje prošnje)
+      await registerRoomInLobby(r, name);
+
       attachRoom(r);
       startSafeCoinsMirror(r, userId);
+      startJoinRequestsListenerForHost(r);
+
+      // Odstrani lobby sobo, če host zapre okno
+      window.addEventListener('beforeunload', ()=> unregisterRoomInLobby(r));
     };
 
+    // Direkt “Pridruži se” – brez potrditve hosta (če poznaš ID sobe)
     joinBtn.onclick = async ()=>{
       if(!auth.currentUser){ alert('Ni prijave.'); return; }
       const name = displayNameEl.value.trim() || ('Igralec_'+userId.slice(-4));
       const r = roomIdEl.value.trim() || 'room1';
       const roomSnap = await db.ref(`blackjack/${r}`).once('value');
-      if(!roomSnap.exists()){ alert('Soba ne obstaja. Naj jo nekdo hosta.'); return; }
+      if(!roomSnap.exists()){ alert('Soba ne obstaja. Naj jo nekdo hosta ali izberi iz seznama.'); return; }
 
       await upsertPlayerWithCoins(r, userId, name);
 
@@ -350,7 +469,6 @@
 
     let roomRefValue = null;
     function attachRoom(r){
-      // odklopi star listener
       if(roomRefValue) roomRefValue.off();
       roomRefValue = db.ref(`blackjack/${r}`);
       roomRefValue.on('value', drawState);
@@ -478,7 +596,9 @@
       const myTurn = (st.state==='playing' && (st.order||[])[st.turnIndex]===userId && me.status==='playing');
       hitBtn.disabled = !myTurn;
       standBtn.disabled = !myTurn;
-      betBtn.disabled = !(st.state==='betting' && !me.bet && (me.money||0)>0);
+
+      // 🔒 Min bet = 10 in dovolj kovancev
+      betBtn.disabled = !(st.state==='betting' && !me.bet && (me.money||0)>=10);
 
       const tUid = (st.order||[])[st.turnIndex];
       turnNameEl.textContent = st.players?.[tUid]?.name || '-';
@@ -519,7 +639,6 @@
         dealer: { hand: [] },
         turnIndex: 0
       });
-      // reset players hands/bets, keep money as-is (comes from users coins and mirror)
       const order = currentState.order || [];
       for(const uid of order){
         await db.ref(`blackjack/${roomId}/players/${uid}`).update({ bet: 0, hand: [], status: 'betting' });
@@ -528,25 +647,25 @@
 
     async function startDealing(){
       if(!isHost || !currentState || currentState.state!=='betting') return;
-      let players = currentState.players||{};
-      // ensure in-room money mirrors latest coins before dealing
+      // mirror coins pred deljenjem
       for(const uid of (currentState.order||[])){
         const coins = await readUserCoins(uid);
         await db.ref(`blackjack/${roomId}/players/${uid}/money`).set(coins);
       }
 
+      const players = currentState.players||{};
       let shoe = currentState.shoe && currentState.shoe.length>15 ? currentState.shoe : makeDeck();
       const order = (currentState.order||[]).filter(uid => players[uid]);
 
-      // mark statuses
+      // statusi + filtriraj aktivne (stavili in imajo ≥10 + vsaj toliko kot stava)
       for(const uid of order){
         const p = players[uid];
-        const allowed = (p.bet>0) && (p.money>0);
+        const allowed = (p.bet>=10) && (p.money>=p.bet);
         await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status: allowed?'playing':'sitout', hand: [] });
       }
       const active = order.filter(uid => {
         const p = players[uid];
-        return p && p.bet>0 && p.money>0;
+        return p && p.bet>=10 && p.money>=p.bet;
       });
 
       // deal
@@ -597,6 +716,7 @@
         order: order.length?order:[userId], dealer:{hand:[]}, shoe: makeDeck(),
         players: newPlayers
       });
+      // lobby ostane registriran
     }
 
     /* =========================
@@ -605,12 +725,16 @@
     betBtn.onclick = async ()=>{
       if(!currentState || currentState.state!=='betting') return alert('Zdaj ni faza stav.');
       const me = currentState.players?.[userId]; if(!me) return;
-      const bet = Math.max(1, Math.floor(+betInput.value||0));
+      let bet = Math.floor(+betInput.value||0);
+
+      // 🔒 MIN BET 10
+      if(bet < 10){ alert('Minimalna stava je 10.'); betInput.value = 10; return; }
+
       // mirror latest coins before bet check
       const latestCoins = await readUserCoins(userId);
       await db.ref(`blackjack/${roomId}/players/${userId}/money`).set(latestCoins);
 
-      if(latestCoins < bet) return alert('Nimaš dovolj kovancev.');
+      if(latestCoins < bet) return alert('Nimaš dovolj kovancev za to stavo.');
       await db.ref(`blackjack/${roomId}/players/${userId}`).update({ bet, status:'ready' });
       plMsg.textContent = `Stavil si ${bet}.`;
     };
@@ -658,7 +782,7 @@
       while(loop--){
         const uid = order[idx];
         const p = players[uid];
-        if(p && p.status==='playing' && (p.bet>0) && (p.money>=0)){
+        if(p && p.status==='playing' && (p.bet>=10) && (p.money>=p.bet)){
           await db.ref(`blackjack/${roomId}/turnIndex`).set(idx);
           return;
         }
@@ -680,7 +804,7 @@
         }
         const uid = order[idx];
         const p = players[uid];
-        if(p && p.status==='playing' && p.bet>0){
+        if(p && p.status==='playing' && p.bet>=10 && p.money>=p.bet){
           await db.ref(`blackjack/${roomId}/turnIndex`).set(idx);
           return;
         }
@@ -690,8 +814,7 @@
     }
 
     /* =========================
-       Settle payouts (money moves between users coins)
-       - uses transactions on users/{uid}/coins to avoid race conditions
+       Settle payouts (transactions)
     ========================== */
     async function settlePayouts(){
       const stSnap = await db.ref(`blackjack/${roomId}`).once('value');
@@ -703,10 +826,9 @@
       const dVal = handValue(st.dealer?.hand||[]);
       let hostDelta = 0;
 
-      // Resolve each player result, compute deltas
       for(const [uid,p] of Object.entries(players)){
         if(uid===st.hostId) continue;
-        const bet = +p.bet||0; if(bet<=0) continue;
+        const bet = +p.bet||0; if(bet<10) continue; // min bet zaščita
 
         const v = handValue(p.hand||[]);
         const pBust = v>21; const dBust = dVal>21;
@@ -718,18 +840,13 @@
         else if(v<dVal){ delta=-bet; result='lose'; }
         else { delta=0; result='push'; }
 
-        // Apply to user's global coins (transaction) and mirror back into room
         const newCoins = await applyCoinDelta(roomId, uid, delta);
         await db.ref(`blackjack/${roomId}/players/${uid}/status`).set(result);
-        // bet ostane zapisan (lahko ga počistimo ob naslednjem krogu)
 
-        hostDelta -= delta; // nasprotje za hišo
+        hostDelta -= delta;
       }
 
-      // Apply host delta to host coins
-      const newHostCoins = await applyCoinDelta(roomId, st.hostId, hostDelta);
-
-      // Mark state settle
+      await applyCoinDelta(roomId, st.hostId, hostDelta);
       await db.ref(`blackjack/${roomId}/state`).set('settle');
     }
   </script>
