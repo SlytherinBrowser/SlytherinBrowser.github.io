@@ -2866,10 +2866,12 @@ function returnToPublicChat() {
 
 
 
-// ===========================
-// Per-user typing strip ABOVE input, using GLB avatars from users/${uid}/avatarURL2
-// and names from users/${uid}/displayName. Only JS.
-// ===========================
+// ===============================================
+// Per-user typing strip ABOVE input + 7 visual styles
+// Set your own style with a chat command: "/1" .. "/7"
+// Style is saved to users/${uid}/typingStyle so EVERYONE sees it.
+// Uses users/${uid}/{displayName, avatarURL2, typingStyle}  (avatarURL2 = GLB)
+// ===============================================
 
 const chatId = "globalChat";
 const userId = "user_" + Math.floor(Math.random() * 10000);
@@ -2880,12 +2882,12 @@ const defaultPlaceholder = "Vpiši sporočilo...";
 let myTypingTimeout;
 
 // ---------------------------------------------
-// 1) CSS — strip + chip + model-viewer
+// 1) CSS — base + 7 variants
 // ---------------------------------------------
 (function injectCSS() {
-  if (document.getElementById("typing-strip-style")) return;
+  if (document.getElementById("typing-styles-7")) return;
   const style = document.createElement("style");
-  style.id = "typing-strip-style";
+  style.id = "typing-styles-7";
   style.textContent = `
     @keyframes borderBlink { 0%,100%{border-color:#4a90e2;} 50%{border-color:#e91e63;} }
     .typing-blink { animation:borderBlink 1.2s infinite; border-width:2px!important; border-style:solid!important; outline:none!important; }
@@ -2894,27 +2896,82 @@ let myTypingTimeout;
       display:none; width:100%; overflow-x:auto; white-space:nowrap;
       box-sizing:border-box; padding:6px 8px; margin-bottom:6px; gap:10px;
       border-radius:10px; background:rgba(20,20,25,.08); backdrop-filter:blur(2px);
+      align-items:flex-end;
     }
-    .typing-strip.visible { display:flex; align-items:center; }
+    .typing-strip.visible { display:flex; }
 
     .typing-chip {
+      --chip-bg:#fff; --chip-radius:999px; --chip-pad:6px 10px 6px 6px; --chip-shadow:0 2px 8px rgba(0,0,0,.12);
       display:inline-flex; align-items:center; gap:10px;
-      padding:6px 10px 6px 6px; background:#fff; border-radius:999px;
-      box-shadow:0 2px 8px rgba(0,0,0,.12);
+      padding:var(--chip-pad); border-radius:var(--chip-radius);
+      background:var(--chip-bg); box-shadow:var(--chip-shadow);
       transform:translateY(8px); opacity:0; animation:chipIn 180ms ease-out forwards;
+      position:relative; order:0;
     }
     @keyframes chipIn { from{transform:translateY(8px);opacity:0;} to{transform:translateY(0);opacity:1;} }
 
-    .typing-chip .chip-viewer-wrap {
-      width:32px; height:32px; border-radius:50%; overflow:hidden; background:#eee; flex:0 0 auto;
+    .chip-viewer-wrap { width:36px; height:36px; border-radius:50%; overflow:hidden; background:#eee; flex:0 0 auto; }
+    .typing-chip model-viewer { width:36px; height:36px; display:block; background:transparent; --poster-color:transparent; }
+
+    .chip-name {
+      font-size:12px; line-height:1; color:#222; max-width:160px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     }
-    .typing-chip model-viewer {
-      width:32px; height:32px; display:block; background:transparent;
-      --poster-color: transparent;
-    }
-    .typing-chip .chip-name { font-size:12px; line-height:1; color:#222; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .typing-chip .chip-dots::after { content:""; animation: dotstep 1s infinite steps(4, end); }
+    .chip-dots::after { content:""; animation: dotstep 1s infinite steps(4, end); }
     @keyframes dotstep { 0%{content:"";} 25%{content:".";} 50%{content:"..";} 75%{content:"...";} 100%{content:"";} }
+
+    /* ========= Variants ========= */
+    /* 1) Classic pill (default) */
+    .variant-1 { --chip-bg:#ffffff; --chip-radius:999px; --chip-shadow:0 2px 8px rgba(0,0,0,.12); margin-bottom:0; }
+
+    /* 2) Glassy outline */
+    .variant-2 {
+      --chip-bg:rgba(255,255,255,0.6);
+      --chip-radius:22px;
+      --chip-shadow:0 6px 16px rgba(0,0,0,.16);
+      backdrop-filter: blur(6px);
+      border:1px solid rgba(255,255,255,0.7);
+    }
+
+    /* 3) Compact square tag */
+    .variant-3 {
+      --chip-bg:#0f172a; /* slate-900 */
+      --chip-radius:12px;
+      --chip-shadow:0 4px 10px rgba(2,6,23,.35);
+      color:#e5e7eb;
+    }
+    .variant-3 .chip-name { color:#e5e7eb; }
+    .variant-3 .chip-viewer-wrap { width:30px; height:30px; border-radius:8px; }
+
+    /* 4) Tall stack (name above avatar) */
+    .variant-4 {
+      --chip-bg:#ffffff; --chip-radius:14px; flex-direction:column-reverse; align-items:center; gap:4px; padding:8px;
+    }
+    .variant-4 .chip-viewer-wrap { width:44px; height:44px; border-radius:12px; }
+    .variant-4 .chip-name { max-width:90px; text-align:center; }
+    .variant-4 .chip-dots { position:absolute; right:6px; bottom:6px; }
+    .variant-4 { margin-bottom:2px; }
+
+    /* 5) Staggered low (drops lower) */
+    .variant-5 { margin-bottom:-4px; transform:translateY(12px); }
+    .variant-5 .chip-viewer-wrap { width:40px; height:40px; }
+    .variant-5 .chip-name { font-weight:600; }
+
+    /* 6) Minimal avatar-only bubble (name as tooltip) */
+    .variant-6 {
+      --chip-bg:#ffffff; --chip-radius:999px; padding:6px; gap:0;
+    }
+    .variant-6 .chip-name { position:absolute; bottom:-18px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.75); color:#fff; padding:3px 6px; border-radius:6px; pointer-events:none; }
+    .variant-6 .chip-viewer-wrap { width:42px; height:42px; }
+    .variant-6 .chip-dots { display:none; }
+
+    /* 7) Push-right badge (align this chip to the far right) */
+    .variant-7 { margin-left:auto; --chip-bg:#111827; --chip-radius:20px; }
+    .variant-7 .chip-name { color:#f9fafb; }
+    .variant-7 .chip-viewer-wrap { width:34px; height:34px; border:2px solid #f9fafb22; }
+
+    /* Nice entrance when variant tweaks transform */
+    .typing-chip[class*="variant-"] { will-change: transform, opacity; }
   `;
   document.head.appendChild(style);
 })();
@@ -2931,7 +2988,7 @@ let myTypingTimeout;
 })();
 
 // ---------------------------------------------
-// 3) Create a typing strip directly ABOVE the input
+// 3) Typing strip (ABOVE input)
 // ---------------------------------------------
 function getTypingStrip() {
   let strip = document.getElementById("typing-strip");
@@ -2942,46 +2999,115 @@ function getTypingStrip() {
   strip.className = "typing-strip";
 
   const parent = inputField.parentElement || document.body;
-  parent.insertBefore(strip, inputField); // ensure it's right above the input
+  parent.insertBefore(strip, inputField); // right above the input
   return strip;
 }
 
 // ---------------------------------------------
-// 4) Fetch user profile from users/${uid}/{displayName, avatarURL2}
-// avatarURL2 MUST be a GLB URL
+// 4) Profiles + style cache (live)
+// users/${uid}/{displayName, avatarURL2 (GLB), typingStyle (1..7)}
 // ---------------------------------------------
 const DEFAULT_GLB = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
-const profileCache = new Map();
+const profileCache = new Map(); // uid -> { displayName, glb, style }
 
-async function getUserProfile(uid) {
+function safeStr(v, fb = "") { return (v === undefined || v === null) ? fb : String(v); }
+function clampStyle(v) {
+  const n = parseInt(v, 10);
+  return (Number.isFinite(n) && n >= 1 && n <= 7) ? n : 1;
+}
+
+function applyProfileToChip(uid) {
+  const data = profileCache.get(uid);
+  if (!data) return;
+  const chip = document.querySelector(`.typing-chip[data-uid="${CSS.escape(uid)}"]`);
+  if (!chip) return;
+
+  // name
+  const nameEl = chip.querySelector(".chip-name");
+  if (nameEl) nameEl.textContent = data.displayName || "Uporabnik";
+
+  // glb
+  const mv = chip.querySelector("model-viewer");
+  if (mv) {
+    const nextSrc = data.glb || DEFAULT_GLB;
+    if (mv.getAttribute("src") !== nextSrc) mv.setAttribute("src", nextSrc);
+  }
+
+  // variant class
+  chip.classList.remove("variant-1","variant-2","variant-3","variant-4","variant-5","variant-6","variant-7");
+  chip.classList.add(`variant-${data.style || 1}`);
+}
+
+(function listenUsersLive() {
+  const usersRef = firebase.database().ref("users");
+
+  usersRef.on("child_added", (snap) => {
+    const uid = snap.key;
+    const val = snap.val() || {};
+    profileCache.set(uid, {
+      displayName: safeStr(val.displayName, "Uporabnik"),
+      glb: safeStr(val.avatarURL2, DEFAULT_GLB),
+      style: clampStyle(val.typingStyle)
+    });
+    applyProfileToChip(uid);
+  });
+
+  usersRef.on("child_changed", (snap) => {
+    const uid = snap.key;
+    const val = snap.val() || {};
+    profileCache.set(uid, {
+      displayName: safeStr(val.displayName, "Uporabnik"),
+      glb: safeStr(val.avatarURL2, DEFAULT_GLB),
+      style: clampStyle(val.typingStyle)
+    });
+    applyProfileToChip(uid);
+  });
+})();
+
+async function fetchProfileOnce(uid) {
   if (profileCache.has(uid)) return profileCache.get(uid);
-
-  const db = firebase.database();
-  const [nameSnap, glbSnap] = await Promise.all([
-    db.ref(`users/${uid}/displayName`).once("value"),
-    db.ref(`users/${uid}/avatarURL2`).once("value"),
+  const [nameSnap, glbSnap, styleSnap] = await Promise.all([
+    firebase.database().ref(`users/${uid}/displayName`).once("value"),
+    firebase.database().ref(`users/${uid}/avatarURL2`).once("value"),
+    firebase.database().ref(`users/${uid}/typingStyle`).once("value"),
   ]);
-
-  const displayName = (nameSnap && nameSnap.val()) ? String(nameSnap.val()) : "Uporabnik";
-  const glb = (glbSnap && glbSnap.val()) ? String(glbSnap.val()) : DEFAULT_GLB;
-
-  const profile = { displayName, glb };
+  const profile = {
+    displayName: safeStr(nameSnap.val(), "Uporabnik"),
+    glb: safeStr(glbSnap.val(), DEFAULT_GLB),
+    style: clampStyle(styleSnap.val())
+  };
   profileCache.set(uid, profile);
   return profile;
 }
 
 // ---------------------------------------------
-// 5) Local typing state
+// 5) Typing state
 // ---------------------------------------------
-const typingState = new Map(); // uid -> { timer, staleTimer, el, profile }
+const typingState = new Map(); // uid -> { timer, staleTimer, el }
 const isAnyoneTyping = () => typingState.size > 0;
 
 // ---------------------------------------------
-// 6) My typing writes
+// 6) My typing writers
 // ---------------------------------------------
 firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
 
 inputField.addEventListener("input", () => {
+  // detect style command ("/1" .. "/7") typed alone
+  const v = inputField.value.trim();
+  const m = /^\/([1-7])$/.exec(v);
+  if (m) {
+    const styleNum = parseInt(m[1], 10);
+    setMyTypingStyle(styleNum);
+    // Clear command from input; don't emit as message
+    inputField.value = "";
+    // subtle feedback
+    inputField.placeholder = `Nastavljen stil ${styleNum} ✅`;
+    setTimeout(() => (inputField.placeholder = defaultPlaceholder), 1200);
+    // do not mark as typing on command
+    firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
+    return;
+  }
+
   firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(true);
   clearTimeout(myTypingTimeout);
   myTypingTimeout = setTimeout(() => {
@@ -2993,12 +3119,22 @@ window.addEventListener("beforeunload", () => {
   firebase.database().ref(`typingStatus/${chatId}/${userId}`).set(false);
 });
 
+// Persist my style so everyone sees it
+function setMyTypingStyle(n) {
+  const styleNum = clampStyle(n);
+  firebase.database().ref(`users/${userId}/typingStyle`).set(styleNum);
+  // Update local cache immediately
+  const p = profileCache.get(userId) || { displayName: "Uporabnik", glb: DEFAULT_GLB, style: 1 };
+  p.style = styleNum;
+  profileCache.set(userId, p);
+}
+
 // ---------------------------------------------
-// 7) Render helpers (GLB avatar chips)
+// 7) Render helpers (GLB avatar chips) — head visible
 // ---------------------------------------------
 function createTypingChip(uid, profile) {
   const chip = document.createElement("div");
-  chip.className = "typing-chip";
+  chip.className = `typing-chip variant-${profile.style || 1}`;
   chip.dataset.uid = uid;
 
   const wrap = document.createElement("div");
@@ -3010,19 +3146,18 @@ function createTypingChip(uid, profile) {
   mv.setAttribute("camera-controls", "");
   mv.setAttribute("disable-zoom", "");
   mv.setAttribute("interaction-prompt", "none");
-  // Shoulder-ish framing (tweak if your GLBs are different scale):
-  mv.setAttribute("camera-orbit", "0deg 85deg 0.9m");
-  mv.setAttribute("field-of-view", "25deg");
-  mv.setAttribute("exposure", "1.0");
+  // Framing so head is nicely visible
+  mv.setAttribute("camera-target", "0m 0.18m 0m");
+  mv.setAttribute("camera-orbit", "0deg 70deg 1.15m");
+  mv.setAttribute("field-of-view", "23deg");
   mv.setAttribute("autoplay", "");
-  // NOTE: do not set auto-rotate if you want static avatars; uncomment if desired:
-  // mv.setAttribute("auto-rotate", "");
+  mv.setAttribute("exposure", "1.0");
 
   wrap.appendChild(mv);
 
   const name = document.createElement("span");
   name.className = "chip-name";
-  name.textContent = profile.displayName;
+  name.textContent = profile.displayName || "Uporabnik";
 
   const dots = document.createElement("span");
   dots.className = "chip-dots";
@@ -3032,7 +3167,6 @@ function createTypingChip(uid, profile) {
   chip.appendChild(name);
   chip.appendChild(dots);
 
-  // If GLB fails to load, fall back to default
   mv.addEventListener("error", () => {
     if (mv.getAttribute("src") !== DEFAULT_GLB) {
       mv.setAttribute("src", DEFAULT_GLB);
@@ -3042,28 +3176,33 @@ function createTypingChip(uid, profile) {
   return chip;
 }
 
-function showTyping(uid, profile) {
+function showTyping(uid) {
   const strip = getTypingStrip();
+  const cached = profileCache.get(uid) || { displayName: "Uporabnik", glb: DEFAULT_GLB, style: 1 };
+  const existing = typingState.get(uid);
 
-  const current = typingState.get(uid);
-  if (current && current.el && strip.contains(current.el)) {
-    clearTimeout(current.timer);
-    clearTimeout(current.staleTimer);
-    current.timer = scheduleHide(uid);
-    current.staleTimer = scheduleStaleReset(uid);
+  if (existing && existing.el && strip.contains(existing.el)) {
+    clearTimeout(existing.timer);
+    clearTimeout(existing.staleTimer);
+    existing.timer = scheduleHide(uid);
+    existing.staleTimer = scheduleStaleReset(uid);
   } else {
-    const el = createTypingChip(uid, profile);
+    const el = createTypingChip(uid, cached);
     strip.appendChild(el);
     const timer = scheduleHide(uid);
     const staleTimer = scheduleStaleReset(uid);
-    typingState.set(uid, { el, profile, timer, staleTimer });
+    typingState.set(uid, { el, timer, staleTimer });
+
+    // If profile later updates (live listeners), apply it
+    applyProfileToChip(uid);
   }
 
   strip.classList.add("visible");
   inputField.classList.add("typing-blink");
 
   if (typingState.size === 1) {
-    inputField.placeholder = `${profile.displayName} tipka...`;
+    const prof = profileCache.get(uid) || cached;
+    inputField.placeholder = `${prof.displayName} tipka...`;
   } else {
     inputField.placeholder = defaultPlaceholder;
   }
@@ -3106,7 +3245,7 @@ function scheduleStaleReset(uid) {
 }
 
 // ---------------------------------------------
-// 8) Per-user listeners
+// 8) Per-user typing listeners
 // ---------------------------------------------
 (function attachPerUserTypingListeners() {
   const roomRef = firebase.database().ref(`typingStatus/${chatId}`);
@@ -3115,8 +3254,8 @@ function scheduleStaleReset(uid) {
     const uid = snap.key;
     if (uid === userId) return;
     if (snap.val()) {
-      const profile = await getUserProfile(uid);
-      showTyping(uid, profile);
+      if (!profileCache.has(uid)) await fetchProfileOnce(uid);
+      showTyping(uid);
     }
   });
 
@@ -3125,16 +3264,8 @@ function scheduleStaleReset(uid) {
     if (uid === userId) return;
     const isTyping = !!snap.val();
     if (isTyping) {
-      const current = typingState.get(uid);
-      if (current) {
-        clearTimeout(current.timer);
-        clearTimeout(current.staleTimer);
-        current.timer = scheduleHide(uid);
-        current.staleTimer = scheduleStaleReset(uid);
-      } else {
-        const profile = await getUserProfile(uid);
-        showTyping(uid, profile);
-      }
+      if (!profileCache.has(uid)) await fetchProfileOnce(uid);
+      showTyping(uid);
     } else {
       hideTyping(uid);
     }
@@ -3146,6 +3277,26 @@ function scheduleStaleReset(uid) {
     hideTyping(uid);
   });
 })();
+
+// ---------------------------------------------
+// 9) (Optional) Also allow Enter to set style if input == "/n"
+//   If you have your own send flow, keep this snippet so the command
+//   doesn't go as a message.
+// ---------------------------------------------
+inputField.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const v = inputField.value.trim();
+    const m = /^\/([1-7])$/.exec(v);
+    if (m) {
+      e.preventDefault();
+      const styleNum = parseInt(m[1], 10);
+      setMyTypingStyle(styleNum);
+      inputField.value = "";
+      inputField.placeholder = `Nastavljen stil ${styleNum} ✅`;
+      setTimeout(() => (inputField.placeholder = defaultPlaceholder), 1200);
+    }
+  }
+});
 
 
 
