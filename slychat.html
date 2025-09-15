@@ -2891,7 +2891,7 @@ let myTypingTimeout;
     .typing-blink { animation:borderBlink 1.2s infinite; border-width:2px!important; border-style:solid!important; outline:none!important; }
 
     .typing-strip {
-      display:none; width:100%; height: 100px; overflow-x:auto; white-space:nowrap;
+      display:none; width:100%; height: 80px; overflow-x:auto; white-space:nowrap;
       box-sizing:border-box; padding:6px 8px; margin-bottom:6px; gap:10px;
       border-radius:10px; background:rgba(20,20,25,.08); backdrop-filter:blur(2px);
       align-items:flex-end;
@@ -3045,7 +3045,10 @@ function createChip(uid,profile){
   const wrap=document.createElement("div");wrap.className="chip-viewer-wrap";
   const mv=document.createElement("model-viewer");
   mv.setAttribute("src",profile.glb||DEFAULT_GLB);
-  mv.setAttribute("camera-target","0m 0.18m 0m");mv.setAttribute("camera-orbit","0deg 70deg 1.15m");mv.setAttribute("field-of-view","23deg");mv.setAttribute("exposure","1.0");
+  // 🔹 ZAMENJAJ s tem (glava bolj v sredini):
+mv.setAttribute("camera-target", "0m 1.6m 0m");  // višina fokusa, ~glava
+mv.setAttribute("camera-orbit", "0deg 75deg 1.8m"); // malenkost od zgoraj, dlje stran
+mv.setAttribute("field-of-view", "20deg");mv.setAttribute("exposure","1.0");
   mv.setAttribute("disable-zoom","");mv.setAttribute("interaction-prompt","none");mv.setAttribute("reveal","auto");mv.setAttribute("autoplay","");
   wrap.appendChild(mv);
   const name=document.createElement("span");name.className="chip-name";name.textContent=profile.displayName;
