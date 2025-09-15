@@ -1,334 +1,389 @@
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link id="favicon" rel="icon" href="Slytherin.png">
-    <title>Gameportal</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(to bottom, #68e5d8, #b1c6f5);
-            color: #333;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link id="favicon" rel="icon" href="Slytherin.png">
+  <title>Gameportal</title>
 
-        #searchForm {
-            width: 50%;
-            background: radial-gradient(circle, #3fa9ff, #2473b2);
-            border: 2px solid #fff;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
-            transition: transform 0.5s ease-in-out, box-shadow 0.3s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-        #searchForm.shrunk {
-            display: none;
-        }
+  <style>
+    body{
+      font-family: 'Arial', sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center;
+      min-height:100vh; margin:0; background: linear-gradient(to bottom, #68e5d8, #b1c6f5); color:#333;
+    }
+    #searchForm{ width: 50%; background: radial-gradient(circle, #3fa9ff, #2473b2); border:2px solid #fff; border-radius:20px;
+      padding:25px; box-shadow:0 4px 30px rgba(0,0,0,.4); transition: transform .5s, box-shadow .3s; display:flex; flex-direction:column; align-items:center;
+    }
+    #searchForm.shrunk{ display:none; }
+    #searchForm:hover{ box-shadow:0 6px 40px rgba(0,0,0,.6); }
+    label{ display:block; margin-bottom:10px; font-size:16px; color:#fff; }
+    #search{
+      background: linear-gradient(to right, #3fa9ff, #2473b2); border:2px solid #fff; padding:20px; font-size:18px; width:90%; height:74px;
+      border-radius:10px; color:#fff; outline:none; transition: background .3s, transform .3s, border-color .3s, box-shadow .3s;
+    }
+    #search:focus{ border-color:#007bff; background: linear-gradient(to right, #e74c3c, #2473b2); box-shadow:0 0 10px rgba(0,0,0,.4); }
+    iframe{ width:100%; height:400px; border:none; margin-top:20px; display:none; border-radius:10px; opacity:1; transform:translateY(0);
+      transition: height .5s, opacity .5s; box-shadow:0 0 15px rgba(0,0,0,.3);
+    }
+    iframe.active{ display:block; opacity:1; }
+    .button-container{ display:flex; justify-content:center; gap:10px; margin-top:8px; }
+    button{
+      background-color:#3fa9ff; color:#fff; padding:12px 25px; border:none; border-radius:12px; cursor:pointer;
+      transition: background .3s, transform .2s;
+    }
+    button:hover{ background-color:#2473b2; transform:scale(1.05); }
 
-        #searchForm:hover {
-            box-shadow: 0 6px 40px rgba(0, 0, 0, 0.6);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #fff;
-        }
-
-        #search {
-            background: linear-gradient(to right, #3fa9ff, #2473b2);
-            border: 2px solid #fff;
-            padding: 20px;
-            font-size: 18px;
-            width: 90%;
-            height: 74px;
-            border-radius: 10px;
-            color: #fff;
-            outline: none;
-            transition: background 0.3s, transform 0.3s ease-in-out, border-color 0.3s, box-shadow 0.3s;
-        }
-
-        #search:focus {
-            border-color: #007bff;
-            background: linear-gradient(to right, #e74c3c, #2473b2);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-        }
-
-        iframe {
-            width: 100%;
-            height: 400px;
-            border: none;
-            margin-top: 20px;
-            display: block;
-            border-radius: 10px;
-            opacity: 1;
-            transform: translateY(0);
-            transition: height 0.5s ease-in-out, opacity 0.5s ease-in-out;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        }
-
-        iframe.active {
-            height: 100%;
-            opacity: 1;
-        }
-
-        #popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #fff;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            width: 80%;
-            max-width: 400px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        #popup ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        #popup li {
-            margin: 10px 0;
-            font-size: 18px;
-            color: #333;
-        }
-
-#popupButton {
-    display: none;
-            background-color: #3fa9ff;
-            color: #fff;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s ease-in-out;
-            margin-top: 10px;
-        }
-    
- #toggleButton, #lastPlayedButton {
-            background-color: #3fa9ff;
-            color: #fff;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s ease-in-out;
-            margin-top: 10px;
-        }
-
-        #popupButton:hover, #toggleButton:hover, #lastPlayedButton:hover {
-            background-color: #2473b2;
-            transform: scale(1.05);
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -60%);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%);
-            }
-        }
-    </style>
+    /* HUD za kovance */
+    #coinsHUD{
+      position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,.35); color:#fff; padding:10px 14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.35); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size:14px; z-index: 5;
+      display:flex; gap:10px; align-items:center;
+    }
+    #coinsHUD .dot{ width:8px; height:8px; border-radius:50%; background:#18d36e; box-shadow:0 0 8px #18d36e; }
+    #toast{
+      position: fixed; bottom: 14px; right: 14px; background:#1f2e54; color:#fff; padding:10px 14px; border-radius:10px;
+      border:1px solid #2c3d74; display:none; box-shadow:0 6px 20px rgba(0,0,0,.35); z-index: 6;
+    }
+    .hidden{ display:none !important; }
+  </style>
 </head>
 <body>
-    <form id="searchForm">
-        <label for="search">Vnesi igro:</label>
-        <input list="games" type="text" id="search" placeholder="Napiši ključne besede...">
-        <datalist id="games">
-            <option value="cat">
-            <option value="among">
-            <option value="archer hero">
-            <option value="warstrike">
-            <option value="drift">
-            <option value="bob">
-            <option value="diep">
-            <option value="wormate">
-            <option value="littlebigsnake">
-            <option value="wormszoneio">
-            <option value="slithercraft">
-            <option value="moomoo">
-            <option value="zombsroyale">
-            <option value="krunker">
-            <option value="lordz.io">
-            <option value="flyordie">
-            <option value="typeracer">
-        </datalist>
-    </form>
-    <iframe id="resultFrame" style="display:none;"></iframe>
-    <div class="button-container">
-        <button id="popupButton">Pokaži seznam iger</button>
-        <button id="toggleButton" disabled>Povečaj / Pomanjšaj</button>
-        <button id="lastPlayedButton">Odpni zadnjo igro</button>
-    </div>
+  <!-- HUD -->
+  <div id="coinsHUD" class="hidden">
+    <div class="dot" id="hudDot" title="Sledenje igri aktivno"></div>
+    <div><b>Kovanci:</b> <span id="coinsBalance">—</span></div>
+    <div><b>Tempo:</b> +<span id="coinsRate">0</span>/min</div>
+    <div><b>Igra:</b> <span id="currentGameName">—</span></div>
+  </div>
+  <div id="toast"></div>
 
+  <form id="searchForm">
+    <label for="search">Vnesi igro:</label>
+    <input list="games" type="text" id="search" placeholder="Napiši ključne besede...">
+    <datalist id="games">
+      <option value="cat">
+      <option value="among">
+      <option value="archer hero">
+      <option value="warstrike">
+      <option value="drift">
+      <option value="bob">
+      <option value="diep">
+      <option value="wormate">
+      <option value="littlebigsnake">
+      <option value="wormszoneio">
+      <option value="slithercraft">
+      <option value="moomoo">
+      <option value="zombsroyale">
+      <option value="krunker">
+      <option value="lordz.io">
+      <option value="flyordie">
+      <option value="typeracer">
+    </datalist>
+  </form>
 
-    <script>
-        const searchInput = document.getElementById('search');
-        const searchForm = document.getElementById('searchForm');
-        const resultFrame = document.getElementById('resultFrame');
-        const popupButton = document.getElementById('popupButton');
-        const popup = document.getElementById('popup');
-        const toggleButton = document.getElementById('toggleButton');
-        const lastPlayedButton = document.getElementById('lastPlayedButton');
+  <iframe id="resultFrame"></iframe>
 
-        const links = {
-            "cat": "https://slytherinbrowser.github.io/cat.html",
-            "among": "https://www.onlinegames.io/games/2023/construct/234/among-impostor/index.html",
-            "archer hero": "https://www.onlinegames.io/games/2023/unity/archer-hero/index.html",
-            "warstrike": "https://cloud.onlinegames.io/games/2024/unity3/warstrike/index-og.html",
-            "drift": "https://www.onlinegames.io/games/2024/unity/drift-king/index.html",
-            "bob": "https://html5.gamedistribution.com/18d28481ea514f3c838f9a5a355fb0f7/?gd_sdk_referrer_url=https://gamedistribution.com/games/bob-the-robber/",
-            "diep": "https://diep.io",
-            "wormate": "https://wormate.io",
-            "littlebigsnake": "https://littlebigsnake.com",
-            "wormszoneio": "https://wormszone.io",
-            "slithercraft": "https://slithercraft.io",
-            "moomoo": "https://moomoo.io",
-            "zombsroyale": "https://zombsroyale.io",
-            "krunker": "https://krunker.io",
-            "lordz.io": "https://lordz.io",
-            "flyordie": "https://flyordie.io",
-            "typeracer": "https://play.typeracer.com"
-        };
- let lastPlayedGame = localStorage.getItem('lastPlayedGame');
+  <div class="button-container">
+    <button id="toggleButton" disabled>Povečaj / Pomanjšaj</button>
+    <button id="lastPlayedButton">Odpni zadnjo igro</button>
+  </div>
 
-        // Poveži iskalnik z iframe
-        searchInput.addEventListener('input', () => {
-            const value = searchInput.value.toLowerCase();
-            if (links[value]) {
-                resultFrame.src = links[value];
-                resultFrame.style.display = 'block';
-                toggleButton.disabled = false;
-                lastPlayedGame = value;
-                localStorage.setItem('lastPlayedGame', value);
-                lastPlayedButton.disabled = false;
-            } else {
-                resultFrame.style.display = 'none';
-                toggleButton.disabled = true;
-                lastPlayedButton.disabled = true;
-            }
-        });
+  <script>
+    /* =========================
+       Firebase init
+    ========================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
 
-        // Gumb za odpiranje zadnje igre ob kliku
-        lastPlayedButton.addEventListener('click', () => {
-            if (lastPlayedGame && links[lastPlayedGame]) {
-                resultFrame.src = links[lastPlayedGame];
-                resultFrame.style.display = 'block';
-                toggleButton.disabled = false;
-            } else {
-                alert("Ni nobene nedavne igre za odpreti.");
-            }
-        });
+    /* =========================
+       DOM refs
+    ========================== */
+    const searchInput       = document.getElementById('search');
+    const searchForm        = document.getElementById('searchForm');
+    const resultFrame       = document.getElementById('resultFrame');
+    const toggleButton      = document.getElementById('toggleButton');
+    const lastPlayedButton  = document.getElementById('lastPlayedButton');
+    const coinsHUD          = document.getElementById('coinsHUD');
+    const coinsBalanceEl    = document.getElementById('coinsBalance');
+    const coinsRateEl       = document.getElementById('coinsRate');
+    const currentGameNameEl = document.getElementById('currentGameName');
+    const toastEl           = document.getElementById('toast');
 
-        popupButton.addEventListener('click', () => {
-            popup.style.display = 'block';
-        });
+    /* =========================
+       Igralni linki
+    ========================== */
+    const links = {
+      "cat":                "https://slytherinbrowser.github.io/cat.html",
+      "among":              "https://www.onlinegames.io/games/2023/construct/234/among-impostor/index.html",
+      "archer hero":        "https://www.onlinegames.io/games/2023/unity/archer-hero/index.html",
+      "warstrike":          "https://cloud.onlinegames.io/games/2024/unity3/warstrike/index-og.html",
+      "drift":              "https://www.onlinegames.io/games/2024/unity/drift-king/index.html",
+      "bob":                "https://html5.gamedistribution.com/18d28481ea514f3c838f9a5a355fb0f7/?gd_sdk_referrer_url=https://gamedistribution.com/games/bob-the-robber/",
+      "diep":               "https://diep.io",
+      "wormate":            "https://wormate.io",
+      "littlebigsnake":     "https://littlebigsnake.com",
+      "wormszoneio":        "https://wormszone.io",
+      "slithercraft":       "https://slithercraft.io",
+      "moomoo":             "https://moomoo.io",
+      "zombsroyale":        "https://zombsroyale.io",
+      "krunker":            "https://krunker.io",
+      "lordz.io":           "https://lordz.io",
+      "flyordie":           "https://flyordie.io",
+      "typeracer":          "https://play.typeracer.com"
+    };
 
-        function closePopup() {
-            popup.style.display = 'none';
-        }
+    /* =========================
+       Tempo kovancev (10..200) po igrah
+       (lahko spreminjaš vrednosti)
+    ========================== */
+    const coinRates = {
+      "cat": 20,
+      "among": 60,
+      "archer hero": 70,
+      "warstrike": 150,
+      "drift": 80,
+      "bob": 30,
+      "diep": 50,
+      "wormate": 40,
+      "littlebigsnake": 45,
+      "wormszoneio": 40,
+      "slithercraft": 35,
+      "moomoo": 55,
+      "zombsroyale": 160,
+      "krunker": 120,
+      "lordz.io": 50,
+      "flyordie": 65,
+      "typeracer": 100
+    };
+    const MIN_RATE = 10, MAX_RATE = 200;
 
-        let isExpanded = false;
+    /* =========================
+       State
+    ========================== */
+    let userId = null;
+    let userCoinsUnsub = null;
+    let lastPlayedGame = localStorage.getItem('lastPlayedGame') || null;
 
-        toggleButton.addEventListener('click', () => {
-    if (!isExpanded) {
-        resultFrame.style.height = '100vh';
-        resultFrame.style.width = '100%';
-        searchForm.classList.add('shrunk'); // Skrije iskalnik
-    } else {
-        resultFrame.style.height = '400px';
-        resultFrame.style.width = '100%';
-        searchForm.classList.remove('shrunk'); // Prikaže iskalnik
+    let startTime  = null;         // za merjenje igranja
+    let isChildMode = false;
+    let isExpanded = false;
+
+    // kovanci/min podeljevanje
+    let activeGameKey = null;
+    let currentRate   = 0;
+    let minuteBufferMs = 0;       // akumulira čas do 60s
+    let earningTimerId = null;    // interval ID
+    let pageVisible = true;
+
+    /* =========================
+       Auth + coins listener
+    ========================== */
+    auth.onAuthStateChanged(async (user)=>{
+      if(user){
+        userId = user.uid;
+        // prikažemo HUD
+        coinsHUD.classList.remove('hidden');
+        // poslušamo kovance uporabnika
+        if(userCoinsUnsub) db.ref(`users/${userId}/coins`).off('value', userCoinsUnsub);
+        userCoinsUnsub = (snap)=>{ coinsBalanceEl.textContent = (snap.val() ?? 0); };
+        db.ref(`users/${userId}/coins`).on('value', userCoinsUnsub);
+      }else{
+        userId = null;
+        coinsHUD.classList.add('hidden');
+        if(userCoinsUnsub) db.ref(`users/${userId}/coins`).off('value', userCoinsUnsub);
+        alert('Nisi prijavljen. Igra deluje, kovanci se pa ne bodo shranjevali.');
+      }
+
+      // Auto-odpri zadnjo igro (če obstaja)
+      if(lastPlayedGame && links[lastPlayedGame]){
+        openGame(lastPlayedGame);
+      }
+    });
+
+    /* =========================
+       Pomagala
+    ========================== */
+    function clampRate(n){
+      n = Math.round(+n || 0);
+      if(n < MIN_RATE) return MIN_RATE;
+      if(n > MAX_RATE) return MAX_RATE;
+      return n;
     }
-    isExpanded = !isExpanded;
-});
-         function getTimePlayedToday() {
-            const today = new Date().toISOString().split('T')[0];
-            const data = JSON.parse(localStorage.getItem('playTime')) || {};
-            return data[today] || 0;
-        }
+    function showToast(msg){
+      toastEl.textContent = msg;
+      toastEl.style.display = 'block';
+      setTimeout(()=>{ toastEl.style.display='none'; }, 2000);
+    }
+    function setHUD(gameKey){
+      const nice = gameKey || '—';
+      currentGameNameEl.textContent = nice;
+      coinsRateEl.textContent = clampRate(coinRates[nice] ?? MIN_RATE);
+    }
+    function startEarning(){
+      stopEarning(); // varnostno
+      minuteBufferMs = 0;
+      currentRate = clampRate(coinRates[activeGameKey] ?? MIN_RATE);
+      coinsRateEl.textContent = currentRate;
 
-        function updateTimePlayed(duration) {
-            const today = new Date().toISOString().split('T')[0];
-            const data = JSON.parse(localStorage.getItem('playTime')) || {};
-            data[today] = (data[today] || 0) + duration;
-            localStorage.setItem('playTime', JSON.stringify(data));
-        }
+      earningTimerId = setInterval(()=>{
+        if(!activeGameKey) return;
+        if(!pageVisible) return;
+        if(resultFrame.style.display === 'none') return;
 
-        function getTotalTimePlayed() {
-            const data = JSON.parse(localStorage.getItem('playTime')) || {};
-            return Object.values(data).reduce((total, time) => total + time, 0);
-        }
+        const now = Date.now();
+        if(startTime == null){ startTime = now; return; }
+        const elapsed = now - startTime;
+        startTime = now;
 
-        function enforceChildMode() {
-            if (getTimePlayedToday() >= 3 * 60 * 60 * 1000) {
-                alert('Dosežen je dnevni časovni limit igranja (3 ure).');
-                resultFrame.classList.add('hidden');
-            }
-        }
+        // beleži čas igranja (tvoj obstoječ sistem)
+        updateTimePlayed(elapsed);
+        if(isChildMode) enforceChildMode();
 
-        searchInput.addEventListener('input', () => {
-            const value = searchInput.value.toLowerCase();
-            if (links[value]) {
-                resultFrame.src = links[value];
-                resultFrame.classList.remove('hidden');
-                toggleButton.disabled = false;
-                startTime = Date.now();
-            } else {
-                resultFrame.classList.add('hidden');
-                toggleButton.disabled = true;
-            }
-        });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                const command = searchInput.value.toLowerCase();
-                if (command === 'todaytime') {
-                    alert(`Danes si igral ${Math.floor(getTimePlayedToday() / 60000)} minut.`);
-                } else if (command === 'time') {
-                    alert(`Skupno si igral ${Math.floor(getTotalTimePlayed() / 60000)} minut.`);
-                } else if (command === 'child') {
-                    isChildMode = true;
-                    enforceChildMode();
-                } else if (command === '18') {
-                    isChildMode = false;
-                    alert('Preklopljeno na način brez omejitev.');
-                }
-            }
-        });
-         setInterval(() => {
-            if (startTime) {
-                const now = Date.now();
-                const elapsed = now - startTime;
-                updateTimePlayed(elapsed);
-                startTime = now;
-                if (isChildMode) enforceChildMode();
-            }
-        }, 1000);
-    </script>
+        // akumuliraj do 60s
+        minuteBufferMs += elapsed;
+        if(minuteBufferMs >= 60_000){
+          minuteBufferMs -= 60_000;
+          grantCoins(currentRate);
+        }
+      }, 1000);
+    }
+    function stopEarning(){
+      if(earningTimerId){ clearInterval(earningTimerId); earningTimerId = null; }
+    }
+    async function grantCoins(amount){
+      if(!userId) return; // ni prijave → ne shranjuj
+      const ref = db.ref(`users/${userId}/coins`);
+      await ref.transaction(curr => ( +curr || 0 ) + (+amount || 0) );
+      showToast(`+${amount} kovancev (${activeGameKey})`);
+    }
+
+    /* =========================
+       Upravljanje z igrami
+    ========================== */
+    function openGame(key){
+      const url = links[key];
+      if(!url){ resultFrame.classList.remove('active'); resultFrame.style.display='none'; toggleButton.disabled=true; return; }
+
+      // naloži iframe
+      resultFrame.src = url;
+      resultFrame.classList.add('active');
+      resultFrame.style.display = 'block';
+      toggleButton.disabled = false;
+
+      // shrani zadnjo igro
+      lastPlayedGame = key;
+      localStorage.setItem('lastPlayedGame', key);
+
+      // nastavi HUD in earning
+      activeGameKey = key;
+      setHUD(activeGameKey);
+      startTime = Date.now(); // resetaj igralni čas za merjenje
+      startEarning();
+    }
+
+    // vnos v polje
+    searchInput.addEventListener('input', ()=>{
+      const value = (searchInput.value || '').toLowerCase().trim();
+      if(links[value]) openGame(value);
+      else {
+        resultFrame.classList.remove('active');
+        resultFrame.style.display='none';
+        toggleButton.disabled = true;
+        stopEarning();
+        activeGameKey = null;
+        setHUD(null);
+      }
+    });
+
+    // zadnja igra
+    lastPlayedButton.addEventListener('click', ()=>{
+      if(lastPlayedGame && links[lastPlayedGame]) openGame(lastPlayedGame);
+      else alert('Ni nobene nedavne igre za odpreti.');
+    });
+
+    // povečaj/pomanjšaj
+    toggleButton.addEventListener('click', ()=>{
+      if(!isExpanded){
+        resultFrame.style.height = '100vh';
+        resultFrame.style.width  = '100%';
+        searchForm.classList.add('shrunk'); // skrij iskalnik
+      }else{
+        resultFrame.style.height = '400px';
+        resultFrame.style.width  = '100%';
+        searchForm.classList.remove('shrunk'); // pokaži iskalnik
+      }
+      isExpanded = !isExpanded;
+    });
+
+    // pavza pridobivanja kovancev, ko je tab skrit
+    document.addEventListener('visibilitychange', ()=>{
+      pageVisible = !document.hidden;
+      // ko postane viden, resetiraj startTime, da ne šteje “luknje”
+      if(pageVisible) startTime = Date.now();
+    });
+
+    /* =========================
+       Tvoj obstoječ time-tracking + child mode
+    ========================== */
+    function getTimePlayedToday(){
+      const today = new Date().toISOString().split('T')[0];
+      const data  = JSON.parse(localStorage.getItem('playTime')) || {};
+      return data[today] || 0;
+    }
+    function updateTimePlayed(duration){
+      const today = new Date().toISOString().split('T')[0];
+      const data  = JSON.parse(localStorage.getItem('playTime')) || {};
+      data[today] = (data[today] || 0) + duration;
+      localStorage.setItem('playTime', JSON.stringify(data));
+    }
+    function getTotalTimePlayed(){
+      const data = JSON.parse(localStorage.getItem('playTime')) || {};
+      return Object.values(data).reduce((total, t) => total + t, 0);
+    }
+    function enforceChildMode(){
+      if(getTimePlayedToday() >= 3*60*60*1000){
+        alert('Dosežen je dnevni časovni limit igranja (3 ure).');
+        resultFrame.classList.remove('active');
+        resultFrame.style.display='none';
+        toggleButton.disabled = true;
+        stopEarning(); // ustavi pridobivanje kovancev
+      }
+    }
+
+    document.addEventListener('keydown', (event)=>{
+      if(event.key === 'Enter'){
+        const command = (searchInput.value || '').toLowerCase().trim();
+        if(command === 'todaytime'){
+          alert(`Danes si igral ${Math.floor(getTimePlayedToday() / 60000)} minut.`);
+        } else if (command === 'time'){
+          alert(`Skupno si igral ${Math.floor(getTotalTimePlayed() / 60000)} minut.`);
+        } else if (command === 'child'){
+          isChildMode = true;
+          enforceChildMode();
+        } else if (command === '18'){
+          isChildMode = false;
+          alert('Preklopljeno na način brez omejitev.');
+        }
+      }
+    });
+
+    // varnost: ob unloadu zapri earning interval
+    window.addEventListener('beforeunload', stopEarning);
+  </script>
 </body>
 </html>
