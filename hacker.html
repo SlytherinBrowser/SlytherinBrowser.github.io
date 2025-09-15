@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hacker Game (MP)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root{ --bg:#0b1020; --panel:#111936; --muted:#a9b6d6; --txt:#ecf2ff; --acc:#4a90e2; --ok:#20c997; --bad:#ef476f; }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:12px 14px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    header h1{font-size:18px;margin:0 10px 0 0}
+    .tag{font-size:12px;background:#16244c;padding:2px 6px;border-radius:6px;border:1px solid #273b7d}
+    main{padding:14px;display:grid;gap:14px;grid-template-columns:1fr 360px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:12px}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--txt)}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .sep{height:1px;background:#1b264b;margin:8px 0}
+    .list{max-height:60vh;overflow:auto}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #1d2852;border-radius:10px;background:#0d1530}
+    .muted{color:var(--muted)}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
+    .oktxt{color:var(--ok)} .badtxt{color:var(--bad)}
+    @media (max-width: 980px){ main{grid-template-columns:1fr} }
+    /* Defense modal */
+    #defenseModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
+    .modal{width:min(520px,92vw);background:#0e1530;border:1px solid #2a3870;border-radius:14px;padding:16px}
+    .timerCircle{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;border:4px solid var(--acc);font-size:26px;margin:10px auto}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧑‍💻 Hacker Game</h1>
+    <span class="tag">Uporabnik: <b id="meName">–</b></span>
+    <span class="tag">Kovanci: <b id="meCoins">0</b></span>
+    <span class="tag">Moje zaščite: <b id="mySec">FW0 / AV0 / IDS0</b></span>
+    <div style="margin-left:auto" class="row">
+      <button onclick="window.location.href='index.html'">🏠 Domov</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEVO: napad -->
+    <section class="panel">
+      <h2>🚀 Zaženi napad</h2>
+      <div class="stack">
+        <label>Cilj:
+          <select id="targetSel"></select>
+        </label>
+
+        <div class="row">
+          <label>Metoda:
+            <select id="methodSel">
+              <option value="brute">Brute Force (reakcija)</option>
+              <option value="phish">Phishing (RNG + zaščita)</option>
+            </select>
+          </label>
+          <span class="pill">Kraja: 5–20% kovancev tarče, max 500</span>
+        </div>
+
+        <div class="row">
+          <div class="pill">Osnovni fee: <b id="baseFee">10</b></div>
+          <div class="pill">Fee z IDS: <b id="feeWithIds">10</b></div>
+          <div class="pill">Okno obrambe: <b id="defWindowLbl">3.0s</b></div>
+        </div>
+
+        <button id="attackBtn" class="primary">🔥 Napad</button>
+        <div class="muted">Opomba: napada iste tarče ne moreš spamati (cooldown); branilec ob uspešni obrambi prejme tvoj fee.</div>
+      </div>
+
+      <div class="sep"></div>
+
+      <h2>🛡️ Nadgradnje zaščite</h2>
+      <div class="stack">
+        <div class="kv">
+          <div><b>Firewall</b><div class="muted">Poveča čas obrambe (+0.5s/stopnja)</div></div>
+          <div><button id="buyFW" class="ok">Kupi (20c)</button></div>
+        </div>
+        <div class="kv">
+          <div><b>Antivirus</b><div class="muted">Zmanjša uspeh phishinga (-5%/stopnja)</div></div>
+          <div><button id="buyAV" class="ok">Kupi (20c)</button></div>
+        </div>
+        <div class="kv">
+          <div><b>IDS</b><div class="muted">Poveča fee napadalca (+5c/stopnja)</div></div>
+          <div><button id="buyIDS" class="ok">Kupi (20c)</button></div>
+        </div>
+        <div class="muted">Vsaka zaščita ima max 5 stopenj.</div>
+      </div>
+    </section>
+
+    <!-- DESNO: seznam igralcev + status -->
+    <aside class="panel">
+      <h2>👥 Igralci (za tarčo izberi kogarkoli razen sebe)</h2>
+      <div id="usersList" class="list stack"></div>
+      <div class="sep"></div>
+      <div class="stack">
+        <div class="pill">Globalni cooldown tarče: 5 min</div>
+        <div class="pill">Cooldown napadalec→ista tarča: 20 min</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Defense modal -->
+  <div id="defenseModal">
+    <div class="modal">
+      <h2 id="defTitle">🔐 Napad zaznan!</h2>
+      <div class="timerCircle" id="defTimer">3.0</div>
+      <p id="defDesc" class="muted">Klikni “BLOKIRAJ” preden čas poteče.</p>
+      <div class="row" style="justify-content:center;margin-top:8px">
+        <button id="defBlockBtn" class="ok">🛡️ BLOKIRAJ</button>
+        <button id="defIgnoreBtn" class="warn">Ignoriraj</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Firebase =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    // ===== UI refs =====
+    const meName = document.getElementById('meName');
+    const meCoins= document.getElementById('meCoins');
+    const mySec  = document.getElementById('mySec');
+
+    const targetSel = document.getElementById('targetSel');
+    const methodSel = document.getElementById('methodSel');
+    const baseFeeLbl = document.getElementById('baseFee');
+    const feeWithIdsLbl = document.getElementById('feeWithIds');
+    const defWindowLbl = document.getElementById('defWindowLbl');
+
+    const attackBtn = document.getElementById('attackBtn');
+    const usersList = document.getElementById('usersList');
+
+    const buyFW = document.getElementById('buyFW');
+    const buyAV = document.getElementById('buyAV');
+    const buyIDS= document.getElementById('buyIDS');
+
+    const defenseModal = document.getElementById('defenseModal');
+    const defTimer = document.getElementById('defTimer');
+    const defBlockBtn = document.getElementById('defBlockBtn');
+    const defIgnoreBtn= document.getElementById('defIgnoreBtn');
+    const defTitle = document.getElementById('defTitle');
+    const defDesc  = document.getElementById('defDesc');
+
+    // ===== State =====
+    let user=null, uid=null, mySecState={fw:0,av:0,ids:0};
+    let myCoinsVal=0;
+    const BASE_FEE = 10;            // osnovni fee napadalca
+    const MAX_PERCENT = 20;         // max % kraje
+    const MIN_PERCENT = 5;          // min % kraje
+    const MAX_STEAL_CAP = 500;      // max ukradenih kovancev
+    const DEF_BASE_WINDOW = 3000;   // 3s (v ms)
+    const FW_STEP = 500;            // +0.5s/stopnja firewall
+    const AV_STEP = 5;              // -5% uspeh phishinga na stopnjo
+    const IDS_STEP_FEE = 5;         // +5c fee/stopnja
+    const SEC_PRICE = 20;           // cena nadgradnje
+    const MAX_SEC_LEVEL = 5;
+
+    const TARGET_GLOBAL_COOLDOWN = 5*60*1000;   // 5 min
+    const ATTACKER_TARGET_COOLDOWN = 20*60*1000;// 20 min
+
+    // ===== Auth =====
+    auth.onAuthStateChanged(async (_u)=>{
+      if(!_u){ window.location.href='index.html'; return; }
+      user=_u; uid=user.uid;
+      meName.textContent = user.displayName || user.email;
+
+      db.ref(`users/${uid}/coins`).on('value', s=> { myCoinsVal = (s.val()??0); meCoins.textContent = myCoinsVal; });
+      db.ref(`users/${uid}/security`).on('value', s=>{
+        const v=s.val()||{}; mySecState={ fw:+(v.fw||0), av:+(v.av||0), ids:+(v.ids||0) };
+        mySec.textContent = `FW${mySecState.fw} / AV${mySecState.av} / IDS${mySecState.ids}`;
+      });
+
+      loadUsers();
+      watchIncomingAttacks(); // poslušaj napade name
+      refreshAttackPreview();
+    });
+
+    // ===== Users list & target select =====
+    function loadUsers(){
+      db.ref('users').on('value', snap=>{
+        const data = snap.val()||{};
+        usersList.innerHTML=''; targetSel.innerHTML='';
+        const fragSel = document.createDocumentFragment();
+
+        Object.entries(data).forEach(([id,u])=>{
+          if(id===uid) return;
+          const coins = +(u.coins||0);
+          const sec = u.security||{};
+          const fw = +(sec.fw||0), av=+(sec.av||0), ids=+(sec.ids||0);
+          const approx = `FW${fw} / AV${av} / IDS${ids}`;
+
+          // card
+          const d=document.createElement('div');
+          d.className='kv';
+          d.innerHTML = `<div><b>${u.displayName || u.email || id}</b>
+            <div class="muted">Zaščite: ${approx}</div></div>
+            <div><button data-id="${id}" class="primary">CILJ</button></div>`;
+          d.querySelector('button').onclick = ()=>{
+            targetSel.value = id;
+            refreshAttackPreview();
+            window.scrollTo({top:0,behavior:'smooth'});
+          };
+          usersList.appendChild(d);
+
+          // option
+          const opt=document.createElement('option');
+          opt.value=id;
+          opt.textContent=(u.displayName || u.email || id);
+          fragSel.appendChild(opt);
+        });
+
+        targetSel.appendChild(fragSel);
+        refreshAttackPreview();
+      });
+    }
+
+    methodSel.addEventListener('change', refreshAttackPreview);
+    targetSel.addEventListener('change', refreshAttackPreview);
+
+    async function getTargetSecurity(tid){
+      const s = await db.ref(`users/${tid}/security`).once('value');
+      const v = s.val()||{}; return { fw:+(v.fw||0), av:+(v.av||0), ids:+(v.ids||0) };
+    }
+
+    async function refreshAttackPreview(){
+      const tid = targetSel.value;
+      if(!tid){ baseFeeLbl.textContent = BASE_FEE; feeWithIdsLbl.textContent = BASE_FEE; defWindowLbl.textContent='–'; return; }
+      const sec = await getTargetSecurity(tid);
+      const fee = BASE_FEE + IDS_STEP_FEE * (sec.ids||0);
+      const windowMs = DEF_BASE_WINDOW + FW_STEP * (sec.fw||0);
+      baseFeeLbl.textContent = BASE_FEE;
+      feeWithIdsLbl.textContent = fee;
+      defWindowLbl.textContent = (windowMs/1000).toFixed(1)+'s';
+    }
+
+    // ===== Buy upgrades =====
+    buyFW.onclick = ()=> buySec('fw');
+    buyAV.onclick = ()=> buySec('av');
+    buyIDS.onclick= ()=> buySec('ids');
+
+    async function buySec(kind){
+      const secPath = `users/${uid}/security/${kind}`;
+      const levSnap = await db.ref(secPath).once('value');
+      const level = +(levSnap.val()||0);
+      if(level>=MAX_SEC_LEVEL) return alert('Že na max (5).');
+      const tx = await db.ref(`users/${uid}/coins`).transaction(c=>{
+        c=(+c||0); if(c<SEC_PRICE) return; return c-SEC_PRICE;
+      });
+      if(!tx.committed) return alert('Premalo kovancev.');
+      await db.ref(secPath).set(level+1);
+      alert('Nadgrajeno!');
+    }
+
+    // ===== Attack flow =====
+    attackBtn.onclick = async ()=>{
+      const targetUid = targetSel.value;
+      if(!targetUid) return alert('Izberi tarčo.');
+      if(targetUid===uid) return alert('Ne moreš napasti sebe.');
+
+      // Cooldowni
+      const now = Date.now();
+      const tCooldownSnap = await db.ref(`hacker/cooldowns/targetGlobal/${targetUid}`).once('value');
+      const tCool = +(tCooldownSnap.val()||0);
+      if(now < tCool) return alert('Tarča je pod zaščito (globalni cooldown). Počakaj malo.');
+
+      const pairKey = `${uid}_${targetUid}`;
+      const pairSnap = await db.ref(`hacker/cooldowns/pairs/${pairKey}`).once('value');
+      const pCool = +(pairSnap.val()||0);
+      if(now < pCool) return alert('To tarčo si napadel pred kratkim. Počakaj malo.');
+
+      // Parametri (iz tarče)
+      const sec = await getTargetSecurity(targetUid);
+      const fee = BASE_FEE + IDS_STEP_FEE * (sec.ids||0);
+      const windowMs = DEF_BASE_WINDOW + FW_STEP * (sec.fw||0);
+
+      // Plačaj fee
+      const tx = await db.ref(`users/${uid}/coins`).transaction(c=>{
+        c=(+c||0); if(c<fee) return; return c - fee;
+      });
+      if(!tx.committed) return alert('Premalo kovancev za fee.');
+
+      // Ustvari attack
+      const method = methodSel.value; // 'brute' | 'phish'
+      const percent = MIN_PERCENT + Math.floor(Math.random()*(MAX_PERCENT-MIN_PERCENT+1)); // 5..20
+      const expiresAt = Date.now() + windowMs;
+
+      const attackId = db.ref().push().key;
+      await db.ref(`hacker/attacks/${attackId}`).set({
+        id: attackId,
+        attackerUid: uid,
+        attackerName: user.displayName||user.email||uid,
+        targetUid,
+        method,
+        percent,
+        fee,
+        createdAt: Date.now(),
+        expiresAt,
+        state: 'pending', // pending|blocked|success|failed
+        resolvedAt: null
+      });
+
+      // Nastavi cooldown-e
+      await db.ref(`hacker/cooldowns/targetGlobal/${targetUid}`).set(now + TARGET_GLOBAL_COOLDOWN);
+      await db.ref(`hacker/cooldowns/pairs/${pairKey}`).set(now + ATTACKER_TARGET_COOLDOWN);
+
+      alert('Napad zagnan! Če tarča ne blokira pravočasno, bo uspešen.');
+    };
+
+    // ===== Listen for incoming attacks (defense) =====
+    function watchIncomingAttacks(){
+      db.ref('hacker/attacks').orderByChild('targetUid').equalTo(uid).on('child_added', snap=>{
+        const atk = snap.val(); if(!atk) return;
+        if(atk.state!=='pending') return;
+        showDefenseModal(atk);
+      });
+
+      // Če je modal odprt in kdo drugi spremeni state, zapri
+      db.ref('hacker/attacks').orderByChild('targetUid').equalTo(uid).on('child_changed', snap=>{
+        const atk = snap.val(); if(!atk) return;
+        if(atk.state!=='pending'){ hideDefenseModal(); }
+      });
+    }
+
+    let defInterval=null;
+    function showDefenseModal(atk){
+      const { attackerName, method, expiresAt } = atk;
+      defTitle.textContent = `🔐 Napad: ${method==='brute'?'Brute Force':'Phishing'}`;
+      defDesc.textContent = method==='brute'
+        ? `Napadalec: ${attackerName}. Klikni BLOKIRAJ preden čas poteče.`
+        : `Napadalec: ${attackerName}. Phishing – uspeh je odvisen od tvojega antivirusa in sreče, lahko pa ga popolnoma blokiraš s klikom.`;
+      defenseModal.style.display='flex';
+
+      tickDefenseTimer(expiresAt);
+      if(defInterval) clearInterval(defInterval);
+      defInterval = setInterval(()=> tickDefenseTimer(expiresAt), 50);
+
+      defBlockBtn.onclick = ()=> blockAttack(atk);
+      defIgnoreBtn.onclick = ()=> { /* nič – modal ostane, lahko ignoriraš */ };
+    }
+
+    function hideDefenseModal(){
+      defenseModal.style.display='none';
+      if(defInterval) clearInterval(defInterval);
+    }
+
+    async function blockAttack(atk){
+      const ref = db.ref(`hacker/attacks/${atk.id}`);
+      const snap = await ref.once('value'); const cur=snap.val();
+      if(!cur || cur.state!=='pending') return hideDefenseModal();
+
+      // Branilec prejme fee napadalca
+      await db.ref(`users/${uid}/coins`).transaction(c=>(+c||0)+(+cur.fee||0));
+
+      await ref.update({ state:'blocked', resolvedAt: Date.now() });
+      hideDefenseModal();
+      alert('Napad blokiran. Prejel si fee napadalca. ✅');
+    }
+
+    function tickDefenseTimer(expiresAt){
+      const left = Math.max(0, expiresAt - Date.now());
+      defTimer.textContent = (left/1000).toFixed(1);
+      if(left<=0){
+        if(defInterval) clearInterval(defInterval);
+        // timeout – poskusi zaključiti
+        tryResolvePendingForMe(expiresAt);
+      }
+    }
+
+    async function tryResolvePendingForMe(expiresAtAtClick){
+      // najdi najnovejši pending attack name, ki je potekel
+      const q = await db.ref('hacker/attacks').orderByChild('targetUid').equalTo(uid).once('value');
+      const vals = q.val()||{};
+      const list = Object.values(vals).filter(a=>a.state==='pending' && a.expiresAt<=Date.now());
+      for(const a of list){ await resolveAttack(a); }
+    }
+
+    // ===== Resolution (server-ish, ampak tukaj v klientu hosta/branilca) =====
+    async function resolveAttack(atk){
+      const ref = db.ref(`hacker/attacks/${atk.id}`);
+      const snap = await ref.once('value'); const cur = snap.val();
+      if(!cur || cur.state!=='pending') return;
+
+      // Če je metoda phishing, uporabimo pasivno verjetnost uspeha – antivirus jo zmanjša
+      let success = true;
+      if(cur.method==='phish'){
+        const secSnap = await db.ref(`users/${cur.targetUid}/security/av`).once('value');
+        const av = +(secSnap.val()||0);
+        const baseP = 0.40;            // 40% osnovna šansa
+        const reduct = av * (AV_STEP/100); // 0.05 na lvl
+        const p = Math.max(0.05, baseP - reduct); // min 5%
+        success = Math.random() < p;
+      }
+      // Pri brute je uspeh, če branilec ni pravočasno kliknil (t.j. smo sploh prišli do resolve)
+      // -> success ostane true
+
+      if(success){
+        // Izračun kraje
+        const percent = +cur.percent || 10;
+        const targCoinsSnap = await db.ref(`users/${cur.targetUid}/coins`).once('value');
+        const targCoins = +(targCoinsSnap.val()||0);
+        const stealRaw = Math.floor(targCoins * percent / 100);
+        const steal = Math.min(MAX_STEAL_CAP, Math.max(0, stealRaw));
+
+        if(steal>0){
+          // prenesi kovance (transaction v seriji, zaščita pred negativnim)
+          const dec = await db.ref(`users/${cur.targetUid}/coins`).transaction(c=>{
+            c=(+c||0); if(c<steal) return c; return c - steal;
+          });
+          const actuallyStolen = dec.committed ? steal : Math.max(0,(+dec.snapshot.val()||0));
+          if(actuallyStolen>0){
+            await db.ref(`users/${cur.attackerUid}/coins`).transaction(c=>(+c||0)+actuallyStolen);
+          }
+        }
+        await ref.update({ state:'success', resolvedAt: Date.now(), stolen: steal });
+        hideDefenseModal();
+        if(cur.targetUid===uid) alert(`💥 Napad uspel. Izgubil si ${steal} kovancev.`);
+      } else {
+        await ref.update({ state:'failed', resolvedAt: Date.now() });
+        hideDefenseModal();
+        if(cur.targetUid===uid) alert('Phishing zgrešil. Ni škode. ✅');
+      }
+    }
+
+  </script>
+</body>
+</html>
