@@ -2,7 +2,7 @@
 <html lang="sl">
 <head>
   <meta charset="utf-8" />
-  <title>Blackjack – Dealer & Igralec ločen UI</title>
+  <title>Blackjack – Dealer & Igralec (kovanci iz baze)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase (compat) -->
@@ -10,232 +10,50 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-
   <style>
-:root{
-  --bg: #0b1020;
-  --panel: #121932;
-  --panel2:#0e1530;
-  --text:#e9edf7;
-  --muted:#9fb3d0;
-  --acc:#4a90e2;
-  --ok:#20c997;
-  --warn:#ffb703;
-  --bad:#ef476f;
-
-  /* UI */
-  --radius-sm:10px;
-  --radius-md:12px;
-  --radius-lg:14px;
-  --ring: 2px;
-  --shadow: 0 8px 24px rgba(0,0,0,.25);
-
-  /* Tipografija – fluidna */
-  --fs-base: clamp(15px, 0.9vw + 12px, 16px);
-  --fs-h1: clamp(18px, 1.2vw + 14px, 22px);
-  --fs-h2: clamp(16px, 1vw + 12px, 18px);
-}
-
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  color:var(--text);
-  background:linear-gradient(180deg,#0a0f22,#0b1020);
-  font: var(--fs-base)/1.5 system-ui, Segoe UI, Roboto, Arial, sans-serif;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-
-/* Bolj lepe scrollbarje (podprti brskalniki) */
-*{
-  scrollbar-width: thin;
-  scrollbar-color: #31406f #0e1530;
-}
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-thumb{background:#31406f;border-radius:999px}
-*::-webkit-scrollbar-track{background:#0e1530}
-
-/* ===============================
-   Header
-   =============================== */
-header{
-  position:sticky; top:0; z-index:5;
-  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-  padding:14px 16px;
-  border-bottom:1px solid #1b264b;
-  background:#0a0f22cc;
-  backdrop-filter:saturate(1.2) blur(6px);
-}
-header h1{
-  font-size:var(--fs-h1); margin:0 10px 0 0; font-weight:700;
-}
-
-/* ===============================
-   Kontrole (inputi/gumbi)
-   =============================== */
-input, button, select, textarea{
-  padding:10px 12px;
-  border-radius:var(--radius-sm);
-  border:1px solid #24325c;
-  background:#0e1530;
-  color:var(--text);
-  transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
-}
-input::placeholder{color:var(--muted)}
-
-input:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible{
-  outline:none;
-  box-shadow:0 0 0 var(--ring) color-mix(in srgb, var(--acc) 60%, transparent);
-  border-color: color-mix(in srgb, var(--acc) 60%, #24325c 40%);
-}
-
-button{
-  cursor:pointer; user-select:none; font-weight:600;
-  background:linear-gradient(180deg,#2a3564,#1a244a);
-  border-color:#3a4b86;
-}
-button:hover{transform:translateY(-1px)}
-button:active{transform:translateY(0)}
-button:disabled{opacity:.6; cursor:not-allowed}
-
-/* Variacije gumbov */
-button.primary{
-  background:linear-gradient(180deg,#3270e6,#2756b8);
-  border-color:#3c7df0;
-}
-button.ok{
-  background:linear-gradient(180deg,#26a169,#1f8255);
-  border-color:#33c584;
-}
-button.warn{
-  background:linear-gradient(180deg,#d29a10,#a77708);
-  border-color:#e7b028;
-}
-button.danger{
-  background:linear-gradient(180deg,#b82a47,#8a2036);
-  border-color:#c14961;
-}
-
-/* ===============================
-   Mikro-komponente
-   =============================== */
-.pill{
-  font-size:12px; padding:4px 9px; border-radius:999px;
-  background:#18244a; border:1px solid #2a3c77;
-}
-.tag{
-  font-size:12px; padding:3px 7px; border-radius:6px;
-  background:#1a2448; border:1px solid #2b3b74;
-}
-.muted{color:var(--muted)}
-.hidden{display:none !important}
-.wide{width:100%}
-.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-.stack{display:flex; flex-direction:column; gap:12px}
-.grid{display:grid; gap:12px}
-
-/* Kartice / plošče */
-.panel{
-  background:var(--panel);
-  border:1px solid #1d2852;
-  border-radius:var(--radius-lg);
-  padding:14px;
-  box-shadow: var(--shadow);
-}
-.table{
-  background:var(--panel2);
-  border:1px solid #223064;
-  border-radius:var(--radius-md);
-  padding:12px;
-}
-
-/* Naslovi  */
-h2{
-  margin:0 0 8px 0;
-  font-size:var(--fs-h2);
-  border-bottom:1px solid #1b264b;
-  padding-bottom:6px;
-}
-
-/* Igre / roke */
-.hand{display:flex; gap:6px; flex-wrap:wrap}
-.card{
-  width:54px; height:78px;
-  display:grid; place-items:center;
-  font-weight:700;
-  border-radius:8px; border:1px solid #1f2a4e; background:#0e1530;
-}
-
-/* Vodenje / leaderboards */
-.playersList{
-  display:flex; flex-direction:column; gap:10px;
-  max-height:45vh; overflow:auto;
-}
-.leader{display:flex; flex-direction:column; gap:6px}
-
-/* Odseki strani */
-main{padding:14px}
-
-/* Primarni layout-i */
-#hostView{
-  display:grid; gap:14px;
-  grid-template-columns: 360px 1fr;
-  align-items:start;
-}
-#playerView{max-width: 980px; margin: 0 auto}
-
-/* Stanja */
-.turn{
-  outline:2px solid var(--acc);
-  box-shadow:0 0 0 4px rgba(74,144,226,.25);
-}
-
-/* ===============================
-   Odzivnost (računalnik ↔ telefon)
-   =============================== */
-@media (max-width: 900px){
-  #hostView{ grid-template-columns: 1fr; }
-  header{ gap:10px }
-}
-@media (max-width: 600px){
-  body{ line-height: 1.6 }
-  header{ padding:12px }
-  main{ padding:12px }
-  .panel, .table{ padding:12px }
-  button, input, select, textarea{ padding:12px 14px }
-  .card{ width:50px; height:72px }
-}
-
-/* ===============================
-   Dostopnost in preference
-   =============================== */
-@media (prefers-reduced-motion: reduce){
-  *{ animation-duration: .001ms !important; animation-iteration-count:1 !important;
-     transition-duration: .001ms !important; scroll-behavior:auto !important; }
-}
-
-/* Light mode (če ga kdaj rabiš) */
-@media (prefers-color-scheme: light){
-  :root{
-    --bg:#f6f7fb; --panel:#ffffff; --panel2:#f8faff; --text:#0a0f22; --muted:#5b6b88;
-    --acc:#3b6eea;
-  }
-  body{ background:linear-gradient(180deg,#eef1f9,#e8ecfb); color:var(--text) }
-  header{ background:#ffffffcc; border-bottom:1px solid #dde3f7 }
-  input,button{ background:#f6f8ff; border-color:#cfd8f3; color:var(--text) }
-  .panel{ border-color:#e3e8fb }
-  .table{ border-color:#e6ebfe }
-  .pill, .tag{ background:#eef2ff; border-color:#dbe3ff }
-}
-</style>
+    :root{
+      --bg:#0b1020; --panel:#121932; --panel2:#0e1530; --text:#e9edf7; --muted:#9fb3d0;
+      --acc:#4a90e2; --ok:#20c997; --warn:#ffb703; --bad:#ef476f;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:14px 16px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    header h1{font-size:18px;margin:0 10px 0 0}
+    input,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--text)}
+    input::placeholder{color:#9fb3d0}
+    button{cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .grid{display:grid;gap:12px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:14px}
+    .table{background:var(--panel2);border:1px solid #223064;border-radius:12px;padding:12px}
+    h2{margin:0 0 8px 0;font-size:16px;border-bottom:1px solid #1b264b;padding-bottom:6px}
+    .tag{font-size:12px;background:#1a2448;padding:2px 6px;border-radius:6px;border:1px solid #2b3b74}
+    .turn{outline:2px solid var(--acc);box-shadow:0 0 0 3px rgba(74,144,226,.25)}
+    .hand{display:flex;gap:6px;flex-wrap:wrap}
+    .card{width:54px;height:78px;border-radius:8px;border:1px solid #1f2a4e;background:#0e1530;display:grid;place-items:center;font-weight:700}
+    .muted{color:var(--muted)}
+    .hidden{display:none !important}
+    .wide{width:100%}
+    .playersList{display:flex;flex-direction:column;gap:10px;max-height:45vh;overflow:auto}
+    .leader{display:flex;flex-direction:column;gap:6px}
+    footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
+    main{padding:14px}
+    #hostView {display:grid;grid-template-columns: 360px 1fr;gap:14px}
+    #playerView {max-width: 980px;margin: 0 auto}
+  </style>
 </head>
 <body>
   <header>
     <h1>🂡 Blackjack</h1>
     <div class="row">
       <input id="displayName" placeholder="Tvoje ime" />
-      <input id="roomId" placeholder="ID sobe (npr. math1)" />
+      <input id="roomId" placeholder="ID sobe (npr. room1)" />
       <button id="hostBtn" class="primary">Ustvari / Host</button>
       <button id="joinBtn">Pridruži se</button>
       <span id="whoami" class="pill">Nisi povezan</span>
@@ -318,7 +136,7 @@ main{padding:14px}
                 </div>
                 <div class="row">
                   <span class="tag">Stava: <span id="plMyBet">0</span></span>
-                  <span class="tag">Denar: <span id="plMyMoney">0</span></span>
+                  <span class="tag">Kovanci: <span id="plMyMoney">0</span></span>
                 </div>
               </div>
               <div class="hand" id="plMyHand" style="margin-top:8px"></div>
@@ -349,10 +167,12 @@ main{padding:14px}
     </section>
   </main>
 
-  <footer>Ločen UI: delilec (host) vidi upravljalski pogled; igralci imajo enoten igralni pogled.</footer>
+  <footer>Denar v igri = <strong>coins</strong> iz <code>users/{uid}/coins</code>. Hiša (host) in igralci uporabljajo isti saldo kot v chatu.</footer>
 
   <script>
-    // ===== Firebase init (uporabi isti projekt kot pri login strani) =====
+    /* =========================
+       Firebase init
+    ========================== */
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
@@ -366,41 +186,42 @@ main{padding:14px}
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // ===== Shortcuts =====
+    /* =========================
+       Shortcuts & state
+    ========================== */
     const $ = id => document.getElementById(id);
     const SUITS=['♠','♥','♦','♣']; const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-    // ===== Global state =====
     let roomId = null;
     let userId = null;
     let isHost = false;
     let currentState = null;
 
-    // ===== UI refs =====
+    // UI refs
     const hostView = $('hostView');
     const playerView = $('playerView');
     const whoami = $('whoami');
 
-    // Host refs
-    const hostRoomId = $('hostRoomId'); const hostRound = $('hostRound'); const hostState = $('hostState');
-    const hostDealerHand = $('hostDealerHand'); const hostDealerVal = $('hostDealerVal'); const hostTurnName = $('hostTurnName');
-    const hostPlayers = $('hostPlayers'); const hostLeaderboard = $('hostLeaderboard'); const hostControls = $('hostControls'); const hostRoomMeta = $('hostRoomMeta');
+    // header inputs
+    const hostBtn = $('hostBtn'); const joinBtn = $('joinBtn');
+    const displayNameEl = $('displayName'); const roomIdEl = $('roomId');
 
-    // Player refs
-    const plRoomId = $('plRoomId'); const plRound = $('plRound'); const plState = $('plState'); const plMsg = $('plMsg');
-    const plDealerHand = $('plDealerHand'); const plDealerVal = $('plDealerVal');
-    const plMyHand = $('plMyHand'); const plMyVal = $('plMyVal'); const plMyBet = $('plMyBet'); const plMyMoney = $('plMyMoney');
-    const plLeaderboard = $('plLeaderboard'); const plPlayers = $('plPlayers'); const turnNameEl = $('turnName');
+    // host UI refs
+    const hostRoomId = $('hostRoomId'), hostRound = $('hostRound'), hostState = $('hostState');
+    const hostDealerHand = $('hostDealerHand'), hostDealerVal = $('hostDealerVal'), hostTurnName = $('hostTurnName');
+    const hostPlayers = $('hostPlayers'), hostLeaderboard = $('hostLeaderboard'), hostControls = $('hostControls'), hostRoomMeta = $('hostRoomMeta');
 
-    const betInput = $('betInput'); const betBtn = $('betBtn'); const hitBtn = $('hitBtn'); const standBtn = $('standBtn');
+    // player UI refs
+    const plRoomId = $('plRoomId'), plRound = $('plRound'), plState = $('plState'), plMsg = $('plMsg');
+    const plDealerHand = $('plDealerHand'), plDealerVal = $('plDealerVal');
+    const plMyHand = $('plMyHand'), plMyVal = $('plMyVal'), plMyBet = $('plMyBet'), plMyMoney = $('plMyMoney');
+    const plLeaderboard = $('plLeaderboard'), plPlayers = $('plPlayers'), turnNameEl = $('turnName');
+    const betInput = $('betInput'), betBtn = $('betBtn'), hitBtn = $('hitBtn'), standBtn = $('standBtn');
 
-    // Header controls
-    const hostBtn = $('hostBtn'); const joinBtn = $('joinBtn'); const displayNameEl = $('displayName'); const roomIdEl = $('roomId');
-
-    // ===== Auth: require login =====
+    // auth required
     auth.onAuthStateChanged(async (user)=>{
       if(!user){
-        alert('Prijavi se najprej (preko tvoje login strani).');
+        alert('Prijavi se najprej (preko login strani).');
         window.location.href = 'index.html';
         return;
       }
@@ -409,7 +230,9 @@ main{padding:14px}
       whoami.textContent = 'Prijavljen: ' + (user.displayName || user.email);
     });
 
-    // ===== Helpers =====
+    /* =========================
+       Helpers: cards & render
+    ========================== */
     function makeDeck(){
       const d=[]; for(const s of SUITS){ for(const r of RANKS){ d.push(`${r}${s}`); } }
       for(let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
@@ -430,14 +253,65 @@ main{padding:14px}
     }
     function fmtMoney(n){ return Math.max(0, Math.round(+n||0)).toString(); }
 
-    // ===== Create / Join =====
+    /* =========================
+       Coins sync helpers
+       - players money in room mirrors users/{uid}/coins
+       - deltas applied via transactions
+    ========================== */
+    async function readUserCoins(uid){
+      const snap = await db.ref(`users/${uid}/coins`).once('value');
+      return +snap.val() || 0;
+    }
+
+    async function upsertPlayerWithCoins(rid, uid, name){
+      const coins = await readUserCoins(uid);
+      await db.ref(`blackjack/${rid}/players/${uid}`).update({
+        name,
+        money: coins,     // mirror from users/{uid}/coins
+        bet: 0,
+        hand: [],
+        status: 'idle',
+        joinedAt: Date.now()
+      });
+    }
+
+    // Apply delta to users/{uid}/coins using transaction, mirror to room players/{uid}/money
+    async function applyCoinDelta(rid, uid, delta){
+      const userRef = db.ref(`users/${uid}/coins`);
+      const tx = await userRef.transaction(curr => {
+        const now = (+curr||0) + (delta||0);
+        return now < 0 ? 0 : now;
+      });
+      const newVal = tx.snapshot?.val() ?? 0;
+      await db.ref(`blackjack/${rid}/players/${uid}/money`).set(newVal);
+      return newVal;
+    }
+
+    // Keep players money synced to users coins when safe (not during 'playing'/'dealer')
+    function startSafeCoinsMirror(rid, uid){
+      const userCoinsRef = db.ref(`users/${uid}/coins`);
+      userCoinsRef.on('value', snap=>{
+        const coins = +snap.val() || 0;
+        const st = currentState;
+        if(!st) return;
+        // Update in lobby/betting/settle only, to avoid mid-turn cheating effects
+        if(['lobby','betting','settle'].includes(st.state)){
+          db.ref(`blackjack/${rid}/players/${uid}/money`).set(coins);
+        }
+      });
+    }
+
+    /* =========================
+       Create / Join room
+    ========================== */
     hostBtn.onclick = async ()=>{
       if(!auth.currentUser){ alert('Ni prijave.'); return; }
       const name = displayNameEl.value.trim() || 'Host';
       const r = roomIdEl.value.trim() || 'room1';
       roomId = r;
 
-      // Create or overwrite room
+      const myCoins = await readUserCoins(userId);
+
       await db.ref(`blackjack/${r}`).set({
         hostId: userId,
         createdAt: Date.now(),
@@ -448,10 +322,12 @@ main{padding:14px}
         dealer: { hand: [] },
         shoe: makeDeck(),
         players: {
-          [userId]: { name, money: 1000, bet: 0, hand: [], status: 'idle', joinedAt: Date.now() }
+          [userId]: { name, money: myCoins, bet: 0, hand: [], status: 'idle', joinedAt: Date.now() }
         }
       });
+
       attachRoom(r);
+      startSafeCoinsMirror(r, userId);
     };
 
     joinBtn.onclick = async ()=>{
@@ -461,45 +337,46 @@ main{padding:14px}
       const roomSnap = await db.ref(`blackjack/${r}`).once('value');
       if(!roomSnap.exists()){ alert('Soba ne obstaja. Naj jo nekdo hosta.'); return; }
 
+      await upsertPlayerWithCoins(r, userId, name);
+
       const orderSnap = await db.ref(`blackjack/${r}/order`).once('value');
       const order = orderSnap.val()||[];
-
-      // create or update player
-      await db.ref(`blackjack/${r}/players/${userId}`).update({
-        name, money: 1000, bet: 0, hand: [], status: 'idle', joinedAt: Date.now()
-      });
       if(!order.includes(userId)){ order.push(userId); await db.ref(`blackjack/${r}/order`).set(order); }
 
       roomId = r;
       attachRoom(r);
+      startSafeCoinsMirror(r, userId);
     };
 
+    let roomRefValue = null;
     function attachRoom(r){
-      db.ref(`blackjack/${r}`).on('value', drawState);
+      // odklopi star listener
+      if(roomRefValue) roomRefValue.off();
+      roomRefValue = db.ref(`blackjack/${r}`);
+      roomRefValue.on('value', drawState);
     }
 
-    // ===== Render based on role =====
+    /* =========================
+       Render (role-based)
+    ========================== */
     function drawState(snap){
       const st = snap.val(); currentState = st;
-      if(!st){ return; }
+      if(!st) return;
       isHost = (st.hostId === userId);
 
-      // Toggle UIs
       hostView.classList.toggle('hidden', !isHost);
       playerView.classList.toggle('hidden', isHost);
 
-      // Common room id
       hostRoomId.textContent = roomId || '-';
       plRoomId.textContent = roomId || '-';
 
       if(isHost) renderHost(st); else renderPlayer(st);
     }
 
-    // ===== Host UI =====
     function renderHost(st){
       hostRound.textContent = st.round||0;
       hostState.textContent = st.state||'-';
-      hostRoomMeta.textContent = `Host: ${st.hostId}`;
+      hostRoomMeta.textContent = `Host UID: ${st.hostId}`;
 
       // Dealer hand
       hostDealerHand.innerHTML = '';
@@ -533,7 +410,7 @@ main{padding:14px}
         const handWrap = document.createElement('div'); handWrap.className='row';
         const hand = document.createElement('div'); hand.className='hand';
         (p.hand||[]).forEach(c=>hand.appendChild(renderCard(c)));
-        const val = document.createElement('span'); val.className='tag'; val.textContent = handValue(p.hand||[]);
+        const val = document.createElement('span'); val.className='tag'; val.textContent = (p.hand||[]).length?handValue(p.hand):'?';
         handWrap.appendChild(hand); handWrap.appendChild(val);
         box.appendChild(row); box.appendChild(handWrap);
         hostPlayers.appendChild(box);
@@ -567,7 +444,6 @@ main{padding:14px}
       hostControls.appendChild(addBtn('Reset sobo','danger', hardReset));
     }
 
-    // ===== Player UI =====
     function renderPlayer(st){
       plRound.textContent = st.round||0;
       plState.textContent = st.state||'-';
@@ -632,7 +508,9 @@ main{padding:14px}
       }
     }
 
-    // ===== Host actions =====
+    /* =========================
+       Host actions
+    ========================== */
     async function startBetting(){
       if(!isHost || !currentState) return;
       await db.ref(`blackjack/${roomId}`).update({
@@ -641,7 +519,7 @@ main{padding:14px}
         dealer: { hand: [] },
         turnIndex: 0
       });
-      // reset players
+      // reset players hands/bets, keep money as-is (comes from users coins and mirror)
       const order = currentState.order || [];
       for(const uid of order){
         await db.ref(`blackjack/${roomId}/players/${uid}`).update({ bet: 0, hand: [], status: 'betting' });
@@ -651,19 +529,25 @@ main{padding:14px}
     async function startDealing(){
       if(!isHost || !currentState || currentState.state!=='betting') return;
       let players = currentState.players||{};
+      // ensure in-room money mirrors latest coins before dealing
+      for(const uid of (currentState.order||[])){
+        const coins = await readUserCoins(uid);
+        await db.ref(`blackjack/${roomId}/players/${uid}/money`).set(coins);
+      }
+
       let shoe = currentState.shoe && currentState.shoe.length>15 ? currentState.shoe : makeDeck();
       const order = (currentState.order||[]).filter(uid => players[uid]);
 
       // mark statuses
       for(const uid of order){
         const p = players[uid];
-        if(!(p.bet>0) || p.money<=0){
-          await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status:'sitout', hand: [] });
-        } else {
-          await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status:'playing', hand: [] });
-        }
+        const allowed = (p.bet>0) && (p.money>0);
+        await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status: allowed?'playing':'sitout', hand: [] });
       }
-      const active = order.filter(uid => (players[uid].bet>0 && players[uid].money>0));
+      const active = order.filter(uid => {
+        const p = players[uid];
+        return p && p.bet>0 && p.money>0;
+      });
 
       // deal
       const updates = {};
@@ -696,24 +580,41 @@ main{padding:14px}
       if(!confirm('Reset sobo?')) return;
       const order = currentState.order||[];
       const players = currentState.players||{};
+      const newPlayers = {};
+      for(const uid of order){
+        const coins = await readUserCoins(uid);
+        newPlayers[uid] = {
+          name: (players[uid]?.name)||uid,
+          money: coins,
+          bet: 0,
+          hand: [],
+          status: 'idle',
+          joinedAt: players[uid]?.joinedAt || Date.now()
+        };
+      }
       await db.ref(`blackjack/${roomId}`).set({
         hostId: userId, createdAt: Date.now(), state:'lobby', round:0, turnIndex:0,
         order: order.length?order:[userId], dealer:{hand:[]}, shoe: makeDeck(),
-        players: Object.fromEntries(order.map(uid=>[uid, {
-          name: (players[uid]?.name)||uid, money: 1000, bet:0, hand:[], status:'idle', joinedAt: players[uid]?.joinedAt || Date.now()
-        }]))
+        players: newPlayers
       });
     }
 
-    // ===== Player actions =====
+    /* =========================
+       Player actions
+    ========================== */
     betBtn.onclick = async ()=>{
       if(!currentState || currentState.state!=='betting') return alert('Zdaj ni faza stav.');
       const me = currentState.players?.[userId]; if(!me) return;
       const bet = Math.max(1, Math.floor(+betInput.value||0));
-      if(me.money < bet) return alert('Nimaš dovolj denarja.');
+      // mirror latest coins before bet check
+      const latestCoins = await readUserCoins(userId);
+      await db.ref(`blackjack/${roomId}/players/${userId}/money`).set(latestCoins);
+
+      if(latestCoins < bet) return alert('Nimaš dovolj kovancev.');
       await db.ref(`blackjack/${roomId}/players/${userId}`).update({ bet, status:'ready' });
       plMsg.textContent = `Stavil si ${bet}.`;
     };
+
     hitBtn.onclick = ()=>playerHit(userId);
     standBtn.onclick = ()=>playerStand(userId);
 
@@ -788,7 +689,10 @@ main{padding:14px}
       await db.ref(`blackjack/${roomId}`).update({ state:'dealer' });
     }
 
-    // ===== Settle (money moves between players and host) =====
+    /* =========================
+       Settle payouts (money moves between users coins)
+       - uses transactions on users/{uid}/coins to avoid race conditions
+    ========================== */
     async function settlePayouts(){
       const stSnap = await db.ref(`blackjack/${roomId}`).once('value');
       const st = stSnap.val(); if(!st) return;
@@ -797,8 +701,9 @@ main{padding:14px}
       if(!host) return;
 
       const dVal = handValue(st.dealer?.hand||[]);
-      const updates = {}; let hostDelta = 0;
+      let hostDelta = 0;
 
+      // Resolve each player result, compute deltas
       for(const [uid,p] of Object.entries(players)){
         if(uid===st.hostId) continue;
         const bet = +p.bet||0; if(bet<=0) continue;
@@ -813,13 +718,19 @@ main{padding:14px}
         else if(v<dVal){ delta=-bet; result='lose'; }
         else { delta=0; result='push'; }
 
-        updates[`players/${uid}/money`] = Math.max(0, (+p.money||0) + delta);
-        updates[`players/${uid}/status`] = result;
-        hostDelta -= delta;
+        // Apply to user's global coins (transaction) and mirror back into room
+        const newCoins = await applyCoinDelta(roomId, uid, delta);
+        await db.ref(`blackjack/${roomId}/players/${uid}/status`).set(result);
+        // bet ostane zapisan (lahko ga počistimo ob naslednjem krogu)
+
+        hostDelta -= delta; // nasprotje za hišo
       }
-      updates[`players/${st.hostId}/money`] = Math.max(0, (+host.money||0) + hostDelta);
-      updates[`state`] = 'settle';
-      await db.ref(`blackjack/${roomId}`).update(updates);
+
+      // Apply host delta to host coins
+      const newHostCoins = await applyCoinDelta(roomId, st.hostId, hostDelta);
+
+      // Mark state settle
+      await db.ref(`blackjack/${roomId}/state`).set('settle');
     }
   </script>
 </body>
