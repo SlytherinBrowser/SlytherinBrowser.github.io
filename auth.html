@@ -5,51 +5,33 @@
   <title>Prijava / Registracija</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Firebase (compat) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-    body {
-      background: url('slika.png') no-repeat center center fixed;
-      background-size: cover;
-      min-height: 100vh;
-      display: flex; justify-content: center; align-items: center; padding: 20px;
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
+    body{
+      background:url('slika.png') no-repeat center center fixed;background-size:cover;
+      height:100vh;display:flex;justify-content:center;align-items:center;
     }
-    .container {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-      width: 90%;
-      max-width: 380px;
-      color: white;
+    .container{
+      background:rgba(255,255,255,.08);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+      padding:30px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:90%;max-width:420px;color:white
     }
-    h2 { text-align: center; margin-bottom: 20px; font-weight: 500; }
-    input {
-      width: 100%; padding: 10px; margin: 8px 0;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px; background-color: rgba(255, 255, 255, 0.05);
-      color: white; outline: none; transition: border 0.3s;
+    h2{text-align:center;margin-bottom:20px;font-weight:500}
+    input,button{
+      width:100%;padding:10px;margin:8px 0;border:1px solid rgba(255,255,255,.3);
+      border-radius:8px;background-color:rgba(255,255,255,.05);color:white;outline:none;transition:border .3s
     }
-    input::placeholder { color: rgba(255, 255, 255, 0.6); }
-    input:focus { border-color: white; }
-    button {
-      width: 100%; padding: 10px; margin-top: 10px;
-      background-color: rgba(255, 255, 255, 0.15);
-      border: none; border-radius: 8px; color: white;
-      font-weight: 600; cursor: pointer; transition: background 0.3s;
-    }
-    button:hover { background-color: rgba(255, 255, 255, 0.25); }
-    .toggle { text-align: center; margin-top: 15px; cursor: pointer; color: #dddddd; font-size: 0.9em; text-decoration: underline; }
-    .hidden { display: none; }
-    .btn-primary { background-color: rgba(0, 150, 136, 0.85); }
-    .btn-secondary { background-color: rgba(255,255,255,0.1); font-size: 0.9em; }
-    .note { margin-top: 8px; font-size: 0.85em; opacity: .9; text-align: center; }
+    input::placeholder{color:rgba(255,255,255,.6)}
+    input:focus{border-color:white}
+    button{background-color:rgba(255,255,255,.15);border:none;color:white;font-weight:600;cursor:pointer;transition:background .3s}
+    button:hover{background-color:rgba(255,255,255,.25)}
+    .toggle{text-align:center;margin-top:15px;cursor:pointer;color:#ddd;font-size:.9em;text-decoration:underline}
+    .hidden{display:none}
+    .row{display:flex;gap:8px}
   </style>
 </head>
 <body>
@@ -57,31 +39,33 @@
     <!-- PRIJAVA -->
     <div id="loginForm">
       <h2>Prijava</h2>
-      <input type="email" id="logEmail" placeholder="Email" autocomplete="username" />
-      <input type="password" id="logPass" placeholder="Geslo" autocomplete="current-password" />
+      <input type="email" id="logEmail" placeholder="Email (dodaj /admin za admin prijavo)" />
+      <input type="password" id="logPass" placeholder="Geslo" />
       <button onclick="login()">Prijavi se</button>
 
-      <!-- 🎰 Blackjack gumb: prijavi z email/geslo in preusmeri na blackj.html -->
-      <button id="blackjackBtn" class="btn-primary" onclick="goBlackjack()">🎰 Blackjack</button>
+      <!-- Hitra navigacija -->
+      <div class="row">
+        <button onclick="window.location.href='slychat.html'">Chat</button>
+        <button onclick="window.location.href='blackj.html'">Blackjack</button>
+        <button onclick="window.location.href='lottery.html'">Loterija</button>
+      </div>
 
-      <button onclick="resetPassword()" class="btn-secondary">Pozabil/a geslo?</button>
+      <button onclick="resetPassword()" style="margin-top:8px;background-color:rgba(255,255,255,.1);font-size:.9em;">Pozabil/a geslo?</button>
       <div class="toggle" onclick="toggleForms()">Še nimaš računa? Registriraj se</div>
-      <div class="note">Namig: za Blackjack gumb moraš izpolniti email + geslo.</div>
     </div>
 
     <!-- REGISTRACIJA -->
     <div id="registerForm" class="hidden">
       <h2>Registracija</h2>
       <input type="text" id="regName" placeholder="Ime" />
-      <input type="email" id="regEmail" placeholder="Email" autocomplete="username" />
-      <input type="password" id="regPass" placeholder="Geslo" autocomplete="new-password" />
+      <input type="email" id="regEmail" placeholder="Email" />
+      <input type="password" id="regPass" placeholder="Geslo" />
       <button onclick="register()">Registriraj</button>
       <div class="toggle" onclick="toggleForms()">Že imaš račun? Prijavi se</div>
     </div>
   </div>
 
   <script>
-    // ===== Firebase config (zamenjaj samo, če imaš drug projekt) =====
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
       authDomain: "chater-cf682.firebaseapp.com",
@@ -91,151 +75,71 @@
       messagingSenderId: "233632075480",
       appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // ✅ Ob spremembi avtentikacije: če je nastavljena "redirectTo", jo upoštevamo
     auth.onAuthStateChanged((user) => {
       if (user) {
-        const to = localStorage.getItem("redirectTo");
-        if (to) {
-          localStorage.removeItem("redirectTo");
-          window.location.href = to;
-          return;
-        }
-        // privzeto v chat, če ni posebne želje
-        window.location.href = "slychat.html";
+        // nič – ostaneš na landing strani, lahko odpreš Blackjack/Chat/Loterijo
       }
     });
 
-    // ===== Registracija =====
-    function register() {
+    async function register() {
       const name = document.getElementById("regName").value.trim();
       const email = document.getElementById("regEmail").value.trim();
       const pass = document.getElementById("regPass").value;
+      if (!name || !email || !pass) return alert("Prosim, izpolni vsa polja.");
 
-      if (!name || !email || !pass) {
-        alert("Prosim, izpolni vsa polja.");
-        return;
-      }
-
-      firebase.auth()
-        .createUserWithEmailAndPassword(email, pass)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          return user.updateProfile({ displayName: name })
-            .then(() => db.ref("users/" + user.uid).set({
-              displayName: name,
-              email: email,
-            }));
-        })
-        .then(() => {
-          alert("Registracija uspešna!");
-          // če želiš po registraciji takoj v igro, odkomentiraj spodaj:
-          // localStorage.setItem("redirectTo", "blackj.html");
-          window.location.href = "slychat1.html";
-        })
-        .catch((error) => alert(error.message));
+      const cred = await auth.createUserWithEmailAndPassword(email, pass);
+      await cred.user.updateProfile({ displayName: name });
+      await db.ref("users/" + cred.user.uid).set({
+        displayName: name, email: email, coins: 0
+      });
+      alert("Registracija uspešna!");
+      window.location.href = "lottery.html";
     }
 
-    // ===== Klasična prijava =====
-    function login() {
-      const email = document.getElementById("logEmail").value.trim();
-      const pass  = document.getElementById("logPass").value;
+    async function login() {
+      let emailRaw = document.getElementById("logEmail").value.trim();
+      const pass = document.getElementById("logPass").value;
+      if(!emailRaw || !pass) return alert("Manjka email ali geslo.");
 
-      if (!email || !pass) {
-        alert("Vnesi email in geslo.");
-        return;
+      // /admin sintaksa
+      const isAdminLogin = emailRaw.endsWith('/admin');
+      const email = isAdminLogin ? emailRaw.replace(/\/admin$/,'') : emailRaw;
+
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+
+      // če je /admin in še ni nastavljen admin, postavi mene
+      if (isAdminLogin) {
+        const adminSnap = await db.ref('lottery/adminUid').once('value');
+        const currentAdmin = adminSnap.val();
+        if (!currentAdmin) {
+          await db.ref('lottery/adminUid').set(cred.user.uid);
+          await db.ref('lottery/adminSince').set(Date.now());
+          alert("Uspešno nastavljen kot ADMIN loterije.");
+        } else if (currentAdmin !== cred.user.uid) {
+          alert("Admin je že nastavljen. Uporabi navadno prijavo brez /admin.");
+        } else {
+          alert("Prijavljen kot trenutni ADMIN.");
+        }
       }
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => (window.location.href = "slychat.html"))
-        .catch((error) => alert(error.message));
+      // Pojdi v loterijo
+      window.location.href = "lottery.html";
     }
 
-    // ===== Prijava + preusmeritev v Blackjack =====
-    async function goBlackjack() {
-      const btn   = document.getElementById("blackjackBtn");
-      const email = document.getElementById("logEmail").value.trim();
-      const pass  = document.getElementById("logPass").value;
-
-      // Če je že prijavljen, samo odpri igro
-      if (auth.currentUser) {
-        window.location.href = "blackj.html";
-        return;
-      }
-
-      if (!email || !pass) {
-        alert("Vnesi email in geslo za zagon Blackjack igre.");
-        return;
-      }
-
-      try {
-        // OnAuthStateChanged bo prebral "redirectTo" in preusmeril v igro
-        localStorage.setItem("redirectTo", "blackj.html");
-        btn.disabled = true;
-        btn.textContent = "Prijavljam ...";
-        await auth.signInWithEmailAndPassword(email, pass);
-      } catch (err) {
-        localStorage.removeItem("redirectTo");
-        alert(err.message);
-        btn.disabled = false;
-        btn.textContent = "🎰 Blackjack";
-      }
+    async function resetPassword() {
+      const emailRaw = document.getElementById("logEmail").value.trim();
+      if (!emailRaw) return alert("Vnesi email.");
+      const email = emailRaw.replace(/\/admin$/,'');
+      await auth.sendPasswordResetEmail(email);
+      alert("Poslali smo povezavo za ponastavitev.");
     }
 
-    // ===== Ponastavitev gesla =====
-    function resetPassword() {
-      const email = document.getElementById("logEmail").value.trim();
-      if (!email) {
-        alert("Prosimo, vnesi tvoj email za ponastavitev gesla.");
-        return;
-      }
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("Poslali smo ti email za ponastavitev gesla."))
-        .catch((error) => alert("Napaka: " + error.message));
-    }
-
-    // ===== Preklapljanje med prijavo in registracijo =====
     function toggleForms() {
       document.getElementById("loginForm").classList.toggle("hidden");
       document.getElementById("registerForm").classList.toggle("hidden");
-    }
-
-    // ===== (Neobvezno) funkcije iz tvoje stare kode – ostanejo, če jih kje kličeš =====
-    function loginToGame() { window.location.href = "gamechat.html"; }
-
-    function startReset() {
-      const username = document.getElementById("usernameForReset")?.value?.trim();
-      if (!username) { alert("Vnesi uporabniško ime."); return; }
-      db.ref("users").once("value", (snapshot) => {
-        let found = false;
-        snapshot.forEach((child) => {
-          const user = child.val();
-          if (user.displayName === username) {
-            found = true;
-            const emailEl = document.getElementById("realResetEmail");
-            if (emailEl) emailEl.value = user.email;
-            const step2 = document.getElementById("resetStep2");
-            if (step2) step2.classList.remove("hidden");
-            alert("Uporabnik najden! Vnesi email za ponastavitev.");
-          }
-        });
-        if (!found) alert("Uporabnik s tem imenom ni bil najden.");
-      });
-    }
-
-    function confirmReset() {
-      const email = document.getElementById("realResetEmail")?.value?.trim();
-      if (!email) { alert("Vnesi email naslov."); return; }
-      auth.sendPasswordResetEmail(email)
-        .then(() => {
-          alert("Na vpisani e-mail je bila poslana povezava za ponastavitev gesla.");
-          const step2 = document.getElementById("resetStep2");
-          if (step2) step2.classList.add("hidden");
-        })
-        .catch((error) => alert("Napaka: " + error.message));
     }
   </script>
 </body>
