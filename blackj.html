@@ -10,44 +10,225 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <style>
-    :root{
-      --bg:#0b1020; --panel:#121932; --panel2:#0e1530; --text:#e9edf7; --muted:#9fb3d0;
-      --acc:#4a90e2; --ok:#20c997; --warn:#ffb703; --bad:#ef476f;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
-    header{padding:14px 16px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
-    header h1{font-size:18px;margin:0 10px 0 0}
-    input,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--text)}
-    input::placeholder{color:#9fb3d0}
-    button{cursor:pointer}
-    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
-    button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
-    button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
-    button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
-    .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
-    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .stack{display:flex;flex-direction:column;gap:10px}
-    .grid{display:grid;gap:12px}
-    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:14px}
-    .table{background:var(--panel2);border:1px solid #223064;border-radius:12px;padding:12px}
-    h2{margin:0 0 8px 0;font-size:16px;border-bottom:1px solid #1b264b;padding-bottom:6px}
-    .tag{font-size:12px;background:#1a2448;padding:2px 6px;border-radius:6px;border:1px solid #2b3b74}
-    .turn{outline:2px solid var(--acc);box-shadow:0 0 0 3px rgba(74,144,226,.25)}
-    .hand{display:flex;gap:6px;flex-wrap:wrap}
-    .card{width:54px;height:78px;border-radius:8px;border:1px solid #1f2a4e;background:#0e1530;display:grid;place-items:center;font-weight:700}
-    .muted{color:var(--muted)}
-    .hidden{display:none !important}
-    .wide{width:100%}
-    .playersList{display:flex;flex-direction:column;gap:10px;max-height:45vh;overflow:auto}
-    .leader{display:flex;flex-direction:column;gap:6px}
-    footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
-    /* Layouts */
-    main{padding:14px}
-    #hostView {display:grid;grid-template-columns: 360px 1fr;gap:14px}
-    #playerView {max-width: 980px;margin: 0 auto}
-  </style>
+/* ===============================
+   Osnovne spremenljivke in reset
+   =============================== */
+:root{
+  --bg: #0b1020;
+  --panel: #121932;
+  --panel2:#0e1530;
+  --text:#e9edf7;
+  --muted:#9fb3d0;
+  --acc:#4a90e2;
+  --ok:#20c997;
+  --warn:#ffb703;
+  --bad:#ef476f;
+
+  /* UI */
+  --radius-sm:10px;
+  --radius-md:12px;
+  --radius-lg:14px;
+  --ring: 2px;
+  --shadow: 0 8px 24px rgba(0,0,0,.25);
+
+  /* Tipografija – fluidna */
+  --fs-base: clamp(15px, 0.9vw + 12px, 16px);
+  --fs-h1: clamp(18px, 1.2vw + 14px, 22px);
+  --fs-h2: clamp(16px, 1vw + 12px, 18px);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  background:linear-gradient(180deg,#0a0f22,#0b1020);
+  font: var(--fs-base)/1.5 system-ui, Segoe UI, Roboto, Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* Bolj lepe scrollbarje (podprti brskalniki) */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: #31406f #0e1530;
+}
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-thumb{background:#31406f;border-radius:999px}
+*::-webkit-scrollbar-track{background:#0e1530}
+
+/* ===============================
+   Header
+   =============================== */
+header{
+  position:sticky; top:0; z-index:5;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:14px 16px;
+  border-bottom:1px solid #1b264b;
+  background:#0a0f22cc;
+  backdrop-filter:saturate(1.2) blur(6px);
+}
+header h1{
+  font-size:var(--fs-h1); margin:0 10px 0 0; font-weight:700;
+}
+
+/* ===============================
+   Kontrole (inputi/gumbi)
+   =============================== */
+input, button, select, textarea{
+  padding:10px 12px;
+  border-radius:var(--radius-sm);
+  border:1px solid #24325c;
+  background:#0e1530;
+  color:var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
+}
+input::placeholder{color:var(--muted)}
+
+input:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 var(--ring) color-mix(in srgb, var(--acc) 60%, transparent);
+  border-color: color-mix(in srgb, var(--acc) 60%, #24325c 40%);
+}
+
+button{
+  cursor:pointer; user-select:none; font-weight:600;
+  background:linear-gradient(180deg,#2a3564,#1a244a);
+  border-color:#3a4b86;
+}
+button:hover{transform:translateY(-1px)}
+button:active{transform:translateY(0)}
+button:disabled{opacity:.6; cursor:not-allowed}
+
+/* Variacije gumbov */
+button.primary{
+  background:linear-gradient(180deg,#3270e6,#2756b8);
+  border-color:#3c7df0;
+}
+button.ok{
+  background:linear-gradient(180deg,#26a169,#1f8255);
+  border-color:#33c584;
+}
+button.warn{
+  background:linear-gradient(180deg,#d29a10,#a77708);
+  border-color:#e7b028;
+}
+button.danger{
+  background:linear-gradient(180deg,#b82a47,#8a2036);
+  border-color:#c14961;
+}
+
+/* ===============================
+   Mikro-komponente
+   =============================== */
+.pill{
+  font-size:12px; padding:4px 9px; border-radius:999px;
+  background:#18244a; border:1px solid #2a3c77;
+}
+.tag{
+  font-size:12px; padding:3px 7px; border-radius:6px;
+  background:#1a2448; border:1px solid #2b3b74;
+}
+.muted{color:var(--muted)}
+.hidden{display:none !important}
+.wide{width:100%}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+.stack{display:flex; flex-direction:column; gap:12px}
+.grid{display:grid; gap:12px}
+
+/* Kartice / plošče */
+.panel{
+  background:var(--panel);
+  border:1px solid #1d2852;
+  border-radius:var(--radius-lg);
+  padding:14px;
+  box-shadow: var(--shadow);
+}
+.table{
+  background:var(--panel2);
+  border:1px solid #223064;
+  border-radius:var(--radius-md);
+  padding:12px;
+}
+
+/* Naslovi  */
+h2{
+  margin:0 0 8px 0;
+  font-size:var(--fs-h2);
+  border-bottom:1px solid #1b264b;
+  padding-bottom:6px;
+}
+
+/* Igre / roke */
+.hand{display:flex; gap:6px; flex-wrap:wrap}
+.card{
+  width:54px; height:78px;
+  display:grid; place-items:center;
+  font-weight:700;
+  border-radius:8px; border:1px solid #1f2a4e; background:#0e1530;
+}
+
+/* Vodenje / leaderboards */
+.playersList{
+  display:flex; flex-direction:column; gap:10px;
+  max-height:45vh; overflow:auto;
+}
+.leader{display:flex; flex-direction:column; gap:6px}
+
+/* Odseki strani */
+main{padding:14px}
+
+/* Primarni layout-i */
+#hostView{
+  display:grid; gap:14px;
+  grid-template-columns: 360px 1fr;
+  align-items:start;
+}
+#playerView{max-width: 980px; margin: 0 auto}
+
+/* Stanja */
+.turn{
+  outline:2px solid var(--acc);
+  box-shadow:0 0 0 4px rgba(74,144,226,.25);
+}
+
+/* ===============================
+   Odzivnost (računalnik ↔ telefon)
+   =============================== */
+@media (max-width: 900px){
+  #hostView{ grid-template-columns: 1fr; }
+  header{ gap:10px }
+}
+@media (max-width: 600px){
+  body{ line-height: 1.6 }
+  header{ padding:12px }
+  main{ padding:12px }
+  .panel, .table{ padding:12px }
+  button, input, select, textarea{ padding:12px 14px }
+  .card{ width:50px; height:72px }
+}
+
+/* ===============================
+   Dostopnost in preference
+   =============================== */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: .001ms !important; animation-iteration-count:1 !important;
+     transition-duration: .001ms !important; scroll-behavior:auto !important; }
+}
+
+/* Light mode (če ga kdaj rabiš) */
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f6f7fb; --panel:#ffffff; --panel2:#f8faff; --text:#0a0f22; --muted:#5b6b88;
+    --acc:#3b6eea;
+  }
+  body{ background:linear-gradient(180deg,#eef1f9,#e8ecfb); color:var(--text) }
+  header{ background:#ffffffcc; border-bottom:1px solid #dde3f7 }
+  input,button{ background:#f6f8ff; border-color:#cfd8f3; color:var(--text) }
+  .panel{ border-color:#e3e8fb }
+  .table{ border-color:#e6ebfe }
+  .pill, .tag{ background:#eef2ff; border-color:#dbe3ff }
+}
 </head>
 <body>
   <header>
