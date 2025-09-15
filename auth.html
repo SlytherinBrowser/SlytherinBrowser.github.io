@@ -39,15 +39,14 @@
     <!-- PRIJAVA -->
     <div id="loginForm">
       <h2>Prijava</h2>
-      <input type="email" id="logEmail" placeholder="Email (dodaj /admin za admin prijavo)" />
+      <input type="email" id="logEmail" placeholder="Email (za Loterijo lahko dodaš /admin)" />
       <input type="password" id="logPass" placeholder="Geslo" />
-      <button onclick="login()">Prijavi se</button>
 
-      <!-- Hitra navigacija -->
+      <!-- Navigacija – ob kliku najprej prijavi, nato odpelje -->
       <div class="row">
-        <button onclick="window.location.href='slychat.html'">Chat</button>
-        <button onclick="window.location.href='blackj.html'">Blackjack</button>
-        <button onclick="window.location.href='teste.html'">Loterija</button>
+        <button onclick="loginAndGo('slychat.html')">Chat</button>
+        <button onclick="loginAndGo('blackj.html')">Blackjack</button>
+        <button onclick="loginAndGo('teste.html')">Loterija</button>
       </div>
 
       <button onclick="resetPassword()" style="margin-top:8px;background-color:rgba(255,255,255,.1);font-size:.9em;">Pozabil/a geslo?</button>
@@ -79,11 +78,14 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        // nič – ostaneš na landing strani, lahko odpreš Blackjack/Chat/Loterijo
-      }
-    });
+    // NE delaj nobenih auto-preusmeritev tukaj
+    auth.onAuthStateChanged(() => { /* namenoma prazno */ });
+
+    function sanitizeEmailForAdmin(raw){
+      const isAdmin = raw.endsWith('/admin');
+      const email = isAdmin ? raw.replace(/\/admin$/,'') : raw;
+      return { email, isAdmin };
+    }
 
     async function register() {
       const name = document.getElementById("regName").value.trim();
@@ -91,50 +93,69 @@
       const pass = document.getElementById("regPass").value;
       if (!name || !email || !pass) return alert("Prosim, izpolni vsa polja.");
 
-      const cred = await auth.createUserWithEmailAndPassword(email, pass);
-      await cred.user.updateProfile({ displayName: name });
-      await db.ref("users/" + cred.user.uid).set({
-        displayName: name, email: email, coins: 0
-      });
-      alert("Registracija uspešna!");
-      window.location.href = "lottery.html";
+      try{
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        await cred.user.updateProfile({ displayName: name });
+        await db.ref("users/" + cred.user.uid).set({
+          displayName: name, email: email, coins: 0
+        });
+        alert("Registracija uspešna! Zdaj klikni, kam želiš iti (Chat/Blackjack/Loterija).");
+        // ostanemo na strani – uporabnik izbere destinacijo
+      }catch(e){
+        alert(e.message);
+      }
     }
 
-    async function login() {
-      let emailRaw = document.getElementById("logEmail").value.trim();
+    async function loginAndGo(dest){
+      const raw = document.getElementById("logEmail").value.trim();
       const pass = document.getElementById("logPass").value;
-      if(!emailRaw || !pass) return alert("Manjka email ali geslo.");
+      if(!raw || !pass) return alert("Vnesi email in geslo.");
 
-      // /admin sintaksa
-      const isAdminLogin = emailRaw.endsWith('/admin');
-      const email = isAdminLogin ? emailRaw.replace(/\/admin$/,'') : emailRaw;
+      const { email, isAdmin } = sanitizeEmailForAdmin(raw);
 
-      const cred = await auth.signInWithEmailAndPassword(email, pass);
-
-      // če je /admin in še ni nastavljen admin, postavi mene
-      if (isAdminLogin) {
-        const adminSnap = await db.ref('lottery/adminUid').once('value');
-        const currentAdmin = adminSnap.val();
-        if (!currentAdmin) {
-          await db.ref('lottery/adminUid').set(cred.user.uid);
-          await db.ref('lottery/adminSince').set(Date.now());
-          alert("Uspešno nastavljen kot ADMIN loterije.");
-        } else if (currentAdmin !== cred.user.uid) {
-          alert("Admin je že nastavljen. Uporabi navadno prijavo brez /admin.");
-        } else {
-          alert("Prijavljen kot trenutni ADMIN.");
+      try{
+        // Če smo že prijavljeni z istim mailom, preskoči login
+        const current = auth.currentUser;
+        if(!current || current.email !== email){
+          // če je prijavljen z drugim računom, ga odjavi
+          if(current && current.email !== email){ await auth.signOut(); }
+          await auth.signInWithEmailAndPassword(email, pass);
         }
+
+        // Posebno: /admin velja samo za Loterijo
+        if(isAdmin && dest === 'teste.html'){
+          const adminSnap = await db.ref('lottery/adminUid').once('value');
+          const currentAdmin = adminSnap.val();
+          const uid = auth.currentUser.uid;
+          if (!currentAdmin) {
+            await db.ref('lottery/adminUid').set(uid);
+            await db.ref('lottery/adminSince').set(Date.now());
+            alert("Uspešno nastavljen kot ADMIN loterije.");
+          } else if (currentAdmin !== uid) {
+            alert("Admin je že nastavljen. Nadaljujem kot navaden igralec.");
+          } else {
+            // si že admin
+          }
+        }
+
+        // gremo na ciljno stran
+        window.location.href = dest;
+
+      }catch(e){
+        alert(e.message);
       }
-      // Pojdi v loterijo
-      window.location.href = "lottery.html";
     }
 
     async function resetPassword() {
-      const emailRaw = document.getElementById("logEmail").value.trim();
-      if (!emailRaw) return alert("Vnesi email.");
-      const email = emailRaw.replace(/\/admin$/,'');
-      await auth.sendPasswordResetEmail(email);
-      alert("Poslali smo povezavo za ponastavitev.");
+      const raw = document.getElementById("logEmail").value.trim();
+      if (!raw) return alert("Vnesi email.");
+      const email = raw.replace(/\/admin$/,'');
+      try{
+        await auth.sendPasswordResetEmail(email);
+        alert("Poslali smo povezavo za ponastavitev.");
+      }catch(e){
+        alert(e.message);
+      }
     }
 
     function toggleForms() {
