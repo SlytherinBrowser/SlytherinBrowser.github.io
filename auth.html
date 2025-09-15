@@ -133,15 +133,15 @@
   const auth = firebase.auth();
   const db = firebase.database();
 
-  // ====== igre & cene (po potrebi spremeni) ======
+  // ====== vse igre zastonj ======
   const GAME_CATALOG = {
     chat:     { name:'Chat',        dest:'slychat.html', price:0 },
-    blackjack:{ name:'Blackjack',   dest:'blackj.html',  price:200 },
-    lottery:  { name:'Loterija',    dest:'teste.html',   price:150, adminPath:'lottery' },
-    casino:   { name:'Casino',      dest:'casino.html',  price:300, adminPath:'casino' },
-    crashmp:  { name:'Crash (MP)',  dest:'crashmp.html', price:250 },
-    mapguess: { name:'MapGuess',    dest:'mapguess.html',price:120 },
-    hacker:   { name:'Hacker Game', dest:'hacker.html',  price:180 }
+    blackjack:{ name:'Blackjack',   dest:'blackj.html',  price:0 },
+    lottery:  { name:'Loterija',    dest:'teste.html',   price:0, adminPath:'lottery' },
+    casino:   { name:'Casino',      dest:'casino.html',  price:0, adminPath:'casino' },
+    crashmp:  { name:'Crash (MP)',  dest:'crashmp.html', price:0 },
+    mapguess: { name:'MapGuess',    dest:'mapguess.html',price:0 },
+    hacker:   { name:'Hacker Game', dest:'hacker.html',  price:0 }
   };
 
   // UI refs
@@ -150,7 +150,7 @@
   const menuList = document.getElementById('menuList');
   const appNameEl = document.getElementById('appName');
 
-  // Privzeto na CHat
+  // Privzeto na Chat
   let selectedKey  = 'chat';
   let selectedDest = GAME_CATALOG.chat.dest;
   let selectedName = GAME_CATALOG.chat.name;
@@ -178,20 +178,19 @@
     });
   });
 
-  // Prikaz ključavnic po loginu
+  // Po loginu posodobi značke (vse ✅ Brezplačno)
   auth.onAuthStateChanged(async (u)=>{
-    if(u){ await refreshLocksUI(u.uid); }
-    else { // po odjavi: reset prikaza na default (Chat)
+    if(u){ await refreshLocksUI(); }
+    else {
       appNameEl.textContent = 'Chat';
       selectedKey  = 'chat';
       selectedDest = GAME_CATALOG.chat.dest;
       selectedName = GAME_CATALOG.chat.name;
-      // opcijsko: počisti ikone v meniju, ni nujno
     }
   });
 
-  // Gumb prijava → vedno najprej PRIJAVA, potem UNLOCK CHECK, potem (morda) PREUSMERI
-  goBtn.addEventListener('click', ()=> loginThenEnter(selectedKey));
+  // Prijava → samo prijavi, nato takoj preusmeri v izbrano igro (brez odklepov)
+  goBtn.addEventListener('click', ()=> loginThenGo(selectedKey));
 
   function sanitizeEmailForAdmin(raw){
     const isAdmin = raw.endsWith('/admin');
@@ -199,7 +198,7 @@
     return { email, isAdmin };
   }
 
-  async function loginThenEnter(gameKey){
+  async function loginThenGo(gameKey){
     const raw = document.getElementById("logEmail").value.trim();
     const pass = document.getElementById("logPass").value;
     if(!raw || !pass) return alert("Vnesi email in geslo.");
@@ -209,7 +208,7 @@
     if(!game) return alert("Neznana igra.");
 
     try{
-      // 1) PRIJAVA (vedno)
+      // 1) PRIJAVA
       const current = auth.currentUser;
       if(!current || current.email !== email){
         if(current && current.email !== email){ await auth.signOut(); }
@@ -217,29 +216,20 @@
       }
       const uid = auth.currentUser.uid;
 
-      // 2) (opcijsko) ADMIN inicializacija za module, ki jo podpirajo
+      // 2) (opcijsko) admin nastavitev za module, ki jo podpirajo
       if(isAdmin && game.adminPath){
         const adminSnap = await db.ref(`${game.adminPath}/adminUid`).once('value');
-        const currentAdmin = adminSnap.val();
-        if (!currentAdmin) {
+        const curAdmin = adminSnap.val();
+        if (!curAdmin) {
           await db.ref(`${game.adminPath}/adminUid`).set(uid);
           await db.ref(`${game.adminPath}/adminSince`).set(Date.now());
           alert(`Uspešno nastavljen kot ADMIN (${game.name}).`);
-        } else if (currentAdmin !== uid) {
+        } else if (curAdmin !== uid) {
           alert(`Admin (${game.name}) je že nastavljen. Nadaljujem kot navaden igralec.`);
         }
       }
 
-      // 3) PREVERI/ODKLENI (če je treba). Tukaj ŠE NE preusmerjamo.
-      const ok = await ensureUnlockedOrBuyAfterLogin(uid, gameKey);
-      if(!ok){
-        // premalo kovancev ali uporabnik preklical → ODJAVA nazaj
-        await auth.signOut();
-        alert("Ni odklepa. Odjavljen nazaj.");
-        return;
-      }
-
-      // 4) Šele zdaj PREUSMERI
+      // 3) TAKOJŠNJA PREUSMERITEV (brez preverjanja kovancev/odklepov)
       window.location.href = game.dest;
 
     }catch(e){
@@ -247,45 +237,8 @@
     }
   }
 
-  // Odklepanje se izvaja *po* loginu, z bralnim dostopom do users/{uid}
-  async function ensureUnlockedOrBuyAfterLogin(uid, key){
-    const game = GAME_CATALOG[key];
-    if(!game) return false;
-    if(game.price === 0) return true; // Chat ipd.
-
-    // preberi stanje (smo prijavljeni, tako da ni več 401)
-    const uSnap = await db.ref(`users/${uid}`).once('value');
-    const u = uSnap.val()||{};
-    const unlocked = u.unlocked || {};
-    if(unlocked[key]) return true; // že odklenjeno
-
-    const coins = +(u.coins||0);
-    if(coins < game.price){
-      alert(`Za odklep "${game.name}" potrebuješ ${game.price} kovancev. Trenutno: ${coins}.`);
-      return false;
-    }
-
-    const confirmBuy = confirm(`Odkleni "${game.name}" za ${game.price} kovancev? Odklep je trajen.`);
-    if(!confirmBuy) return false;
-
-    // atomicno odštej in označi odklenjeno
-    const dec = await db.ref(`users/${uid}/coins`).transaction(c=>{
-      c=(+c||0); if(c < game.price) return; return c - game.price;
-    });
-    if(!dec.committed){
-      alert("Ni uspelo odšteti kovancev (morda premalo).");
-      return false;
-    }
-    await db.ref(`users/${uid}/unlocked/${key}`).set(true);
-    await refreshLocksUI(uid);
-    alert(`"${game.name}" je odklenjen!`);
-    return true;
-  }
-
-  // Posodobi 🔒/✅ v dropdown meniju (kliče se po loginu in po uspešnem odklepu)
-  async function refreshLocksUI(uid){
-    const uSnap = await db.ref(`users/${uid}/unlocked`).once('value');
-    const unlocked = uSnap.val()||{ chat:true };
+  // V meniju pokaži ✅ Brezplačno za vse
+  async function refreshLocksUI(){
     menuList.querySelectorAll('.menu-item').forEach(item=>{
       const key = item.getAttribute('data-key');
       const lockEl = item.querySelector('.status .lock');
@@ -293,20 +246,12 @@
       const game   = GAME_CATALOG[key];
       if(!game || !lockEl || !priceEl) return;
 
-      if(game.price === 0){
-        lockEl.textContent = '✅';
-        priceEl.textContent = 'Brezplačno';
-      }else if(unlocked[key]){
-        lockEl.textContent = '✅';
-        priceEl.textContent = 'Odklenjeno';
-      }else{
-        lockEl.textContent = '🔒';
-        priceEl.textContent = String(game.price);
-      }
+      lockEl.textContent = '✅';
+      priceEl.textContent = 'Brezplačno';
     });
   }
 
-  // Registracija (Chat ostane privzeto odklenjen)
+  // Registracija (Chat brez sprememb; lahko dodaš začetne kovance)
   async function register() {
     const name = document.getElementById("regName").value.trim();
     const email = document.getElementById("regEmail").value.trim();
@@ -318,10 +263,10 @@
       await cred.user.updateProfile({ displayName: name });
       await db.ref("users/" + cred.user.uid).set({
         displayName: name, email: email, coins: 0,
-        unlocked: { chat: true }
+        unlocked: { chat: true } // ni pomembno, ker je vse brezplačno; lahko pustiš
       });
       alert("Registracija uspešna! Zdaj klikni na gumb in izberi aplikacijo.");
-      await refreshLocksUI(cred.user.uid);
+      await refreshLocksUI();
     }catch(e){
       alert(e.message);
     }
