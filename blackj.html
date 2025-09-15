@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="sl">
+<head>
+  <meta charset="utf-8" />
+  <title>Multiplayer Blackjack (Firebase)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#121932; --panel-2:#0e1530; --acc:#4a90e2; --good:#20c997; --bad:#ef476f; --warn:#ffb703; --text:#e9edf7;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--text);font:16px/1.4 system-ui,Segoe UI,Roboto,Arial}
+    header{padding:16px 20px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:12px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:10}
+    header h1{font-size:18px;margin:0 12px 0 0;opacity:.95}
+    header .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--text)}
+    input::placeholder{color:#9fb3d0}
+    button{background:linear-gradient(180deg,#1f2a4e,#172243);border:1px solid #31416f;cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    main{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
+    aside,section{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:14px}
+    h2{margin:0 0 8px 0;font-size:16px;border-bottom:1px solid #1b264b;padding-bottom:6px;opacity:.9}
+    .col{display:flex;flex-direction:column;gap:10px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .grid{display:grid;gap:10px}
+    .players{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow:auto}
+    .card{width:54px;height:78px;border-radius:8px;border:1px solid #1f2a4e;background:#0e1530;display:grid;place-items:center;font-weight:700}
+    .hand{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .tag{font-size:12px;background:#1a2448;padding:2px 6px;border-radius:6px;border:1px solid #2b3b74}
+    .tag.good{background:#153a2b;border-color:#1a6b4f}
+    .tag.bad{background:#3a1a24;border-color:#7b2b42}
+    .money{font-weight:700}
+    .stack{display:flex;flex-direction:column;gap:6px}
+    .dealerBox{border:1px solid #223064;border-radius:12px;background:var(--panel-2);padding:12px}
+    .table{border:1px dashed #2b3b74;border-radius:12px;padding:12px}
+    .turn{outline:2px solid var(--acc);box-shadow:0 0 0 3px rgba(74,144,226,.25)}
+    .muted{opacity:.7}
+    .sep{height:1px;background:#1b264b;margin:10px -14px}
+    .status{min-height:22px}
+    .hidden{display:none !important;}
+    .pill{padding:2px 6px;border-radius:999px;background:#18244a;border:1px solid #2a3c77;font-size:12px}
+    .link{color:#8fb6ff}
+    .btns{display:flex;gap:8px;flex-wrap:wrap}
+    .wide{width:100%}
+    .sm{padding:6px 8px;font-size:14px;border-radius:8px}
+    .danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
+    .ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
+    .warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;background:#101935;border:1px solid #26346b;border-radius:6px;padding:1px 5px;font-size:12px}
+    footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
+    .small{font-size:12px}
+    .center{display:flex;justify-content:center;align-items:center}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🂡 Blackjack Multiplayer</h1>
+    <div class="row">
+      <input id="displayName" placeholder="Tvoje ime" />
+      <input id="roomId" placeholder="ID sobe (npr. math1)" />
+      <button id="hostBtn" class="primary">Ustvari / Host</button>
+      <button id="joinBtn">Pridruži se</button>
+      <span id="myRole" class="pill">Nisi povezan</span>
+    </div>
+    <div class="row small">
+      <span>Tipke: <span class="kbd">H</span> = Hit, <span class="kbd">S</span> = Stand</span>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+      <h2>👥 Igralci</h2>
+      <div class="players" id="players"></div>
+      <div class="sep"></div>
+      <div class="stack">
+        <div id="leaderboard"></div>
+      </div>
+    </aside>
+
+    <section>
+      <div class="stack">
+        <div class="dealerBox" id="dealerBox">
+          <div class="row" style="justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h2 style="border:none;padding:0;margin:0 0 6px">🃏 Delilec (Host)</h2>
+              <div class="row small muted" id="roomInfo"></div>
+              <div class="status small" id="status"></div>
+            </div>
+            <div class="btns" id="hostControls" class="hidden">
+              <!-- Host controls injected here -->
+            </div>
+          </div>
+          <div class="grid">
+            <div class="table">
+              <div class="row" style="justify-content:space-between;">
+                <div class="row">
+                  <span class="tag">Krog: <span id="roundNo">-</span></span>
+                  <span class="tag">Stanje: <span id="stateTag">-</span></span>
+                </div>
+                <div class="row">
+                  <span class="tag">Na potezi: <span id="turnName">-</span></span>
+                </div>
+              </div>
+              <div style="margin-top:8px">
+                <div class="row">
+                  <strong>Dealerjeva roka:</strong>
+                  <span class="tag" id="dealerValue">?</span>
+                </div>
+                <div class="hand" id="dealerHand"></div>
+              </div>
+            </div>
+
+            <div class="table">
+              <div class="row" style="justify-content:space-between;">
+                <div class="row">
+                  <strong>Tvoja roka:</strong>
+                  <span class="tag" id="myValue">?</span>
+                </div>
+                <div class="row">
+                  <span class="tag">Stava: <span id="myBet">0</span></span>
+                  <span class="tag">Denar: <span id="myMoney">0</span></span>
+                </div>
+              </div>
+              <div class="hand" id="myHand"></div>
+              <div class="btns" id="playerControls">
+                <input id="betInput" type="number" min="1" step="1" value="10" style="width:110px" />
+                <button id="placeBetBtn" class="ok sm">Stavi</button>
+                <button id="hitBtn" class="sm" disabled>Hit</button>
+                <button id="standBtn" class="sm" disabled>Stand</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="small">Demo: vse poteka prek Firebase Realtime Database. Za resno rabo dodaj pravila in strežniške preverbe.</footer>
+
+  <!-- Firebase (replace config) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // =========================
+    // 0) Firebase setup
+    // =========================
+    const firebaseConfig = {
+      apiKey: "YOUR_KEY",
+      authDomain: "YOUR_APP.firebaseapp.com",
+      databaseURL: "https://YOUR_APP-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "YOUR_APP",
+      storageBucket: "YOUR_APP.appspot.com",
+      messagingSenderId: "000000000000",
+      appId: "1:000000000000:web:xxxx"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // =========================
+    // 1) DOM refs
+    // =========================
+    const el = (id)=>document.getElementById(id);
+    const displayNameEl = el('displayName');
+    const roomIdEl = el('roomId');
+    const hostBtn = el('hostBtn');
+    const joinBtn = el('joinBtn');
+    const myRoleEl = el('myRole');
+
+    const playersEl = el('players');
+    const leaderboardEl = el('leaderboard');
+
+    const roundNoEl = el('roundNo');
+    const stateTagEl = el('stateTag');
+    const turnNameEl = el('turnName');
+    const dealerHandEl = el('dealerHand');
+    const dealerValueEl = el('dealerValue');
+    const myHandEl = el('myHand');
+    const myValueEl = el('myValue');
+    const myMoneyEl = el('myMoney');
+    const myBetEl = el('myBet');
+    const statusEl = el('status');
+
+    const placeBetBtn = el('placeBetBtn');
+    const betInput = el('betInput');
+    const hitBtn = el('hitBtn');
+    const standBtn = el('standBtn');
+    const hostControlsEl = el('hostControls');
+    const roomInfoEl = el('roomInfo');
+
+    // =========================
+    // 2) Local session
+    // =========================
+    let userId = "user_" + Math.floor(Math.random() * 1000000);
+    let roomId = null;
+    let isHost = false;
+    let unsub = [];
+    let currentState = null;
+
+    function cleanupListeners(){
+      unsub.forEach(u=>u && u.off && u.off());
+      unsub = [];
+    }
+
+    // =========================
+    // 3) Helpers: Cards, values
+    // =========================
+    const SUITS = ['♠','♥','♦','♣'];
+    const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+    function makeDeck(){
+      const deck = [];
+      for(const s of SUITS){
+        for(const r of RANKS){
+          deck.push(`${r}${s}`);
+        }
+      }
+      // Shuffle
+      for(let i=deck.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [deck[i],deck[j]]=[deck[j],deck[i]];
+      }
+      return deck;
+    }
+    function cardValue(r){
+      if(r==='A') return 11;
+      if(['K','Q','J'].includes(r)) return 10;
+      return parseInt(r,10);
+    }
+    function handValue(cards){
+      let total = 0;
+      let aces = 0;
+      for(const c of cards){
+        const r = c.replace(/♠|♥|♦|♣/g,'');
+        total += cardValue(r);
+        if(r==='A') aces++;
+      }
+      while(total>21 && aces>0){
+        total -= 10; // Ace 11 -> 1
+        aces--;
+      }
+      return total;
+    }
+    function renderCard(c){
+      const div = document.createElement('div');
+      div.className = 'card';
+      const isHidden = (c === 'HIDDEN');
+      div.textContent = isHidden ? '🂠' : c;
+      if(!isHidden && (c.includes('♥') || c.includes('♦'))) div.style.color = '#ef476f';
+      return div;
+    }
+
+    // =========================
+    // 4) DB schema
+    //   /blackjack/{roomId}/
+    //   {
+    //     hostId, createdAt, state, round, turnIndex, shoe[], dealer{hand[]},
+    //     players: { uid: { name, money, bet, hand[], status, joinedAt } },
+    //     order: [uid, uid2, ...]
+    //   }
+    // states: 'lobby' | 'betting' | 'dealing' | 'playing' | 'dealer' | 'settle'
+    // =========================
+
+    // =========================
+    // 5) UI updates
+    // =========================
+    function setRoleTag(){
+      myRoleEl.textContent = roomId ? (isHost ? 'Host / Delilec' : 'Igralec') : 'Nisi povezan';
+    }
+
+    function fmtMoney(n){ return Math.max(0, Math.round(n)).toString(); }
+
+    function drawState(snap){
+      const state = snap.val();
+      currentState = state;
+      if(!state) return;
+      roundNoEl.textContent = state.round || 0;
+      stateTagEl.textContent = state.state || '-';
+      roomInfoEl.textContent = roomId ? `Soba: ${roomId}` : '';
+      statusEl.textContent = '';
+
+      // Players list
+      playersEl.innerHTML = '';
+      const players = state.players || {};
+      const order = state.order || Object.keys(players);
+      order.forEach(uid=>{
+        const p = players[uid];
+        if(!p) return;
+        const row = document.createElement('div');
+        row.className = 'row';
+        if(state.state === 'playing' && order[state.turnIndex] === uid){
+          row.classList.add('turn');
+        }
+        const name = document.createElement('div');
+        name.innerHTML = `<strong>${p.name||uid}</strong> <span class="tag">💰 ${fmtMoney(p.money||0)}</span> <span class="tag">Bet: ${fmtMoney(p.bet||0)}</span> <span class="tag">${p.status||'-'}</span>`;
+        row.appendChild(name);
+
+        const hand = document.createElement('div');
+        hand.className = 'hand';
+        (p.hand||[]).forEach(c=>hand.appendChild(renderCard(c)));
+        const val = handValue(p.hand||[]);
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = isNaN(val)?'?':val;
+        const box = document.createElement('div');
+        box.className = 'row';
+        box.appendChild(hand);
+        box.appendChild(tag);
+        const wrapper = document.createElement('div');
+        wrapper.className='stack';
+        wrapper.appendChild(row);
+        wrapper.appendChild(box);
+        playersEl.appendChild(wrapper);
+      });
+
+      // Dealer hand
+      dealerHandEl.innerHTML = '';
+      let showHole = (state.state==='dealer' || state.state==='settle' || state.state==='lobby' || state.state==='betting');
+      const dHand = (state.dealer && state.dealer.hand) ? [...state.dealer.hand] : [];
+      if(state.state==='playing' || state.state==='dealing'){
+        // hide hole card during player turns
+        if(dHand.length>1){
+          const [c0, ...rest] = dHand;
+          dealerHandEl.appendChild(renderCard(c0));
+          dealerHandEl.appendChild(renderCard('HIDDEN'));
+          rest.slice(1).forEach(c=>dealerHandEl.appendChild(renderCard(c)));
+        }else{
+          dHand.forEach(c=>dealerHandEl.appendChild(renderCard(c)));
+        }
+        dealerValueEl.textContent = '?';
+      } else {
+        dHand.forEach(c=>dealerHandEl.appendChild(renderCard(c)));
+        dealerValueEl.textContent = handValue(dHand);
+      }
+
+      // My panel
+      const me = players[userId] || {};
+      myHandEl.innerHTML = '';
+      (me.hand||[]).forEach(c=>myHandEl.appendChild(renderCard(c)));
+      myValueEl.textContent = (me.hand && me.hand.length)? handValue(me.hand):'?';
+      myMoneyEl.textContent = fmtMoney(me.money||0);
+      myBetEl.textContent = fmtMoney(me.bet||0);
+
+      // Controls visibility
+      const myTurn = (state.state==='playing' && (state.order||[])[state.turnIndex]===userId && me.status==='playing');
+      hitBtn.disabled = !myTurn;
+      standBtn.disabled = !myTurn;
+
+      placeBetBtn.disabled = !(state.state==='betting' && !me.bet && (me.money||0)>0);
+
+      // Host controls
+      renderHostControls(state);
+      // Leaderboard
+      renderLeaderboard(players);
+      // Turn label
+      const tUid = (state.order||[])[state.turnIndex];
+      turnNameEl.textContent = tUid && players[tUid] ? players[tUid].name : '-';
+    }
+
+    function renderLeaderboard(players){
+      const arr = Object.entries(players||{}).map(([uid,p])=>({uid,name:p.name||uid,score:+(p.money||0)}));
+      arr.sort((a,b)=>b.score-a.score);
+      leaderboardEl.innerHTML = `<h2 style="margin:0 0 6px 0;border:none;padding:0">🏆 Lestvica</h2>` +
+        arr.map((p,i)=>`<div class="row"><span class="tag">${i+1}</span> <strong>${p.name}</strong> <span class="money">💰 ${fmtMoney(p.score)}</span></div>`).join('');
+    }
+
+    function renderHostControls(state){
+      hostControlsEl.innerHTML = '';
+      if(!isHost || !state) return;
+
+      const btnLobby = (txt, cls, handler)=>{
+        const b = document.createElement('button'); b.textContent = txt; b.className = `sm ${cls||''}`; b.onclick = handler; return b;
+      };
+
+      if(state.state==='lobby' || state.state==='settle'){
+        hostControlsEl.appendChild(btnLobby('Začni stavljanje', 'primary', startBetting));
+      }
+      if(state.state==='betting'){
+        hostControlsEl.appendChild(btnLobby('Deli karte', 'primary', startDealing));
+      }
+      if(state.state==='playing'){
+        hostControlsEl.appendChild(btnLobby('Skrajšaj potezo (skip AFK)', 'warn', forceNextPlayer));
+      }
+      if(state.state==='dealer'){
+        hostControlsEl.appendChild(btnLobby('Igraj dealerja', 'ok', dealerPlay));
+      }
+      if(state.state==='settle'){
+        hostControlsEl.appendChild(btnLobby('Naslednji krog', 'primary', nextRound));
+      }
+
+      // Panic reset
+      hostControlsEl.appendChild(btnLobby('Reset sobo', 'danger', hardReset));
+    }
+
+    // =========================
+    // 6) Room create/join
+    // =========================
+    hostBtn.onclick = async ()=>{
+      const name = displayNameEl.value.trim() || 'Host';
+      const r = roomIdEl.value.trim() || 'room1';
+      roomId = r; isHost = true; setRoleTag();
+
+      await db.ref(`blackjack/${r}`).set({
+        hostId: userId,
+        createdAt: Date.now(),
+        state: 'lobby',
+        round: 0,
+        turnIndex: 0,
+        order: [],
+        dealer: { hand: [] },
+        shoe: makeDeck(),
+        players: {}
+      });
+      await db.ref(`blackjack/${r}/players/${userId}`).set({
+        name, money: 1000, bet: 0, hand: [], status: 'idle', joinedAt: Date.now()
+      });
+      await db.ref(`blackjack/${r}/order`).set([userId]);
+      attachRoom(r);
+    };
+
+    joinBtn.onclick = async ()=>{
+      const name = displayNameEl.value.trim() || ('Igralec_' + userId.slice(-4));
+      const r = roomIdEl.value.trim() || 'room1';
+      roomId = r; isHost = false; setRoleTag();
+
+      const roomSnap = await db.ref(`blackjack/${r}`).once('value');
+      if(!roomSnap.exists()){
+        alert('Soba ne obstaja. Najprej jo naj host ustvari.');
+        return;
+      }
+      // add player if not exists
+      const pSnap = await db.ref(`blackjack/${r}/players/${userId}`).once('value');
+      if(!pSnap.exists()){
+        await db.ref(`blackjack/${r}/players/${userId}`).set({
+          name, money: 1000, bet: 0, hand: [], status: 'idle', joinedAt: Date.now()
+        });
+        const orderSnap = await db.ref(`blackjack/${r}/order`).once('value');
+        const order = orderSnap.val()||[];
+        if(!order.includes(userId)){
+          order.push(userId);
+          await db.ref(`blackjack/${r}/order`).set(order);
+        }
+      } else {
+        // update name
+        await db.ref(`blackjack/${r}/players/${userId}/name`).set(name);
+      }
+      attachRoom(r);
+    };
+
+    function attachRoom(r){
+      cleanupListeners();
+      const ref = db.ref(`blackjack/${r}`);
+      ref.on('value', drawState);
+      unsub.push(ref);
+    }
+
+    // =========================
+    // 7) Host actions
+    // =========================
+    async function startBetting(){
+      if(!isHost) return;
+      await db.ref(`blackjack/${roomId}`).update({
+        state: 'betting',
+        round: (currentState?.round || 0) + 1,
+        dealer: { hand: [] },
+      });
+      // reset players bets & hands
+      const order = currentState?.order || [];
+      for(const uid of order){
+        await db.ref(`blackjack/${roomId}/players/${uid}`).update({ bet: 0, hand: [], status: 'betting' });
+      }
+    }
+
+    placeBetBtn.onclick = async ()=>{
+      if(!roomId) return;
+      const bet = Math.max(1, Math.floor(+betInput.value||0));
+      const me = currentState?.players?.[userId]; if(!me) return;
+      if(me.money < bet){ alert('Nimaš dovolj denarja.'); return; }
+      if(currentState?.state!=='betting'){ alert('Zdaj ne moreš staviti.'); return; }
+      await db.ref(`blackjack/${roomId}/players/${userId}`).update({ bet, status:'ready' });
+      statusEl.textContent = `Stavil si ${bet}. Počakaj na deljenje.`;
+    };
+
+    async function startDealing(){
+      if(!isHost || !currentState) return;
+      if(currentState.state!=='betting') return;
+
+      // Ensure everyone with money has either bet or is idle; non-bettors get status 'sitout'
+      const players = currentState.players || {};
+      let shoe = currentState.shoe && currentState.shoe.length>15 ? currentState.shoe : makeDeck();
+
+      // initial deal: each player gets 2, dealer gets 2 (one hidden for UI)
+      // prepare player list who actually bet
+      const order = (currentState.order||[]).filter(uid => players[uid]);
+      // set all who didn't bet to sitout
+      for(const uid of order){
+        const p = players[uid];
+        if(!(p.bet>0) || p.money<=0){
+          await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status:'sitout', hand: [] });
+        } else {
+          await db.ref(`blackjack/${roomId}/players/${uid}`).update({ status:'playing', hand: [] });
+        }
+      }
+
+      // Deal
+      const active = order.filter(uid => (players[uid].bet>0 && players[uid].money>0));
+      let updates = {};
+      // First card each
+      for(const uid of active){
+        const c = shoe.pop();
+        updates[`players/${uid}/hand`] = [c];
+      }
+      // Dealer 1
+      const d1 = shoe.pop();
+      let dealer = { hand: [d1] };
+
+      // Second card each
+      for(const uid of active){
+        const cur = updates[`players/${uid}/hand`];
+        cur.push(shoe.pop());
+      }
+      // Dealer 2
+      dealer.hand.push(shoe.pop());
+
+      await db.ref(`blackjack/${roomId}`).update({
+        shoe,
+        dealer,
+        state: 'playing',
+        turnIndex: 0
+      });
+
+      // If nobody active, skip to settle
+      if(active.length===0){
+        await db.ref(`blackjack/${roomId}`).update({ state:'settle' });
+      } else {
+        // advance turnIndex to first active
+        await advanceToNextActive();
+      }
+    }
+
+    async function forceNextPlayer(){
+      if(!isHost || currentState?.state!=='playing') return;
+      await nextTurn(); // just skip
+    }
+
+    async function dealerPlay(){
+      if(!isHost || !currentState) return;
+      if(currentState.state!=='dealer') return;
+      let shoe = currentState.shoe || makeDeck();
+      let dHand = (currentState.dealer?.hand)||[];
+      let val = handValue(dHand);
+      while(val<17){
+        dHand.push(shoe.pop());
+        val = handValue(dHand);
+      }
+      await db.ref(`blackjack/${roomId}`).update({
+        dealer: { hand: dHand },
+        shoe,
+        state: 'settle'
+      });
+      await settlePayouts();
+    }
+
+    async function nextRound(){
+      if(!isHost) return;
+      await db.ref(`blackjack/${roomId}`).update({
+        state: 'lobby',
+        dealer: { hand: [] },
+        turnIndex: 0
+      });
+    }
+
+    async function hardReset(){
+      if(!isHost) return;
+      if(!confirm('Reset sobo?')) return;
+      await db.ref(`blackjack/${roomId}`).set({
+        hostId: userId,
+        createdAt: Date.now(),
+        state: 'lobby',
+        round: 0,
+        turnIndex: 0,
+        order: currentState?.order || [userId],
+        dealer: { hand: [] },
+        shoe: makeDeck(),
+        players: Object.fromEntries(Object.entries(currentState?.players||{}).map(([uid,p])=>[uid,{
+          name: p.name||uid, money: 1000, bet: 0, hand: [], status: 'idle', joinedAt: p.joinedAt||Date.now()
+        }]))
+      });
+    }
+
+    // =========================
+    // 8) Player actions (turn-based)
+    // =========================
+    hitBtn.onclick = ()=>playerHit(userId);
+    standBtn.onclick = ()=>playerStand(userId);
+
+    document.addEventListener('keydown',(e)=>{
+      if(!currentState) return;
+      const meTurn = currentState.state==='playing' && (currentState.order||[])[currentState.turnIndex]===userId;
+      if(!meTurn) return;
+      if(e.key.toLowerCase()==='h') playerHit(userId);
+      if(e.key.toLowerCase()==='s') playerStand(userId);
+    });
+
+    async function playerHit(uid){
+      if(!currentState || currentState.state!=='playing') return;
+      if((currentState.order||[])[currentState.turnIndex]!==uid) return; // not your turn
+      const me = currentState.players?.[uid]; if(!me || me.status!=='playing') return;
+
+      let shoe = currentState.shoe || makeDeck();
+      const c = shoe.pop();
+      const newHand = [...(me.hand||[]), c];
+      const val = handValue(newHand);
+
+      await db.ref(`blackjack/${roomId}`).update({ shoe });
+      await db.ref(`blackjack/${roomId}/players/${uid}/hand`).set(newHand);
+
+      if(val>21){
+        // bust
+        await db.ref(`blackjack/${roomId}/players/${uid}/status`).set('bust');
+        await nextTurn();
+      }
+    }
+
+    async function playerStand(uid){
+      if(!currentState || currentState.state!=='playing') return;
+      if((currentState.order||[])[currentState.turnIndex]!==uid) return;
+      await db.ref(`blackjack/${roomId}/players/${uid}/status`).set('stand');
+      await nextTurn();
+    }
+
+    async function advanceToNextActive(){
+      const order = currentState?.order||[];
+      let idx = currentState?.turnIndex||0;
+      const players = currentState?.players||{};
+      let safety = order.length+5;
+      while(safety--){
+        const uid = order[idx];
+        const p = players[uid];
+        if(p && p.status==='playing' && (p.bet>0) && (p.money>=0)){
+          await db.ref(`blackjack/${roomId}/turnIndex`).set(idx);
+          return;
+        }
+        idx = (idx+1)%order.length;
+        // loop break if nobody is active
+        if(idx===currentState.turnIndex) break;
+      }
+      // nobody left -> dealer turn
+      await db.ref(`blackjack/${roomId}`).update({ state:'dealer' });
+    }
+
+    async function nextTurn(){
+      const order = currentState?.order||[];
+      let idx = (currentState?.turnIndex||0) + 1;
+      const players = currentState?.players||{};
+      let safety = order.length+5;
+      while(safety--){
+        if(idx>=order.length) { // after last player -> dealer
+          await db.ref(`blackjack/${roomId}`).update({ turnIndex: 0, state:'dealer' });
+          return;
+        }
+        const uid = order[idx];
+        const p = players[uid];
+        if(p && p.status==='playing' && p.bet>0){
+          await db.ref(`blackjack/${roomId}/turnIndex`).set(idx);
+          return;
+        }
+        idx++;
+      }
+      await db.ref(`blackjack/${roomId}`).update({ state:'dealer' });
+    }
+
+    // =========================
+    // 9) Settle payouts (money moves between players and host)
+    // =========================
+    async function settlePayouts(){
+      const stateSnap = await db.ref(`blackjack/${roomId}`).once('value');
+      const state = stateSnap.val();
+      if(!state) return;
+      const players = state.players||{};
+      const host = players[state.hostId];
+      if(!host){ console.warn('Host missing'); return; }
+
+      const dVal = handValue(state.dealer?.hand||[]);
+      const updates = {};
+      let hostDelta = 0;
+
+      for(const [uid,p] of Object.entries(players)){
+        if(uid === state.hostId) continue;
+        const bet = +p.bet || 0;
+        if(bet<=0) continue; // no action
+        const pVal = handValue(p.hand||[]);
+        let delta = 0; // money change for player (positive = player wins)
+        let result = 'push';
+
+        const pBust = pVal>21;
+        const dBust = dVal>21;
+
+        if(pBust){
+          delta = -bet; result = 'lose';
+        } else if(dBust){
+          delta = +bet; result = 'win';
+        } else if(pVal > dVal){
+          delta = +bet; result = 'win';
+        } else if(pVal < dVal){
+          delta = -bet; result = 'lose';
+        } else {
+          delta = 0; result = 'push';
+        }
+
+        const newPMoney = Math.max(0, (+p.money||0) + delta);
+        updates[`players/${uid}/money`] = newPMoney;
+        updates[`players/${uid}/status`] = result;
+        hostDelta -= delta; // opposite for host
+      }
+
+      // apply host change
+      updates[`players/${state.hostId}/money`] = Math.max(0, (+host.money||0) + hostDelta);
+      updates[`state`] = 'settle';
+
+      await db.ref(`blackjack/${roomId}`).update(updates);
+    }
+
+    // =========================
+    // 10) Initial UI state
+    // =========================
+    setRoleTag();
+  </script>
+</body>
+</html>
