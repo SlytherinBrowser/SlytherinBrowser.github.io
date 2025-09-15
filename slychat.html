@@ -2870,22 +2870,26 @@ function returnToPublicChat() {
 // Per-user typing + GLB avatars (only JS)
 // ===========================
 
-// 🔧 IDs you already have
+// ===========================
+// Per-user typing + strip above input (avatarURL2) — only JS
+// ===========================
+
 const chatId = "globalChat";
 const userId = "user_" + Math.floor(Math.random() * 10000);
 
 const inputField = document.getElementById("messageInput");
 const defaultPlaceholder = "Vpiši sporočilo...";
 
+let myTypingTimeout;
+
 // ---------------------------------------------
-// 1) CSS (injected) — typing bar + slide-in AVIs
+// 1) CSS (injected) — input blink + typing strip
 // ---------------------------------------------
 (function injectCSS() {
-  if (document.getElementById("typing-avatars-style")) return;
+  if (document.getElementById("typing-strip-style")) return;
   const style = document.createElement("style");
-  style.id = "typing-avatars-style";
+  style.id = "typing-strip-style";
   style.textContent = `
-    /* Border blink on input when someone is typing */
     @keyframes borderBlink {
       0%, 100% { border-color: #4a90e2; }
       50% { border-color: #e91e63; }
@@ -2896,148 +2900,140 @@ const defaultPlaceholder = "Vpiši sporočilo...";
       border-style: solid !important;
       outline: none !important;
     }
-
-    /* Container that hugs the bottom of the chat UI */
-    .typing-bar {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0.35rem;
-      display: flex;
-      gap: 8px;
-      padding: 6px 10px;
-      pointer-events: none; /* don't steal clicks */
-      justify-content: flex-start;
-      align-items: flex-end;
-      overflow: visible;
-      z-index: 999;
-    }
-
-    /* Fallback if we must attach to body */
-    .typing-bar.fixed {
-      position: fixed;
-      left: 16px;
-      right: auto;
-      bottom: 16px;
-    }
-
-    /* Each avatar "bubble" */
-    .typing-avatar {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      border-radius: 999px;
-      background: #111;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-      overflow: hidden;
-      transform: translateY(110%); /* start hidden below edge */
-      opacity: 0;
-      animation: slideUp 240ms ease-out forwards;
-    }
-
-    /* Name tag */
-    .typing-name {
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      line-height: 1;
-      background: rgba(0,0,0,0.75);
-      color: #fff;
-      padding: 3px 6px;
-      border-radius: 6px;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    /* Slide from edge to shoulders visible */
-    @keyframes slideUp {
-      0% { transform: translateY(110%); opacity: 0; }
-      100% { transform: translateY(0%); opacity: 1; }
-    }
-
-    /* <model-viewer> should fill the bubble */
-    .typing-avatar model-viewer {
+    /* The horizontal strip above the input */
+    .typing-strip {
+      display: none;
       width: 100%;
-      height: 100%;
-      --poster-color: transparent;
-      background: transparent;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      border-radius: 10px;
+      background: rgba(20, 20, 25, 0.08);
+      backdrop-filter: blur(2px);
+      scrollbar-width: thin;
+      gap: 8px;
+    }
+    .typing-strip.visible { display: flex; }
+
+    .typing-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 6px;
+      background: #fff;
+      border-radius: 999px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transform: translateY(8px);
+      opacity: 0;
+      animation: chipIn 180ms ease-out forwards;
+    }
+    @keyframes chipIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+
+    .typing-chip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #ddd;
+      flex: 0 0 auto;
+    }
+
+    .typing-chip .chip-name {
+      font-size: 12px;
+      line-height: 1;
+      color: #222;
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .typing-chip .chip-dots {
+      font-size: 16px;
+      line-height: 1;
+      color: #666;
+      display: inline-block;
+      margin-left: 2px;
+      width: 24px;
+      text-align: left;
+      animation: dots 1.2s infinite steps(4, jump-none);
+    }
+    @keyframes dots {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75% { content: "..."; }
+    }
+    /* Pseudo-element for animated dots */
+    .typing-chip .chip-dots::after {
+      content: "...";
+      animation: dotstep 1s infinite steps(4, end);
+    }
+    @keyframes dotstep {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75% { content: "..."; }
+      100% { content: ""; }
     }
   `;
   document.head.appendChild(style);
 })();
 
 // ---------------------------------------------
-// 2) Ensure <model-viewer> is available (inject)
+// 2) Create / place the typing strip above input
 // ---------------------------------------------
-(function ensureModelViewer() {
-  if (customElements.get("model-viewer")) return;
-  const script = document.createElement("script");
-  script.type = "module";
-  script.src = "https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js";
-  document.head.appendChild(script);
-})();
+function getTypingStrip() {
+  let strip = document.getElementById("typing-strip");
+  if (strip) return strip;
 
-// ---------------------------------------------
-// 3) Typing bar container (attach intelligently)
-// ---------------------------------------------
-function getTypingBar() {
-  let bar = document.getElementById("typing-bar");
-  if (bar) return bar;
+  strip = document.createElement("div");
+  strip.id = "typing-strip";
+  strip.className = "typing-strip";
 
-  // Prefer a relatively-positioned parent (chat wrapper)
-  // We'll walk up from the input searching for a positioned ancestor.
-  let p = inputField;
-  let attachParent = null;
-  while (p && p !== document.body) {
-    const style = getComputedStyle(p);
-    if (["relative", "absolute", "fixed", "sticky"].includes(style.position)) {
-      attachParent = p;
-      break;
-    }
-    p = p.parentElement;
-  }
-  bar = document.createElement("div");
-  bar.id = "typing-bar";
-  bar.className = "typing-bar";
-  if (!attachParent) {
-    // Fall back to body if no positioned ancestor found
-    bar.classList.add("fixed");
-    document.body.appendChild(bar);
+  // Insert right above the input if possible
+  const parent = inputField.parentElement || document.body;
+  if (inputField.previousElementSibling) {
+    inputField.parentElement.insertBefore(strip, inputField);
   } else {
-    attachParent.appendChild(bar);
+    parent.insertBefore(strip, inputField);
   }
-  return bar;
+  return strip;
 }
 
 // ---------------------------------------------
-// 4) Utilities to fetch user profile (name + GLB)
+// 3) Fetch user profile (name + avatarURL2)
 // ---------------------------------------------
-const DEFAULT_GLB = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
+const DEFAULT_AVATAR =
+  "https://cdn.jsdelivr.net/gh/egoistdeveloper/placeholder@main/avatar/placeholder.png";
 
 async function getUserProfile(uid) {
   const db = firebase.database();
-  const [nameSnap, glbSnap] = await Promise.all([
+  const [nameSnap, avatarSnap] = await Promise.all([
     db.ref(`users/${uid}/displayName`).once("value"),
-    db.ref(`users/${uid}/avatarGlb`).once("value"),
+    db.ref(`users/${uid}/avatarURL2`).once("value"),
   ]);
-
-  const profile = {
-    displayName: nameSnap.val() || "Uporabnik",
-    glb: glbSnap.val() || DEFAULT_GLB,
+  return {
+    displayName: (nameSnap.val() || "Uporabnik").toString(),
+    avatarURL2: avatarSnap.val() || DEFAULT_AVATAR,
   };
-  return profile;
 }
 
 // ---------------------------------------------
-// 5) Local state for per-user typing
+// 4) Local state for per-user typing
 // ---------------------------------------------
 const typingState = new Map(); // uid -> { timer, staleTimer, el, profile }
-let myTypingTimeout;
+function anyoneTyping() { return typingState.size > 0; }
 
 // ---------------------------------------------
-// 6) My typing: write true, then auto-false
+// 5) My typing writers
 // ---------------------------------------------
 firebase.database().ref(`typingStatus/${chatId}/${userId}`).onDisconnect().set(false);
 
@@ -3054,101 +3050,97 @@ window.addEventListener("beforeunload", () => {
 });
 
 // ---------------------------------------------
-// 7) Render helpers
+// 6) Render helpers for the strip
 // ---------------------------------------------
-function createTypingAvatarElement(uid, profile) {
-  const el = document.createElement("div");
-  el.className = "typing-avatar";
-  el.dataset.uid = uid;
+function createTypingChip(uid, profile) {
+  const chip = document.createElement("div");
+  chip.className = "typing-chip";
+  chip.dataset.uid = uid;
 
-  // Model viewer (shoulders crop via camera orbit & fov)
-  const mv = document.createElement("model-viewer");
-  mv.setAttribute("src", profile.glb);
-  mv.setAttribute("reveal", "auto");
-  mv.setAttribute("camera-controls", "");
-  mv.setAttribute("disable-zoom", "");
-  mv.setAttribute("interaction-prompt", "none");
-  mv.setAttribute("camera-orbit", "0deg 85deg 0.9m");
-  mv.setAttribute("field-of-view", "25deg");
-  mv.setAttribute("auto-rotate", "");
-  mv.setAttribute("autoplay", "");
-  mv.setAttribute("exposure", "1.0");
-  el.appendChild(mv);
+  const img = document.createElement("img");
+  img.src = profile.avatarURL2 || DEFAULT_AVATAR;
+  img.alt = profile.displayName;
+  img.loading = "lazy";
 
-  const name = document.createElement("div");
-  name.className = "typing-name";
+  const name = document.createElement("span");
+  name.className = "chip-name";
   name.textContent = profile.displayName;
-  el.appendChild(name);
 
-  return el;
+  const dots = document.createElement("span");
+  dots.className = "chip-dots";
+  dots.setAttribute("aria-hidden", "true");
+
+  chip.appendChild(img);
+  chip.appendChild(name);
+  chip.appendChild(dots);
+
+  return chip;
 }
 
 function showTyping(uid, profile) {
-  const bar = getTypingBar();
+  const strip = getTypingStrip();
 
-  // Already visible?
+  // already present?
   const current = typingState.get(uid);
-  if (current && current.el && bar.contains(current.el)) {
-    // Reset hide timer
+  if (current && current.el && strip.contains(current.el)) {
     clearTimeout(current.timer);
-    current.timer = scheduleHide(uid);
-    // Reset stale timer
     clearTimeout(current.staleTimer);
+    current.timer = scheduleHide(uid);
     current.staleTimer = scheduleStaleReset(uid);
-    inputField.classList.add("typing-blink");
-    return;
+  } else {
+    const el = createTypingChip(uid, profile);
+    strip.appendChild(el);
+    const timer = scheduleHide(uid);
+    const staleTimer = scheduleStaleReset(uid);
+    typingState.set(uid, { el, profile, timer, staleTimer });
   }
 
-  // Create element
-  const el = createTypingAvatarElement(uid, profile);
-  bar.appendChild(el);
-
-  // Timers
-  const timer = scheduleHide(uid);
-  const staleTimer = scheduleStaleReset(uid);
-
-  typingState.set(uid, { el, profile, timer, staleTimer });
-
-  // UI: blink input border when someone (not me) is typing
+  // UI feedback
+  strip.classList.add("visible");
   inputField.classList.add("typing-blink");
+
+  // Placeholder hint (single user)
+  if (typingState.size === 1) {
+    inputField.placeholder = `${profile.displayName} tipka...`;
+  } else {
+    inputField.placeholder = defaultPlaceholder;
+  }
 }
 
 function hideTyping(uid) {
-  const state = typingState.get(uid);
-  if (!state) return;
+  const st = typingState.get(uid);
+  if (!st) return;
 
-  clearTimeout(state.timer);
-  clearTimeout(state.staleTimer);
+  clearTimeout(st.timer);
+  clearTimeout(st.staleTimer);
 
-  if (state.el && state.el.parentElement) {
-    // smooth remove
-    state.el.style.transition = "transform 160ms ease-in, opacity 160ms ease-in";
-    state.el.style.transform = "translateY(110%)";
-    state.el.style.opacity = "0";
-    setTimeout(() => state.el?.remove(), 170);
+  if (st.el && st.el.parentElement) {
+    st.el.style.transition = "transform 140ms ease-in, opacity 140ms ease-in";
+    st.el.style.transform = "translateY(6px)";
+    st.el.style.opacity = "0";
+    setTimeout(() => st.el?.remove(), 160);
   }
-
   typingState.delete(uid);
 
-  // If nobody left, remove blink and restore placeholder
-  if (typingState.size === 0) {
+  if (!anyoneTyping()) {
+    const strip = getTypingStrip();
+    strip.classList.remove("visible");
     inputField.classList.remove("typing-blink");
     inputField.placeholder = defaultPlaceholder;
   }
 }
 
 function scheduleHide(uid) {
-  // Hide if we don't hear from that user for 3s
+  // hide chip if no updates from that user for 3s
   return setTimeout(() => hideTyping(uid), 3000);
 }
 
 function scheduleStaleReset(uid) {
-  // Force reset in DB after 10s if stuck on true
+  // DB safety: force flip stuck "true" to false after 10s
   return setTimeout(() => {
     const ref = firebase.database().ref(`typingStatus/${chatId}/${uid}`);
     ref.once("value").then((snap) => {
       if (snap.val() === true) {
-        // Try to flip to false (best-effort)
         ref.set(false);
         hideTyping(uid);
       }
@@ -3157,56 +3149,41 @@ function scheduleStaleReset(uid) {
 }
 
 // ---------------------------------------------
-// 8) Per-user listeners (no group snapshot spam)
+// 7) Per-user listeners (child_* for minimal churn)
 // ---------------------------------------------
 (function attachPerUserTypingListeners() {
   const roomRef = firebase.database().ref(`typingStatus/${chatId}`);
 
-  // When a child (uid) shows up for the first time:
   roomRef.on("child_added", async (snap) => {
     const uid = snap.key;
     if (uid === userId) return;
-
-    const isTyping = !!snap.val();
-    if (isTyping) {
+    if (snap.val()) {
       const profile = await getUserProfile(uid);
       showTyping(uid, profile);
     }
   });
 
-  // When a child (uid) changes typing state:
   roomRef.on("child_changed", async (snap) => {
     const uid = snap.key;
     if (uid === userId) return;
-
     const isTyping = !!snap.val();
     if (isTyping) {
-      // Update or create
-      let entry = typingState.get(uid);
-      if (!entry) {
+      const current = typingState.get(uid);
+      if (current) {
+        // refresh timers
+        clearTimeout(current.timer);
+        clearTimeout(current.staleTimer);
+        current.timer = scheduleHide(uid);
+        current.staleTimer = scheduleStaleReset(uid);
+      } else {
         const profile = await getUserProfile(uid);
         showTyping(uid, profile);
-      } else {
-        // refresh timers
-        clearTimeout(entry.timer);
-        clearTimeout(entry.staleTimer);
-        entry.timer = scheduleHide(uid);
-        entry.staleTimer = scheduleStaleReset(uid);
-        typingState.set(uid, entry);
-      }
-      // Optional: subtle placeholder hint with single user
-      if (typingState.size === 1) {
-        const only = [...typingState.values()][0];
-        inputField.placeholder = `${only.profile.displayName} tipka...`;
-      } else {
-        inputField.placeholder = defaultPlaceholder;
       }
     } else {
       hideTyping(uid);
     }
   });
 
-  // If a user node is removed entirely
   roomRef.on("child_removed", (snap) => {
     const uid = snap.key;
     if (uid === userId) return;
@@ -3214,11 +3191,6 @@ function scheduleStaleReset(uid) {
   });
 })();
 
-// ---------------------------------------------
-// 9) Optional: keep legacy placeholder when none
-// ---------------------------------------------
-// (We already restore placeholder in hideTyping)
-// Nothing else needed here.
 
 
 
