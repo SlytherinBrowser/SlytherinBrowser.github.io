@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="sl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Loterija</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -11,583 +12,629 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <style>
-    :root{ --bg:#0b1020; --panel:#111936; --muted:#a9b6d6; --txt:#ecf2ff; --acc:#4a90e2; --ok:#20c997; --bad:#ef476f; }
+    :root{
+      --bg:#0b1020; --panel:#111936; --text:#ecf2ff; --muted:#a9b6d6; --acc:#4a90e2; --ok:#20c997; --bad:#ef476f; --warn:#ffb703;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
-    header{padding:10px 14px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+    body{margin:0;background:linear-gradient(180deg,#0a0f22,#0b1020);color:var(--text);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial;min-height:100vh}
+    header{padding:14px 16px;border-bottom:1px solid #1b264b;background:#0a0f22;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5}
     header h1{font-size:18px;margin:0 10px 0 0}
-    .tag{font-size:12px;background:#16244c;padding:3px 8px;border-radius:999px;border:1px solid #273b7d}
-    .muted{color:var(--muted)}
-    main{display:grid;gap:12px;grid-template-columns:360px 1fr;padding:12px}
-    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:12px}
+    main{padding:16px;display:grid;gap:16px;grid-template-columns: 1fr 380px}
+    .panel{background:var(--panel);border:1px solid #1d2852;border-radius:14px;padding:14px}
     .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .stack{display:flex;flex-direction:column;gap:10px}
-    input,select,button{padding:9px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--txt)}
+    .tag{font-size:12px;background:#16244c;padding:2px 6px;border-radius:6px;border:1px solid #273b7d}
+    input,select,button{padding:10px 12px;border-radius:10px;border:1px solid #24325c;background:#0e1530;color:var(--text)}
     button{cursor:pointer}
     button.primary{background:linear-gradient(180deg,#3270e6,#2756b8);border-color:#3c7df0}
     button.ok{background:linear-gradient(180deg,#26a169,#1f8255);border-color:#33c584}
     button.warn{background:linear-gradient(180deg,#d29a10,#a77708);border-color:#e7b028}
     button.danger{background:linear-gradient(180deg,#b82a47,#8a2036);border-color:#c14961}
-    .kv{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid #1d2852;border-radius:10px;background:#0d1530}
-    .list{max-height:55vh;overflow:auto}
+    .muted{color:var(--muted)}
+    .grid{display:grid;gap:10px}
+    .nums{display:flex;flex-wrap:wrap;gap:6px}
+    .num{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid #29407e;background:#0e1530;cursor:pointer}
+    .num.sel{outline:2px solid var(--acc);box-shadow:0 0 0 3px rgba(74,144,226,.2)}
+    .joker{display:flex;gap:8px}
+    .list{max-height:420px;overflow:auto}
+    .kv{display:grid;grid-template-columns: 1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #1d2852;border-radius:10px;background:#0d1530}
+    .money{font-weight:700}
+    .sep{height:1px;background:#1b264b;margin:10px 0}
+    footer{padding:12px;color:#99a9d9;text-align:center;opacity:.8}
     .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
-    .balls{display:flex;gap:6px;flex-wrap:wrap}
-    .ball{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#20315f;border:1px solid #3450a1}
-    .joker{background:#5f2031;border-color:#a13450}
-    .title{font-weight:700}
-    @media (max-width: 980px){ main{grid-template-columns:1fr} .list{max-height:unset} }
-    a.btnlink{color:#fff;text-decoration:none}
+    .oktxt{color:#20c997}
+    .badtxt{color:#ef476f}
   </style>
 </head>
 <body>
-<header>
-  <h1>🎟️ Loterija</h1>
-  <span class="tag">Uporabnik: <b id="meName">–</b></span>
-  <span class="tag">Kovanci: <b id="meCoins">0</b></span>
-  <span class="tag">Status runde: <b id="roundStatus">–</b></span>
-  <span class="tag">Jackpot: <b id="jackpotLbl">0</b></span>
-  <div style="margin-left:auto" class="row">
-    <a class="btnlink" href="index.html"><button class="ghost">🏠 Domov</button></a>
-  </div>
-</header>
+  <header>
+    <h1>🎟️ Loterija</h1>
+    <div class="row">
+      <span class="tag">Prijavljen: <b id="meName">-</b></span>
+      <span class="tag">Kovanci: <b id="meCoins">0</b></span>
+      <span class="tag">Status: <b id="drawStatus">-</b></span>
+      <span class="tag">Trenutni krog: <b id="drawId">-</b></span>
+    </div>
+    <div class="row" style="margin-left:auto">
+      <button onclick="window.location.href='index.html'">🏠 Domov</button>
+    </div>
+  </header>
 
-<main>
-  <!-- LEVO: nakup & admin -->
-  <aside class="panel">
-    <div class="stack">
-      <div class="kv">
-        <div><b>Trenutni krog</b><div class="muted">ID: <span id="roundId">–</span></div></div>
-        <div><span class="pill" id="salesLbl">Vplačila: 0</span></div>
+  <main>
+    <!-- LEVO: nakup in moje srečke -->
+    <section class="panel">
+      <h2>Kupite srečko</h2>
+      <div class="row">
+        <label>Paketi:</label>
+        <select id="bundleSel">
+          <option value="1">1 kombinacija</option>
+          <option value="3">3 kombinacije</option>
+          <option value="5">5 kombinacij</option>
+          <option value="7">7 kombinacij</option>
+        </select>
+        <span class="tag">Cena: <b id="bundlePrice">-</b></span>
       </div>
 
-      <section id="buyTicketSection" class="stack">
-        <div class="title">Kupite srečko</div>
-        <div class="row">
-          <label for="bundle">Št. kombinacij:</label>
-          <select id="bundle">
-            <option value="1">1 kombinacija</option>
-            <option value="3">3 kombinacije</option>
-            <option value="5">5 kombinacij</option>
-            <option value="7">7 kombinacij</option>
-          </select>
+      <div class="sep"></div>
+
+      <div class="stack">
+        <div class="muted">Izberi <b id="needCount">7</b> števil (1–39). Lahko uporabiš <button id="rndBtn" type="button">Naključno</button> ali <button id="clearBtn" type="button">Počisti</button>.</div>
+        <div id="numsGrid" class="nums"></div>
+        <div class="row joker">
+          <div>Joker:</div>
+          <input id="joker1" type="number" min="0" max="9" step="1" value="0" style="width:70px">
+          <input id="joker2" type="number" min="0" max="9" step="1" value="0" style="width:70px">
+          <button id="rndJoker" type="button">🎲</button>
         </div>
         <div class="row">
-          <button id="btnQuickPick" class="primary">Hitri nakup (random)</button>
-          <button id="btnBuy" class="ok">Kupi</button>
+          <button id="addCombo" class="ok" type="button">Dodaj kombinacijo</button>
+          <span class="muted">Kombinacij v paketu: <b id="comboCount">0</b>/<b id="bundleCount">1</b></span>
         </div>
-        <div class="muted">Joker (2 številki 0–9) se doda samodejno.</div>
-        <div class="muted" id="priceHint">Cena: —</div>
-      </section>
+        <div id="comboPreview" class="stack"></div>
+        <button id="buyBtn" class="primary" type="button">Kupi srečko</button>
+        <div class="muted">Prodaja do: <b id="salesEndTxt">-</b></div>
+      </div>
 
-      <section id="resultsSection" class="stack" style="display:none">
-        <div class="title">Rezultati kroga</div>
-        <div id="drawnNumbers" class="balls"></div>
-        <div id="drawnJoker" class="balls"></div>
-        <div id="winnersInfo"></div>
-        <div class="row">
-          <button id="btnBackToShop" class="primary">Nazaj na nakup (nov krog)</button>
+      <div class="sep"></div>
+
+      <h3>Moje srečke (trenutni krog)</h3>
+      <div id="myTickets" class="list stack"></div>
+
+      <div class="sep"></div>
+      <h3>Rezultati preteklih krogov</h3>
+      <div id="myHistory" class="list stack"></div>
+    </section>
+
+    <!-- DESNO: status / admin -->
+    <aside class="panel">
+      <h2>Status žrebanja</h2>
+      <div class="stack">
+        <div class="kv">
+          <div>Jackpot (trenutni):</div><div class="money"><span id="jackpotNow">-</span></div>
         </div>
-      </section>
-
-      <section id="adminSection" class="stack" style="display:none">
-        <div class="title">Admin nadzor</div>
-        <div class="row">
-          <label>Jackpot:</label>
-          <input id="adminJackpot" type="number" min="0" step="1" />
-          <button id="btnSetJackpot" class="ok">Nastavi</button>
+        <div class="kv">
+          <div>Vplačano (kovanci):</div><div><span id="salesTotal">0</span></div>
         </div>
-        <div class="row">
-          <button id="btnCloseSales" class="warn">Zaključi vplačila & Žrebanje</button>
-          <button id="btnPublishResults" class="ok">Objavi rezultate</button>
+        <div class="kv">
+          <div>Št. srečk:</div><div><span id="ticketsCount">0</span></div>
         </div>
-        <div class="row">
-          <button id="btnNewRound" class="danger">Nov krog</button>
+        <div class="kv">
+          <div>Št. kombinacij:</div><div><span id="combosCount">0</span></div>
         </div>
-        <div class="muted">Opomba: žreb poteka lokalno pri adminu in se zapiše v bazo (poštenost po dogovoru).</div>
-      </section>
+        <div class="sep"></div>
+        <div id="winningBox" class="stack"></div>
+      </div>
 
-      <section class="stack">
-        <div class="title">Pravila (povzetek)</div>
-        <ul style="margin-left:14px">
-          <li>Igra: <b>7/39</b> – za glavni dobitek ujemi vseh 7 številk.</li>
-          <li>Joker: 2 številki (0–9). Joker bonus: +5% jackpota.</li>
-          <li>Nakup: paketi 1/3/5/7 kombinacij. Kupiš lahko več paketov.</li>
-          <li>Izplačila: 7→75%, 6→15%, 5→7%, 4→3% jackpota (delitev znotraj kategorije po enakih deležih).</li>
-          <li>Po “Nov krog” se UI samodejno obnovi – brez osveževanja.</li>
-        </ul>
-      </section>
-    </div>
-  </aside>
+      <div class="sep"></div>
 
-  <!-- DESNO: moje srečke in pregled -->
-  <section class="panel">
-    <div class="stack">
-      <div class="title">Moje srečke (trenutni krog)</div>
-      <div id="ticketList" class="list"></div>
-
-      <div class="title">Zgodovina zadnjih krogov</div>
-      <div id="history" class="list"></div>
-    </div>
-  </section>
-</main>
-
-<script>
-/* ==========================
-   KONFIG & STALNICE
-========================== */
-const firebaseConfig = {
-  apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
-  authDomain: "chater-cf682.firebaseapp.com",
-  databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
-  projectId: "chater-cf682",
-  storageBucket: "chater-cf682.appspot.com",
-  messagingSenderId: "233632075480",
-  appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.database();
-
-// Loto parametri
-const MAIN_COUNT = 7;     // izžrebanih številk
-const MAIN_MAX   = 39;    // izbiramo 1..39
-const JOKER_DIGITS = 2;   // 2 številki 0-9
-
-// Cene paketov (po želji spremeni)
-const BUNDLE_PRICES = { 1:50, 3:120, 5:180, 7:230 };
-
-// Izplačila po kategorijah (deleži jackpota, vsota 100%)
-const PAYOUT_PCT = { 7:0.75, 6:0.15, 5:0.07, 4:0.03 };
-// Joker bonus kot % jackpota (doda se k srečki, ki že nekaj prejme)
-const JOKER_BONUS_PCT = 0.05;
-
-/* ==========================
-   DOM ELEMENTI
-========================== */
-const meName = document.getElementById('meName');
-const meCoins= document.getElementById('meCoins');
-const roundStatus = document.getElementById('roundStatus');
-const roundIdLbl = document.getElementById('roundId');
-const jackpotLbl = document.getElementById('jackpotLbl');
-const salesLbl = document.getElementById('salesLbl');
-
-const buyTicketSection = document.getElementById('buyTicketSection');
-const resultsSection   = document.getElementById('resultsSection');
-const drawnNumbersEl   = document.getElementById('drawnNumbers');
-const drawnJokerEl     = document.getElementById('drawnJoker');
-const winnersInfo      = document.getElementById('winnersInfo');
-
-const btnBackToShop = document.getElementById('btnBackToShop');
-
-const bundleSel  = document.getElementById('bundle');
-const btnQuickPick = document.getElementById('btnQuickPick');
-const btnBuy     = document.getElementById('btnBuy');
-const priceHint  = document.getElementById('priceHint');
-
-const ticketList = document.getElementById('ticketList');
-const historyEl  = document.getElementById('history');
-
-const adminSection = document.getElementById('adminSection');
-const adminJackpot = document.getElementById('adminJackpot');
-const btnSetJackpot = document.getElementById('btnSetJackpot');
-const btnCloseSales = document.getElementById('btnCloseSales');
-const btnPublishResults = document.getElementById('btnPublishResults');
-const btnNewRound  = document.getElementById('btnNewRound');
-
-/* ==========================
-   STATE
-========================== */
-let USER = null, UID = null;
-let CURRENT_ROUND = null;
-let ADMIN_UID = null;
-let isAdmin = false;
-let buyBusy = false;
-
-/* ==========================
-   UTIL
-========================== */
-function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
-function pickUniqueNumbers(k, max){
-  const s = new Set();
-  while(s.size<k){ s.add(randInt(1,max)); }
-  return Array.from(s).sort((a,b)=>a-b);
-}
-function pickJoker(){
-  const d=[]; for(let i=0;i<JOKER_DIGITS;i++) d.push(randInt(0,9));
-  return d;
-}
-function ballsHtml(arr, joker=false){
-  return arr.map(n=>`<span class="ball ${joker?'joker':''}">${n}</span>`).join('');
-}
-function fmtCoins(n){ return (n||0).toString(); }
-
-/* ==========================
-   AUTH
-========================== */
-auth.onAuthStateChanged(async (u)=>{
-  if(!u){ location.href='index.html'; return; }
-  USER=u; UID=u.uid;
-  meName.textContent = u.displayName || u.email || u.uid;
-
-  // coins live
-  db.ref(`users/${UID}/coins`).on('value', s=> meCoins.textContent = fmtCoins(s.val()));
-
-  // kdo je admin loterije
-  db.ref('lottery/adminUid').on('value', s=>{
-    ADMIN_UID = s.val()||null;
-    isAdmin = (ADMIN_UID===UID);
-    adminSection.style.display = isAdmin ? 'block' : 'none';
-  });
-
-  // currentRound live
-  const roundRef = db.ref('lottery/currentRound');
-  roundRef.on('value', snap=>{
-    const r = snap.val();
-    if(!r){ // če ni runde, naj admin ustvari
-      CURRENT_ROUND = null;
-      roundStatus.textContent = 'ni runde';
-      roundIdLbl.textContent = '—';
-      jackpotLbl.textContent = '0';
-      salesLbl.textContent = 'Vplačila: 0';
-      showShop(true);
-      ticketList.innerHTML='';
-      drawnNumbersEl.innerHTML='';
-      drawnJokerEl.innerHTML='';
-      winnersInfo.innerHTML='';
-      return;
-    }
-    CURRENT_ROUND = r;
-    roundStatus.textContent = r.status || 'open';
-    roundIdLbl.textContent = r.id || '—';
-    jackpotLbl.textContent = fmtCoins(r.jackpot||0);
-    salesLbl.textContent = `Vplačila: ${r.salesCount||0}`;
-
-    // UI preklop glede na status
-    if(r.status==='open'){
-      showShop(true);     // omogoči nakup
-      resultsSection.style.display='none';
-      ticketList.innerHTML=''; // počisti
-      alertOnce('Začel se je nov krog! Lahko kupiš novo srečko.');
-      subscribeMyTickets();
-    }else if(r.status==='closed' || r.status==='drawing'){
-      showShop(false);    // nakup skrij
-    }else if(r.status==='done'){
-      showShop(false);
-      // prikaži rezultate
-      renderResults(r);
-    }
-  });
-
-  // hint cene
-  updatePriceHint();
-  bundleSel.addEventListener('change', updatePriceHint);
-
-  // gumbi user
-  btnQuickPick.addEventListener('click', quickPickBuy);
-  btnBuy.addEventListener('click', buyTickets);
-  btnBackToShop.addEventListener('click', ()=> showShop(true));
-
-  // gumbi admin
-  btnSetJackpot.addEventListener('click', setJackpot);
-  btnCloseSales.addEventListener('click', closeAndDraw);
-  btnPublishResults.addEventListener('click', publishResults);
-  btnNewRound.addEventListener('click', newRound);
-
-  // zgodovina
-  subscribeHistory();
-});
-
-/* ==========================
-   UI FUNKCIJE
-========================== */
-function showShop(show){
-  buyTicketSection.style.display = show ? 'block' : 'none';
-  if(show) resultsSection.style.display='none';
-}
-function updatePriceHint(){
-  const b = +bundleSel.value;
-  const price = BUNDLE_PRICES[b] ?? 0;
-  priceHint.textContent = `Cena: ${price} kovancev`;
-}
-function alertOnce(msg){
-  // malo prijazno: pokaži samo enkrat na nov krog
-  if(window._alertedNewRound === CURRENT_ROUND?.id) return;
-  window._alertedNewRound = CURRENT_ROUND?.id;
-  alert(msg);
-}
-
-/* ==========================
-   MOJE SREČKE – live
-========================== */
-let myTicketsUnsub = null;
-function subscribeMyTickets(){
-  if(myTicketsUnsub) myTicketsUnsub.off();
-  if(!CURRENT_ROUND?.id) { ticketList.innerHTML=''; return; }
-  const ref = db.ref(`lottery/rounds/${CURRENT_ROUND.id}/tickets`).orderByChild('uid').equalTo(UID);
-  ref.on('value', snap=>{
-    const data = snap.val()||{};
-    ticketList.innerHTML = '';
-    Object.entries(data).reverse().forEach(([tid,t])=>{
-      const div = document.createElement('div');
-      div.className='kv';
-      const combosHtml = (t.combos||[]).map(c=>`<div class="balls">${ballsHtml(c)}</div>`).join('');
-      const jokerHtml  = `<div class="balls">${ballsHtml(t.joker||[], true)}</div>`;
-      div.innerHTML = `
-        <div>
-          <div><b>Srečka #${tid.slice(-6).toUpperCase()}</b> • <span class="muted">${new Date(t.purchasedAt).toLocaleString()}</span></div>
-          <div>Paketi: ${t.combos?.length||0}</div>
-          ${combosHtml}
-          <div>Joker: ${jokerHtml}</div>
-          ${t.result ? `<div class="pill">Dobitek: ${fmtCoins(t.result.payout||0)}</div>` : ''}
+      <div id="adminBox" class="hidden">
+        <h2>🔧 ADMIN</h2>
+        <div class="tag">Ti si edini admin (dokler ne klikneš “Ponastavi admin”)</div>
+        <div class="stack" style="margin-top:8px">
+          <label>Jackpot: <input id="cfgJackpot" type="number" step="1" min="0" value="10000"></label>
+          <label>Prodaja do (ISO ali epoch ms): <input id="cfgSalesEnd" type="text" placeholder="2025-09-30T20:00:00Z"></label>
+          <label>Cene (1/3/5/7): <input id="cfgPrices" type="text" placeholder="100,250,400,500"></label>
+          <label>Deleži % (7,6,5,4,3,J2,J1): <input id="cfgPayouts" type="text" placeholder="70,10,5,3,2,8,2"></label>
+          <div class="row">
+            <button id="saveCfg" class="ok" type="button">Shrani nastavitve</button>
+            <button id="closeSales" class="warn" type="button">Zaključi prodajo</button>
+            <button id="drawNow" class="primary" type="button">ŽREB</button>
+          </div>
+          <button id="resetAdmin" class="danger" type="button">Ponastavi admin</button>
         </div>
-        <div><span class="pill">Cena ${fmtCoins(t.cost||0)}</span></div>
-      `;
-      ticketList.appendChild(div);
-    });
-  });
-  myTicketsUnsub = ref;
-}
+      </div>
 
-/* ==========================
-   NAKUP
-========================== */
-async function quickPickBuy(){
-  // samo vizualno napolni – dejanski nakup je buyTickets()
-  const b = +bundleSel.value;
-  alert(`Hitri nakup bo ustvaril ${b} kombinacij + Joker.`);
-}
+      <div class="sep"></div>
 
-async function buyTickets(){
-  if(buyBusy) return;
-  buyBusy = true; btnBuy.disabled = true; btnQuickPick.disabled = true;
+      <h3>Pravila (povzetek)</h3>
+      <div class="stack">
+        <div>• Izbereš 7 števil med 1–39 in 2 Joker števki (0–9).</div>
+        <div>• Paketi: 1, 3, 5, 7 kombinacij; vsaka kombinacija ima iste Joker števke.</div>
+        <div>• Po koncu prodaje admin izvede žreb. Določi se 7 zmagovalnih števil in 2 Joker števki.</div>
+        <div>• Nagrade: deleži jackpota po ujemanju: 7/6/5/4/3. Joker ujemanje 2 števk (J2) in 1 števke (J1) imata ločena deleža.</div>
+        <div>• Deleži se <b>delijo med vse dobitne srečke v posameznem tieru</b> (pool sistem).</div>
+      </div>
+    </aside>
+  </main>
 
-  try{
-    const r = CURRENT_ROUND;
-    if(!r || r.status!=='open'){ alert('Nakup trenutno ni mogoč.'); return; }
+  <footer>© Loterija • Kovanci se črpajo iz <code>users/{uid}/coins</code>. Vse transakcije so zavarovane s Firebase <i>transaction</i>.</footer>
 
-    const b = +bundleSel.value;
-    const price = BUNDLE_PRICES[b] ?? 0;
-    if(price<=0){ alert('Neveljaven paket.'); return; }
-
-    // 1) odštej kovance (atomicno)
-    const dec = await db.ref(`users/${UID}/coins`).transaction(c=>{
-      c=(+c||0); if(c<price) return; return c - price;
-    });
-    if(!dec.committed){ alert('Premalo kovancev.'); return; }
-
-    // 2) pripravi kombinacije
-    const combos = [];
-    for(let i=0;i<b;i++) combos.push(pickUniqueNumbers(MAIN_COUNT, MAIN_MAX));
-    const joker  = pickJoker();
-
-    // 3) shrani srečko
-    const ticketRef = db.ref(`lottery/rounds/${r.id}/tickets`).push();
-    await ticketRef.set({
-      uid: UID,
-      userName: (auth.currentUser.displayName || auth.currentUser.email || UID),
-      combos, joker,
-      cost: price,
-      purchasedAt: Date.now()
-    });
-
-    // 4) posodobi salesCount
-    await db.ref('lottery/currentRound/salesCount').transaction(x => (+x||0)+1);
-
-    alert('Nakup uspešen!');
-  } finally {
-    buyBusy = false; btnBuy.disabled = false; btnQuickPick.disabled = false;
-  }
-}
-
-/* ==========================
-   REZULTATI
-========================== */
-function renderResults(r){
-  resultsSection.style.display='block';
-  buyTicketSection.style.display='none';
-
-  drawnNumbersEl.innerHTML = `<div class="title">Žrebane številke:</div>` + (r.drawn?.main ? ballsHtml(r.drawn.main) : '');
-  drawnJokerEl.innerHTML   = `<div class="title">Joker:</div>` + (r.drawn?.joker ? ballsHtml(r.drawn.joker, true) : '');
-  winnersInfo.innerHTML    = r.summaryHtml || '';
-}
-
-/* ==========================
-   ADMIN FUNKCIJE
-========================== */
-async function setJackpot(){
-  if(!isAdmin || !CURRENT_ROUND) return;
-  const val = +adminJackpot.value;
-  if(val<0) return alert('Vnesi veljaven znesek.');
-  await db.ref('lottery/currentRound/jackpot').set(val);
-  alert('Jackpot nastavljen.');
-}
-
-async function closeAndDraw(){
-  if(!isAdmin || !CURRENT_ROUND) return;
-  const r = CURRENT_ROUND;
-  if(r.status!=='open') return alert('Runda ni odprta.');
-  // zaključi vplačila
-  await db.ref('lottery/currentRound/status').set('closed');
-
-  // žrebanje (lokalno)
-  const main = pickUniqueNumbers(MAIN_COUNT, MAIN_MAX);
-  const joker= pickJoker();
-
-  await db.ref('lottery/currentRound/drawn').set({ main, joker });
-  await db.ref('lottery/currentRound/status').set('drawing');
-
-  alert('Žreb opravljен. Objavi rezultate, ko želiš.');
-}
-
-async function publishResults(){
-  if(!isAdmin || !CURRENT_ROUND) return;
-  const r = CURRENT_ROUND;
-  if(r.status!=='drawing' && r.status!=='closed') return alert('Najprej opravi žreb.');
-  if(!r.drawn?.main) return alert('Ni žrebanih številk.');
-
-  const roundId = r.id;
-  const ticketsSnap = await db.ref(`lottery/rounds/${roundId}/tickets`).once('value');
-  const tickets = ticketsSnap.val()||{};
-  const mainSet = new Set(r.drawn.main);
-  const jokerDraw = (r.drawn.joker||[]).join('');
-
-  // zberi zmage po kategorijah
-  const winnersByTier = {7:[],6:[],5:[],4:[]};
-  const updates = {};
-  for(const [tid,t] of Object.entries(tickets)){
-    let bestMatches = 0;
-    for(const combo of (t.combos||[])){
-      const m = combo.filter(n=>mainSet.has(n)).length;
-      if(m>bestMatches) bestMatches=m;
-    }
-    const hasJoker = ((t.joker||[]).join('')===jokerDraw);
-    const rec = {uid:t.uid, name:t.userName||t.uid, tid, bestMatches, hasJoker, payout:0};
-    if(bestMatches>=4){
-      winnersByTier[bestMatches].push(rec);
-    }
-    updates[`lottery/rounds/${roundId}/tickets/${tid}/result`] = {
-      matches: bestMatches,
-      joker: hasJoker
+  <script>
+    // ===== Firebase init =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+      authDomain: "chater-cf682.firebaseapp.com",
+      databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+      projectId: "chater-cf682",
+      storageBucket: "chater-cf682.appspot.com",
+      messagingSenderId: "233632075480",
+      appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad",
     };
-  }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
 
-  // razdelitev jackpota po tierjih
-  const jackpot = +r.jackpot || 0;
-  const tierOrder = [7,6,5,4];
-  const payouts = {}; // tid -> payout
-  let summaryLines = [];
+    // ===== UI refs =====
+    const meName = document.getElementById('meName');
+    const meCoins = document.getElementById('meCoins');
+    const drawStatus = document.getElementById('drawStatus');
+    const drawIdEl = document.getElementById('drawId');
+    const jackpotNow = document.getElementById('jackpotNow');
+    const salesTotal = document.getElementById('salesTotal');
+    const ticketsCount = document.getElementById('ticketsCount');
+    const combosCount = document.getElementById('combosCount');
+    const winningBox = document.getElementById('winningBox');
+    const adminBox = document.getElementById('adminBox');
 
-  for(const tier of tierOrder){
-    const group = winnersByTier[tier];
-    const pct = PAYOUT_PCT[tier] || 0;
-    if(jackpot>0 && pct>0 && group.length>0){
-      const pool = Math.floor(jackpot * pct);
-      const baseEach = Math.floor(pool / group.length);
-      for(const rec of group){
-        payouts[rec.tid] = (payouts[rec.tid]||0) + baseEach;
-      }
-      summaryLines.push(`<div>⭐ Kategorija ${tier}: ${group.length} dobitnik(ov), sklad ${pool}, na srečko ${baseEach}</div>`);
-    }else if(group.length>0){
-      summaryLines.push(`<div>⭐ Kategorija ${tier}: ${group.length} dobitnik(ov), sklad 0</div>`);
+    const bundleSel = document.getElementById('bundleSel');
+    const bundlePrice = document.getElementById('bundlePrice');
+    const bundleCountEl = document.getElementById('bundleCount');
+    const needCountEl = document.getElementById('needCount');
+    const comboCountEl = document.getElementById('comboCount');
+    const numsGrid = document.getElementById('numsGrid');
+    const rndBtn = document.getElementById('rndBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const addComboBtn = document.getElementById('addCombo');
+    const comboPreview = document.getElementById('comboPreview');
+    const buyBtn = document.getElementById('buyBtn');
+    const joker1 = document.getElementById('joker1');
+    const joker2 = document.getElementById('joker2');
+    const rndJoker = document.getElementById('rndJoker');
+    const salesEndTxt = document.getElementById('salesEndTxt');
+
+    const myTickets = document.getElementById('myTickets');
+    const myHistory = document.getElementById('myHistory');
+
+    // ADMIN inputs
+    const cfgJackpot = document.getElementById('cfgJackpot');
+    const cfgSalesEnd = document.getElementById('cfgSalesEnd');
+    const cfgPrices = document.getElementById('cfgPrices');
+    const cfgPayouts = document.getElementById('cfgPayouts');
+    const saveCfgBtn = document.getElementById('saveCfg');
+    const closeSalesBtn = document.getElementById('closeSales');
+    const drawNowBtn = document.getElementById('drawNow');
+    const resetAdminBtn = document.getElementById('resetAdmin');
+
+    // ===== Default config =====
+    const defaultConfig = {
+      numbersCount: 7,
+      maxNumber: 39,
+      jokerDigits: 2,
+      prices: { "1": 100, "3": 250, "5": 400, "7": 500 },
+      payoutPercents: { "7": 70, "6": 10, "5": 5, "4": 3, "3": 2, "J2": 8, "J1": 2 },
+      jackpot: 10000,
+      salesEndTs: Date.now() + 3600_000,
+    };
+
+    // ===== State =====
+    let user = null, uid = null;
+    let coinsUnsub = null;
+    let adminUid = null;
+
+    let cfg = {...defaultConfig};
+    let currentDrawId = null;
+    let myCombos = [];               // trenutni paket za nakup
+    let selected = new Set();        // izbrane številke za 1 kombinacijo
+
+    // ===== Helpers =====
+    const $ = (n)=>document.querySelector(n);
+    function fmt(n){ return (Math.round(n)||0).toString(); }
+    function iso(ts){ try{ return new Date(+ts).toLocaleString(); }catch{ return '-'; } }
+    function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+    function pickUnique(k, max){
+      const s=new Set(); while(s.size<k){ s.add(randInt(1,max)); } return [...s].sort((a,b)=>a-b);
     }
-  }
 
-  // Joker bonus (5% jackpota) — dobi ga vsaka srečka, ki že prejme nekaj in ima Joker
-  const bonusTotal = Math.floor(jackpot * JOKER_BONUS_PCT);
-  // koliko srečk je upravičenih do bonusa?
-  const eligible = Object.entries(payouts).filter(([tid,amt])=>{
-    const t = tickets[tid];
-    return amt>0 && t?.result?.joker===true;
-  });
-  if(eligible.length>0 && bonusTotal>0){
-    const eachBonus = Math.floor(bonusTotal / eligible.length);
-    for(const [tid] of eligible){
-      payouts[tid] += eachBonus;
+    // ---- NEW helpers for bundles / UI sync ----
+    function requiredCount(){ return +bundleSel.value || 1; }   // koliko kombinacij zahteva izbrani paket
+    function syncAddBtn(){
+      addComboBtn.disabled = (myCombos.length >= requiredCount());
+      bundleCountEl.textContent = requiredCount();
+      comboCountEl.textContent  = myCombos.length;
     }
-    summaryLines.push(`<div>🃏 Joker bonus: ${bonusTotal} (na upravičeno srečko ${eachBonus})</div>`);
-  }
+    function clearSelectionUI(){
+      selected.clear();
+      [...numsGrid.children].forEach(ch=>ch.classList.remove('sel'));
+    }
 
-  // zapiši payout na srečke + nakaži uporabnikom
-  const userAdds = {}; // uid -> +coins
-  for(const [tid,amt] of Object.entries(payouts)){
-    updates[`lottery/rounds/${roundId}/tickets/${tid}/result/payout`] = amt;
-    const uid = tickets[tid].uid;
-    userAdds[uid] = (userAdds[uid]||0) + amt;
-  }
-  // RTDB update (results on tickets)
-  await db.ref().update(updates);
+    // ===== Auth =====
+    auth.onAuthStateChanged(async (_u)=>{
+      if(!_u){ window.location.href='index.html'; return; }
+      user=_u; uid=user.uid;
+      meName.textContent = user.displayName || user.email;
+      if(coinsUnsub) db.ref(`users/${uid}/coins`).off('value', coinsUnsub);
+      coinsUnsub = (snap)=> meCoins.textContent = fmt(snap.val()||0);
+      db.ref(`users/${uid}/coins`).on('value', coinsUnsub);
 
-  // coin nakazila
-  const coinTx = Object.entries(userAdds).map(([uid,amt])=>
-    db.ref(`users/${uid}/coins`).transaction(c=>(+c||0)+amt)
-  );
-  await Promise.all(coinTx);
+      // načitaj admina in config
+      const [adminSnap, cfgSnap, drawSnap] = await Promise.all([
+        db.ref('lottery/adminUid').once('value'),
+        db.ref('lottery/config').once('value'),
+        db.ref('lottery/currentDrawId').once('value'),
+      ]);
+      adminUid = adminSnap.val() || null;
+      if(cfgSnap.exists()) cfg = {...defaultConfig, ...cfgSnap.val()};
+      await ensureCurrentDraw(drawSnap.val());
 
-  // status done + summary
-  const summaryHtml = `
-    <div class="kv">
-      <div><b>Povzetek izplačil</b></div>
-      <div><span class="pill">Jackpot ${fmtCoins(jackpot)}</span></div>
-    </div>
-    ${summaryLines.join('')}
-  `;
-  await db.ref('lottery/currentRound').update({
-    status:'done',
-    summaryHtml
-  });
-
-  alert('Rezultati objavljeni.');
-}
-
-async function newRound(){
-  if(!isAdmin) return;
-  const newId = 'R' + Date.now();
-  const baseJackpot = +adminJackpot.value || (+CURRENT_ROUND?.jackpot || 0);
-  await db.ref('lottery/currentRound').set({
-    id: newId,
-    status: 'open',
-    jackpot: baseJackpot,
-    salesCount: 0,
-    drawn: null,
-    summaryHtml: ''
-  });
-  // zgodovina – opcijsko: zapiši marker o začetku
-  await db.ref(`lottery/rounds/${newId}`).set({ createdAt: Date.now() });
-
-  // ⚡ igralcem UI samodejno preklopi na nakup (listener poskrbi)
-}
-
-/* ==========================
-   ZGODOVINA
-========================== */
-function subscribeHistory(){
-  db.ref('lottery/rounds').limitToLast(20).on('value', snap=>{
-    const data = snap.val()||{};
-    const ids = Object.keys(data).sort().reverse();
-    historyEl.innerHTML = '';
-    ids.forEach(id=>{
-      const rId = id;
-      // skušamo prebrati rezultate iz currentRound, če se ujemajo
-      const card = document.createElement('div');
-      card.className='kv';
-      card.innerHTML = `
-        <div>
-          <div><b>Krog ${rId}</b></div>
-          <div class="muted">${new Date(data[id].createdAt||Date.now()).toLocaleString()}</div>
-        </div>
-        <div></div>
-      `;
-      historyEl.appendChild(card);
+      initUI();
+      attachLive();
+      renderNumbers();
+      updateBundlePrice();
     });
-  });
-}
 
-/* ==========================
-   ADMIN AUTO-SET (če še ni)
-========================== */
-// Ni nujno, admin se nastavlja na prijavni strani z /admin.
-// Ta stran samo bere `lottery/adminUid` in prikaže UI, če si ti admin.
+    async function ensureCurrentDraw(drawId){
+      if(!drawId){
+        // ustvari nov krog
+        const id = 'draw_'+Date.now();
+        const base = {
+          status:'selling', createdAt:Date.now(),
+          jackpot: cfg.jackpot,
+          salesEndTs: cfg.salesEndTs,
+          prices: cfg.prices,
+          payoutPercents: cfg.payoutPercents,
+          numbersCount: cfg.numbersCount, maxNumber: cfg.maxNumber, jokerDigits: cfg.jokerDigits,
+          totals:{ revenue:0, tickets:0, combos:0 }
+        };
+        await db.ref(`lottery/draws/${id}`).set(base);
+        await db.ref('lottery/currentDrawId').set(id);
+        currentDrawId = id;
+      } else {
+        currentDrawId = drawId;
+      }
+      drawIdEl.textContent = currentDrawId;
+    }
 
-</script>
+    function initUI(){
+      // admin box
+      const amAdmin = (uid === adminUid);
+      adminBox.classList.toggle('hidden', !amAdmin);
+      if(amAdmin){
+        cfgJackpot.value = cfg.jackpot;
+        cfgSalesEnd.value = cfg.salesEndTs;
+        cfgPrices.value = `${cfg.prices["1"]},${cfg.prices["3"]},${cfg.prices["5"]},${cfg.prices["7"]}`;
+        const p = cfg.payoutPercents; cfgPayouts.value = `${p["7"]},${p["6"]},${p["5"]},${p["4"]},${p["3"]},${p["J2"]},${p["J1"]}`;
+      }
+    }
+
+    function attachLive(){
+      db.ref(`lottery/draws/${currentDrawId}`).on('value', snap=>{
+        const d = snap.val(); if(!d) return;
+        drawStatus.textContent = d.status;
+        jackpotNow.textContent = fmt(d.jackpot||0);
+        salesEndTxt.textContent = iso(d.salesEndTs || 0);
+        salesTotal.textContent = fmt(d.totals?.revenue||0);
+        ticketsCount.textContent = fmt(d.totals?.tickets||0);
+        combosCount.textContent = fmt(d.totals?.combos||0);
+        cfg = {...cfg, ...d}; // sproti sync
+        if(d.winning){
+          winningBox.innerHTML = `
+            <div class="tag">Zmagovalne številke: <b>${(d.winning.numbers||[]).join(', ')}</b></div>
+            <div class="tag">Joker: <b>${(d.winning.joker||[]).join('')}</b></div>
+          `;
+        } else {
+          winningBox.innerHTML = `<div class="muted">Rezultati še niso izžrebani.</div>`;
+        }
+      });
+
+      // moje srečke (trenutni krog)
+      db.ref(`lottery/tickets/${currentDrawId}`).orderByChild('uid').equalTo(uid).on('value', snap=>{
+        const data = snap.val()||{};
+        myTickets.innerHTML = '';
+        Object.entries(data).sort((a,b)=> (a[1].purchasedAt||0)-(b[1].purchasedAt||0)).forEach(([tid,t])=>{
+          const res = t.result;
+          const payout = t.payoutTotal||0;
+          const statusTag = res ? `<span class="pill ${payout>0?'oktxt':'badtxt'}">${payout>0?('Dobitek: '+fmt(payout)):'Brez dobitka'}</span>` : `<span class="pill">Čakanje žreba</span>`;
+          const div = document.createElement('div');
+          div.className='kv';
+          div.innerHTML = `
+            <div>
+              <div class="muted">Srečka ${tid.slice(-6)}</div>
+              <div>Kombinacije: ${t.combos.map(c=>c.nums.join('-')).join(' | ')}</div>
+              <div>Joker: ${(t.joker||[]).join('')}</div>
+              <div class="muted">Cena: ${fmt(t.price)} • Kupljeno: ${iso(t.purchasedAt)}</div>
+            </div>
+            <div>${statusTag}</div>
+          `;
+          myTickets.appendChild(div);
+        });
+      });
+
+      // zgodovina (zadnjih 5 krogov)
+      db.ref('lottery/draws').limitToLast(5).on('value', async snap=>{
+        const all = snap.val()||{};
+        const ids = Object.keys(all).sort().reverse();
+        myHistory.innerHTML = '';
+        for(const id of ids){
+          if(id===currentDrawId) continue;
+          const tSnap = await db.ref(`lottery/tickets/${id}`).orderByChild('uid').equalTo(uid).once('value');
+          if(!tSnap.exists()) continue;
+          const d = all[id];
+          const winNums = d.winning ? d.winning.numbers.join(',') : '—';
+          const winJ = d.winning ? d.winning.joker.join('') : '—';
+          const div = document.createElement('div');
+          div.className='kv';
+          div.innerHTML = `
+            <div>
+              <b>${id}</b> • status: ${d.status}
+              <div class="muted">Win: ${winNums} | Joker: ${winJ}</div>
+            </div>
+            <div><a href="#" onclick="alert('Odpri podrobnosti v bazi: lottery/tickets/${id}');return false;">Moje srečke</a></div>
+          `;
+          myHistory.appendChild(div);
+        }
+      });
+    }
+
+    // ===== Številke UI =====
+    function renderNumbers(){
+      numsGrid.innerHTML='';
+      selected.clear();
+      const max = cfg.maxNumber || 39;
+      for(let i=1;i<=max;i++){
+        const b=document.createElement('div'); b.className='num'; b.textContent=i;
+        b.onclick=()=>{ 
+          if(selected.has(i)){ selected.delete(i); b.classList.remove('sel'); }
+          else if(selected.size < (cfg.numbersCount||7)){ selected.add(i); b.classList.add('sel'); }
+        };
+        numsGrid.appendChild(b);
+      }
+      needCountEl.textContent = cfg.numbersCount||7;
+    }
+
+    rndBtn.onclick = ()=>{
+      const arr = pickUnique(cfg.numbersCount||7, cfg.maxNumber||39);
+      clearSelectionUI();
+      arr.forEach(n=>{
+        selected.add(n);
+        numsGrid.children[n-1].classList.add('sel');
+      });
+    };
+    clearBtn.onclick = ()=> clearSelectionUI();
+    rndJoker.onclick = ()=>{
+      joker1.value = randInt(0,9);
+      joker2.value = randInt(0,9);
+    };
+
+    // ---- UPDATED bundle price + sync ----
+    bundleSel.onchange = updateBundlePrice;
+    function updateBundlePrice(){
+      const cnt = requiredCount();
+      const price = (cfg.prices?.[cnt] ?? defaultConfig.prices[cnt] ?? 100);
+      bundlePrice.textContent = fmt(price);
+      syncAddBtn(); // posodobi gumb in števec
+    }
+
+    // ---- UPDATED add combo handler ----
+    addComboBtn.onclick = ()=>{
+      const need = cfg.numbersCount || 7;
+      if (selected.size !== need){
+        return alert(`Izberi točno ${need} števil.`);
+      }
+      if (myCombos.length >= requiredCount()){
+        syncAddBtn();
+        return alert(`V paketu je že ${requiredCount()} kombinacij.`);
+      }
+      const nums = Array.from(selected).sort((a,b)=>a-b);
+      myCombos.push({ nums });
+
+      // Po dodajanju počisti UI za hitro izbiro naslednje kombinacije
+      clearSelectionUI();
+
+      renderComboPreview();
+      syncAddBtn();
+    };
+
+    // ---- UPDATED preview (z odstranitvijo) ----
+    function renderComboPreview(){
+      comboPreview.innerHTML = '';
+      myCombos.forEach((c,idx)=>{
+        const d = document.createElement('div');
+        d.className='kv';
+        d.innerHTML = `<div>#${idx+1}: ${c.nums.join(', ')}</div><button class="danger" type="button">Odstrani</button>`;
+        d.querySelector('button').onclick = ()=>{
+          myCombos.splice(idx,1);
+          renderComboPreview();
+          syncAddBtn();
+        };
+        comboPreview.appendChild(d);
+      });
+    }
+
+    // ===== Nakup =====
+    buyBtn.onclick = async ()=>{
+      const cnt = requiredCount();
+      if (myCombos.length !== cnt) return alert(`V paketu mora biti ${cnt} kombinacij.`);
+      if(cfg.status !== 'selling') return alert('Prodaja je zaključena.');
+
+      const j1 = Math.max(0, Math.min(9, +joker1.value||0));
+      const j2 = Math.max(0, Math.min(9, +joker2.value||0));
+      const joker = [j1,j2];
+
+      const price = (cfg.prices?.[cnt] ?? defaultConfig.prices[cnt] ?? 100);
+
+      // odštej kovance atomarno
+      const userCoinsRef = db.ref(`users/${uid}/coins`);
+      const ok = await userCoinsRef.transaction(c=>{
+        c = (+c||0);
+        if(c < price) return; // abort tx
+        return c - price;
+      });
+      if(!ok.committed) return alert('Premalo kovancev.');
+
+      const tid = db.ref().push().key;
+      const ticket = {
+        uid, combos: myCombos, joker, price,
+        purchasedAt: Date.now()
+      };
+      await db.ref(`lottery/tickets/${currentDrawId}/${tid}`).set(ticket);
+
+      // stats
+      await db.ref(`lottery/draws/${currentDrawId}/totals`).transaction(t=>{
+        t=t||{revenue:0,tickets:0,combos:0};
+        t.revenue += price;
+        t.tickets += 1;
+        t.combos  += myCombos.length;
+        return t;
+      });
+
+      alert('Srečka kupljena!');
+
+      // ---- reset paketa in UI po nakupu ----
+      myCombos = [];
+      renderComboPreview();
+      clearSelectionUI();
+      addComboBtn.disabled = false;
+      syncAddBtn();
+      updateBundlePrice();
+    };
+
+    // ===== Admin =====
+    saveCfgBtn.onclick = async ()=>{
+      if(uid !== adminUid) return alert('Nisi admin.');
+      const pricesArr = cfgPrices.value.split(',').map(x=>+x.trim());
+      const payoutsArr = cfgPayouts.value.split(',').map(x=>+x.trim());
+      const newCfg = {
+        jackpot: +cfgJackpot.value||0,
+        salesEndTs: isNaN(+cfgSalesEnd.value) ? Date.parse(cfgSalesEnd.value) : +cfgSalesEnd.value,
+        prices: { "1":pricesArr[0]||100, "3":pricesArr[1]||250, "5":pricesArr[2]||400, "7":pricesArr[3]||500 },
+        payoutPercents: { "7":payoutsArr[0]||70, "6":payoutsArr[1]||10, "5":payoutsArr[2]||5, "4":payoutsArr[3]||3, "3":payoutsArr[4]||2, "J2":payoutsArr[5]||8, "J1":payoutsArr[6]||2 }
+      };
+      await db.ref(`lottery/draws/${currentDrawId}`).update(newCfg);
+      await db.ref('lottery/config').update(newCfg);
+      alert('Nastavitve shranjene.');
+    };
+
+    closeSalesBtn.onclick = async ()=>{
+      if(uid !== adminUid) return alert('Nisi admin.');
+      await db.ref(`lottery/draws/${currentDrawId}/status`).set('closed');
+      alert('Prodaja zaključena.');
+    };
+
+    drawNowBtn.onclick = async ()=>{
+      if(uid !== adminUid) return alert('Nisi admin.');
+      const dSnap = await db.ref(`lottery/draws/${currentDrawId}`).once('value');
+      const d = dSnap.val(); if(!d) return;
+
+      if(d.status==='selling'){
+        if(!confirm('Prodaja še teče. Želiš najprej zaključiti prodajo?')) return;
+        await db.ref(`lottery/draws/${currentDrawId}/status`).set('closed');
+      }
+
+      // 1) Generiraj zmagovalne
+      const winNums = pickUnique(d.numbersCount||7, d.maxNumber||39);
+      const winJ = [randInt(0,9), randInt(0,9)];
+      await db.ref(`lottery/draws/${currentDrawId}/winning`).set({ numbers: winNums, joker: winJ });
+
+      // 2) Preštej zadetke po tierih
+      const tSnap = await db.ref(`lottery/tickets/${currentDrawId}`).once('value');
+      const tickets = tSnap.val()||{};
+      const tiers = {"7":[], "6":[], "5":[], "4":[], "3":[], "J2":[], "J1":[]};
+
+      function countHits(nums){
+        let c=0; for(const n of nums){ if(winNums.includes(n)) c++; } return c;
+      }
+      function jokerTier(j){
+        if(!j) return null;
+        if(j[0]===winJ[0] && j[1]===winJ[1]) return 'J2';
+        if(j[0]===winJ[0] || j[1]===winJ[1]) return 'J1';
+        return null;
+      }
+
+      const results = {};
+      for(const [tid,t] of Object.entries(tickets)){
+        const perComboHits = t.combos.map(c=>countHits(c.nums));
+        const best = Math.max(...perComboHits);
+        if(best>=3) tiers[String(best)].push(tid);
+        const jt = jokerTier(t.joker);
+        if(jt) tiers[jt].push(tid);
+        results[tid] = { perComboHits, best, jokerTier: jt };
+      }
+
+      // 3) Izračun nagrad (pool delitev)
+      const P = d.payoutPercents || defaultConfig.payoutPercents;
+      const jackpot = +d.jackpot||0;
+      const payouts = {};
+      let totalPaid = 0;
+
+      function payTier(tier){
+        const perc = +P[tier]||0;
+        if(perc<=0) return;
+        const pool = Math.floor(jackpot * (perc/100));
+        const winners = tiers[tier].length;
+        if(winners<=0) return;
+        const each = Math.max(0, Math.floor(pool / winners));
+        for(const tid of tiers[tier]){
+          payouts[tid] = (payouts[tid]||0) + each;
+          totalPaid += each;
+        }
+      }
+      ['7','6','5','4','3','J2','J1'].forEach(payTier);
+
+      // 4) Zapiši rezultate in izplačaj kovance
+      const updates = {};
+      for(const [tid,res] of Object.entries(results)){
+        const amount = payouts[tid]||0;
+        updates[`lottery/tickets/${currentDrawId}/${tid}/result`] = res;
+        updates[`lottery/tickets/${currentDrawId}/${tid}/payoutTotal`] = amount;
+      }
+      updates[`lottery/draws/${currentDrawId}/status`] = 'drawn';
+      updates[`lottery/draws/${currentDrawId}/paidTotal`] = totalPaid;
+      await db.ref().update(updates);
+
+      for(const [tid,t] of Object.entries(tickets)){
+        const win = payouts[tid]||0; if(win<=0) continue;
+        await db.ref(`users/${t.uid}/coins`).transaction(c => (+c||0) + win);
+      }
+
+      await db.ref(`lottery/draws/${currentDrawId}/status`).set('paid');
+      alert(`Žreb opravljen. Izplačano skupaj: ${fmt(totalPaid)} kovancev.`);
+
+      // Nov krog
+      const createNew = confirm('Ustvarim nov krog za prodajo?');
+      if(createNew){
+        const id = 'draw_'+Date.now();
+        const base = {
+          status:'selling', createdAt:Date.now(),
+          jackpot: cfg.jackpot, salesEndTs: cfg.salesEndTs,
+          prices: cfg.prices, payoutPercents: cfg.payoutPercents,
+          numbersCount: cfg.numbersCount, maxNumber: cfg.maxNumber, jokerDigits: cfg.jokerDigits,
+          totals:{ revenue:0, tickets:0, combos:0 }
+        };
+        await db.ref(`lottery/draws/${id}`).set(base);
+        await db.ref('lottery/currentDrawId').set(id);
+        currentDrawId = id;
+        drawIdEl.textContent = id;
+      }
+    };
+
+    resetAdminBtn.onclick = async ()=>{
+      if(uid !== adminUid) return alert('Nisi admin.');
+      if(!confirm('Ponastavim admina? Potem se lahko nekdo drug prijavi z /admin.')) return;
+      await db.ref('lottery/adminUid').remove();
+      await db.ref('lottery/adminSince').set(null);
+      alert('Admin ponastavljen.');
+      adminBox.classList.add('hidden');
+    };
+  </script>
 </body>
 </html>
