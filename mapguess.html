@@ -95,7 +95,7 @@
             <button id="joinWithBetBtn" class="primary">Pridruži se (stavi)</button>
             <button id="cancelBetBtn" class="warn">Prekliči</button>
           </div>
-          <div class="muted">Izbirač ne plača (nima dobička/izgube).</div>
+          <div class="muted">Izbiralec ne plača (nima dobička/izgube).</div>
         </div>
 
         <div class="sep"></div>
@@ -106,6 +106,7 @@
             <div class="row">
               <button id="startBtn" class="ok">Začni rundo</button>
               <button id="forceSettleBtn" class="danger">Zaključi rundo</button>
+              <button id="closeRoomBtn" class="danger">Zapri sobo</button>
             </div>
           </div>
           <div class="pill" id="chooserInfo">Izbiralec: –</div>
@@ -160,6 +161,7 @@
     const chooserInfo = document.getElementById('chooserInfo');
     const startBtn = document.getElementById('startBtn');
     const forceSettleBtn = document.getElementById('forceSettleBtn');
+    const closeRoomBtn = document.getElementById('closeRoomBtn');
 
     const betBox = document.getElementById('betBox');
     const betAmount = document.getElementById('betAmount');
@@ -170,8 +172,8 @@
     const resultBox = document.getElementById('resultBox');
 
     // ===== Map =====
-    let map, myMarker, targetMarker; // targetMarker samo izbiralec vidi
-    const initialView = [46.0569, 14.5058]; // Ljubljana kot default
+    let map, myMarker, targetMarker;
+    const initialView = [46.0569, 14.5058]; // Ljubljana
     function initMap(){
       map = L.map('map').setView(initialView, 5);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -186,17 +188,20 @@
     let user=null, uid=null;
 
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371000; // m
+      const R = 6371000;
       const toRad = d => d * Math.PI / 180;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
       const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c; // meters
+      return R * c;
     }
 
     function playersRef() { return db.ref(`mapguess/rooms/${roomId}/players`); }
     function roomRef()    { return db.ref(`mapguess/rooms/${roomId}`); }
+
+    // Busy flags (anti-spam)
+    let joinBusy=false, cancelBusy=false, closeBusy=false;
 
     // ===== Auth =====
     auth.onAuthStateChanged(async (_u)=>{
@@ -206,7 +211,6 @@
 
       db.ref(`users/${uid}/coins`).on('value', s=> meCoins.textContent = s.val() ?? 0);
 
-      // Če ni ?room, pokaži seznam sob
       if(!roomId){ showRoomsLobby(); }
       else { showRoomUI(); }
     });
@@ -216,7 +220,6 @@
       roomsView.style.display='block';
       roomShell.style.display='none';
 
-      // prikaz sob
       db.ref('mapguess/rooms').on('value', snap=>{
         const data = snap.val()||{};
         roomsList.innerHTML = '';
@@ -232,7 +235,6 @@
         });
       });
 
-      // Ustvari sobo
       createRoomBtn.onclick = async ()=>{
         const name = (newRoomName.value||'Soba').trim();
         const id = Math.random().toString(36).slice(2,8).toUpperCase();
@@ -254,7 +256,7 @@
       attachRoomListeners();
       setupMapInteractions();
 
-      // pridruži se players (če še nisi)
+      // registriraj se med igralce (če še nisi)
       playersRef().child(uid).transaction(p=>{
         if(p) return p;
         return { name: user.displayName || user.email || uid, role: 'guesser', paid:false, bet:0 };
@@ -269,17 +271,19 @@
         potVal.textContent = r.pot || 0;
         chooserInfo.textContent = `Izbiralec: ${r.chooserUid ? (r.players?.[r.chooserUid]?.name || r.chooserUid) : '–'}`;
 
-        // gumbi & bet box
         const imChooser = r.chooserUid === uid;
+        const isHost = r.hostUid === uid;
         const status = r.status || 'lobby';
 
         // Stave le v lobbyju in če NISI izbiralec
         betBox.style.display = (status==='lobby' && !imChooser) ? 'block' : 'none';
 
-        startBtn.disabled = !(status==='lobby' && Object.keys(r.players||{}).length>=2);
-        forceSettleBtn.disabled = !(status==='guessing' || status==='choosing');
+        // host kontrole
+        startBtn.disabled = !(isHost && status==='lobby' && Object.keys(r.players||{}).length>=2);
+        forceSettleBtn.disabled = !(isHost && (status==='guessing' || status==='choosing'));
+        closeRoomBtn.disabled = !isHost;
 
-        // Hint po fazah
+        // Hint
         if(status==='lobby'){
           hint.textContent = imChooser ? 'V lobbyju si — kot izbiralec ne plačaš vstopa.' : 'V lobbyju — stavi in počakaj na začetek.';
         } else if(status==='choosing'){
@@ -290,13 +294,12 @@
           hint.textContent = 'Zaključevanje runde…';
         }
 
-        // Target marker prikaži samo izbiralcu
+        // Target marker samo izbiralcu
         if(targetMarker){ map.removeLayer(targetMarker); targetMarker = null; }
         if(imChooser && r.target?.lat){
           targetMarker = L.marker([r.target.lat, r.target.lng], {title:'Tarča'}).addTo(map);
         }
 
-        // Rezultati (po poračunu)
         if(status==='lobby' && r.lastResult){
           renderResults(r.lastResult, r.players||{}, r.target);
         } else {
@@ -306,17 +309,15 @@
         renderPlayers(r.players||{});
       });
 
-      // players list
       playersRef().on('value', snap=>{
-        const players = snap.val()||{};
-        renderPlayers(players);
+        renderPlayers(snap.val()||{});
       });
 
-      // bind gumbi
       joinBtn.onclick = joinWithBet;
       cancelBtn.onclick = cancelBet;
       startBtn.onclick = startRound;
       forceSettleBtn.onclick = settleNow;
+      closeRoomBtn.onclick = closeRoom;
     }
 
     function renderPlayers(players){
@@ -327,7 +328,7 @@
         d.innerHTML = `
           <div>
             <b>${p.name||id}</b>
-            <div class="muted">Vloga: ${p.role||'guesser'} ${p.paid ? ' • 🪙 plačal' : ''} ${p.guess ? ' • ✅ uganil (oddano)' : ''}</div>
+            <div class="muted">Vloga: ${p.role||'guesser'} ${p.paid ? ' • 🪙 plačal' : ''} ${p.guess ? ' • ✅ oddal' : ''}</div>
           </div>
           <div>${p.bet ? `<span class="pill">Bet ${p.bet}</span>` : ''}</div>
         `;
@@ -335,48 +336,96 @@
       });
     }
 
-    // ===== Stave =====
+    // ===== Stave (anti-spam + idempotentno) =====
     const MIN_BET = 10;
 
     async function joinWithBet(){
-      const rs = await roomRef().once('value'); const r = rs.val()||{};
-      if((r.status||'lobby')!=='lobby') return alert('Stave možne le v lobbyju.');
-      if(r.chooserUid === uid) return alert('Izbiralec ne plača.');
+      if(joinBusy) return;
+      joinBusy = true; joinBtn.disabled = true;
 
-      const amt = Math.floor(+betAmount.value||0);
-      if(amt < MIN_BET) return alert(`Minimalna stava je ${MIN_BET}.`);
+      try{
+        const rs = await roomRef().once('value'); const r = rs.val()||{};
+        if((r.status||'lobby')!=='lobby'){ alert('Stave možne le v lobbyju.'); return; }
+        if(r.chooserUid === uid){ alert('Izbiralec ne plača.'); return; }
 
-      const ps = await playersRef().child(uid).once('value');
-      const p = ps.val()||{};
-      if(p.paid) return alert('Stava je že oddana.');
+        const amt = Math.floor(+betAmount.value||0);
+        if(amt < MIN_BET){ alert(`Minimalna stava je ${MIN_BET}.`); return; }
 
-      // odštej kovance
-      const dec = await db.ref(`users/${uid}/coins`).transaction(c=>{
-        c=(+c||0); if(c<amt) return; return c-amt;
-      });
-      if(!dec.committed) return alert('Premalo kovancev.');
+        // 1) postavi "placing" lock na igralcu (če je že paid ali placing, ne nadaljuj)
+        let allow = false;
+        const t1 = await playersRef().child(uid).transaction(p=>{
+          p = p || { name: user.displayName || user.email || uid, role:'guesser', paid:false, bet:0 };
+          if(p.paid===true || p.placing===true) return p; // nič
+          p.placing = true;
+          return p;
+        });
+        const pAfter = t1.snapshot.val();
+        allow = t1.committed && pAfter && pAfter.placing===true && pAfter.paid!==true;
+        if(!allow){ alert('Stava je že oddana ali v teku.'); return; }
 
-      await playersRef().child(uid).update({ bet: amt, paid: true, role: p.role||'guesser' });
-      await roomRef().child('pot').transaction(x => (+x||0) + amt);
-      alert('Stava sprejeta.');
+        // 2) odštej kovance
+        const dec = await db.ref(`users/${uid}/coins`).transaction(c=>{
+          c=(+c||0); if(c<amt) return; return c-amt;
+        });
+        if(!dec.committed){
+          // rollback placing lock
+          await playersRef().child(uid).child('placing').set(false);
+          alert('Premalo kovancev.');
+          return;
+        }
+
+        // 3) potrdi stavo
+        await playersRef().child(uid).update({ bet: amt, paid:true, placing:false });
+        await roomRef().child('pot').transaction(x => (+x||0) + amt);
+        alert('Stava sprejeta.');
+      } finally {
+        joinBusy = false; joinBtn.disabled = false;
+      }
     }
 
     async function cancelBet(){
-      const rs = await roomRef().once('value'); const r = rs.val()||{};
-      if((r.status||'lobby')!=='lobby') return alert('Runda že teče.');
-      const ps = await playersRef().child(uid).once('value'); const p = ps.val();
-      if(!p || !p.paid || !p.bet) return alert('Nimaš aktivne stave.');
-      const amt = +p.bet;
+      if(cancelBusy) return;
+      cancelBusy = true; cancelBtn.disabled = true;
 
-      await db.ref(`users/${uid}/coins`).transaction(c=>(+c||0)+amt);
-      await playersRef().child(uid).update({ paid:false, bet:0 });
-      await roomRef().child('pot').transaction(x => Math.max(0,(+x||0)-amt));
-      alert('Stava preklicana.');
+      try{
+        const rs = await roomRef().once('value'); const r = rs.val()||{};
+        if((r.status||'lobby')!=='lobby'){ alert('Runda je že v teku — preklic ni možen.'); return; }
+
+        // 1) atomarna menjava na igralcu: če paid==true in bet>0 → nastavi paid=false, bet=0 ter zabeleži refund
+        let refund=0;
+        const t = await playersRef().child(uid).transaction(p=>{
+          if(!p || p.paid!==true || !p.bet) return p; // nič za delat
+          refund = +p.bet;
+          p.paid = false;
+          p.bet = 0;
+          p.guess = null;
+          p.distance = null;
+          p._lastCancelTs = Date.now();
+          return p;
+        });
+
+        if(!t.committed){
+          alert('Preklic ni uspel. Poskusi znova.');
+          return;
+        }
+        if(refund<=0){
+          alert('Nimaš aktivne stave.');
+          return;
+        }
+
+        // 2) vrni kovance (enkrat, glede na refund, potegnjeno iz transakcije)
+        await db.ref(`users/${uid}/coins`).transaction(c=>(+c||0)+refund);
+
+        // 3) zmanjša pot
+        await roomRef().child('pot').transaction(x => Math.max(0,(+x||0) - refund));
+
+        alert('Stava preklicana.');
+      } finally {
+        cancelBusy = false; cancelBtn.disabled = false;
+      }
     }
 
     // ===== Round control =====
-
-    // Izberi naključnega izbiralca med VSEMI igralci v sobi (lahko še izboljšaš, da ne ponavlja prejšnjega)
     function pickRandomChooser(players){
       const ids = Object.keys(players||{});
       if(ids.length===0) return null;
@@ -386,10 +435,10 @@
     async function startRound(){
       const s = await roomRef().once('value'); const r=s.val()||{};
       if((r.status||'lobby')!=='lobby') return;
+      if(r.hostUid !== uid) return alert('Samo gostitelj lahko začne rundo.');
       const players = r.players||{};
       if(Object.keys(players).length < 2) return alert('Premalo igralcev.');
 
-      // naključno izberi izbiralca
       const chooserUid = pickRandomChooser(players);
       if(!chooserUid) return alert('Ni igralcev.');
 
@@ -398,25 +447,51 @@
         chooserUid,
         target: null,
         lastResult: null,
-        roundDeadline: null // nastavimo ob prehodu v guessing
+        roundDeadline: null
       };
-
-      // nastavi vloge
       for(const [pid,p] of Object.entries(players)){
         updates[`players/${pid}/role`] = (pid===chooserUid) ? 'chooser' : 'guesser';
         updates[`players/${pid}/guess`] = null;
         updates[`players/${pid}/distance`] = null;
       }
-
       await roomRef().update(updates);
       alert('Runda začeta. Izbiralec naj klikne na mapo.');
     }
 
-    // Silen zaključek (če kdaj zatakne)
     async function settleNow(){
       const s = await roomRef().once('value'); const r=s.val()||{};
+      if(r.hostUid !== uid) return alert('Samo gostitelj lahko zaključi rundo.');
       if(!r.target) return alert('Ni tarče.');
       await settleRound();
+    }
+
+    // ===== Close room (refund v lobby) =====
+    async function closeRoom(){
+      if(closeBusy) return;
+      closeBusy = true; closeRoomBtn.disabled = true;
+      try{
+        const s = await roomRef().once('value'); const r=s.val();
+        if(!r){ location.href='mapguess.html'; return; }
+        if(r.hostUid !== uid){ alert('Samo gostitelj lahko zapre sobo.'); return; }
+
+        // Če smo v lobbyju, refund vsem plačanim
+        if((r.status||'lobby')==='lobby' && r.players){
+          const refunds = [];
+          for(const [pid,p] of Object.entries(r.players)){
+            if(p.role!=='chooser' && p.paid===true && p.bet>0){
+              const amt = +p.bet;
+              refunds.push(db.ref(`users/${pid}/coins`).transaction(c=>(+c||0)+amt));
+            }
+          }
+          await Promise.all(refunds);
+        }
+
+        await db.ref(`mapguess/rooms/${roomId}`).remove();
+        alert('Soba zaprta.');
+        location.href = 'mapguess.html';
+      } finally {
+        closeBusy = false; closeRoomBtn.disabled = false;
+      }
     }
 
     // ===== Map interakcije =====
@@ -427,26 +502,24 @@
         const imChooser = r.chooserUid===uid;
 
         if(status==='choosing' && imChooser){
-          // izbiralec izbere tarčo
           const { lat, lng } = e.latlng;
           await roomRef().update({
             target: { lat, lng },
             status: 'guessing',
-            roundDeadline: Date.now() + 60_000 // 60s za ugib
+            roundDeadline: Date.now() + 60_000
           });
           alert('Tarča nastavljena. Igralci naj ugibajo.');
         } else if(status==='guessing' && !imChooser){
-          // ugib (en poskus)
           const meSnap = await playersRef().child(uid).once('value');
           const me = meSnap.val()||{};
-          if(me.guess){ alert('Už oddano.'); return; }
-          if(me.paid!==true){ alert('Stava ni oddana.'); return; }
+          if(me.guess){ alert('Že oddano.'); return; }
+          if(me.paid!==true){ alert('Najprej stavi.'); return; }
           if(!r.target){ alert('Tarča še ni nastavljena.'); return; }
           const { lat, lng } = e.latlng;
           const dist = Math.round(haversine(lat,lng,r.target.lat,r.target.lng));
           await playersRef().child(uid).update({ guess: {lat,lng}, distance: dist });
           L.marker([lat,lng], {title:'Moj ugib'}).addTo(map);
-          // če so vsi plačani ugibali -> settle
+
           const allPaid = Object.entries(r.players||{}).filter(([,p])=>p.role!=='chooser' && p.paid===true);
           const guessed  = allPaid.filter(([,p])=>p.guess);
           if(allPaid.length>0 && allPaid.length===guessed.length){
@@ -455,7 +528,7 @@
         }
       });
 
-      // watchdog za časovni rok
+      // deadline watchdog
       setInterval(async ()=>{
         const s = await roomRef().once('value'); const r=s.val()||{};
         if((r.status||'')!=='guessing') return;
@@ -471,7 +544,6 @@
       const players = r.players||{};
       if(!r.target){ return; }
 
-      // Najdi zmagovalca med guesserji, ki so plačali IN oddali ugib
       let winners = [];
       let best = Infinity;
       for(const [pid,p] of Object.entries(players)){
@@ -490,16 +562,14 @@
         }
       }
 
-      // zapiši rezultat za prikaz v lobbyju
       await roomRef().update({
         lastResult: { winners, best, pot, endedAt: Date.now() },
         status: 'lobby',
         pot: 0,
         chooserUid: null,
-        target: r.target // pustimo, da se lahko pokaže na kartici rezultatov (vidno po rundi)
+        target: r.target
       });
 
-      // resetiraj plačila/ugibe
       const upd = {};
       for(const [pid,p] of Object.entries(players)){
         if(p.role!=='chooser'){
@@ -508,7 +578,7 @@
         }
         upd[`players/${pid}/guess`] = null;
         upd[`players/${pid}/distance`] = null;
-        upd[`players/${pid}/role`] = 'guesser'; // vrni vse nazaj na guesser
+        upd[`players/${pid}/role`] = 'guesser';
       }
       await roomRef().update(upd);
 
@@ -528,7 +598,6 @@
           <div class="pill">Zaključeno: ${new Date(res.endedAt||Date.now()).toLocaleTimeString()}</div>
         </div>
       `;
-      // Po rundi lahko pokažemo tarčo kot majhen marker (za preglednost)
       if(target?.lat){
         if(targetMarker){ map.removeLayer(targetMarker); }
         targetMarker = L.marker([target.lat,target.lng], {title:'Tarča (prejšnja)'}).addTo(map);
