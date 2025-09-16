@@ -130,17 +130,10 @@
         <h2>🔧 ADMIN</h2>
         <div class="tag">Ti si edini admin (dokler ne klikneš “Ponastavi admin”)</div>
         <div class="stack" style="margin-top:8px">
-          <label>Jackpot: <input id="cfgJackpot" type="number" step="1" min="0" value="10000"></label>
+          <label>Jackpot (seed): <input id="cfgJackpot" type="number" step="1" min="0" value="10000"></label>
           <label>Prodaja do (ISO ali epoch ms): <input id="cfgSalesEnd" type="text" placeholder="2025-09-30T20:00:00Z"></label>
           <label>Cene (1/3/5/7): <input id="cfgPrices" type="text" placeholder="100,250,400,500"></label>
           <label>Deleži % (7,6,5,4,3,J2,J1): <input id="cfgPayouts" type="text" placeholder="70,10,5,3,2,8,2"></label>
-          <!-- NOVO: iz česa se računa izplačila -->
-          <label>Osnova izplačil:
-            <select id="cfgPayoutBase">
-              <option value="revenue">Revenue (vplačila) – priporočeno</option>
-              <option value="jackpot">Jackpot (fiksni znesek)</option>
-            </select>
-          </label>
           <div class="row">
             <button id="saveCfg" class="ok" type="button">Shrani nastavitve</button>
             <button id="closeSales" class="warn" type="button">Zaključi prodajo</button>
@@ -154,11 +147,9 @@
 
       <h3>Pravila (povzetek)</h3>
       <div class="stack">
-        <div>• Izbereš 7 števil med 1–39 in 2 Joker števki (0–9).</div>
-        <div>• Paketi: 1, 3, 5, 7 kombinacij; vsaka kombinacija ima iste Joker števke.</div>
-        <div>• Po koncu prodaje admin izvede žreb. Določi se 7 zmagovalnih števil in 2 Joker števki.</div>
-        <div>• Nagrade: deleži osnove (revenue/jackpot) po ujemanju: 7/6/5/4/3 + Joker (J2/J1).</div>
-        <div>• Deleži se <b>delijo med vse dobitne srečke v posameznem tieru</b> (pool sistem).</div>
+        <div>• Pari-mutuel: nagradni sklad = % vplačil v krogu, razdeljen po stopnjah (7/6/5/4/3, Joker J2/J1).</div>
+        <div>• Če <b>ni</b> zmagovalca s 7 številkami, se njihov del prenese (rollover) v naslednji krog.</div>
+        <div>• Paketi: 1, 3, 5, 7 kombinacij; Joker sta 2 števki (0–9).</div>
       </div>
     </aside>
   </main>
@@ -166,6 +157,10 @@
   <footer>© Loterija • Kovanci se črpajo iz <code>users/{uid}/coins</code>. Transakcije so atomarne (<i>transaction</i>).</footer>
 
   <script>
+    // ===== Konstante =====
+    // Kolikšen % vplačil gre v nagradni sklad (pari-mutuel): 1.0 = 100%
+    const PRIZE_FUND = 1.0;
+
     // ===== Firebase init =====
     const firebaseConfig = {
       apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
@@ -220,7 +215,6 @@
     const closeSalesBtn = document.getElementById('closeSales');
     const drawNowBtn = document.getElementById('drawNow');
     const resetAdminBtn = document.getElementById('resetAdmin');
-    const cfgPayoutBaseSel = document.getElementById('cfgPayoutBase');
 
     // ===== Default config =====
     const defaultConfig = {
@@ -229,10 +223,9 @@
       jokerDigits: 2,
       prices: { "1": 100, "3": 250, "5": 400, "7": 500 },
       payoutPercents: { "7": 70, "6": 10, "5": 5, "4": 3, "3": 2, "J2": 8, "J1": 2 },
-      jackpot: 10000,
+      jackpot: 10000,                 // seed, prikaže se na začetku kroga
       salesEndTs: Date.now() + 3600_000,
-      // NOVO: osnova izplačil
-      payoutBase: 'revenue'
+      prizeFundPercent: PRIZE_FUND
     };
 
     // ===== State =====
@@ -245,14 +238,14 @@
     let myCombos = [];               // paket za nakup
     let selected = new Set();        // izbrane številke
 
-    // --- per-round reference (za odklop) ---
+    // per-round reference (za odklop)
     let perRoundRefs = { draw: null, myTickets: null };
     function offOurPerRound() {
       if (perRoundRefs.draw)     { perRoundRefs.draw.off();     perRoundRefs.draw = null; }
       if (perRoundRefs.myTickets){ perRoundRefs.myTickets.off(); perRoundRefs.myTickets = null; }
     }
 
-    // --- ANTI-STALE GUARD ---
+    // ANTI-STALE GUARD
     let currentStatusSafe = 'selling';
 
     // ===== Helpers =====
@@ -326,21 +319,29 @@
       bindPerRoundStreams();
     });
 
+    // Ustvari/prevzemi trenutni krog; vključi rollover in resetiraj ga
     async function ensureCurrentDraw(drawId){
       if(!drawId){
+        // preberi rollover iz prejšnjih krogov
+        const rollSnap = await db.ref('lottery/rolloverJackpot').once('value');
+        const rollover = +rollSnap.val() || 0;
+
         const id = 'draw_'+Date.now();
         const base = {
           status:'selling', createdAt:Date.now(),
-          jackpot: cfg.jackpot,
+          jackpot: (cfg.jackpot||0) + rollover,
           salesEndTs: cfg.salesEndTs,
           prices: cfg.prices,
           payoutPercents: cfg.payoutPercents,
           numbersCount: cfg.numbersCount, maxNumber: cfg.maxNumber, jokerDigits: cfg.jokerDigits,
-          totals:{ revenue:0, tickets:0, combos:0 },
-          payoutBase: cfg.payoutBase  // NOVO
+          totals:{ revenue:0, tickets:0, combos:0 }
         };
         await db.ref(`lottery/draws/${id}`).set(base);
         await db.ref('lottery/currentDrawId').set(id);
+
+        // rollover vključen -> reset
+        await db.ref('lottery/rolloverJackpot').set(0);
+
         currentDrawId = id;
       } else {
         currentDrawId = drawId;
@@ -356,14 +357,13 @@
         cfgSalesEnd.value = cfg.salesEndTs;
         cfgPrices.value = `${cfg.prices["1"]},${cfg.prices["3"]},${cfg.prices["5"]},${cfg.prices["7"]}`;
         const p = cfg.payoutPercents; cfgPayouts.value = `${p["7"]},${p["6"]},${p["5"]},${p["4"]},${p["3"]},${p["J2"]},${p["J1"]}`;
-        if (cfgPayoutBaseSel) cfgPayoutBaseSel.value = cfg.payoutBase || 'revenue';
       }
     }
 
     function attachLive(){
       db.ref(`lottery/draws/${currentDrawId}`).on('value', snap=>{
         const d = snap.val(); if(!d) return;
-        drawStatus.textContent = d.status;
+        drawStatus.textContent = d.status || '-';
         jackpotNow.textContent = fmt(d.jackpot||0);
         salesEndTxt.textContent = iso(d.salesEndTs || 0);
         salesTotal.textContent = fmt(d.totals?.revenue||0);
@@ -585,8 +585,7 @@
         jackpot: +cfgJackpot.value||0,
         salesEndTs: isNaN(+cfgSalesEnd.value) ? Date.parse(cfgSalesEnd.value) : +cfgSalesEnd.value,
         prices: { "1":pricesArr[0]||100, "3":pricesArr[1]||250, "5":pricesArr[2]||400, "7":pricesArr[3]||500 },
-        payoutPercents: { "7":payoutsArr[0]||70, "6":payoutsArr[1]||10, "5":payoutsArr[2]||5, "4":payoutsArr[3]||3, "3":payoutsArr[4]||2, "J2":payoutsArr[5]||8, "J1":payoutsArr[6]||2 },
-        payoutBase: (cfgPayoutBaseSel?.value) || 'revenue'
+        payoutPercents: { "7":payoutsArr[0]||70, "6":payoutsArr[1]||10, "5":payoutsArr[2]||5, "4":payoutsArr[3]||3, "3":payoutsArr[4]||2, "J2":payoutsArr[5]||8, "J1":payoutsArr[6]||2 }
       };
       await db.ref(`lottery/draws/${currentDrawId}`).update(newCfg);
       await db.ref('lottery/config').update(newCfg);
@@ -639,27 +638,34 @@
         results[tid] = { perComboHits, best, jokerTier: jt };
       }
 
-      // 3) Izračun nagrad – OSNOVA: revenue ali jackpot
+      // 3) Izračun nagrad – pari-mutuel iz vplačil + rollover top tierja
       const P = d.payoutPercents || defaultConfig.payoutPercents;
-      const basePool = (d.payoutBase || defaultConfig.payoutBase) === 'revenue'
-        ? (d.totals?.revenue || 0)
-        : (+d.jackpot || 0);
+      const revenue = +((d.totals && d.totals.revenue) || 0);
+      const basePool = Math.floor(revenue * PRIZE_FUND);
 
       const payouts = {};
       let totalPaid = 0;
+      let unclaimedTop = 0; // del za rollover, če ni zmagovalca 7
 
       function payTier(tier){
-        const perc = +P[tier]||0;
-        if(perc<=0) return;
-        const pool = Math.floor(basePool * (perc/100));
+        const perc = +P[tier] || 0;
+        if (perc <= 0) return;
+
+        const pool = Math.floor(basePool * (perc / 100));
         const winners = tiers[tier].length;
-        if(winners<=0) return;
+
+        if (winners <= 0) {
+          if (tier === '7') unclaimedTop += pool; // rollover del
+          return;
+        }
+
         const each = Math.max(0, Math.floor(pool / winners));
-        for(const tid of tiers[tier]){
-          payouts[tid] = (payouts[tid]||0) + each;
+        for (const tid of tiers[tier]) {
+          payouts[tid] = (payouts[tid] || 0) + each;
           totalPaid += each;
         }
       }
+
       ['7','6','5','4','3','J2','J1'].forEach(payTier);
 
       // 4) Zapiši rezultate in izplačaj
@@ -673,9 +679,15 @@
       updates[`lottery/draws/${currentDrawId}/paidTotal`] = totalPaid;
       await db.ref().update(updates);
 
+      // izplačila kovancev
       for(const [tid,t] of Object.entries(tickets)){
         const win = payouts[tid]||0; if(win<=0) continue;
         await db.ref(`users/${t.uid}/coins`).transaction(c => (+c||0) + win);
+      }
+
+      // rollover za top-tier, če ni bilo zmagovalcev 7
+      if (unclaimedTop > 0) {
+        await db.ref('lottery/rolloverJackpot').transaction(x => (+x||0) + unclaimedTop);
       }
 
       await db.ref(`lottery/draws/${currentDrawId}/status`).set('paid');
@@ -684,20 +696,26 @@
       // Nov krog
       const createNew = confirm('Ustvarim nov krog za prodajo?');
       if(createNew){
+        // preberi rollover (morda smo ga pravkar povečali)
+        const rollSnap = await db.ref('lottery/rolloverJackpot').once('value');
+        const rollover = +rollSnap.val() || 0;
+
         const id = 'draw_'+Date.now();
         const base = {
           status:'selling', createdAt:Date.now(),
-          jackpot: cfg.jackpot, salesEndTs: cfg.salesEndTs,
+          jackpot: (cfg.jackpot||0) + rollover,
+          salesEndTs: cfg.salesEndTs,
           prices: cfg.prices, payoutPercents: cfg.payoutPercents,
           numbersCount: cfg.numbersCount, maxNumber: cfg.maxNumber, jokerDigits: cfg.jokerDigits,
-          totals:{ revenue:0, tickets:0, combos:0 },
-          payoutBase: cfg.payoutBase // NOVO
+          totals:{ revenue:0, tickets:0, combos:0 }
         };
         await db.ref(`lottery/draws/${id}`).set(base);
         await db.ref('lottery/currentDrawId').set(id);
+        // rollover vključen -> reset
+        await db.ref('lottery/rolloverJackpot').set(0);
+
         currentDrawId = id;
         drawIdEl.textContent = id;
-        // currentDrawId listener bo rebindal UI in nastavil status
       }
     };
 
