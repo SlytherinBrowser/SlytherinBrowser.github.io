@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sl">
 <head>
@@ -44,6 +43,7 @@
     .pill{font-size:12px;padding:3px 8px;border-radius:999px;background:#18244a;border:1px solid #2a3c77}
     .oktxt{color:#20c997}
     .badtxt{color:#ef476f}
+    .hidden{display:none}
   </style>
 </head>
 <body>
@@ -236,6 +236,13 @@
     let myCombos = [];               // trenutni paket za nakup
     let selected = new Set();        // izbrane številke za 1 kombinacijo
 
+    // --- ADD: naše "odklopljive" per-round reference (ne posega v obstoječe) ---
+    let perRoundRefs = { draw: null, myTickets: null };
+    function offOurPerRound() {
+      if (perRoundRefs.draw)     { perRoundRefs.draw.off();     perRoundRefs.draw = null; }
+      if (perRoundRefs.myTickets){ perRoundRefs.myTickets.off(); perRoundRefs.myTickets = null; }
+    }
+
     // ===== Helpers =====
     const $ = (n)=>document.querySelector(n);
     function fmt(n){ return (Math.round(n)||0).toString(); }
@@ -249,8 +256,8 @@
     function requiredCount(){ return +bundleSel.value || 1; }   // koliko kombinacij zahteva izbrani paket
     function syncAddBtn(){
       addComboBtn.disabled = (myCombos.length >= requiredCount());
-      bundleCountEl.textContent = requiredCount();
-      comboCountEl.textContent  = myCombos.length;
+      if (document.getElementById('bundleCount')) document.getElementById('bundleCount').textContent = requiredCount();
+      if (comboCountEl) comboCountEl.textContent  = myCombos.length;
     }
     function clearSelectionUI(){
       selected.clear();
@@ -280,6 +287,24 @@
       attachLive();
       renderNumbers();
       updateBundlePrice();
+
+      // --- ADD: realtime poslušalec na currentDrawId (brez refresh novi krog) ---
+      db.ref('lottery/currentDrawId').on('value', async (snap) => {
+        const newId = snap.val();
+        if (!newId) return;
+        if (currentDrawId !== newId) {
+          currentDrawId = newId;
+          drawIdEl.textContent = currentDrawId;
+          // preveži NAŠE stream-e in resetiraj nakup UI
+          bindPerRoundStreams();
+          try {
+            if (document.hasFocus()) alert('Nov krog je aktiven! Nakup je spet omogočen.');
+          } catch(_) {}
+        }
+      });
+
+      // po začetnem nalaganju preveži naše stream-e
+      bindPerRoundStreams();
     });
 
     async function ensureCurrentDraw(drawId){
@@ -609,7 +634,7 @@
       await db.ref(`lottery/draws/${currentDrawId}/status`).set('paid');
       alert(`Žreb opravljen. Izplačano skupaj: ${fmt(totalPaid)} kovancev.`);
 
-      // Nov krog
+      // Nov krog (admin)
       const createNew = confirm('Ustvarim nov krog za prodajo?');
       if(createNew){
         const id = 'draw_'+Date.now();
@@ -624,6 +649,7 @@
         await db.ref('lottery/currentDrawId').set(id);
         currentDrawId = id;
         drawIdEl.textContent = id;
+        // naši streami se bodo avtomatsko prevezali preko listenerja na currentDrawId
       }
     };
 
@@ -635,6 +661,62 @@
       alert('Admin ponastavljen.');
       adminBox.classList.add('hidden');
     };
+
+    // --- ADD: preveži NAŠE stream-e na trenutni krog in osveži UI ---
+    function bindPerRoundStreams() {
+      if (!currentDrawId || !uid) return;
+
+      // 1) odklopi stare (samo naši)
+      offOurPerRound();
+
+      // 2) reset nakup UI (nov krog vibe)
+      myCombos = [];
+      if (typeof renderComboPreview === 'function') renderComboPreview();
+      if (typeof clearSelectionUI === 'function') clearSelectionUI();
+      addComboBtn.disabled = false;
+      if (typeof syncAddBtn === 'function') syncAddBtn();
+      if (typeof updateBundlePrice === 'function') updateBundlePrice();
+
+      // 3) lightweight status runde (naši)
+      perRoundRefs.draw = db.ref(`lottery/draws/${currentDrawId}`);
+      perRoundRefs.draw.on('value', snap => {
+        const d = snap.val() || {};
+        drawStatus.textContent = d.status || '-';
+        jackpotNow.textContent = (Math.round(d.jackpot || 0)).toString();
+        salesEndTxt.textContent = (d.salesEndTs ? new Date(+d.salesEndTs).toLocaleString() : '-');
+      });
+
+      // 4) NAŠ live seznam mojih srečk za NOVI krog
+      perRoundRefs.myTickets = db
+        .ref(`lottery/tickets/${currentDrawId}`)
+        .orderByChild('uid').equalTo(uid);
+
+      perRoundRefs.myTickets.on('value', snap => {
+        const data = snap.val() || {};
+        myTickets.innerHTML = '';
+        Object.entries(data)
+          .sort((a,b)=>(a[1].purchasedAt||0)-(b[1].purchasedAt||0))
+          .forEach(([tid,t])=>{
+            const payout = t.payoutTotal || 0;
+            const res = t.result;
+            const statusTag = res
+              ? `<span class="pill ${payout>0?'oktxt':'badtxt'}">${payout>0?('Dobitek: '+payout):'Brez dobitka'}</span>`
+              : `<span class="pill">Čakanje žreba</span>`;
+            const div = document.createElement('div');
+            div.className='kv';
+            div.innerHTML = `
+              <div>
+                <div class="muted">Srečka ${tid.slice(-6)}</div>
+                <div>Kombinacije: ${t.combos.map(c=>c.nums.join('-')).join(' | ')}</div>
+                <div>Joker: ${(t.joker||[]).join('')}</div>
+                <div class="muted">Cena: ${t.price||0} • Kupljeno: ${new Date(t.purchasedAt||0).toLocaleString()}</div>
+              </div>
+              <div>${statusTag}</div>
+            `;
+            myTickets.appendChild(div);
+          });
+      });
+    }
   </script>
 </body>
 </html>
