@@ -44,25 +44,46 @@
       camera-controls: true;
     }
 
-    input, button {
+    input, button, progress {
       margin-top: 10px;
       padding: 8px;
       font-size: 16px;
     }
+
+    #uploadStatus {
+      font-size: 14px;
+      opacity: 0.85;
+    }
   </style>
+
+  <!-- Firebase compat SDK-ji -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 </head>
 <body>
 
 <h2>Ustvari svoj avatar</h2>
+
+<!-- Ready Player Me -->
 <iframe id="rpm-frame" src="https://readyplayer.me/avatar?frameApi" allow="camera *; microphone *;"></iframe>
 
 <div id="avatarDisplay"></div>
 
+<!-- Ročni vnos URL-ja -->
 <input type="text" id="linkInput" placeholder="Vnesi avatar URL ročno">
-<button onclick="shraniAvatar()">Shrani ročno</button>
+<button id="saveUrlBtn">Shrani ročno</button>
+
+<!-- LOKALNA DATOTEKA: GLB/GLTF/VRM → Upload v Firebase Storage -->
+<div id="localUpload">
+  <input type="file" id="fileInput" accept=".glb,.gltf,.vrm,model/gltf-binary,model/gltf+json">
+  <button id="uploadBtn">Naloži GLB in shrani</button>
+  <div>
+    <progress id="uploadProgress" value="0" max="100" style="width: 260px;"></progress>
+    <span id="uploadStatus"></span>
+  </div>
+</div>
 
 <script>
   const firebaseConfig = {
@@ -77,7 +98,18 @@
 
   firebase.initializeApp(firebaseConfig);
 
-  // poslušaj spremembo stanja avtentikacije
+  const db = firebase.database();
+  const storage = firebase.storage();
+
+  // UI elementi
+  const frame = document.getElementById("rpm-frame");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const fileInput = document.getElementById("fileInput");
+  const uploadProgress = document.getElementById("uploadProgress");
+  const uploadStatus = document.getElementById("uploadStatus");
+  const saveUrlBtn = document.getElementById("saveUrlBtn");
+
+  // Avtentikacija (anonimno, če ni prijave)
   firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
       console.log("✅ Prijavljen:", user.uid);
@@ -93,8 +125,7 @@
     }
   });
 
-  const frame = document.getElementById("rpm-frame");
-
+  // Ready Player Me – poslušaj export dogodke
   frame.addEventListener("load", () => {
     frame.contentWindow.postMessage(
       JSON.stringify({
@@ -118,7 +149,7 @@
         const user = firebase.auth().currentUser;
         if (user) {
           const userId = user.uid;
-          await firebase.database().ref("users/" + userId).update({
+          await db.ref("users/" + userId).update({
             avatarURL2: avatarUrl
           });
           prikaziAvatar(avatarUrl);
@@ -129,21 +160,24 @@
     }
   });
 
+  // Ročno shranjevanje URL-ja
+  saveUrlBtn.addEventListener("click", shraniAvatar);
   async function shraniAvatar() {
     const avatarUrl = document.getElementById("linkInput").value.trim();
     const user = firebase.auth().currentUser;
     if (user && avatarUrl) {
       const userId = user.uid;
-      await firebase.database().ref("users/" + userId).update({
+      await db.ref("users/" + userId).update({
         avatarURL2: avatarUrl
       });
       prikaziAvatar(avatarUrl);
     }
   }
 
+  // BRANJE iz baze in prikaz
   async function preberiInPrikaziAvatar(userId) {
     try {
-      const snapshot = await firebase.database().ref("users/" + userId + "/avatarURL2").get();
+      const snapshot = await db.ref("users/" + userId + "/avatarURL2").get();
       if (snapshot.exists()) {
         const avatarUrl = snapshot.val();
         console.log("Prebran avatar URL:", avatarUrl);
@@ -156,34 +190,116 @@
     }
   }
 
-  function prikaziAvatar(url) {
-  document.getElementById("avatarDisplay").innerHTML = `
-    <h3>Tvoj avatar:</h3>
-    <div class="viewer-wrapper">
-      <model-viewer src="${url}" camera-controls auto-rotate
-        disable-zoom disable-pan disable-tap
-        min-camera-orbit="auto 90deg auto"
-        max-camera-orbit="auto 90deg auto">
-      </model-viewer>
+  // LOKALNI UPLOAD: GLB → Firebase Storage → URL v bazo
+  uploadBtn.addEventListener("click", naloziGLB);
+  async function naloziGLB() {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) {
+      alert("Izberi .glb / .gltf / .vrm datoteko.");
+      return;
+    }
 
-      <div class="round">
-  <model-viewer
-    src="${url}"
-    camera-controls
-    auto-rotate
-    disable-zoom
-    disable-pan
-    disable-tap
-    min-camera-orbit="0deg 90deg 0.80m"
-    max-camera-orbit="360deg 90deg 0.65m"
-    camera-target="0m 1.70m 0m"
-    field-of-view="20deg"
-    ar
-    style="width: 100%; height: 100%;">
-  </model-viewer>
-</div>
-  `;
-}
+    // Osnovna validacija
+    const allowedTypes = [
+      "model/gltf-binary",
+      "model/gltf+json",
+      "application/octet-stream"
+    ];
+    const ext = file.name.toLowerCase().split(".").pop();
+    const isExtOk = ["glb", "gltf", "vrm"].includes(ext);
+    const isTypeOk = allowedTypes.includes(file.type) || isExtOk;
+
+    if (!isExtOk && !isTypeOk) {
+      alert("Datoteka mora biti .glb, .gltf ali .vrm.");
+      return;
+    }
+
+    // npr. omejitev velikosti 100 MB
+    const MAX_SIZE = 100 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      alert("Datoteka je prevelika (max 100 MB).");
+      return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Uporabnik ni prijavljen.");
+      return;
+    }
+
+    try {
+      uploadProgress.value = 0;
+      uploadStatus.textContent = "Priprava nalaganja…";
+
+      const userId = user.uid;
+      const filenameSafe = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `avatars/${userId}/${Date.now()}-${filenameSafe}`;
+      const ref = storage.ref().child(path);
+
+      const metadata = {
+        contentType: file.type || "model/gltf-binary",
+        customMetadata: { source: "user-upload" }
+      };
+
+      const task = ref.put(file, metadata);
+
+      task.on(
+        "state_changed",
+        (snap) => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          uploadProgress.value = pct;
+          uploadStatus.textContent = `Nalaganje: ${pct}%`;
+        },
+        (err) => {
+          console.error("Napaka pri nalaganju:", err);
+          uploadStatus.textContent = "Napaka pri nalaganju.";
+          alert("Pri nalaganju je prišlo do napake.");
+        },
+        async () => {
+          const downloadURL = await ref.getDownloadURL();
+          uploadStatus.textContent = "Shranjujem URL v bazo…";
+          await db.ref("users/" + userId).update({ avatarURL2: downloadURL });
+          uploadStatus.textContent = "Končano. Avatar posodobljen.";
+          prikaziAvatar(downloadURL);
+        }
+      );
+    } catch (e) {
+      console.error(e);
+      uploadStatus.textContent = "Napaka.";
+      alert("Nalaganje ni uspelo.");
+    }
+  }
+
+  // Prikaz v model-viewer
+  function prikaziAvatar(url) {
+    document.getElementById("avatarDisplay").innerHTML = `
+      <h3>Tvoj avatar:</h3>
+      <div class="viewer-wrapper">
+        <model-viewer src="${url}" camera-controls auto-rotate
+          disable-zoom disable-pan disable-tap
+          min-camera-orbit="auto 90deg auto"
+          max-camera-orbit="auto 90deg auto">
+        </model-viewer>
+
+        <div class="round">
+          <model-viewer
+            src="${url}"
+            camera-controls
+            auto-rotate
+            disable-zoom
+            disable-pan
+            disable-tap
+            min-camera-orbit="0deg 90deg 0.80m"
+            max-camera-orbit="360deg 90deg 0.65m"
+            camera-target="0m 1.70m 0m"
+            field-of-view="20deg"
+            ar
+            style="width: 100%; height: 100%;">
+          </model-viewer>
+        </div>
+      </div>
+    `;
+  }
 </script>
 
 </body>
