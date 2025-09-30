@@ -1,0 +1,270 @@
+/* =========================
+   FUTURISTIC 3D / NEON UI
+   Complete redesign of the provided stylesheet
+   - Glassmorphism + neon cyber lines
+   - 3D transforms & micro-interactions
+   - Smooth animations with motion-safe fallbacks
+   - Consistent variables, adaptive to light/dark
+   ========================= */
+
+/* ---------- CSS VARIABLES ---------- */
+:root{
+  --bg1:#0b0f1c;              /* deep space */
+  --bg2:#10152b;              /* nebula */
+  --accent:#7afcff;           /* cyan glow */
+  --accent-2:#ff71f6;         /* magenta */
+  --accent-3:#8cff61;         /* neon green */
+  --text:#e5f0ff;             /* primary text */
+  --muted:#9bb0c9;            /* secondary text */
+  --card:rgba(255,255,255,.06);/* glass layer */
+  --stroke:rgba(122,252,255,.35);
+  --shadow:0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(122,252,255,.05) inset;
+  --glow:0 0 20px var(--accent), 0 0 40px rgba(122,252,255,.4);
+  --radius:16px;
+  --blur:18px;
+  --speed:260ms;
+}
+
+@media (prefers-color-scheme: light){
+  :root{ --bg1:#eef3ff; --bg2:#dfe7ff; --text:#0b0f1c; --muted:#2c3e57; --card:rgba(0,0,0,.06); --stroke:rgba(10,20,40,.16); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+}
+
+/* ---------- GLOBAL RESET & SCENE ---------- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  color:var(--text);
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 800px at 10% 10%, rgba(122,252,255,.08), transparent 60%),
+              radial-gradient(900px 700px at 90% 20%, rgba(255,113,246,.08), transparent 60%),
+              linear-gradient(135deg, var(--bg1), var(--bg2));
+  display:flex; align-items:center; justify-content:center;
+  perspective: 1200px; /* enable 3D stage */
+  overflow:hidden;
+}
+
+/* Ambient animated grid */
+body::before{
+  content:""; position:fixed; inset:-5%; pointer-events:none; opacity:.25;
+  background: linear-gradient(transparent 95%, rgba(122,252,255,.35) 100%),
+              linear-gradient(90deg, transparent 95%, rgba(122,252,255,.35) 100%);
+  background-size: 40px 40px, 40px 40px;
+  filter: drop-shadow(0 0 8px rgba(122,252,255,.3));
+  animation: gridShift 14s linear infinite;
+}
+@keyframes gridShift{ from{ transform:translate3d(0,0,0) rotateX(35deg); } to{ transform:translate3d(-40px,-40px,0) rotateX(35deg);} }
+
+/* Subtle star noise */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; mix-blend-mode:soft-light; opacity:.25;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.05"/></svg>');
+}
+
+/* Utility: glass card */
+.glass{
+  background: var(--card);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  border:1px solid var(--stroke);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* Utility: neon button base */
+.neon-btn{
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  padding:12px 18px; border-radius:12px; border:1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  color:var(--text); text-shadow:0 0 6px rgba(122,252,255,.35);
+  cursor:pointer; transition: transform var(--speed) ease, box-shadow var(--speed) ease, border-color var(--speed) ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  transform-style: preserve-3d;
+}
+.neon-btn::before{
+  content:""; position:absolute; inset:-2px; border-radius:inherit; pointer-events:none;
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  filter: blur(12px); opacity:.35; z-index:-1; transition:opacity var(--speed);
+}
+.neon-btn:hover{ transform: translateY(-2px) rotateX(6deg); box-shadow: var(--glow); border-color: rgba(255,255,255,.5); }
+.neon-btn:active{ transform: translateY(0) scale(.98); }
+
+/* Hidden audio player */
+#backgroundMusic{ display:none; }
+
+/* ---------- TEXT INPUTS / TEXTAREA ---------- */
+textarea, input[type="text"], input[type="search"], #fileInput, #urlInput{
+  width:100%; color:var(--text); border-radius:14px; border:1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  padding:18px; outline:none; transition: border-color var(--speed), transform var(--speed), box-shadow var(--speed);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.25);
+}
+textarea{ height: 90px; resize:none; }
+textarea:focus, input:focus{ border-color: rgba(255,255,255,.6); box-shadow: var(--glow); transform: translateZ(8px); }
+
+label{ color:var(--muted); font-weight:600; letter-spacing:.02em; }
+.bold{ font-weight:800; }
+
+/* ---------- MODAL ---------- */
+.modal{ position:fixed; inset:0; display:none; place-items:center; z-index:1000; padding:24px;
+  background: radial-gradient(800px 400px at 50% 60%, rgba(122,252,255,.08), transparent 60%),
+              rgba(0,0,0,.55);
+}
+.modal[open], .modal.show{ display:grid; }
+.modal-content{ width:min(560px, 92vw); transform: translateY(24px) scale(.96) rotateX(-8deg);
+  transition: transform var(--speed) ease; }
+.modal-content.show{ transform: translateY(0) scale(1) rotateX(0); }
+
+.modal-content{ padding:24px; }
+.modal-content.glass{}
+
+.close{ font-size:22px; font-weight:800; color:var(--muted); cursor:pointer; border:none; background:transparent; }
+.close:hover{ color:var(--text); filter:drop-shadow(0 0 6px rgba(255,255,255,.35)); }
+
+.modal-actions{ display:flex; gap:12px; justify-content:space-between; align-items:center; margin-top:16px; }
+.modal-actions button{ composes: neon-btn; }
+.modal-actions button, .modal-actions .cancel{ all:unset; }
+.modal-actions button, .modal-actions .cancel{ display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border-radius:12px; }
+.modal-actions button{ background:linear-gradient(180deg, rgba(122,252,255,.18), rgba(255,255,255,.02)); border:1px solid var(--stroke); }
+.modal-actions .cancel{ background:linear-gradient(180deg, rgba(255,113,246,.18), rgba(255,255,255,.02)); border:1px solid rgba(255,113,246,.35); color:#fff; }
+.modal-actions button:hover{ box-shadow: var(--glow); transform: translateY(-2px); }
+.modal-actions .cancel:hover{ box-shadow: 0 0 20px rgba(255,113,246,.45), 0 0 40px rgba(255,113,246,.25); transform: translateY(-2px); }
+
+/* ---------- BUTTONS (IDs preserved) ---------- */
+#clickButton, #backupButton, #chatButton, .preklop, #submitBtn, #buttonkng, #menu, .taskbar-icon, .trigger-button, #closePopup{
+  composes: neon-btn; /* for editors not supporting composes, rules expand below */
+}
+
+/* Expand composes for broad support */
+#clickButton, #backupButton, #chatButton, .preklop, #submitBtn, #buttonkng, #menu, .taskbar-icon, .trigger-button, #closePopup{
+  position:fixed; border-radius:12px; border:1px solid var(--stroke); background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)); color:var(--text);
+}
+#clickButton:hover, #backupButton:hover, #chatButton:hover, .preklop:hover, #submitBtn:hover, #buttonkng:hover, #menu:hover, .taskbar-icon:hover, .trigger-button:hover, #closePopup:hover{
+  box-shadow: var(--glow); transform: translateY(-2px) rotateX(6deg);
+}
+
+/* Positions adjusted in media queries */
+
+/* Icons */
+img.lamp, img.gif{ width:64px; height:64px; filter: drop-shadow(0 8px 16px rgba(0,0,0,.45)); transform: translateZ(12px); }
+
+/* ---------- CHAT POPUP ---------- */
+#chatPopup{ position:fixed; display:none; width:min(360px, 92vw); border-radius:18px; overflow:hidden; z-index:900;
+  box-shadow: var(--shadow), 0 0 30px rgba(122,252,255,.25);
+}
+#chatArea{ padding:12px; max-height: 320px; overflow:auto; font-size:14px; color:var(--text); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); }
+#chatInputArea{ display:flex; align-items:stretch; position:relative; background: linear-gradient(90deg, rgba(122,252,255,.25), rgba(255,113,246,.25)); }
+#chatInput{ flex:1; padding:12px; border:none; color:#fff; background:transparent; }
+#sendButton{ border:none; padding:0 16px; background:transparent; color:#000; }
+#sendButton:hover{ filter: drop-shadow(0 0 8px rgba(255,255,255,.5)); }
+
+/* ---------- SNOWFLAKES -> upgraded to holo particles ---------- */
+.snowflake{ position:absolute; top:-10%; font-size:1.2rem; color:var(--text); opacity:.8; text-shadow:0 0 8px rgba(122,252,255,.6); animation: snowfall 10s linear infinite; }
+@keyframes snowfall{ 0%{ transform: translateY(-10%) translateX(0) rotate(0deg) scale(.8); opacity:1;} 100%{ transform: translateY(110vh) translateX(60px) rotate(360deg) scale(1.1); opacity:.25;} }
+.snowflake:nth-child(odd){ animation-duration:12s; }
+.snowflake:nth-child(even){ animation-duration:8s; }
+
+/* ---------- TOP BAR (hover expandable) ---------- */
+#topBar{ position:fixed; top:110px; inset-inline:auto; width:7.5rem; height:1.2rem; border-radius:999px; background:#000; color:#fff; display:flex; align-items:center; justify-content:center; z-index:990; cursor:pointer;
+  border:1px solid var(--stroke); transition: width var(--speed) .15s, height var(--speed) 0s, transform var(--speed);
+}
+#topBar:hover, #topBar.hover{ width:100%; height:3.2rem; border-radius:12px; box-shadow: var(--glow); transform: translateZ(20px); }
+
+/* ---------- LOGO ---------- */
+#logo{ width:110px; height:110px; margin-bottom:20px; filter: drop-shadow(0 16px 30px rgba(0,0,0,.45)); transform: translateZ(30px) rotateX(6deg); }
+
+/* ---------- SEARCH FORM ---------- */
+#searchForm{ composes: glass; padding:28px; border-radius:20px; transition: transform var(--speed), box-shadow var(--speed); }
+#searchForm:hover{ transform: translateZ(24px) rotateX(4deg); box-shadow: var(--glow); }
+#search{ transition: background var(--speed), transform var(--speed), border-color var(--speed); }
+#search:focus{ border-color:var(--accent); transform: translateZ(10px); }
+
+/* ---------- CONTAINER / DOCK ---------- */
+#container{ position:fixed; bottom:20px; left:50%; transform: translateX(-50%) translateZ(0); width:110px; height:110px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:#fff; background: radial-gradient(circle at 30% 30%, rgba(122,252,255,.35), rgba(255,255,255,.02)); border:1px solid var(--stroke); box-shadow: var(--shadow); overflow:hidden; transition: all .4s ease; }
+#container.dock{ width:340px; height:86px; border-radius:48px; justify-content:space-around; }
+.dock .icon{ width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08); border:1px solid var(--stroke); transition: background var(--speed), transform var(--speed), box-shadow var(--speed); cursor:pointer; }
+.dock .icon:hover{ background:rgba(255,255,255,.18); transform: translateY(-6px) rotateX(10deg); box-shadow: var(--glow); }
+.hidden{ display:none !important; }
+
+#addIconForm{ position:fixed; bottom:120px; left:50%; transform: translateX(-50%); width:min(280px, 90vw); display:none; }
+#addIconForm select, #addIconForm input, #addIconForm button{ margin:6px 0; }
+
+/* ---------- POPUP & OVERLAY ---------- */
+.popup{ position:fixed; inset:auto; display:none; z-index:1000; }
+.overlay{ position:fixed; inset:0; display:none; background:rgba(0,0,0,.55); z-index:998; }
+#closePopup{ border-radius:999px; }
+
+/* ---------- TASKBAR ICON ---------- */
+.taskbar-icon{ display:flex; align-items:center; justify-content:center; box-shadow: var(--shadow); }
+.taskbar-icon svg{ width:60%; height:60%; fill:#fff; transition: transform var(--speed); }
+.taskbar-icon:hover svg{ transform: scale(1.1); }
+
+/* ---------- CALENDAR ---------- */
+.calendar-container{ position:fixed; right:20px; bottom:90px; width:min(360px, 92vw); display:none; }
+.calendar-container.glass{}
+.calendar-header{ background: linear-gradient(135deg, var(--accent-2), var(--accent)); color:#fff; padding:14px 16px; border-top-left-radius:18px; border-top-right-radius:18px; display:flex; align-items:center; justify-content:space-between; box-shadow: var(--shadow); }
+.calendar-header button{ background:none; border:none; color:#fff; font-size:22px; cursor:pointer; transition: transform var(--speed), color var(--speed); }
+.calendar-header button:hover{ color:#000; transform: translateY(-2px) rotateZ(-6deg); }
+.calendar-body{ display:grid; grid-template-columns: repeat(7,1fr); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid var(--stroke); }
+.day{ padding:14px; text-align:center; border-right:1px solid rgba(255,255,255,.04); border-bottom:1px solid rgba(255,255,255,.04); font-weight:600; color:var(--text); cursor:pointer; transition: transform var(--speed), background var(--speed), box-shadow var(--speed); }
+.day:hover{ background:rgba(122,252,255,.08); transform: translateZ(8px) scale(1.05); box-shadow: var(--glow); }
+.today{ background: linear-gradient(135deg, var(--accent-3), var(--accent)); color:#000; border-radius:50%; box-shadow: var(--glow); transform: scale(1.12); }
+.day:nth-child(7n+1){ color:#ff6b6b; }
+.day:nth-child(7n){ color:#64a9ff; }
+.disabled{ background:#f0f0f0; color:#9aa8b8; }
+
+/* ---------- CALCULATOR ---------- */
+.calculator-container{ position:fixed; display:none; z-index:999; padding:22px; border-radius:14px; }
+.calculator-container.glass{}
+#display{ width:100%; padding:16px; font-size:22px; border:none; border-radius:10px; text-align:right; background:rgba(255,255,255,.06); color:var(--text); box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.calculator-container input, .calculator-container select, .calculator-container button{ margin:8px 0; padding:12px; font-size:16px; border-radius:10px; border:1px solid var(--stroke); background: rgba(255,255,255,.06); color:var(--text); transition: transform var(--speed), box-shadow var(--speed); }
+.calculator-container button{ background: linear-gradient(180deg, rgba(122,252,255,.18), rgba(255,255,255,.02)); cursor:pointer; }
+.calculator-container button:hover{ transform: translateY(-2px); box-shadow: var(--glow); }
+
+/* ---------- INLINE TEXT LINK (.p) ---------- */
+.p{ position:fixed; top:0; left:6px; color:#b7c6e6; display:flex; gap:8px; }
+.p:hover{ color:#fff; }
+
+/* ---------- RESPONSIVE LAYOUTS ---------- */
+@media screen and (max-width:700px){
+  body{ align-items:center; justify-content:center; }
+
+  #clickButton{ left:10px; bottom:14%; width:calc(50% - 14px); height:52px; }
+  #backupButton{ right:10px; bottom:14%; width:calc(50% - 14px); height:52px; }
+  #chatButton{ left:10px; bottom:10%; width:calc(50% - 14px); height:48px; }
+  .preklop{ right:10px; bottom:10%; width:calc(50% - 14px); height:48px; }
+  #buttonkng{ right:10px; bottom:6%; width:calc(50% - 14px); height:48px; }
+  #menu{ left:10px; bottom:6%; width:calc(50% - 14px); height:48px; }
+
+  #chatPopup{ right:14px; bottom:24%; }
+  .taskbar-icon{ right:20px; bottom:20px; width:56px; height:56px; }
+  .trigger-button{ left:20px; bottom:20px; width:56px; height:56px; }
+
+  #topBar{ width:5cm; height:1cm; }
+  #topBar:hover, #topBar.hover{ width:100%; height:3cm; }
+
+  .calendar-container{ right:0; width:320px; }
+}
+
+@media screen and (min-width:700px){
+  #clickButton{ right:20px; bottom:80px; width:110px; height:50px; }
+  #chatButton{ left:20px; bottom:80px; width:110px; height:50px; }
+  .preklop{ left:120px; bottom:80px; width:110px; height:50px; }
+  #backupButton{ right:120px; bottom:80px; width:110px; height:50px; }
+
+  #buttonkng{ right:100px; bottom:20px; width:110px; height:50px; }
+  #menu{ left:20px; bottom:20px; width:110px; height:50px; }
+
+  .taskbar-icon{ right:20px; bottom:20px; width:110px; height:50px; }
+  .trigger-button{ left:100px; bottom:20px; width:110px; height:50px; }
+
+  #topBar{ width:2cm; height:.5cm; }
+  #topBar:hover, #topBar.hover{ width:7cm; height:1.5cm; }
+
+  #searchForm{ width:auto; }
+}
