@@ -268,3 +268,132 @@ img.lamp, img.gif{ width:64px; height:64px; filter: drop-shadow(0 8px 16px rgba(
 
   #searchForm{ width:auto; }
 }
+
+/* =====================================================
+   ++ UPGRADE PACK: "ULTRA-RICH / DEEP FUTURISM" ++
+   Dodaje više slojeva, holografske panele, parallax, 
+   plazma-orbove, animirane border-gradient maske, 
+   3D tilt efekte i raskošnije tipografiju.
+   ===================================================== */
+
+/* Dodatne varijable za raskoš / dubinu */
+:root{
+  --glow-strong: 0 0 30px var(--accent), 0 0 70px rgba(122,252,255,.55), 0 0 120px rgba(122,252,255,.35);
+  --shadow-deep: 0 20px 60px rgba(0,0,0,.65), 0 0 0 1px rgba(122,252,255,.08) inset;
+  --ring: conic-gradient(from 0deg, transparent 10%, rgba(122,252,255,.25) 20%, transparent 30%);
+}
+
+/* Višeslojna scena: dodatni parallax slojevi */
+body::before{ opacity:.35; }
+body::after{ opacity:.35; }
+body .parallax-layer{
+  position:fixed; inset:-10%; z-index:-1; pointer-events:none; mix-blend-mode:screen;
+  background: radial-gradient(600px 400px at 20% 80%, rgba(140,255,97,.08), transparent 60%),
+              radial-gradient(800px 600px at 80% 30%, rgba(255,113,246,.08), transparent 60%);
+  animation: drift 30s ease-in-out infinite alternate;
+}
+@keyframes drift{ from{ transform: translate3d(-2%, 1%, 0); } to{ transform: translate3d(2%, -1%, 0);} }
+
+/* Holografski paneli */
+.holo-panel{
+  position:relative; padding:22px; border-radius:16px; color:var(--text);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+  border:1px solid var(--stroke); box-shadow: var(--shadow-deep);
+  backdrop-filter: blur(var(--blur)) saturate(160%);
+}
+.holo-panel::before{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; pointer-events:none;
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding:1px; filter: blur(14px); opacity:.45; animation: hue 6s linear infinite;
+}
+@keyframes hue{ to{ filter:hue-rotate(360deg) blur(14px); } }
+
+/* Neon border utilita */
+.neon-border{ position:relative; border:1px solid var(--stroke); }
+.neon-border::after{
+  content:""; position:absolute; inset:-2px; border-radius:inherit; pointer-events:none;
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  filter: blur(10px); opacity:.5; z-index:-1; animation: spin 10s linear infinite;
+}
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+/* 3D kartice sa odsjajem */
+.card-3d{ composes: glass; position:relative; overflow:hidden; transform-style:preserve-3d; transition: transform 300ms ease, box-shadow 300ms ease; }
+.card-3d:hover{ transform: translateY(-4px) rotateX(6deg) rotateY(-4deg); box-shadow: var(--glow-strong); }
+.card-3d::before{
+  content:""; position:absolute; inset: -20% -20% auto auto; width:60%; height:140%;
+  background: radial-gradient(circle at 30% 30%, rgba(122,252,255,.35), transparent 60%);
+  transform: rotate(25deg) translateZ(20px); filter: blur(12px); opacity:.6;
+}
+
+/* Futuristički heading i gradient text utilita */
+h1,h2,h3{ letter-spacing:.02em; text-transform:none; }
+.gradient-text{ background: linear-gradient(90deg, var(--accent-2), var(--accent), var(--accent-3)); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow: 0 0 24px rgba(122,252,255,.25); }
+
+/* Volumetrijska dugmad */
+.btn-primary, .btn-danger, .btn-ghost{
+  position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.6em;
+  padding:14px 20px; border-radius:14px; border:1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.02));
+  box-shadow: 0 16px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06);
+  transform-style:preserve-3d; transition: transform var(--speed), box-shadow var(--speed), border-color var(--speed);
+}
+.btn-primary{ color:#001216; border-color:rgba(122,252,255,.55); background: linear-gradient(180deg, rgba(122,252,255,.35), rgba(255,255,255,.02)); text-shadow:0 0 8px rgba(122,252,255,.55); }
+.btn-danger{ color:#160010; border-color:rgba(255,113,246,.55); background: linear-gradient(180deg, rgba(255,113,246,.35), rgba(255,255,255,.02)); text-shadow:0 0 8px rgba(255,113,246,.55); }
+.btn-ghost{ color:var(--text); opacity:.9; }
+.btn-primary:hover, .btn-danger:hover, .btn-ghost:hover{ transform: translateY(-3px) translateZ(12px); box-shadow: var(--glow-strong); }
+
+/* Holo-scan linije za elemente koji žele retro-sci-fi look */
+.scanlines{ position:relative; overflow:hidden; }
+.scanlines::after{
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.08; mix-blend-mode:overlay;
+  background: repeating-linear-gradient( to bottom, rgba(255,255,255,.25) 0 1px, transparent 1px 3px );
+  animation: scanMove 5s linear infinite;
+}
+@keyframes scanMove{ to{ transform: translateY(100%); } }
+
+/* Plazma orbovi (dekor) */
+.orb{
+  --size: 140px; --x: 10%; --y: 70%; --c1: 122,252,255; --c2: 255,113,246;
+  position:fixed; left:var(--x); top:var(--y); width:var(--size); height:var(--size); z-index:-1; filter: blur(18px) saturate(120%);
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c1),.7), rgba(var(--c2),.25) 60%, transparent 70%);
+  border-radius:50%; animation: float 10s ease-in-out infinite alternate;
+}
+.orb.small{ --size: 90px; }
+.orb.large{ --size: 220px; }
+@keyframes float{ from{ transform: translate3d(-10px, 6px, 0) scale(.98);} to{ transform: translate3d(10px, -6px, 0) scale(1.04);} }
+
+/* Fancy fokus prsten za inpute */
+input:focus-visible, textarea:focus-visible{ outline:none; box-shadow: var(--glow-strong); border-color: rgba(255,255,255,.75); }
+
+/* Još jači chat i modal efekti */
+#chatPopup{ box-shadow: var(--shadow-deep), 0 0 40px rgba(122,252,255,.35); }
+.modal{ backdrop-filter: blur(12px) brightness(.85); }
+
+/* 3D tilt utilita za bilo koji blok (dodaj class .tilt) */
+.tilt{ transform-style:preserve-3d; transition: transform 300ms ease, box-shadow 300ms ease; }
+.tilt:hover{ transform: rotateX(8deg) rotateY(-6deg) translateZ(14px); box-shadow: var(--glow-strong); }
+
+/* Dinamična aura oko taskbar ikonica */
+.taskbar-icon::before{
+  content:""; position:absolute; inset:-6px; border-radius:16px; opacity:.25; filter: blur(10px);
+  background: conic-gradient(from 0deg, var(--accent), var(--accent-2), var(--accent-3), var(--accent));
+  animation: spin 12s linear infinite;
+}
+
+/* Bonus: utility za layout */
+.stack{ display:flex; flex-direction:column; gap:14px; }
+.row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.center{ display:grid; place-items:center; }
+
+/* Primena na postojeće elemente radi raskoši */
+#searchForm{ border:1px solid rgba(122,252,255,.35); box-shadow: var(--shadow-deep); }
+#container{ box-shadow: var(--shadow-deep); }
+.calendar-header{ box-shadow: var(--shadow-deep); }
+.day:hover{ box-shadow: var(--glow-strong); }
+
+/* Kraj Ultra Pack-a */
+
