@@ -727,189 +727,211 @@ messageInput.placeholder = "Vnesi sporočilo...";
 messageInput.dataset.nameConfirm = "0";
 }
 
-// 🎯 Poslušaj nova sporočila kronološko
-db.ref("messages").orderByChild("timestamp").on("child_added", snapshot => {
-  const msg = snapshot.val();
+// Če še nimaš:
 
+// === DINAMIČNI LISTENER GLEDE NA NAČIN (public vs. kanal) ===
+let currentMessagesRef = null;
 
-  // 🟢 Sistem: zasebno obvestilo
-  if (msg.system && msg.privateUid === currentUser.uid) {
-    const systemDiv = document.createElement("div");
-    systemDiv.style.fontStyle = "italic";
-    systemDiv.style.color = "#90ee90";
-    const senderName = users[msg.uid]?.displayName || "Uporabnik";
-    systemDiv.textContent = `${senderName} ${msg.text}`;
-    chatBox.appendChild(systemDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return;
-  }
+function attachRealtimeMessagesListener() {
+  // določi pot (public ali kanal)
+  const path = (inPrivateChannel && privateChannelId)
+    ? `channelchat_${privateChannelId}`
+    : `messages`;
 
-  // 🟠 Povabilo v klepet
-  if (msg.invite && msg.privateUid === currentUser.uid) {
-    const inviterName = users[msg.uid]?.displayName || "Anonimen";
-    const inviteDiv = document.createElement("div");
-    inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.
-      <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
-    chatBox.appendChild(inviteDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return;
-  }
+  // počisti star listener
+  if (currentMessagesRef) currentMessagesRef.off();
+  chatBox.innerHTML = '';
 
-  // 🔒 Zasebna sporočila
-  if (currentChatPartner) {
-    const isPrivateMatch =
-      (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
-      (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
-    if (!isPrivateMatch) return;
-  } else {
-    if (msg.privateUid) return;
-  }
+  currentMessagesRef = db.ref(path).orderByChild("timestamp");
 
-  // 🪙 Kovanci
-  if (msg.uid === currentUser.uid) {
-    const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
-    userCoinsRef.once('value').then(snapshot => {
-      const currentCoins = snapshot.val() || 0;
-      userCoinsRef.set(currentCoins + 1);
-    });
-  }
+  currentMessagesRef.on("child_added", snapshot => {
+    const msg = snapshot.val();
+    if (!msg) return;
 
-  // 🔧 Nastavitve uporabnika
-  const displayName = userNamesCache[msg.uid] || "Anonimen";
-  const isOnline = userStatusCache[msg.uid]?.online;
-  const color = userColorsCache[msg.uid] || null;
-  const effects = userEffectsCache[msg.uid] || null;
+    // === A) PUBLIC NAČIN: obdelaj system/invite/DM filtre ===
+    if (!(inPrivateChannel && privateChannelId)) {
+      // 🟢 Sistem: zasebno obvestilo (velja le za public "messages")
+      if (msg.system && msg.privateUid === currentUser.uid) {
+        const systemDiv = document.createElement("div");
+        systemDiv.style.fontStyle = "italic";
+        systemDiv.style.color = "#90ee90";
+        const senderName = users[msg.uid]?.displayName || "Uporabnik";
+        systemDiv.textContent = `${senderName} ${msg.text}`;
+        chatBox.appendChild(systemDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return;
+      }
 
-  const div = document.createElement("div");
-div.classList.add("messageContainer");
-div.dataset.key = snapshot.key;
+      // 🟠 Povabilo v klepet (velja le za public "messages")
+      if (msg.invite && msg.privateUid === currentUser.uid) {
+        const inviterName = users[msg.uid]?.displayName || "Anonimen";
+        const inviteDiv = document.createElement("div");
+        inviteDiv.innerHTML = `<strong>${inviterName}</strong> te vabi v zasebni klepet.
+          <button onclick="acceptInvite('${msg.uid}')">Sprejmi</button>`;
+        chatBox.appendChild(inviteDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return;
+      }
 
- const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
-const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
-
-const wrapper = document.createElement("div");
-wrapper.className = "avatar-wrapper";
-wrapper.style.cssText = `
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  overflow: hidden;
-  position: relative;
-  ${isOnline ? "border: 2px solid green;" : ""}
-`;
-
-wrapper.innerHTML = `
-  <model-viewer
-    src="${avatarUrl}"
-    camera-controls
-    auto-rotate
-    disable-zoom
-    disable-pan
-    disable-tap
-    interaction-prompt="none"
-    camera-target="0m 1.6m 0m"
-    min-camera-orbit="0deg 90deg 1.3m"
-    max-camera-orbit="0deg 90deg 1.3m"
-    field-of-view="20deg"
-    style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
-  </model-viewer>
-`;
-
-
-wrapper.addEventListener("click", () => {
-  prepareReply(msg, snapshot.key, div);
-});
-
-div.appendChild(wrapper);
-
-// Ime pošiljatelja
-const senderSpan = document.createElement("span");
-senderSpan.classList.add("sender");
-
-if (color === "none") {
-  senderSpan.style.display = "none";
-} else if (color === "rainbow") {
-  senderSpan.classList.add("rainbow");
-} else if (color) {
-  senderSpan.style.color = color;
-}
-
-if (effects === "hacker") {
-  senderSpan.classList.add("hackerEffect");
-}
-
-senderSpan.textContent = displayName + ": ";
-
-// Dodaj v sporočilo
-div.appendChild(wrapper);
-div.appendChild(senderSpan);
-if (msg.replyTo) {
-  const replyBox = document.createElement("div");
-  replyBox.classList.add("replyBox");
-  replyBox.style.borderLeft = "3px solid #888";
-  replyBox.style.background = "#f9f9f9";
-  replyBox.style.padding = "6px 10px";
-  replyBox.style.marginBottom = "6px";
-  replyBox.style.fontSize = "13px";
-  replyBox.style.color = "#555";
-  replyBox.style.cursor = "pointer";
-  replyBox.style.borderRadius = "6px";
-
-  // Samo preview, brez imena
-  replyBox.textContent = msg.replyTo.preview;
-
-  replyBox.addEventListener("click", () => {
-    const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
-    if (original) {
-      original.scrollIntoView({ behavior: "smooth", block: "center" });
-
-      original.classList.add("blink");
-      setTimeout(() => {
-        original.classList.remove("blink");
-      }, 1500);
+      // 🔒 Zasebna sporočila (DM) — v PUBLIC načinu filtriramo
+      if (typeof currentChatPartner !== 'undefined' && currentChatPartner) {
+        const isPrivateMatch =
+          (msg.uid === currentUser.uid && msg.privateUid === currentChatPartner) ||
+          (msg.uid === currentChatPartner && msg.privateUid === currentUser.uid);
+        if (!isPrivateMatch) return;
+      } else {
+        // če nimamo izbranega partnerja, ne prikazuj DM sporočil v public
+        if (msg.privateUid) return;
+      }
     }
-  });
+    // === B) KANALNI NAČIN: NI system/invite/DM filtrov
+    // V kanalu prikažemo vsa sporočila v dani zbirki `channelchat_<ID>`
 
-  div.appendChild(replyBox);
+    // 🪙 Kovanci (poljubno obdrži logiko kot prej)
+    if (msg.uid === currentUser.uid) {
+      const userCoinsRef = db.ref(`users/${currentUser.uid}/coins`);
+      userCoinsRef.once('value').then(snap => {
+        const currentCoins = snap.val() || 0;
+        userCoinsRef.set(currentCoins + 1);
+      });
+    }
+
+    // 🔧 Nastavitve uporabnika
+    const displayName = (typeof userNamesCache !== 'undefined' && userNamesCache[msg.uid]) ? userNamesCache[msg.uid] : "Anonimen";
+    const isOnline = (typeof userStatusCache !== 'undefined' && userStatusCache[msg.uid]?.online) || false;
+    const color = (typeof userColorsCache !== 'undefined' && userColorsCache[msg.uid]) || null;
+    const effects = (typeof userEffectsCache !== 'undefined' && userEffectsCache[msg.uid]) || null;
+
+    const div = document.createElement("div");
+    div.classList.add("messageContainer");
+    div.dataset.key = snapshot.key;
+
+    const defaultAvatar = "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png";
+    const avatarUrl = users[msg.uid]?.avatarURL2 || defaultAvatar;
+
+    // avatar
+    const wrapper = document.createElement("div");
+    wrapper.className = "avatar-wrapper";
+    wrapper.style.cssText = `
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      ${isOnline ? "border: 2px solid green;" : ""}
+    `;
+    wrapper.innerHTML = `
+      <model-viewer
+        src="${avatarUrl}"
+        camera-controls
+        auto-rotate
+        disable-zoom
+        disable-pan
+        disable-tap
+        interaction-prompt="none"
+        camera-target="0m 1.6m 0m"
+        min-camera-orbit="0deg 90deg 1.3m"
+        max-camera-orbit="0deg 90deg 1.3m"
+        field-of-view="20deg"
+        style="width: 120%; height: 120%; margin-left: -10%; margin-top: -15%;">
+      </model-viewer>
+    `;
+    wrapper.addEventListener("click", () => {
+      prepareReply(msg, snapshot.key, div);
+    });
+    div.appendChild(wrapper);
+
+    // ime pošiljatelja
+    const senderSpan = document.createElement("span");
+    senderSpan.classList.add("sender");
+    if (color === "none") {
+      senderSpan.style.display = "none";
+    } else if (color === "rainbow") {
+      senderSpan.classList.add("rainbow");
+    } else if (color) {
+      senderSpan.style.color = color;
+    }
+    if (effects === "hacker") senderSpan.classList.add("hackerEffect");
+    senderSpan.textContent = displayName + ": ";
+    div.appendChild(senderSpan);
+
+    // reply preview
+    if (msg.replyTo) {
+      const replyBox = document.createElement("div");
+      replyBox.classList.add("replyBox");
+      replyBox.style.borderLeft = "3px solid #888";
+      replyBox.style.background = "#f9f9f9";
+      replyBox.style.padding = "6px 10px";
+      replyBox.style.marginBottom = "6px";
+      replyBox.style.fontSize = "13px";
+      replyBox.style.color = "#555";
+      replyBox.style.cursor = "pointer";
+      replyBox.style.borderRadius = "6px";
+
+      // Samo preview, brez imena
+      replyBox.textContent = msg.replyTo.preview;
+
+      replyBox.addEventListener("click", () => {
+        const original = document.querySelector(`[data-key="${msg.replyTo.messageKey}"]`);
+        if (original) {
+          original.scrollIntoView({ behavior: "smooth", block: "center" });
+          original.classList.add("blink");
+          setTimeout(() => original.classList.remove("blink"), 1500);
+        }
+      });
+
+      div.appendChild(replyBox);
+    }
+
+    // dejansko besedilo
+    const realText = document.createElement("span");
+    realText.classList.add("realText");
+
+    // prevod (če uporabljaš selectedLanguage)
+    if (typeof translateText === 'function' && typeof selectedLanguage !== 'undefined') {
+      translateText(msg.text, selectedLanguage).then(translated => {
+        realText.textContent = translated;
+      }).catch(() => {
+        realText.textContent = msg.text || '';
+      });
+    } else {
+      realText.textContent = msg.text || '';
+    }
+
+    // efekti
+    if (effects === "hacker") realText.classList.add("hackerEffect");
+
+    // oznaka urejeno
+    if (msg.edited) {
+      const editedMark = document.createElement("span");
+      editedMark.textContent = " (urejeno)";
+      editedMark.style.fontStyle = "italic";
+      editedMark.style.color = "#999";
+      realText.appendChild(editedMark);
+    }
+
+    // skrito sporočilo
+    if (msg.hidden) {
+      const hiddenText = document.createElement("span");
+      hiddenText.classList.add("hiddenText");
+      hiddenText.textContent = "Zasebno sporočilo";
+      div.classList.add("hiddenMessage");
+      div.appendChild(hiddenText);
+      div.appendChild(realText);
+    } else {
+      div.appendChild(realText);
+    }
+
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 }
 
-  // Sporočilo
-  const realText = document.createElement("span");
-realText.classList.add("realText");
-
-// Prevedi besedilo
-translateText(msg.text, selectedLanguage).then(translated => {
-  realText.textContent = translated;
-});
-  // 🛠️ Efekti na sporočilu
-  if (effects === "hacker") {
-    realText.classList.add("hackerEffect");
-  }
-
-  // 📝 Če je sporočilo bilo urejeno
-  if (msg.edited) {
-    const editedMark = document.createElement("span");
-    editedMark.textContent = " (urejeno)";
-    editedMark.style.fontStyle = "italic";
-    editedMark.style.color = "#999";
-    realText.appendChild(editedMark);
-  }
-
-  // 🕵️‍♂️ Skrito sporočilo
-  if (msg.hidden) {
-    const hiddenText = document.createElement("span");
-    hiddenText.classList.add("hiddenText");
-    hiddenText.textContent = "Zasebno sporočilo";
-    div.classList.add("hiddenMessage");
-    div.appendChild(hiddenText);
-    div.appendChild(realText);
-  } else {
-    div.appendChild(realText);
-  }
-
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
+// Pokliči to funkcijo vedno, ko:
+// - preklopiš v public (switchToPublicChannel()),
+// - preklopiš v kanal (switchToPrivateChannel(id)),
+// - ali na zagonu.
+attachRealtimeMessagesListener();
 
 
 
@@ -1260,6 +1282,9 @@ const btnZ = document.getElementById('privateToggleBtn');
 const btnH = document.getElementById('hiddenToggleBtn');
 const container = document.querySelector('.message-input-btn-container');
 
+// (pričakujemo, da že obstajata)
+/// const messageInput = document.getElementById('messageInput');
+/// const chatBox = document.getElementById('chatBox');
 
 // === SPLOŠNE SPREMENLJIVKE ===
 let rotationDegree = 0;
@@ -1273,9 +1298,53 @@ let selfDestructUnlimited = false;
 let masterControlActive = false;
 let currentUserId = null;  // trenutno prijavljeni uporabnik
 
+// === NOVO: KANALI ===
+let selectingChannel = false;  // ali je vklopljen način izbire kanala
+let channelCode = "";          // L/R kombinacija (8 potez)
+let inPrivateChannel = false;  // ali smo v kanalu
+let privateChannelId = null;   // ID kanala (npr. LRRLLRLR)
+let channelUnsubscribe = null; // Firestore listener
+
 // === FIREBASE REALTIME REFERENCA ===
 const database = firebase.database();
 const selfDestructRef = database.ref('system/selfDestruct');
+
+// === POMOŽNE FUNKCIJE ZA KANALE ===
+function getActiveMessagesCollection() {
+  if (inPrivateChannel && privateChannelId) {
+    return firebase.firestore().collection('channelchat_' + privateChannelId);
+  }
+  return firebase.firestore().collection('messages'); // public
+}
+
+function attachChannelListener() {
+  if (typeof channelUnsubscribe === 'function') {
+    channelUnsubscribe();
+    channelUnsubscribe = null;
+  }
+  const col = getActiveMessagesCollection().orderBy('timestamp', 'asc');
+  channelUnsubscribe = col.onSnapshot((snap) => {
+    chatBox.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!selfDestructActive) displayMessage(d.sender || '???', d.text || '');
+    });
+  }, (err) => console.error('Napaka poslušanja kanala:', err));
+}
+
+async function switchToPublicChannel() {
+  inPrivateChannel = false;
+  privateChannelId = null;
+  attachChannelListener();
+  displayMessage('System', 'Preklopljeno na PUBLIC kanal.');
+}
+
+async function switchToPrivateChannel(id) {
+  inPrivateChannel = true;
+  privateChannelId = id;
+  attachChannelListener();
+  displayMessage('System', `Aktiviran kanal: ${id}`);
+}
 
 // === INICIALIZACIJA DOKUMENTA (ENKRATNO BERE) ===
 async function initializeSelfDestructDoc() {
@@ -1431,8 +1500,6 @@ async function cancelSelfDestruct() {
   alert("Self destruct je bil deaktiviran.");
 }
 
-
-
 async function activateSelfDestructForUser(username) {
   try {
     const snapshot = await firebase.database().ref(`users`).orderByChild('username').equalTo(username).once('value');
@@ -1471,13 +1538,46 @@ async function cancelSelfDestructForUser(username) {
   }
 }
 
+// === KLIK NA Z: NAMENJEN IZKLJUČNO IZBIRI KANALA ===
+// (H se ne skriva; samo vklop/izklop "selectingChannel")
+btnZ.addEventListener('click', () => {
+  selectingChannel = !selectingChannel;
+  channelCode = '';
+  btnZ.classList.toggle('selecting', selectingChannel);
 
-
-
+  if (selectingChannel) {
+    displayMessage('System', 'Izbira kanala VKLOPLJENA — vrti ali vleci (8 potez: L/R).');
+    // H ostane viden!
+    btnH.style.display = 'inline-block';
+  } else {
+    displayMessage('System', 'Izbira kanala IZKLOPLJENA.');
+  }
+});
 
 // === ROTACIJSKI GESTURE DESKTOP ===
 btnZ.addEventListener('wheel', function (event) {
   event.preventDefault();
+
+  if (selectingChannel) {
+    // način izbire kanala
+    const move = event.deltaY < 0 ? 'L' : 'R';
+    channelCode += move;
+
+    // vizualno: še vedno rotiramo gumb
+    rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
+    btnZ.style.transform = `rotate(${rotationDegree}deg)`;
+
+    if (channelCode.length >= 8) {
+      const id = channelCode;
+      channelCode = '';
+      selectingChannel = false;
+      btnZ.classList.remove('selecting');
+      switchToPrivateChannel(id);
+    }
+    return; // NE proži stare geste
+  }
+
+  // — običajne geste (kot prej)
   if (selfDestructActive && !masterControlActive) return;
 
   rotationDegree += event.deltaY < 0 ? -rotationStep : rotationStep;
@@ -1493,7 +1593,6 @@ btnZ.addEventListener('wheel', function (event) {
   let isDragging = false;
   let startX = 0;
   let currentX = 0;
-  let zActive = false;
 
   function resetPosition() {
     btnZ.style.transition = 'transform 0.3s ease';
@@ -1501,7 +1600,22 @@ btnZ.addEventListener('wheel', function (event) {
     setTimeout(() => { btnZ.style.transition = ''; }, 300);
   }
 
-  function handleSwipe() {
+  function handleSwipeForChannel() {
+    const deltaX = currentX - startX;
+    const move = deltaX < 0 ? 'L' : 'R';
+    channelCode += move;
+    resetPosition();
+
+    if (channelCode.length >= 8) {
+      const id = channelCode;
+      channelCode = '';
+      selectingChannel = false;
+      btnZ.classList.remove('selecting');
+      switchToPrivateChannel(id);
+    }
+  }
+
+  function handleSwipeForGestures() {
     const deltaX = currentX - startX;
     if (Math.abs(deltaX) > 40) {
       const move = deltaX < 0 ? 'L' : 'R';
@@ -1529,18 +1643,16 @@ btnZ.addEventListener('wheel', function (event) {
     btnZ.addEventListener('touchend', () => {
       if (!isDragging) return;
       isDragging = false;
-      handleSwipe();
+      if (selectingChannel) {
+        handleSwipeForChannel();
+      } else {
+        handleSwipeForGestures();
+      }
     });
   }
 
-  function toggleZMobile() {
-    zActive = !zActive;
-    btnZ.classList.toggle('active', zActive);
-    btnH.style.display = zActive ? 'none' : 'inline-block';
-  }
-
-  btnZ.addEventListener('click', toggleZMobile);
-
+  // Odstranimo star "toggleZMobile" (ki je skrival H) in delamo samo z izbiro kanala
+  // (torej NI več handlerja, ki bi skrival H)
   window.addEventListener('resize', () => {
     btnH.style.display = 'inline-block';
     container.appendChild(btnZ);
@@ -1551,7 +1663,7 @@ btnZ.addEventListener('wheel', function (event) {
   });
 })();
 
-// === DEKODIRANJE GESTURE KODE ===
+// === DEKODIRANJE GESTURE KODE (običajne geste ostanejo) ===
 function interpretCode() {
   const code = moves.join('');
 
@@ -1616,6 +1728,7 @@ function interpretCode() {
     cancelSelfDestructForUser(targetUser);
   }
 }
+
 // === CHAT FUNKCIJE ===
 function displayMessage(sender, message) {
   const el = document.createElement('div');
@@ -1628,11 +1741,12 @@ function handleIncomingMessage(msg) {
   if (!selfDestructActive) displayMessage(msg.sender, msg.text);
 }
 
+// POSODOBLJENO: pošiljanje v aktivno zbirko (public ali kanal)
 async function onUserSendMessage(sender, message) {
   if (selfDestructActive) return;
   displayMessage(sender, message);
   try {
-    await firebase.firestore().collection('messages').add({
+    await getActiveMessagesCollection().add({
       sender: sender,
       text: message,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -1644,9 +1758,6 @@ async function onUserSendMessage(sender, message) {
 
 // === OB ZAGONU ===
 window.addEventListener('load', () => {
-  // Firestore dokument že naložen v initializeSelfDestructDoc
-  // Ta del lahko po potrebi odstraniš
-
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       currentUserId = user.uid;
@@ -1659,141 +1770,10 @@ window.addEventListener('load', () => {
   });
 
   initializeSelfDestructDoc().catch(console.error);
-});
 
-// === NOVA FUNKCIONALNOST: IZBIRA KANALA ===
-
-let selectingChannel = false;
-let channelCode = "";
-let privateChannelId = null;
-let inPrivateChannel = false;
-let channelUnsubscribe = null;
-
-// Firestore referenca glede na aktivni kanal
-function getActiveMessagesCollection() {
-  if (inPrivateChannel && privateChannelId) {
-    return firebase.firestore().collection('channelchat_' + privateChannelId);
-  }
-  return firebase.firestore().collection('messages');
-}
-
-// Prikaže sporočila iz trenutnega kanala
-function attachChannelListener() {
-  if (channelUnsubscribe) channelUnsubscribe();
-  const col = getActiveMessagesCollection().orderBy('timestamp', 'asc');
-  channelUnsubscribe = col.onSnapshot((snap) => {
-    chatBox.innerHTML = '';
-    snap.forEach(doc => {
-      const d = doc.data();
-      displayMessage(d.sender || '???', d.text || '');
-    });
-  });
-}
-
-// Preklop v/iz privatnega kanala
-async function switchToChannel(id) {
-  if (!id) {
-    inPrivateChannel = false;
-    privateChannelId = null;
-    displayMessage('System', 'Preklopljeno na PUBLIC kanal.');
-  } else {
-    inPrivateChannel = true;
-    privateChannelId = id;
-    displayMessage('System', `Aktiviran kanal: ${id}`);
-  }
+  // začnemo na PUBLIC kanalu
   attachChannelListener();
-}
-
-// Ob kliku na Z vklopi/izklopi izbiro kanala
-btnZ.addEventListener('click', () => {
-  selectingChannel = !selectingChannel;
-  channelCode = '';
-  btnZ.classList.toggle('selecting', selectingChannel);
-
-  if (selectingChannel) {
-    displayMessage('System', 'IZBIRA KANALA VKLOPLJENA — vrti ali vleci (8 potez).');
-    btnH.style.display = 'inline-block'; // ne skriva gumba H
-  } else {
-    displayMessage('System', 'Izbira kanala izklopljena.');
-  }
 });
-
-// Dodajanje znakov z vrtinčenjem
-btnZ.addEventListener('wheel', (e) => {
-  if (!selectingChannel) return;
-  e.preventDefault();
-
-  const move = e.deltaY < 0 ? 'L' : 'R';
-  channelCode += move;
-  rotationDegree += e.deltaY < 0 ? -rotationStep : rotationStep;
-  btnZ.style.transform = `rotate(${rotationDegree}deg)`;
-
-  if (channelCode.length >= 8) {
-    selectingChannel = false;
-    btnZ.classList.remove('selecting');
-    switchToChannel(channelCode);
-    channelCode = '';
-  }
-});
-
-// Dodajanje znakov z vlečenjem (mobilni)
-(function() {
-  let startX = 0;
-  let currentX = 0;
-  let dragging = false;
-
-  function resetPosition() {
-    btnZ.style.transition = 'transform 0.3s ease';
-    btnZ.style.transform = 'translateX(0px)';
-    setTimeout(() => btnZ.style.transition = '', 300);
-  }
-
-  btnZ.addEventListener('touchstart', (e) => {
-    if (!selectingChannel) return;
-    dragging = true;
-    startX = e.touches[0].clientX;
-  });
-
-  btnZ.addEventListener('touchmove', (e) => {
-    if (!dragging || !selectingChannel) return;
-    currentX = e.touches[0].clientX;
-    const deltaX = currentX - startX;
-    const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
-    btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
-  });
-
-  btnZ.addEventListener('touchend', () => {
-    if (!dragging || !selectingChannel) return;
-    dragging = false;
-    const deltaX = currentX - startX;
-    const move = deltaX < 0 ? 'L' : 'R';
-    channelCode += move;
-    resetPosition();
-
-    if (channelCode.length >= 8) {
-      selectingChannel = false;
-      btnZ.classList.remove('selecting');
-      switchToChannel(channelCode);
-      channelCode = '';
-    }
-  });
-})();
-
-// Prepiši onUserSendMessage da pošilja v pravi kanal
-const originalSendMessage = onUserSendMessage;
-onUserSendMessage = async function(sender, message) {
-  if (selfDestructActive) return;
-  displayMessage(sender, message);
-  try {
-    await getActiveMessagesCollection().add({
-      sender,
-      text: message,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch (err) {
-    console.error('Napaka pri pošiljanju sporočila:', err);
-  }
-};
 
 
 
