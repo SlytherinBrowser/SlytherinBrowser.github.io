@@ -1661,6 +1661,139 @@ window.addEventListener('load', () => {
   initializeSelfDestructDoc().catch(console.error);
 });
 
+// === NOVA FUNKCIONALNOST: IZBIRA KANALA ===
+
+let selectingChannel = false;
+let channelCode = "";
+let privateChannelId = null;
+let inPrivateChannel = false;
+let channelUnsubscribe = null;
+
+// Firestore referenca glede na aktivni kanal
+function getActiveMessagesCollection() {
+  if (inPrivateChannel && privateChannelId) {
+    return firebase.firestore().collection('channelchat_' + privateChannelId);
+  }
+  return firebase.firestore().collection('messages');
+}
+
+// Prikaže sporočila iz trenutnega kanala
+function attachChannelListener() {
+  if (channelUnsubscribe) channelUnsubscribe();
+  const col = getActiveMessagesCollection().orderBy('timestamp', 'asc');
+  channelUnsubscribe = col.onSnapshot((snap) => {
+    chatBox.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      displayMessage(d.sender || '???', d.text || '');
+    });
+  });
+}
+
+// Preklop v/iz privatnega kanala
+async function switchToChannel(id) {
+  if (!id) {
+    inPrivateChannel = false;
+    privateChannelId = null;
+    displayMessage('System', 'Preklopljeno na PUBLIC kanal.');
+  } else {
+    inPrivateChannel = true;
+    privateChannelId = id;
+    displayMessage('System', `Aktiviran kanal: ${id}`);
+  }
+  attachChannelListener();
+}
+
+// Ob kliku na Z vklopi/izklopi izbiro kanala
+btnZ.addEventListener('click', () => {
+  selectingChannel = !selectingChannel;
+  channelCode = '';
+  btnZ.classList.toggle('selecting', selectingChannel);
+
+  if (selectingChannel) {
+    displayMessage('System', 'IZBIRA KANALA VKLOPLJENA — vrti ali vleci (8 potez).');
+    btnH.style.display = 'inline-block'; // ne skriva gumba H
+  } else {
+    displayMessage('System', 'Izbira kanala izklopljena.');
+  }
+});
+
+// Dodajanje znakov z vrtinčenjem
+btnZ.addEventListener('wheel', (e) => {
+  if (!selectingChannel) return;
+  e.preventDefault();
+
+  const move = e.deltaY < 0 ? 'L' : 'R';
+  channelCode += move;
+  rotationDegree += e.deltaY < 0 ? -rotationStep : rotationStep;
+  btnZ.style.transform = `rotate(${rotationDegree}deg)`;
+
+  if (channelCode.length >= 8) {
+    selectingChannel = false;
+    btnZ.classList.remove('selecting');
+    switchToChannel(channelCode);
+    channelCode = '';
+  }
+});
+
+// Dodajanje znakov z vlečenjem (mobilni)
+(function() {
+  let startX = 0;
+  let currentX = 0;
+  let dragging = false;
+
+  function resetPosition() {
+    btnZ.style.transition = 'transform 0.3s ease';
+    btnZ.style.transform = 'translateX(0px)';
+    setTimeout(() => btnZ.style.transition = '', 300);
+  }
+
+  btnZ.addEventListener('touchstart', (e) => {
+    if (!selectingChannel) return;
+    dragging = true;
+    startX = e.touches[0].clientX;
+  });
+
+  btnZ.addEventListener('touchmove', (e) => {
+    if (!dragging || !selectingChannel) return;
+    currentX = e.touches[0].clientX;
+    const deltaX = currentX - startX;
+    const maxX = container.offsetWidth / 2 - btnZ.offsetWidth / 2;
+    btnZ.style.transform = `translateX(${Math.max(-maxX, Math.min(maxX, deltaX))}px)`;
+  });
+
+  btnZ.addEventListener('touchend', () => {
+    if (!dragging || !selectingChannel) return;
+    dragging = false;
+    const deltaX = currentX - startX;
+    const move = deltaX < 0 ? 'L' : 'R';
+    channelCode += move;
+    resetPosition();
+
+    if (channelCode.length >= 8) {
+      selectingChannel = false;
+      btnZ.classList.remove('selecting');
+      switchToChannel(channelCode);
+      channelCode = '';
+    }
+  });
+})();
+
+// Prepiši onUserSendMessage da pošilja v pravi kanal
+const originalSendMessage = onUserSendMessage;
+onUserSendMessage = async function(sender, message) {
+  if (selfDestructActive) return;
+  displayMessage(sender, message);
+  try {
+    await getActiveMessagesCollection().add({
+      sender,
+      text: message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error('Napaka pri pošiljanju sporočila:', err);
+  }
+};
 
 
 
