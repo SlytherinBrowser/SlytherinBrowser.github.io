@@ -17,7 +17,6 @@
     .meta{color:#9f9fb3}
     .cmd{color:var(--accent)}
     .small{font-size:12px;opacity:.8}
-    .help-col{display:flex;gap:10px;flex-wrap:wrap}
     .chip{background:#0f2430;padding:6px;border-radius:6px;color:#bde; font-size:13px}
     a{color:var(--accent)}
   </style>
@@ -31,38 +30,36 @@
     </div>
   </div>
 
-
-  <!-- 🔽 Firebase compat SDK-ovi MORAJU biti iznad tvoje skripte -->
+  <!-- Firebase compat SDK (moraju biti iznad tvoje skripte) -->
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
 
-  <!-- ❌ NEMA type="module" ovde -->
+  <!-- Tvoja igra (bez type="module") -->
   <script>
   /*******************************
-   *  Tvoj Firebase config
+   *  Firebase config
    *******************************/
   const firebaseConfig = {
     apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
     authDomain: "bank-e0ff6.firebaseapp.com",
     projectId: "bank-e0ff6",
-    /* ✅ storageBucket treba da bude *.appspot.com, ne firebasestorage.app */
     storageBucket: "bank-e0ff6.appspot.com",
     messagingSenderId: "742754807887",
     appId: "1:742754807887:web:d88ecb6cb5cb30bd7a3a3a",
     measurementId: "G-ED31C26W08"
   };
 
-  /* compat API */
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db   = firebase.firestore();
+
   // UI refs
   const screen = document.getElementById('screen');
   const input = document.getElementById('input');
   const statusChip = document.getElementById('status');
 
-  // simple print helpers
+  // helpers
   function print(text, cls='') {
     const el = document.createElement('div');
     el.innerHTML = text;
@@ -71,25 +68,25 @@
     screen.scrollTop = screen.scrollHeight;
   }
   function prettyCmd(cmd){ return `<span class="cmd">${cmd}</span>`; }
+  const safeJSON = (obj)=>JSON.stringify(obj,null,2);
 
   /**********************
    *  Game constants
    **********************/
   const ROLES = ['mafijski','policijski','security'];
-  const START_FILES = {
+  const START_FILES = Object.freeze({
     '/home/readme.txt': 'Dobrodošao u HackSim — ovo je simulacija. Koristi help za listu komandi.',
     '/home/notes.txt': 'Tvoje beleške...'
-  };
+  });
 
   /**********************
-   *  Player state (local)
+   *  Player state
    **********************/
-  let me = null; // populated after login: {uid, displayName, role, ip, vpnOn, companyId, fs, money, scripts,...}
+  let me = null;
   let unsubscribePlayers = null;
-  let listeners = [];
 
   /**********************
-   *  Helper util
+   *  Utils
    **********************/
   function randIP(){
     return `${Math.floor(Math.random()*223)+1}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
@@ -98,7 +95,7 @@
   function uidShort(){return Math.random().toString(36).slice(2,9);}
 
   /**********************
-   *  Auth flows (terminal-driven)
+   *  Auth flows
    **********************/
   async function register(email, password, displayName){
     try{
@@ -111,7 +108,7 @@
         ip: randIP(),
         vpnOn: false,
         companyId: null,
-        fs: START_FILES,
+        fs: {...START_FILES}, // kopija, ne referenca
         money: 1000,
         scripts: {},
         logs: [],
@@ -119,6 +116,7 @@
       };
       await db.collection('players').doc(cred.user.uid).set(playerDoc);
       print(`<span class="ok">Registrovan: ${displayName} (${email})</span>`);
+      attachPlayerListener(cred.user.uid);
     } catch(e){
       print(`<span class="err">Greška pri registraciji: ${e.message}</span>`);
     }
@@ -141,6 +139,7 @@
       me = null;
       print('<span class="meta">Odjavljen</span>');
       statusChip.textContent = 'not connected';
+      statusChip.classList.remove('ok');
     } catch(e){
       print(`<span class="err">Logout error: ${e.message}</span>`);
     }
@@ -157,14 +156,14 @@
         me = doc.data();
         statusChip.textContent = `${me.displayName} | ${me.role || 'role:nedef.'} | ${me.ip}${me.vpnOn ? ' (vpn)' : ''}`;
         statusChip.classList.add('ok');
-        // small log on connect
         print(`<span class="sys">[sync] data synced @ ${new Date().toLocaleTimeString()}</span>`);
+      }, err=>{
+        print(`<span class="err">Sync greška: ${err.message}</span>`);
       });
   }
 
   /**********************
-   *  Core in-game API (simulated, safe)
-   *  IMPORTANT: sve "napade" su simulirane
+   *  Core in-game API (simulated)
    **********************/
   async function updateMe(fields){
     if(!me || !me.uid) { print('<span class="err">Nisi prijavljen.</span>'); return; }
@@ -177,34 +176,28 @@
     return q.docs[0].data();
   }
 
-  // push a global event/log
   async function pushGlobalLog(text){
     await db.collection('events').add({text, ts: nowISO()});
   }
 
   /**********************
-   *  Virtual scripting language: SimJS (fictional)
-   *  We only parse minimal structure; effects are game-simulated
+   *  SimJS (lažni kompajl)
    **********************/
-  // store scripts in me.scripts as {name: {code, owner, createdAt, type, power}}
   function compileSimJS(code){
-    // fake compile: check length and reserved words
     if(typeof code !== 'string' || code.length<4) throw new Error('skripta prekratka');
-    // compute "power" as pseudo-hash
     let power = 0;
     for(let i=0;i<code.length;i++) power = (power*31 + code.charCodeAt(i))%1000;
     return {ok:true,power};
   }
 
   /**********************
-   *  Command implementations (70+)
+   *  Commands (70+)
    **********************/
   const COMMANDS = {};
 
-  // --- account & session ---
+  // account & session
   COMMANDS.register = {
     fn: async (args)=>{
-      // register email password name
       const [email,password,name] = args;
       if(!email||!password||!name){ print('Usage: register <email> <password> <displayName>'); return; }
       await register(email,password,name);
@@ -215,44 +208,41 @@
     fn: async (args)=>{ const [email,password]=args; if(!email||!password){print('Usage: login <email> <password>'); return;} await login(email,password); },
     help: 'login <email> <password> — prijavi se'
   };
-  COMMANDS.logout = {
-    fn: async ()=>{ await logout(); },
-    help: 'logout — odjavi se'
-  };
+  COMMANDS.logout = { fn: async ()=>{ await logout(); }, help: 'logout — odjavi se' };
   COMMANDS.whoami = {
-    fn: async ()=>{ if(!me) {print('Nisi prijavljen'); return;} print(JSON.stringify({displayName:me.displayName,role:me.role,ip:me.ip,vpnOn:me.vpnOn,company:me.companyId,money:me.money},null,2)); },
-    help: 'whoami — prikaže podatke o tvojem nalogu'
+    fn: async ()=>{ if(!me) {print('Nisi prijavljen'); return;} print(safeJSON({displayName:me.displayName,role:me.role,ip:me.ip,vpnOn:me.vpnOn,company:me.companyId,money:me.money})); },
+    help: 'whoami — podaci o nalogu'
   };
 
-  // --- role selection ---
+  // roles
   COMMANDS.setrole = {
     fn: async (args)=>{ const role=args[0]; if(!ROLES.includes(role)){print('Role: mafijski, policijski, security'); return;} await updateMe({role}); print(`<span class="ok">Role set: ${role}</span>`); },
-    help: 'setrole <mafijski|policijski|security> — izaberi ulogu'
+    help: 'setrole <mafijski|policijski|security>'
   };
   COMMANDS.roles = { fn:()=>print('Dostupne role: mafijski, policijski, security'), help: 'roles — prikaže dostupne role' };
 
-  // --- company / team features ---
+  // company
   COMMANDS.mkcompany = {
     fn: async (args)=>{ const name = args.join(' '); if(!name){print('Usage: mkcompany <ime>'); return;} if(!me) {print('Prijavi se'); return;} const id = 'co_'+uidShort(); await db.collection('companies').doc(id).set({id,name,owner:me.uid,members:[me.uid],createdAt:nowISO()}); await updateMe({companyId:id}); print(`<span class="ok">Company ${name} created (id:${id})</span>`); },
-    help: 'mkcompany <ime> — napravi firmu/podružnicu'
+    help: 'mkcompany <ime> — napravi firmu'
   };
   COMMANDS.joincompany = {
     fn: async (args)=>{ const id = args[0]; if(!id){print('Usage: joincompany <companyId>'); return;} const doc = await db.collection('companies').doc(id).get(); if(!doc.exists){print('Company ne postoji'); return;} const data = doc.data(); if(data.members.includes(me.uid)){print('Već si član'); return;} data.members.push(me.uid); await db.collection('companies').doc(id).update({members:data.members}); await updateMe({companyId:id}); print(`<span class="ok">Pridružio si se ${data.name}</span>`); },
     help: 'joincompany <companyId> — pridruži se firmi'
   };
   COMMANDS.companyinfo = {
-    fn: async (args)=>{ const id = args[0]||me?.companyId; if(!id){print('Nema company'); return;} const doc = await db.collection('companies').doc(id).get(); if(!doc.exists){print('Ne postoji'); return;} print(JSON.stringify(doc.data(),null,2)); },
+    fn: async (args)=>{ const id = args[0]||me?.companyId; if(!id){print('Nema company'); return;} const doc = await db.collection('companies').doc(id).get(); if(!doc.exists){print('Ne postoji'); return;} print(safeJSON(doc.data())); },
     help: 'companyinfo [id] — info o firmi'
   };
 
-  // --- filesystem simulation ---
+  // filesystem
   COMMANDS.ls = {
-    fn: async (args)=>{ const path = args[0]||'/home'; if(!me) {print('Prijavi se'); return;} const files = Object.keys(me.fs||{}).filter(p=>p.startsWith(path)).map(p=>p.replace(path+'/','')).filter(x=>x); if(files.length===0) print('(prazno)'); else files.forEach(f=>print(f)); },
-    help: 'ls [path] — lista fajlova u tvom virtuelnom FS'
+    fn: async (args)=>{ const path = args[0]||'/home'; if(!me) {print('Prijavi se'); return;} const files = Object.keys(me.fs||{}).filter(p=>p.startsWith(path)).map(p=>p.replace(path+'/','')).filter(x=>x); if(!files.length) print('(prazno)'); else files.forEach(f=>print(f)); },
+    help: 'ls [path] — lista fajlova'
   };
   COMMANDS.cat = {
-    fn: async (args)=>{ const file = args[0]; if(!file){print('Usage: cat <path>'); return;} if(!me) {print('Prijavi se'); return;} const content=me.fs[file]; if(!content){print('Nema fajla'); return;} print(`<span class="meta">--- ${file} ---</span>\n${content}`); },
-    help: 'cat <path> — prikaz sadržaja fajla'
+    fn: async (args)=>{ const file = args[0]; if(!file){print('Usage: cat <path>'); return;} if(!me) {print('Prijavi se'); return;} const content=me.fs[file]; if(content==null){print('Nema fajla'); return;} print(`<span class="meta">--- ${file} ---</span>\n${content}`); },
+    help: 'cat <path> — prikaži sadržaj'
   };
   COMMANDS.write = {
     fn: async (args)=>{ const path=args[0]; const text = args.slice(1).join(' '); if(!path){print('Usage: write <path> <text>'); return;} if(!me){print('Prijavi se'); return;} me.fs[path]=text; await updateMe({fs:me.fs}); print(`<span class="ok">Zapisano ${path}</span>`); },
@@ -264,10 +254,10 @@
   };
   COMMANDS.mv = {
     fn: async (args)=>{ const [src,dst]=args; if(!src||!dst){print('Usage: mv <src> <dst>'); return;} if(!me){print('Prijavi se'); return;} if(!me.fs[src]){print('src ne postoji'); return;} me.fs[dst]=me.fs[src]; delete me.fs[src]; await updateMe({fs:me.fs}); print(`<span class="ok">Moved</span>`); },
-    help: 'mv <src> <dst> — premesti/rename fajl'
+    help: 'mv <src> <dst> — premesti'
   };
 
-  // --- scripts management (SimJS) ---
+  // scripts
   COMMANDS.mkscript = {
     fn: async (args)=>{
       const name = args[0];
@@ -281,236 +271,151 @@
         print(`<span class="ok">Skript ${name} kreirana (power ${compiled.power})</span>`);
       } catch(e){ print(`<span class="err">Compile error: ${e.message}</span>`); }
     },
-    help: 'mkscript <name> <code> — kreiraj SimJS skriptu'
+    help: 'mkscript <name> <code> — napravi SimJS skriptu'
   };
-  COMMANDS.lsscripts = { fn: ()=>{ if(!me) {print('Prijavi se'); return;} const s=Object.keys(me.scripts||{}); if(!s.length) print('(nema skripti)'); else s.forEach(x=>print(x)); }, help: 'lsscripts — lista tvojih skripti' };
+  COMMANDS.lsscripts = { fn: ()=>{ if(!me) {print('Prijavi se'); return;} const s=Object.keys(me.scripts||{}); if(!s.length) print('(nema skripti)'); else s.forEach(x=>print(x)); }, help: 'lsscripts — lista skripti' };
   COMMANDS.catcript = { fn: (args)=>{ const name=args[0]; if(!name){print('Usage: catcript <name>'); return;} if(!me) {print('Prijavi se'); return;} const s=me.scripts[name]; if(!s) {print('Nema skripte'); return;} print(`${s.name} (v${s.version}) power:${s.power}\n${s.code}`); }, help: 'catcript <name> — prikaži skriptu' };
 
-  // --- deploy script to game (viruses/upgrades/antivir) ---
+  // deploy / antivirus
   COMMANDS.deploy = {
     fn: async (args)=>{
-      // deploy <name> <targetPlayer?> <type:virus|upgrade|antivirus>
       const name = args[0];
       const target = args[1] || null;
       const type = args[2] || 'virus';
       if(!me || !name){print('Usage: deploy <scriptName> [targetDisplayName] <virus|upgrade|antivirus>'); return;}
       const s = me.scripts[name];
       if(!s){print('Skripta ne postoji'); return;}
-      // simulated effect
       const effect = {by:me.displayName,script:name,type,power:s.power,ts:nowISO(),target};
       await db.collection('deploys').add(effect);
       print(`<span class="ok">Deployed ${type} ${name} (power ${s.power}) ${target?('-> '+target):''}</span>`);
       await pushGlobalLog(`${me.displayName} je deploy-ovao ${type} ${name} ${target?('na '+target):''}`);
     },
-    help: 'deploy <scriptName> [targetDisplayName] <virus|upgrade|antivirus> — deploy skripte u igri (simulirano)'
+    help: 'deploy <script> [target] <virus|upgrade|antivirus>'
   };
-
-  // --- antivirus lifecycle (security role + shared updates) ---
   COMMANDS.mkuppdate = {
     fn: async (args)=>{ const name=args[0]; const sname=args[1]; if(!name||!sname){print('Usage: mkuppdate <updateName> <scriptName>'); return;} if(!me){print('Prijavi se'); return;} const script = me.scripts[sname]; if(!script){print('Nema skripte'); return;} const up = {name,script:sname,author:me.displayName,power:script.power,ts:nowISO()}; await db.collection('antivirus-updates').add(up); print(`<span class="ok">Update ${name} napravljen</span>`); },
-    help: 'mkuppdate <name> <scriptName> — napravi antivirus update (security role koristi)'
+    help: 'mkuppdate <name> <scriptName> — napravi AV update'
   };
   COMMANDS.updateav = {
-    fn: async ()=>{ // everyone can update local AV list
-      const q = await db.collection('antivirus-updates').get();
-      const updates = q.docs.map(d=>d.data());
-      me.av = updates;
-      await updateMe({av:me.av});
-      print(`<span class="ok">Antivirus ažuriran: ${updates.length} updates</span>`);
-    },
-    help: 'updateav — skini poslednje antivirus update-ove u igri'
+    fn: async ()=>{ const q = await db.collection('antivirus-updates').get(); const updates = q.docs.map(d=>d.data()); me.av = updates; await updateMe({av:me.av}); print(`<span class="ok">Antivirus ažuriran: ${updates.length} updates</span>`); },
+    help: 'updateav — preuzmi AV update-ove'
   };
 
-  // --- network & vpn ---
+  // network & vpn
   COMMANDS.vpn = {
     fn: async (args)=>{ const action = args[0]; if(!me){print('Prijavi se'); return;} if(action==='on'){ await updateMe({vpnOn:true,ip:randIP()}); print('<span class="ok">VPN uključen</span>'); } else if(action==='off'){ await updateMe({vpnOn:false,ip:randIP()}); print('<span class="ok">VPN isključen</span>'); } else print('Usage: vpn <on|off>'); },
-    help: 'vpn <on|off> — uključi ili isključi VPN (simulirano)'
+    help: 'vpn <on|off> — simulirani VPN'
   };
-  COMMANDS.ip = { fn: ()=>{ if(!me){print('Prijavi se'); return;} print('IP: '+me.ip + (me.vpnOn? ' (via vpn)':'')); }, help: 'ip — prikaži IP adresu' };
+  COMMANDS.ip = { fn: ()=>{ if(!me){print('Prijavi se'); return;} print('IP: '+me.ip + (me.vpnOn? ' (via vpn)':'')); }, help: 'ip — prikaži IP' };
 
-  // --- multiplayer interaction ---
+  // multiplayer interaction
   COMMANDS.msg = {
     fn: async (args)=>{ const who=args[0]; const text = args.slice(1).join(' '); if(!who||!text){print('Usage: msg <displayName> <text>'); return;} const target = await fetchPlayerByName(who); if(!target){print('Nema igrača'); return;} await db.collection('messages').add({from:me.displayName,to:who,text,ts:nowISO()}); print(`<span class="ok">Poslato poruku ${who}</span>`); },
-    help: 'msg <displayName> <text> — pošalji privatnu poruku'
+    help: 'msg <displayName> <text> — privatna poruka'
   };
   COMMANDS.readmsgs = {
-    fn: async ()=>{ const q = await db.collection('messages').where('to','==',me.displayName).get(); if(q.empty){print('(nema poruka)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | ${d.data().from}: ${d.data().text}`)); },
-    help: 'readmsgs — pročitaj poruke upućene tebi'
+    fn: async ()=>{ if(!me){print('Prijavi se'); return;} const q = await db.collection('messages').where('to','==',me.displayName).get(); if(q.empty){print('(nema poruka)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | ${d.data().from}: ${d.data().text}`)); },
+    help: 'readmsgs — pročitaj pristigle poruke'
   };
   COMMANDS.players = {
-    fn: async ()=>{ const q = await db.collection('players').get(); q.docs.forEach(d=>{ const p=d.data(); print(`${p.displayName} | ${p.role||'?' } | ${p.ip}`); }); },
-    help: 'players — lista igrača online (simulirano)'
+    fn: async ()=>{ const q = await db.collection('players').get(); if(q.empty){print('(nema igrača)');return;} q.docs.forEach(d=>{ const p=d.data(); print(`${p.displayName} | ${p.role||'?' } | ${p.ip}`); }); },
+    help: 'players — lista igrača'
   };
 
-  // --- in-game "crime" actions (simulated) ---
+  // simulated "crime"
   COMMANDS.scan = {
-    fn: async (args)=>{ const targetName=args[0]; if(!targetName){print('Usage: scan <targetDisplayName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('Cilj ne postoji'); return;} // simulated scan
-      print(`<span class="meta">Skener: ${target.displayName} | IP: ${target.ip} | company: ${target.companyId || 'none'} | hasAV: ${target.av?target.av.length:0}</span>`);
-    },
-    help: 'scan <displayName> — skeniraj drugog igrača (simulirano info)'
+    fn: async (args)=>{ const targetName=args[0]; if(!targetName){print('Usage: scan <displayName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('Cilj ne postoji'); return;} print(`<span class="meta">Skener: ${target.displayName} | IP: ${target.ip} | company: ${target.companyId || 'none'} | hasAV: ${target.av?target.av.length:0}</span>`); },
+    help: 'scan <displayName> — simulirani scan'
   };
   COMMANDS.exploit = {
-    fn: async (args)=>{ const targetName=args[0]; const scriptName=args[1]; if(!targetName||!scriptName){print('Usage: exploit <targetDisplayName> <scriptName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('Cilj ne postoji'); return;} const s = me.scripts[scriptName]; if(!s){print('Nemate takvu skriptu'); return;} // simulated chance
-      const chance = Math.max(5, Math.min(95, s.power % 100));
-      const roll = Math.floor(Math.random()*100)+1;
+    fn: async (args)=>{ const targetName=args[0]; const scriptName=args[1]; if(!targetName||!scriptName){print('Usage: exploit <displayName> <scriptName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('Cilj ne postoji'); return;} const s = me.scripts[scriptName]; if(!s){print('Nemate takvu skriptu'); return;} const chance = Math.max(5, Math.min(95, s.power % 100)); const roll = Math.floor(Math.random()*100)+1;
       if(roll <= chance){
-        // success: copy a random file from target to your /loot/
-        const tFiles = Object.keys(target.fs||{});
-        const stolen = tFiles.length ? tFiles[Math.floor(Math.random()*tFiles.length)] : null;
+        const tFiles = Object.keys(target.fs||{}); const stolen = tFiles.length ? tFiles[Math.floor(Math.random()*tFiles.length)] : null;
         if(stolen){
           const content = target.fs[stolen] || '<empty>';
           me.fs['/loot/'+stolen.replace(/\//g,'_')]=`STOLEN from ${target.displayName} @ ${nowISO()}\n\n${content}`;
           await updateMe({fs:me.fs});
           print(`<span class="ok">Exploit uspeo! Preuzeo ${stolen} u /loot/</span>`);
           await pushGlobalLog(`${me.displayName} je uspešno exploit-ovao ${target.displayName} i preuzeo ${stolen}`);
-        } else {
-          print('<span class="meta">Exploit uspeo ali nema fajlova</span>');
-        }
+        } else { print('<span class="meta">Exploit uspeo ali nema fajlova</span>'); }
       } else {
         print(`<span class="err">Exploit fail (roll ${roll} > ${chance})</span>`);
-        // log possible trace
         await db.collection('traces').add({attacker:me.displayName,target:target.displayName,ts:nowISO()});
       }
     },
-    help: 'exploit <targetDisplayName> <scriptName> — pokuša exploit (simulirano)'
+    help: 'exploit <displayName> <scriptName> — simulirani exploit'
   };
-
   COMMANDS.ddos = {
-    fn: async (args)=>{ const targetName=args[0]; if(!targetName){print('Usage: ddos <targetDisplayName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('no target'); return;} // simulated effect: target offline for a minute in-game
-      await db.collection('attacks').add({type:'ddos',by:me.displayName,target:target.displayName,ts:nowISO()});
-      print('<span class="ok">DDoS initiated (simulated)</span>');
-    },
+    fn: async (args)=>{ const targetName=args[0]; if(!targetName){print('Usage: ddos <displayName>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('no target'); return;} await db.collection('attacks').add({type:'ddos',by:me.displayName,target:target.displayName,ts:nowISO()}); print('<span class="ok">DDoS initiated (simulated)</span>'); },
     help: 'ddos <displayName> — simulirani DDoS'
   };
 
-  // --- police / security detection tools ---
+  // police / security
   COMMANDS.traces = {
-    fn: async ()=>{ const q = await db.collection('traces').where('target','==',me.displayName).get(); if(q.empty) { print('(nema tragova)'); return;} q.docs.forEach(d=>print(JSON.stringify(d.data()))); },
-    help: 'traces — prikaži tragove upada vezane za tebe (za policajce useful)'
+    fn: async ()=>{ if(!me){print('Prijavi se'); return;} const q = await db.collection('traces').where('target','==',me.displayName).get(); if(q.empty) { print('(nema tragova)'); return;} q.docs.forEach(d=>print(safeJSON(d.data()))); },
+    help: 'traces — tragovi napada na tebe'
   };
   COMMANDS.hunt = {
-    fn: async (args)=>{ // policijski: pokušaj locirati najaktivnijeg napadača
-      if(me.role !== 'policijski'){print('Samo policijski heker može hunt-ovati'); return;}
-      const q = await db.collection('traces').get();
-      if(q.empty){print('Nema tragova'); return;}
-      // simple leaderboard: attacker counts
-      const map = {};
-      q.docs.forEach(d=>{ const a=d.data().attacker; if(!map[a]) map[a]=0; map[a]++; });
-      const best = Object.keys(map).sort((a,b)=>map[b]-map[a])[0];
-      print(`<span class="ok">Najaktivniji napadač: ${best} (${map[best]} tragova)</span>`);
-    },
-    help: 'hunt — policijski alat za pronalaženje napadača (simulirano)'
+    fn: async ()=>{ if(me?.role !== 'policijski'){print('Samo policijski heker može hunt-ovati'); return;} const q = await db.collection('traces').get(); if(q.empty){print('Nema tragova'); return;} const map = {}; q.docs.forEach(d=>{ const a=d.data().attacker; map[a]=(map[a]||0)+1; }); const best = Object.keys(map).sort((a,b)=>map[b]-map[a])[0]; print(`<span class="ok">Najaktivniji napadač: ${best} (${map[best]} tragova)</span>`); },
+    help: 'hunt — pronalazak najaktivnijeg napadača'
   };
 
-  // --- log & auditing ---
+  // logs
   COMMANDS.log = {
-    fn: async (args)=>{ const last = args[0] || '10'; const q = await db.collection('events').orderBy('ts','desc').limit(parseInt(last)).get(); if(q.empty){print('(nema događaja)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | ${d.data().text}`)); },
-    help: 'log [n] — prikaz globalnih događaja'
+    fn: async (args)=>{ const last = parseInt(args[0]||'10'); const q = await db.collection('events').orderBy('ts','desc').limit(last).get(); if(q.empty){print('(nema događaja)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | ${d.data().text}`)); },
+    help: 'log [n] — globalni događaji'
   };
 
-  // --- economy (simulated bank accounts inside game) ---
-  COMMANDS.balance = {
-    fn: async ()=>{ print(`Money: ${me.money || 0}`); },
-    help: 'balance — tvoj virtualni novac'
-  };
+  // economy
+  COMMANDS.balance = { fn: async ()=>{ if(!me){print('Prijavi se'); return;} print(`Money: ${me.money || 0}`); }, help: 'balance — tvoj novac' };
   COMMANDS.transfer = {
-    fn: async (args)=>{ const who=args[0]; const amount=parseInt(args[1]); if(!who||!amount){print('Usage: transfer <displayName> <amount>'); return;} const target = await fetchPlayerByName(who); if(!target){print('Target not found'); return;} if(me.money < amount){print('Nemaš dovoljno'); return;} // simulate transfer
-      await db.collection('players').doc(me.uid).update({money: (me.money - amount)}); await db.collection('players').doc(target.uid).update({money: (target.money || 0) + amount});
-      print(`<span class="ok">Poslato ${amount} gamecoins to ${who}</span>`);
-    },
-    help: 'transfer <displayName> <amount> — pošalji in-game novac'
+    fn: async (args)=>{ const who=args[0]; const amount=parseInt(args[1]); if(!who||!amount){print('Usage: transfer <displayName> <amount>'); return;} const target = await fetchPlayerByName(who); if(!target){print('Target not found'); return;} if((me.money||0) < amount){print('Nemaš dovoljno'); return;} await db.collection('players').doc(me.uid).update({money: (me.money - amount)}); await db.collection('players').doc(target.uid).update({money: (target.money || 0) + amount}); print(`<span class="ok">Poslato ${amount} gamecoins to ${who}</span>`); },
+    help: 'transfer <displayName> <amount> — pošalji novac'
   };
 
-  // --- file transfer to another device (simulated) ---
+  // file transfer
   COMMANDS.pushfile = {
-    fn: async (args)=>{ const targetName=args[0]; const path=args[1]; if(!targetName||!path){print('Usage: pushfile <targetDisplayName> <localPath>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('No target'); return;} if(!me.fs[path]){print('Local fajl ne postoji'); return;} // push simulated file as incoming on target
-      await db.collection('incoming').add({to:target.displayName,from:me.displayName,path,pathContent:me.fs[path],ts:nowISO()});
-      print(`<span class="ok">Fajl poslat ${target.displayName}</span>`);
-    },
-    help: 'pushfile <displayName> <localPath> — pošalji fajl drugome (simulirano)'
+    fn: async (args)=>{ const targetName=args[0]; const path=args[1]; if(!targetName||!path){print('Usage: pushfile <displayName> <localPath>'); return;} const target = await fetchPlayerByName(targetName); if(!target){print('No target'); return;} if(!me.fs[path]){print('Local fajl ne postoji'); return;} await db.collection('incoming').add({to:target.displayName,from:me.displayName,path,pathContent:me.fs[path],ts:nowISO()}); print(`<span class="ok">Fajl poslat ${target.displayName}</span>`); },
+    help: 'pushfile <displayName> <localPath> — pošalji fajl'
   };
-
   COMMANDS.incoming = {
-    fn: async ()=>{ const q = await db.collection('incoming').where('to','==',me.displayName).get(); if(q.empty){print('(nema incoming fajlova)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | from ${d.data().from} -> ${d.data().path}`)); },
-    help: 'incoming — proveri fajlove koje su ti poslali'
+    fn: async ()=>{ if(!me){print('Prijavi se'); return;} const q = await db.collection('incoming').where('to','==',me.displayName).get(); if(q.empty){print('(nema incoming fajlova)'); return;} q.docs.forEach(d=>print(`${d.data().ts} | from ${d.data().from} -> ${d.data().path}`)); },
+    help: 'incoming — lista pristiglih fajlova'
   };
-
   COMMANDS.acceptfile = {
     fn: async (args)=>{ const ts = args[0]; if(!ts){print('Usage: acceptfile <ts>'); return;} const q = await db.collection('incoming').where('to','==',me.displayName).where('ts','==',ts).get(); if(q.empty){print('Nema takvog'); return;} const d=q.docs[0].data(); me.fs[d.path] = d.pathContent; await updateMe({fs:me.fs}); print(`<span class="ok">Primljen ${d.path}</span>`); },
-    help: 'acceptfile <ts> — prihvati incoming fajl (koristi timestamp iz incoming)'
+    help: 'acceptfile <ts> — prihvati fajl'
   };
 
-  // --- system utilities ---
-  COMMANDS.help = {
-    fn: async ()=>{ print('<span class="sys">--- HackSim komande ---</span>'); Object.keys(COMMANDS).sort().forEach(k=>{ print(`${prettyCmd(k)} — ${COMMANDS[k].help || ''}`); }); },
-    help: 'help — prikaži ovu listu'
-  };
-
-  // --- misc fun commands (adds flavor) ---
+  // system & fun
+  COMMANDS.help = { fn: async ()=>{ print('<span class="sys">--- HackSim komande ---</span>'); Object.keys(COMMANDS).sort().forEach(k=>{ print(`${prettyCmd(k)} — ${COMMANDS[k].help || ''}`); }); }, help: 'help — prikaži listu' };
   COMMANDS.ping = { fn: ()=>print('pong'), help: 'ping — test' };
   COMMANDS.clear = { fn: ()=>{ screen.innerHTML=''; }, help: 'clear — očisti ekran' };
   COMMANDS.meow = { fn: ()=>print('(=^.^=) virtual cat'), help: 'meow — easter egg' };
-  COMMANDS.version = { fn: ()=>print('HackSim v1.0 (simulated) — by AI'), help: 'version — prikaz verzije' };
+  COMMANDS.version = { fn: ()=>print('HackSim v1.0 (simulated) — by AI'), help: 'version — verzija' };
+  COMMANDS.resetfs = { fn: async ()=>{ if(!me){print('Prijavi se');return;} me.fs = {...START_FILES}; await updateMe({fs:me.fs}); print('FS resetovan'); }, help: 'resetfs — resetuj FS' };
+  COMMANDS.spawn = { fn: async (args)=>{ const n = parseInt(args[0]||1); for(let i=0;i<n;i++){ const id = 'bot_'+uidShort(); await db.collection('players').doc(id).set({uid:id,displayName:'BOT_'+id,role:ROLES[Math.floor(Math.random()*ROLES.length)],ip:randIP(),vpnOn:false,fs:{...START_FILES},money:100,createdAt:nowISO()}); } print(`Spawn-ovano ${n} bota`); }, help: 'spawn <n> — napravi botove' };
 
-  // --- admin-ish / dev tools for debugging (safe) ---
-  COMMANDS.resetfs = { fn: async ()=>{ me.fs = START_FILES; await updateMe({fs:me.fs}); print('FS resetovan'); }, help: 'resetfs — resetuj svoj FS' };
-  COMMANDS.spawn = { fn: async (args)=>{ // spawn bots for load testing (simulated)
-      const n = parseInt(args[0]||1);
-      for(let i=0;i<n;i++){
-        const id = 'bot_'+uidShort();
-        await db.collection('players').doc(id).set({uid:id,displayName:'BOT_'+id,role:ROLES[Math.floor(Math.random()*ROLES.length)],ip:randIP(),vpnOn:false,fs:START_FILES,money:100,createdAt:nowISO()});
-      }
-      print(`Spawn-ovano ${n} bota`);
-    }, help: 'spawn <n> — napravi bot igrače (dev/tool)'
-  };
+  // aliases
+  [
+    ['who','whoami'],['mkco','mkcompany'],['joinco','joincompany'],['ci','companyinfo'],
+    ['sf','scan'],['ex','exploit'],['ds','deploy'],['ms','mkscript'],['lsf','ls'],['catf','cat'],
+    ['wf','write'],['rf','rm'],['mvf','mv'],['ss','lsscripts'],['cs','catcript'],
+    ['avup','mkuppdate'],['updav','updateav'],['msgs','readmsgs'],['pl','players'],['lg','log'],
+    ['bal','balance'],['xfer','transfer'],['pf','pushfile'],['inc','incoming'],['af','acceptfile'],
+    ['tr','traces'],['huntme','hunt'],['vpnstatus','ip']
+  ].forEach(([a,b])=>{ if(COMMANDS[b]) COMMANDS[a]={fn:COMMANDS[b].fn,help:'alias for '+b}; });
 
-  // --- many small flavored commands to reach ~70 (aliases, shortcuts) ---
-  const extras = [
-    ['who','whoami'],
-    ['mkco','mkcompany'],
-    ['joinco','joincompany'],
-    ['ci','companyinfo'],
-    ['sf','scan'],
-    ['ex','exploit'],
-    ['ds','deploy'],
-    ['ms','mkscript'],
-    ['lsf','ls'],
-    ['catf','cat'],
-    ['wf','write'],
-    ['rf','rm'],
-    ['mvf','mv'],
-    ['ss','lsscripts'],
-    ['cs','catcript'],
-    ['avup','mkuppdate'],
-    ['updav','updateav'],
-    ['msgs','readmsgs'],
-    ['pl','players'],
-    ['lg','log'],
-    ['bal','balance'],
-    ['xfer','transfer'],
-    ['pf','pushfile'],
-    ['inc','incoming'],
-    ['af','acceptfile'],
-    ['tr','traces'],
-    ['huntme','hunt'],
-    ['vpnstatus','ip']
-  ];
-  extras.forEach(([a,b])=>{ if(COMMANDS[b]) COMMANDS[a]={fn:COMMANDS[b].fn,help:'alias for '+b}; });
-
-  // Fill up list to ~70 commands by adding many flavored scripting / virus names and "simulate" actions
-  const flavorCommands = [
+  // flavor komande (popuna do ~70)
+  [
     'virus.scan','virus.infect','virus.silent','virus.wipe','virus.encrypt','virus.ransom',
     'upgrade.firewall','upgrade.patch','upgrade.hardening','antivirus.scan','antivirus.clean',
     'social.phish','social.spoof','traceback','forensic','backup','restore','fork','merge',
     'compile','run','stop','status','reboot','shutdown','monitor','tail','grep','find','netstat',
     'ports','route','proxy','sniff','encrypt','decrypt','sign','verify','keygen','authcheck'
-  ];
-  flavorCommands.forEach(name=>{
-    COMMANDS[name] = { fn: ()=>print(`<span class="meta">Simulated action: ${name} (use deploy / mkscript to create logic)</span>`), help: name + ' — flavor simulated command' };
+  ].forEach(name=>{
+    COMMANDS[name] = { fn: ()=>print(`<span class="meta">Simulated action: ${name} (use deploy / mkscript)</span>`), help: name+' — simulacija' };
   });
-
-  // count commands to ensure ~70
-  // (no need to show this in UI)
 
   /**********************
    *  Terminal input handling
@@ -537,19 +442,18 @@
     }
   });
 
-  // auto-focus
+  // focus i auth state
   window.addEventListener('click', ()=>input.focus());
   input.focus();
 
-  // if someone is already logged in (persisted) attach listener
   auth.onAuthStateChanged(user=>{
     if(user) attachPlayerListener(user.uid);
     else { statusChip.textContent='not connected'; statusChip.classList.remove('ok'); }
   });
 
-  // initial greeting
+  // pozdrav
   print(`<span class="sys">HackSim — Multiplayer Terminal Game (simulated)</span>`);
-  print(`<span class="meta">Upiši <span class="cmd">help</span> za listu komandi. Registrovanje: <span class="cmd">register</span></span>`);
+  print(`<span class="meta">Upiši ${prettyCmd('help')} za listu komandi. Registrovanje: ${prettyCmd('register')}</span>`);
   </script>
 </body>
 </html>
