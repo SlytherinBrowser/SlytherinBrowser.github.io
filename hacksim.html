@@ -31,15 +31,15 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
 
   <script type="module">
   /*******************************
    *  PASTI: zameni sa tvojim
    *******************************/
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+
   const firebaseConfig = {
   apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
   authDomain: "bank-e0ff6.firebaseapp.com",
