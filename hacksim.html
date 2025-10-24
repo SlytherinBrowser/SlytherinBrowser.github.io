@@ -32,28 +32,31 @@
   </div>
 
 
-  <script type="module">
+  <!-- 🔽 Firebase compat SDK-ovi MORAJU biti iznad tvoje skripte -->
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
+
+  <!-- ❌ NEMA type="module" ovde -->
+  <script>
   /*******************************
-   *  PASTI: zameni sa tvojim
+   *  Tvoj Firebase config
    *******************************/
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
-
   const firebaseConfig = {
-  apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
-  authDomain: "bank-e0ff6.firebaseapp.com",
-  projectId: "bank-e0ff6",
-  storageBucket: "bank-e0ff6.firebasestorage.app",
-  messagingSenderId: "742754807887",
-  appId: "1:742754807887:web:d88ecb6cb5cb30bd7a3a3a",
-  measurementId: "G-ED31C26W08"
-};
+    apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
+    authDomain: "bank-e0ff6.firebaseapp.com",
+    projectId: "bank-e0ff6",
+    /* ✅ storageBucket treba da bude *.appspot.com, ne firebasestorage.app */
+    storageBucket: "bank-e0ff6.appspot.com",
+    messagingSenderId: "742754807887",
+    appId: "1:742754807887:web:d88ecb6cb5cb30bd7a3a3a",
+    measurementId: "G-ED31C26W08"
+  };
 
+  /* compat API */
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
-  const db = firebase.firestore();
-
+  const db   = firebase.firestore();
   // UI refs
   const screen = document.getElementById('screen');
   const input = document.getElementById('input');
