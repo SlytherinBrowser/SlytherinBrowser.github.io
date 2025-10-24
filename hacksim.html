@@ -26,33 +26,26 @@
 
   <!-- ✅ Modularni SDK; nema globalnog `firebase` -->
   <script type="module">
-    /************ Firebase imports (modular) ************/
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signOut
-    } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, addDoc,
-      collection, getDocs, onSnapshot, query, where, limit, orderBy
-    } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+/* ===== Firebase imports (modular) — VERZIJA 9.23.0 ===== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, getDocs, onSnapshot, query, where, limit, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    /************ Tvoj config ************/
-    const firebaseConfig = {
-      apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
-      authDomain: "bank-e0ff6.firebaseapp.com",
-      projectId: "bank-e0ff6",
-      storageBucket: "bank-e0ff6.appspot.com",
-      messagingSenderId: "742754807887",
-      appId: "1:742754807887:web:d88ecb6cb5cb30bd7a3a3a",
-      measurementId: "G-ED31C26W08"
-    };
+/* ===== Tvoj config ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAg4A0XMqu0C4FqbuKOdSxYSKdixOQp3gI",
+  authDomain: "bank-e0ff6.firebaseapp.com",
+  projectId: "bank-e0ff6",
+  storageBucket: "bank-e0ff6.appspot.com",
+  messagingSenderId: "742754807887",
+  appId: "1:742754807887:web:d88ecb6cb5cb30bd7a3a3a",
+  measurementId: "G-ED31C26W08"
+};
 
-    /************ Init ************/
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db   = getFirestore(app);
-
+/* ===== Init ===== */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
     /************ UI helpers ************/
     const screen = document.getElementById('screen');
     const input = document.getElementById('input');
