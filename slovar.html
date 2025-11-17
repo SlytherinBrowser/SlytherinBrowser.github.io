@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dushra Codex – Demonski Prevajalnik</title>
+  <style>
+    /* ===== GLOBAL ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: radial-gradient(circle at top, #1a0b13 0, #050308 50%, #000 100%);
+      color: #f3e6da;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 2000px;
+      user-select: none;
+    }
+
+    /* ===== BOOK SHELL ===== */
+    .book-container {
+      width: 820px;
+      max-width: 92vw;
+      height: 540px;
+      max-height: 85vh;
+      position: relative;
+      cursor: pointer;
+      transform-style: preserve-3d;
+    }
+
+    .book-outer {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #1b0c0f, #2b131b, #100508);
+      box-shadow:
+        0 0 40px rgba(0, 0, 0, 0.9),
+        0 0 60px rgba(255, 0, 0, 0.25),
+        inset 0 0 40px rgba(255, 60, 30, 0.15);
+      overflow: hidden;
+      border: 2px solid rgba(255, 80, 40, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.9s ease, box-shadow 0.9s ease, border-color 0.9s ease;
+      transform-origin: left center;
+    }
+
+    .book-container.closed .book-outer {
+      transform: rotateY(0deg);
+    }
+
+    .book-container.opened .book-outer {
+      transform: rotateY(-140deg);
+      box-shadow:
+        0 0 80px rgba(255, 50, 10, 0.7),
+        0 0 140px rgba(255, 0, 0, 0.6);
+      border-color: rgba(255, 120, 90, 0.9);
+    }
+
+    .book-cover-symbol {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 120, 90, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow:
+        0 0 35px rgba(255, 60, 30, 0.9),
+        inset 0 0 40px rgba(255, 210, 190, 0.15);
+      animation: heartPulse 3.2s ease-in-out infinite;
+    }
+
+    .book-cover-symbol::before {
+      content: "";
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 90, 60, 0.2);
+      box-shadow: 0 0 35px rgba(255, 90, 60, 0.4);
+      filter: blur(1px);
+    }
+
+    .book-cover-rune {
+      font-family: "Georgia", serif;
+      font-size: 52px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: center;
+      color: #ffb9a0;
+      text-shadow:
+        0 0 10px rgba(255, 210, 180, 0.9),
+        0 0 25px rgba(255, 60, 20, 0.95);
+    }
+
+    @keyframes heartPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(255, 60, 30, 0.8); }
+      40% { transform: scale(1.06); box-shadow: 0 0 60px rgba(255, 80, 50, 1); }
+      60% { transform: scale(1.02); box-shadow: 0 0 45px rgba(255, 70, 40, 0.9); }
+    }
+
+    .cover-cracks {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 10%, rgba(255, 90, 40, 0.55) 0, transparent 36%),
+                  radial-gradient(circle at 80% 80%, rgba(255, 50, 20, 0.45) 0, transparent 32%);
+      mix-blend-mode: screen;
+      opacity: 0.7;
+      pointer-events: none;
+      filter: blur(1px);
+    }
+
+    /* ===== INNER CODEX ===== */
+    .codex-inner {
+      position: absolute;
+      inset: 0;
+      margin-left: 20px;
+      background: linear-gradient(135deg, #f5e8ce 0, #e0cfaa 40%, #d1b88b 100%);
+      border-radius: 8px;
+      box-shadow:
+        18px 0 25px rgba(0, 0, 0, 0.9),
+        inset 0 0 24px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateX(40px) scale(0.98);
+      transform-origin: center;
+      transition: opacity 0.9s ease 0.2s, transform 0.9s ease 0.2s;
+      pointer-events: none;
+    }
+
+    .book-container.opened .codex-inner {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+      pointer-events: auto;
+      cursor: default;
+    }
+
+    .codex-inner::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(90deg,
+          rgba(0, 0, 0, 0.12) 0,
+          rgba(0, 0, 0, 0.12) 1px,
+          transparent 1px,
+          transparent 6px);
+      mix-blend-mode: multiply;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .codex-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 26px 20px 26px;
+      color: #2c1206;
+    }
+
+    .codex-header {
+      text-align: center;
+      margin-bottom: 10px;
+      position: relative;
+      padding-bottom: 6px;
+    }
+
+    .codex-title-main {
+      font-family: "Cinzel", "Georgia", serif;
+      font-size: 28px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: #5d110b;
+      text-shadow:
+        0 0 6px rgba(255, 170, 110, 0.8),
+        0 0 16px rgba(180, 40, 0, 0.8);
+    }
+
+    .codex-title-sub {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      margin-top: 6px;
+      color: #7d2615;
+    }
+
+    .codex-header::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 200px;
+      height: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, #8a3616, transparent);
+      opacity: 0.8;
+    }
+
+    /* ===== SIGILS (MODES) ===== */
+    .mode-sigils {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 10px 0 12px;
+    }
+
+    .sigil {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fdf2d6 0, #e3caa2 40%, #a66e42 100%);
+      box-shadow:
+        0 0 12px rgba(0, 0, 0, 0.4),
+        0 0 18px rgba(180, 50, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .sigil::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 50%;
+      border: 1px solid rgba(120, 60, 30, 0.4);
+    }
+
+    .sigil:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow:
+        0 0 18px rgba(0, 0, 0, 0.7),
+        0 0 28px rgba(210, 80, 10, 0.9);
+      filter: brightness(1.08);
+    }
+
+    .sigil.active {
+      box-shadow:
+        0 0 20px rgba(0, 0, 0, 0.85),
+        0 0 38px rgba(220, 40, 10, 0.95);
+      transform: translateY(-2px) scale(1.05);
+    }
+
+    .sigil-icon {
+      font-size: 26px;
+    }
+
+    .sigil-label {
+      margin-top: 4px;
+      font-size: 11px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6a200b;
+    }
+
+    /* ===== MAIN AREA (PAGES) ===== */
+    .codex-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 1.2fr;
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .page {
+      position: relative;
+      background: radial-gradient(circle at top left, #fdf6e3 0, #e9d6b5 42%, #d6ba8c 100%);
+      border-radius: 8px;
+      padding: 14px 14px 12px;
+      box-shadow:
+        0 0 12px rgba(0, 0, 0, 0.25),
+        inset 0 0 12px rgba(255, 255, 255, 0.3);
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.04) 0,
+            rgba(0, 0, 0, 0.04) 1px,
+            transparent 1px,
+            transparent 14px
+        );
+      pointer-events: none;
+    }
+
+    .page-header {
+      font-family: "Cinzel", "Georgia", serif;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 6px;
+      color: #7d2615;
+    }
+
+    .page-scroll {
+      position: relative;
+      max-height: calc(100% - 20px);
+      overflow-y: auto;
+      padding-right: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #3a1506;
+    }
+
+    .page-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .page-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .page-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 60, 30, 0.5);
+      border-radius: 10px;
+    }
+
+    .muted {
+      opacity: 0.7;
+      font-size: 12px;
+    }
+
+    .small {
+      font-size: 11px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      background: rgba(250, 241, 220, 0.9);
+      border-radius: 6px;
+      border: 1px solid rgba(110, 70, 36, 0.7);
+      padding: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      color: #2b1006;
+      outline: none;
+    }
+
+    textarea:focus {
+      box-shadow: 0 0 0 1px rgba(160, 55, 20, 0.8);
+      border-color: rgba(160, 55, 20, 0.9);
+    }
+
+    .ghost-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #9a5a2f;
+      margin-bottom: 4px;
+    }
+
+    .result-block {
+      background: rgba(255, 248, 228, 0.95);
+      border-radius: 6px;
+      border: 1px solid rgba(100, 60, 30, 0.7);
+      padding: 6px 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .inline-pill {
+      display: inline-block;
+      background: rgba(121, 45, 14, 0.12);
+      border-radius: 999px;
+      padding: 1px 7px 2px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-right: 4px;
+      color: #6e2b13;
+    }
+
+    .direction-toggle {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .direction-pill {
+      flex: 1;
+      text-align: center;
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(115, 60, 26, 0.6);
+      background: rgba(250, 238, 210, 0.75);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .direction-pill.active {
+      background: radial-gradient(circle, #fdf2d6 0, #e5b987 60%, #b26537 100%);
+      box-shadow:
+        0 0 11px rgba(140, 54, 22, 0.8),
+        0 0 15px rgba(180, 76, 26, 0.8);
+      transform: translateY(-1px);
+      color: #3a1408;
+    }
+
+    /* ===== SEARCH / EYE MODE ===== */
+    .eye-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .eye-left, .eye-right {
+      flex: 1;
+      position: relative;
+    }
+
+    .demonic-eye {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffe8b4 0, #ffb98a 30%, #6b0b02 65%, #0b0000 100%);
+      margin: 0 auto;
+      margin-top: 10px;
+      box-shadow:
+        0 0 25px rgba(150, 20, 8, 0.9),
+        0 0 50px rgba(255, 60, 24, 0.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demonic-eye::before {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 200, 160, 0.35);
+      box-shadow: 0 0 20px rgba(255, 210, 160, 0.6);
+    }
+
+    .demonic-pupil {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 80px;
+      background: radial-gradient(circle at 50% 10%, #ffdfc4 0, #570303 48%, #220000 100%);
+      transform: translate(-50%, -50%) rotate(8deg);
+      border-radius: 50% 50% 50% 50%;
+      box-shadow:
+        0 0 30px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(255, 80, 40, 0.8);
+    }
+
+    .eye-ring {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 50%, rgba(255, 130, 60, 0.24) 62%, transparent 80%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .eye-search-input {
+      margin-top: 10px;
+    }
+
+    .eye-search-input input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 70, 30, 0.7);
+      padding: 6px 9px;
+      font-size: 13px;
+      background: rgba(250, 238, 214, 0.9);
+      outline: none;
+      color: #2a0f05;
+    }
+
+    .eye-search-input input:focus {
+      box-shadow: 0 0 0 1px rgba(150, 70, 28, 0.9);
+    }
+
+    .eye-hint {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #7a3e1d;
+    }
+
+    .search-pages {
+      position: relative;
+      margin-top: 10px;
+      height: calc(100% - 90px);
+    }
+
+    .search-page {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background: radial-gradient(circle at top left, #fdf6e3 0, #e9d6b5 42%, #d6ba8c 100%);
+      box-shadow:
+        0 0 10px rgba(0, 0, 0, 0.25),
+        inset 0 0 12px rgba(255, 255, 255, 0.3);
+      padding: 10px;
+      opacity: 0;
+      transform-origin: left center;
+      transform: rotateY(-45deg) translateX(-15px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      overflow: hidden;
+    }
+
+    .search-page.visible {
+      opacity: 1;
+      transform: rotateY(0deg) translateX(0);
+    }
+
+    .search-page-header {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #7d2615;
+      margin-bottom: 4px;
+    }
+
+    .search-page-body {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #3a1506;
+      max-height: calc(100% - 22px);
+      overflow: auto;
+    }
+
+    /* ===== RULES FLIP STACK ===== */
+    .rules-stack {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .rules-page {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background: radial-gradient(circle at top left, #fdf6e3 0, #e9d6b5 40%, #d7bc90 100%);
+      box-shadow:
+        0 0 11px rgba(0, 0, 0, 0.25),
+        inset 0 0 12px rgba(255, 255, 255, 0.3);
+      padding: 10px;
+      opacity: 0;
+      transform-origin: left center;
+      transform: rotateY(-25deg) translateX(-16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .rules-page.visible {
+      opacity: 1;
+      transform: rotateY(0deg) translateX(0);
+    }
+
+    .rules-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 4px;
+      color: #7d2615;
+    }
+
+    .rules-body {
+      font-size: 13px;
+      max-height: calc(100% - 24px);
+      overflow-y: auto;
+    }
+
+    .rules-footer {
+      position: absolute;
+      bottom: 4px;
+      right: 10px;
+      font-size: 11px;
+      color: #80401e;
+    }
+
+    .rules-footer span {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(127, 72, 37, 0.15);
+    }
+
+    .rules-footer span:hover {
+      background: rgba(127, 72, 37, 0.4);
+    }
+
+    /* ===== FOOT ===== */
+    .codex-footer {
+      margin-top: 2px;
+      font-size: 10px;
+      color: #7a3c1a;
+      text-align: right;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .codex-body {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .book-container {
+        transform: scale(0.9);
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="book-container closed" id="bookContainer">
+    <!-- CLOSED COVER -->
+    <div class="book-outer">
+      <div class="book-cover-symbol">
+        <div class="book-cover-rune">
+          ᛞᚢᛋ<br>ᛖᚱ
+        </div>
+      </div>
+      <div class="cover-cracks"></div>
+    </div>
+
+    <!-- INNER CODEX -->
+    <div class="codex-inner">
+      <div class="codex-content">
+        <header class="codex-header">
+          <div class="codex-title-main">DUSHRA CODEX</div>
+          <div class="codex-title-sub">DEMONSKI JEZIK &bull; PREVAJALNIK &bull; PRAVILA</div>
+        </header>
+
+        <section class="mode-sigils">
+          <div class="sigil active" data-mode="translate">
+            <div class="sigil-icon">✒</div>
+            <div class="sigil-label">Pisanje</div>
+          </div>
+          <div class="sigil" data-mode="rules">
+            <div class="sigil-icon">🔥</div>
+            <div class="sigil-label">Pravila</div>
+          </div>
+          <div class="sigil" data-mode="search">
+            <div class="sigil-icon">👁</div>
+            <div class="sigil-label">Iskanje</div>
+          </div>
+        </section>
+
+        <!-- MAIN AREA -->
+        <section class="codex-body">
+          <!-- LEFT PAGE -->
+          <article class="page" id="leftPage">
+            <div class="page-header" id="leftPageHeader">Prevajanje</div>
+            <div class="page-scroll" id="leftPageScroll">
+              <!-- TRANSLATE MODE CONTENT LEFT -->
+              <div class="translate-left">
+                <div class="direction-toggle" id="directionToggle">
+                  <div class="direction-pill active" data-dir="sl2dem">Slovenščina → Demotika</div>
+                  <div class="direction-pill" data-dir="dem2sl">Demotika → Slovenščina</div>
+                </div>
+                <div class="ghost-label" id="inputLabel">Vnos (slovensko)</div>
+                <textarea id="inputText" placeholder="Vpiši besedo, stavek ali cel odstavek..."></textarea>
+                <p class="muted small" style="margin-top:6px;">
+                  Algoritem:
+                  <span class="inline-pill">r→rr</span>
+                  <span class="inline-pill">v→gh</span>
+                  <span class="inline-pill">h→kh</span>
+                  <span class="inline-pill">s→z</span>
+                  <span class="inline-pill">č/š/ž→sh/zh</span>
+                  + podaljšani samoglasniki.
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <!-- RIGHT PAGE -->
+          <article class="page" id="rightPage">
+            <div class="page-header" id="rightPageHeader">Rezultat</div>
+            <div class="page-scroll" id="rightPageScroll">
+              <!-- TRANSLATE MODE CONTENT RIGHT -->
+              <div class="translate-right">
+                <div class="ghost-label" id="outputLabel">Prevod (demotsko)</div>
+                <div class="result-block" id="outputText">
+                  Prevedeno besedilo se bo prikazalo tukaj.  
+                  Začni tipkati levo – knjiga bo prežvečila tvoje besede in jih izpljunila v demotski obliki.
+                </div>
+                <p class="muted small" style="margin-top:8px;">
+                  Poseben slovar prepoznava nekatere ključe besede
+                  (<span class="inline-pill">dusa</span>
+                  <span class="inline-pill">ogenj</span>
+                  <span class="inline-pill">ljubezen</span>
+                  <span class="inline-pill">smrt</span>
+                  ...),  
+                  ostalo obdeluje demonski algoritem.
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <footer class="codex-footer">
+          &copy; Dushra Codex &mdash; Demotski jezik
+        </footer>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===================== CORE DOM ELEMENTS =====================
+  const bookContainer = document.getElementById('bookContainer');
+  const sigils = document.querySelectorAll('.sigil');
+
+  const leftPage = document.getElementById('leftPage');
+  const rightPage = document.getElementById('rightPage');
+  const leftPageHeader = document.getElementById('leftPageHeader');
+  const rightPageHeader = document.getElementById('rightPageHeader');
+  const leftPageScroll = document.getElementById('leftPageScroll');
+  const rightPageScroll = document.getElementById('rightPageScroll');
+
+  // Translate elements
+  let currentMode = 'translate';
+  let currentDirection = 'sl2dem';
+
+  const directionToggle = document.getElementById('directionToggle');
+  const inputLabel = document.getElementById('inputLabel');
+  const outputLabel = document.getElementById('outputLabel');
+  const inputText = document.getElementById('inputText');
+  const outputText = document.getElementById('outputText');
+
+  // ===================== OPEN BOOK =====================
+  bookContainer.addEventListener('click', (ev) => {
+    // first click opens the book; after that, inner elements handle interactions
+    if (bookContainer.classList.contains('closed')) {
+      bookContainer.classList.remove('closed');
+      bookContainer.classList.add('opened');
+      ev.stopPropagation();
+    }
+  }, { capture: true });
+
+  // Prevent click bubbling inside inner codex so it doesn't re-trigger open logic
+  document.querySelector('.codex-inner').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+  });
+
+  // ===================== MODE SWITCHING =====================
+  sigils.forEach(sigil => {
+    sigil.addEventListener('click', () => {
+      sigils.forEach(s => s.classList.remove('active'));
+      sigil.classList.add('active');
+      const mode = sigil.dataset.mode;
+      switchMode(mode);
+    });
+  });
+
+  function switchMode(mode) {
+    currentMode = mode;
+    // Clear left & right pages, then inject appropriate content
+    leftPageScroll.innerHTML = '';
+    rightPageScroll.innerHTML = '';
+
+    if (mode === 'translate') {
+      leftPageHeader.textContent = 'Prevajanje';
+      rightPageHeader.textContent = 'Rezultat';
+      buildTranslateMode();
+    } else if (mode === 'rules') {
+      leftPageHeader.textContent = 'Glavna pravila';
+      rightPageHeader.textContent = 'Sklop pravil';
+      buildRulesMode();
+    } else if (mode === 'search') {
+      leftPageHeader.textContent = 'Oko razodetja';
+      rightPageHeader.textContent = 'Razlaga v listih';
+      buildSearchMode();
+    }
+  }
+
+  // ===================== TRANSLATE MODE =====================
+  function buildTranslateMode() {
+    const left = document.createElement('div');
+    left.className = 'translate-left';
+
+    const toggle = directionToggle;
+    left.appendChild(toggle);
+
+    const label = inputLabel;
+    label.textContent = 'Vnos (slovensko)';
+    left.appendChild(label);
+
+    const textarea = inputText;
+    textarea.value = '';
+    left.appendChild(textarea);
+
+    const info = document.createElement('p');
+    info.className = 'muted small';
+    info.style.marginTop = '6px';
+    info.innerHTML = `
+      Algoritem:
+      <span class="inline-pill">r→rr</span>
+      <span class="inline-pill">v→gh</span>
+      <span class="inline-pill">h→kh</span>
+      <span class="inline-pill">s→z</span>
+      <span class="inline-pill">č/š/ž→sh/zh</span>
+      + podaljšani samoglasniki.
+    `;
+    left.appendChild(info);
+    leftPageScroll.appendChild(left);
+
+    // Right page
+    const right = document.createElement('div');
+    right.className = 'translate-right';
+
+    const outLabel = outputLabel;
+    outLabel.textContent = 'Prevod (demotsko)';
+    right.appendChild(outLabel);
+
+    const outBlock = outputText;
+    outBlock.textContent = 'Prevedeno besedilo se bo prikazalo tukaj.\nZačni tipkati levo – knjiga bo prežvečila tvoje besede in jih izpljunila v demotski obliki.';
+    right.appendChild(outBlock);
+
+    const info2 = document.createElement('p');
+    info2.className = 'muted small';
+    info2.style.marginTop = '8px';
+    info2.innerHTML = `
+      Poseben slovar prepoznava ključne besede
+      (<span class="inline-pill">dusa</span>
+      <span class="inline-pill">ogenj</span>
+      <span class="inline-pill">ljubezen</span>
+      <span class="inline-pill">smrt</span> ...), 
+      ostalo obdeluje demonski algoritem.
+    `;
+    right.appendChild(info2);
+
+    rightPageScroll.appendChild(right);
+  }
+
+  // Direction toggle logic
+  directionToggle.addEventListener('click', (ev) => {
+    const pill = ev.target.closest('.direction-pill');
+    if (!pill) return;
+    const dir = pill.dataset.dir;
+    currentDirection = dir;
+    directionToggle.querySelectorAll('.direction-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+
+    if (dir === 'sl2dem') {
+      inputLabel.textContent = 'Vnos (slovensko)';
+      outputLabel.textContent = 'Prevod (demotsko)';
+      inputText.placeholder = 'Vpiši besedo ali stavek v slovenščini...';
+      outputText.textContent = '';
+      if (inputText.value) {
+        outputText.textContent = slovenianToDemotic(inputText.value);
+      }
+    } else {
+      inputLabel.textContent = 'Vnos (demotsko)';
+      outputLabel.textContent = 'Prevod (slovenščina)';
+      inputText.placeholder = 'Vpiši besedo ali stavek v demotiki...';
+      outputText.textContent = '';
+      if (inputText.value) {
+        outputText.textContent = demoticToSlovenian(inputText.value);
+      }
+    }
+  });
+
+  // Translate on input
+  inputText.addEventListener('input', () => {
+    const val = inputText.value.trim();
+    if (!val) {
+      outputText.textContent = '';
+      return;
+    }
+
+    if (currentDirection === 'sl2dem') {
+      outputText.textContent = slovenianToDemotic(val);
+    } else {
+      outputText.textContent = demoticToSlovenian(val);
+    }
+  });
+
+  // ===================== RULES MODE =====================
+  function buildRulesMode() {
+    // LEFT PAGE: narrative overview
+    const leftIntro = document.createElement('div');
+    leftIntro.innerHTML = `
+      <div class="ghost-label">Opis</div>
+      <p class="small" style="margin-bottom:6px;">
+        Demotika je demonski jezik, ki temelji na slovenski strukturi, 
+        vendar uporablja mračne preobrazbe glasov, samoglasnikov in končnic.
+      </p>
+      <p class="small">
+        Jezik podpira algoritemsko pretvorbo med slovenščino in demotiko:
+        preko zamenjave glasov, podaljševanja samoglasnikov, dodajanja demonskih končnic 
+        in premikanja pridevnika za samostalnik.
+      </p>
+      <p class="small" style="margin-top:6px;">
+        Na desni strani so listi, ki si sledijo skozi različne sklope pravil. Dotakni se oznake 
+        <span style="background:rgba(127,72,37,0.18);padding:1px 6px;border-radius:999px;">Naprej / Nazaj</span>
+        in knjiga bo prelistala na naslednje poglavje.
+      </p>
+    `;
+    leftPageScroll.appendChild(leftIntro);
+
+    // RIGHT PAGE: flipping rules stack
+    const stack = document.createElement('div');
+    stack.className = 'rules-stack';
+
+    const rulesData = [
+      {
+        title: 'Fonologija',
+        body: `
+          <p class="small">
+            Demotika dodaja slovenskim glasovom demonske variacije:
+          </p>
+          <ul class="small">
+            <li><b>kh</b> – močan, grlen h</li>
+            <li><b>gh</b> – temni g, med g in h</li>
+            <li><b>rr</b> – dolgi vibrirajoči r</li>
+            <li><b>th</b> – mehka t/d varianta</li>
+            <li><b>sh</b> – ostri glas, uporabljen pri č/š</li>
+          </ul>
+          <p class="small" style="margin-top:4px;">
+            Tipične kombinacije: <i>kr, gr, dr, rrh, khl, thr, zgh, ghrr, shk, khr</i>.
+          </p>
+        `
+      },
+      {
+        title: 'Tvorba besed',
+        body: `
+          <p class="small">
+            Osnovna pravila tvorbe demotskih besed:
+          </p>
+          <ul class="small">
+            <li>Zamenjava glasov:
+              <br><b>r→rr</b>, <b>v→gh</b>, <b>h→kh</b>, <b>s→z</b>, <b>č/š→sh</b>, <b>ž→zh</b>.
+            </li>
+            <li>Podaljšanje samoglasnikov (pri večini besed):
+              <br><b>a→aa</b>, <b>e→ae</b>, <b>o→or</b>, <b>i→ih</b> (ne podvaja že podvojenih).</li>
+            <li>Demonske končnice:
+              <br><b>-ar</b> (bitje), <b>-ra</b> (abstraktno), <b>-oth</b> (predmet), <b>-irr</b> (ukaz).</li>
+            <li>Pridevnik pogosto sledi samostalniku:
+              <br><i>“temna noč” → “nor’kh temarr”</i>.</li>
+          </ul>
+        `
+      },
+      {
+        title: 'Glagoli',
+        body: `
+          <p class="small">
+            Demotski glagoli ohranijo slovensko logiko časov, dobijo pa demonske končnice.
+          </p>
+          <ul class="small">
+            <li><b>Sedanjik</b>:
+              <br>-jem → -irr (kličem → khlichirr)
+              <br>-am → -ram (čakam → shkakhram)
+              <br>-im → -rhim (vidim → vidhrhim)</li>
+            <li><b>Preteklik</b>:
+              <br>Dodamo <b>’rrash</b>:
+              <br>videl sem → vidhrhim’rrash</li>
+            <li><b>Prihodnjik</b>:
+              <br>Dodamo <b>zgho</b> pred osnovo:
+              <br>bom videl → zgho vidh
+            </li>
+          </ul>
+        `
+      },
+      {
+        title: 'Stavčna zgradba',
+        body: `
+          <p class="small">
+            Stavčni red ostaja pretežno SVO (jaz te vidim), vendar:
+          </p>
+          <ul class="small">
+            <li><b>Negacija</b>: uporabi se <b>nor’</b> pred glagolom:
+              <br><i>“Jaz te ne vidim.” → “Jaz nor’ te vidhrhim.”</i></li>
+            <li><b>Pridevnik za samostalnikom</b>:
+              <br><i>“moja duša” → “dushra moja”</i></li>
+            <li><b>Poudarek</b>:
+              <br>Za poudarek se lahko doda <b>rrath</b> (kot “res / pač”):
+              <br><i>“Ogenj res gori v meni.” → “Oghenn rrath gorrrhim v menih.”</i></li>
+          </ul>
+        `
+      },
+      {
+        title: 'Slovar in posebnosti',
+        body: `
+          <p class="small">
+            Nekatere besede imajo močno zakoreninjeno demonsko obliko, ki jo prevajalnik 
+            prepozna preko posebnega slovarja:
+          </p>
+          <ul class="small">
+            <li>dusa → <b>dushra</b></li>
+            <li>ogenj → <b>oghenn</b></li>
+            <li>ljubezen → <b>ljubaer’th</b></li>
+            <li>smrt → <b>smr’th</b></li>
+            <li>tema → <b>temarr</b></li>
+          </ul>
+          <p class="small" style="margin-top:4px;">
+            Kadar ni slovarskega zadetka, se uporabi algoritem za tvorbo demotske oblike iz slovenske
+            besede ter obratno.
+          </p>
+        `
+      }
+    ];
+
+    rulesData.forEach((rule, idx) => {
+      const page = document.createElement('div');
+      page.className = 'rules-page';
+      if (idx === 0) page.classList.add('visible');
+
+      const t = document.createElement('div');
+      t.className = 'rules-title';
+      t.textContent = rule.title;
+
+      const b = document.createElement('div');
+      b.className = 'rules-body';
+      b.innerHTML = rule.body;
+
+      const f = document.createElement('div');
+      f.className = 'rules-footer small';
+      f.innerHTML = `
+        <span data-nav="prev">Nazaj</span> · 
+        <span data-nav="next">Naprej</span>
+      `;
+
+      page.appendChild(t);
+      page.appendChild(b);
+      page.appendChild(f);
+      stack.appendChild(page);
+    });
+
+    rightPageScroll.appendChild(stack);
+
+    // Navigation
+    let currentRuleIndex = 0;
+    const rulesPages = stack.querySelectorAll('.rules-page');
+    stack.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('span[data-nav]');
+      if (!btn) return;
+      const dir = btn.dataset.nav;
+      if (dir === 'next') {
+        currentRuleIndex = (currentRuleIndex + 1) % rulesPages.length;
+      } else {
+        currentRuleIndex = (currentRuleIndex - 1 + rulesPages.length) % rulesPages.length;
+      }
+      rulesPages.forEach((p, idx) => {
+        p.classList.toggle('visible', idx === currentRuleIndex);
+      });
+    });
+  }
+
+  // ===================== SEARCH MODE =====================
+  function buildSearchMode() {
+    // LEFT: Eye + query
+    const left = document.createElement('div');
+    left.className = 'eye-container';
+
+    const eyeLeft = document.createElement('div');
+    eyeLeft.className = 'eye-left';
+
+    const eye = document.createElement('div');
+    eye.className = 'demonic-eye';
+
+    const pupil = document.createElement('div');
+    pupil.className = 'demonic-pupil';
+
+    const ring = document.createElement('div');
+    ring.className = 'eye-ring';
+
+    eye.appendChild(pupil);
+    eye.appendChild(ring);
+
+    const searchInputWrap = document.createElement('div');
+    searchInputWrap.className = 'eye-search-input';
+
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Vpiši besedo, pravilo ali stavek...';
+
+    const hint = document.createElement('div');
+    hint.className = 'eye-hint small';
+    hint.textContent = 'Pritisni Enter: oko prelista kodeks, poišče pravila, pomen, prevod in primer rabe.';
+
+    searchInputWrap.appendChild(searchInput);
+    searchInputWrap.appendChild(hint);
+
+    eyeLeft.appendChild(eye);
+    eyeLeft.appendChild(searchInputWrap);
+    left.appendChild(eyeLeft);
+
+    const right = document.createElement('div');
+    right.className = 'eye-right';
+
+    const searchPages = document.createElement('div');
+    searchPages.className = 'search-pages';
+
+    const pageRule = document.createElement('div');
+    pageRule.className = 'search-page';
+    const pageMeaning = document.createElement('div');
+    pageMeaning.className = 'search-page';
+    const pageTranslation = document.createElement('div');
+    pageTranslation.className = 'search-page';
+
+    pageRule.innerHTML = `
+      <div class="search-page-header">Pravilo</div>
+      <div class="search-page-body small" id="searchRuleBody">
+        Vnesi iskani pojem in oko bo poiskalo ustrezno pravilo ali razlago.
+      </div>
+    `;
+
+    pageMeaning.innerHTML = `
+      <div class="search-page-header">Pomen & izvor</div>
+      <div class="search-page-body small" id="searchMeaningBody">
+        Tu bo prikazan pomen, kratka etimologija ali demotska razlaga, kadar je na voljo.
+      </div>
+    `;
+
+    pageTranslation.innerHTML = `
+      <div class="search-page-header">Prevodi & raba</div>
+      <div class="search-page-body small" id="searchTranslationBody">
+        Tu se pojavijo prevodi med slovenščino in demotiko ter primeri v stavkih.
+      </div>
+    `;
+
+    searchPages.appendChild(pageRule);
+    searchPages.appendChild(pageMeaning);
+    searchPages.appendChild(pageTranslation);
+
+    right.appendChild(searchPages);
+    leftPageScroll.appendChild(left);
+    rightPageScroll.appendChild(right);
+
+    // Search logic
+    const ruleBody = document.getElementById('searchRuleBody');
+    const meaningBody = document.getElementById('searchMeaningBody');
+    const translationBody = document.getElementById('searchTranslationBody');
+
+    const searchPagesList = [pageRule, pageMeaning, pageTranslation];
+
+    searchInput.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        const query = searchInput.value.trim();
+        if (!query) return;
+        // animate pages (flip in sequence)
+        animateSearchPages();
+
+        // Build explanation
+        const res = explainQuery(query);
+        ruleBody.innerHTML = res.rule;
+        meaningBody.innerHTML = res.meaning;
+        translationBody.innerHTML = res.translation;
+      }
+    });
+
+    function animateSearchPages() {
+      searchPagesList.forEach(p => p.classList.remove('visible'));
+      setTimeout(() => {
+        pageRule.classList.add('visible');
+      }, 120);
+      setTimeout(() => {
+        pageMeaning.classList.add('visible');
+      }, 320);
+      setTimeout(() => {
+        pageTranslation.classList.add('visible');
+      }, 520);
+    }
+  }
+
+  // ===================== DICTIONARY & ALGORITHMS =====================
+
+  // Basic dictionary for "true" translations (overrides)
+  const dictSlToDem = {
+    'dusa': 'dushra',
+    'duša': 'dushra',
+    'dusu': 'dushra',
+    'dušo': 'dushra',
+    'duse': 'dushra',
+    'ogenj': 'oghenn',
+    'ognja': 'oghenn',
+    'ljubezen': "ljubaer'th",
+    'ljubezni': "ljubaer'th",
+    'smrt': "smr'th",
+    'smrti': "smr'th",
+    'tema': 'temarr',
+    'temo': 'temarr',
+    'svetloba': 'zvaethra',
+    'svet': 'zvaet',
+    'zivljenje': 'zhivoth',
+    'življenje': 'zhivoth',
+    'demon': 'demoth',
+    'clovek': 'zhlovek',
+    'človek': 'zhlovek',
+    'kri': 'khri'
+  };
+
+  const dictDemToSl = {};
+  for (const [sl, dem] of Object.entries(dictSlToDem)) {
+    dictDemToSl[dem.toLowerCase()] = sl.toLowerCase();
+  }
+
+  function slovenianToDemotic(text) {
+    return text.split(/(\s+)/).map(token => {
+      if (/\s+/.test(token)) return token;
+
+      // Strip punctuation around word
+      const match = token.match(/^([\.,;:\!\?\(\)\[\]\{\}"']*)(.+?)([\.,;:\!\?\(\)\[\]\{\}"']*)$/);
+      let prefix = '', word = token, suffix = '';
+      if (match) {
+        prefix = match[1];
+        word = match[2];
+        suffix = match[3];
+      }
+
+      const lower = word.toLowerCase();
+
+      // dictionary override
+      if (dictSlToDem[lower]) {
+        const dem = dictSlToDem[lower];
+        return prefix + preserveCase(word, dem) + suffix;
+      }
+
+      const demWord = transformSlWordToDem(word);
+      return prefix + demWord + suffix;
+    }).join('');
+  }
+
+  function demoticToSlovenian(text) {
+    return text.split(/(\s+)/).map(token => {
+      if (/\s+/.test(token)) return token;
+
+      const match = token.match(/^([\.,;:\!\?\(\)\[\]\{\}"']*)(.+?)([\.,;:\!\?\(\)\[\]\{\}"']*)$/);
+      let prefix = '', word = token, suffix = '';
+      if (match) {
+        prefix = match[1];
+        word = match[2];
+        suffix = match[3];
+      }
+
+      const lower = word.toLowerCase();
+
+      if (dictDemToSl[lower]) {
+        const sl = dictDemToSl[lower];
+        return prefix + preserveCase(word, sl) + suffix;
+      }
+
+      const slWord = transformDemWordToSl(word);
+      return prefix + slWord + suffix;
+    }).join('');
+  }
+
+  function preserveCase(original, targetLower) {
+    if (!original) return targetLower;
+    if (original === original.toUpperCase()) {
+      return targetLower.toUpperCase();
+    }
+    if (original[0] === original[0].toUpperCase()) {
+      return targetLower[0].toUpperCase() + targetLower.slice(1);
+    }
+    return targetLower;
+  }
+
+  function transformSlWordToDem(word) {
+    const original = word;
+    let w = original.toLowerCase();
+
+    // Step 1: č,š,ž
+    w = w
+      .replace(/č/g, 'sh')
+      .replace(/š/g, 'sh')
+      .replace(/ž/g, 'zh');
+
+    // Step 2: consonant swaps
+    w = w
+      .replace(/r/g, 'rr')
+      .replace(/v/g, 'gh')
+      .replace(/h/g, 'kh')
+      .replace(/s/g, 'z');
+
+    // Step 3: vowels (avoid already doubled)
+    w = w.replace(/a(?!a)/g, 'aa');
+    w = w.replace(/e(?!e)/g, 'ae');
+    w = w.replace(/o(?!o)/g, 'or');
+    w = w.replace(/i(?!i)/g, 'ih');
+
+    // Step 4: simple ending tweak: if original ends with 'a' and not too short → '-ra'
+    if (/a$/i.test(original) && original.length > 3) {
+      if (!/ra$/.test(w)) {
+        w = w.replace(/a+(?![a-z])/i, 'ra');
+      }
+    }
+
+    return w;
+  }
+
+  function transformDemWordToSl(word) {
+    let w = word.toLowerCase();
+
+    // Reverse vowels first
+    w = w.replace(/aa/g, 'a');
+    w = w.replace(/ae/g, 'e');
+    w = w.replace(/or/g, 'o');
+    w = w.replace(/ih/g, 'i');
+
+    // Reverse consonants
+    w = w.replace(/rr/g, 'r');
+    w = w.replace(/gh/g, 'v');
+    w = w.replace(/kh/g, 'h');
+    w = w.replace(/sh/g, 'š');
+    w = w.replace(/zh/g, 'ž');
+
+    // Reverse simple -ra ending to -a when probably noun
+    if (/ra$/.test(w) && w.length > 3) {
+      w = w.replace(/ra$/, 'a');
+    }
+
+    return w;
+  }
+
+  // Explanation engine for search mode
+  function explainQuery(query) {
+    const q = query.trim();
+    const lower = q.toLowerCase();
+
+    let ruleHtml = '';
+    let meaningHtml = '';
+    let translationHtml = '';
+
+    const isProbablyDemotic = /kh|gh|rr|sh|zh|’/.test(lower);
+
+    if (dictSlToDem[lower]) {
+      const dem = dictSlToDem[lower];
+      const demPretty = dem;
+      ruleHtml = `
+        <p class="small">
+          Vnesena beseda <b>${q}</b> je prepoznana kot slovenska ključna beseda.
+          Za njo obstaja posebna demonska oblika, shranjena v slovarju.
+        </p>
+        <p class="small">
+          Pri takšnih besedah je algoritem podrejen slovarju, saj je demonska oblika 
+          del “kanona” Dushra Codexa.
+        </p>
+      `;
+      meaningHtml = `
+        <p class="small">
+          <b>${q}</b> → <b>${demPretty}</b>
+        </p>
+        <p class="small">
+          Ta beseda predstavlja 
+          <i>${q}</i> v demonskem registru: bolj surov, prazen, vendar magijsko močan koncept.
+        </p>
+      `;
+      translationHtml = `
+        <p class="small">
+          <b>Slovenščina → Demotika:</b><br>
+          ${q} → <b>${demPretty}</b>
+        </p>
+        <p class="small" style="margin-top:4px;">
+          <b>Primer rabe:</b><br>
+          “Moja ${q} gori.” → “Dushra moja gorrrhim.”
+        </p>
+      `;
+    } else if (dictDemToSl[lower]) {
+      const sl = dictDemToSl[lower];
+      ruleHtml = `
+        <p class="small">
+          Vnesena beseda <b>${q}</b> je prepoznana kot demonska ključna beseda iz slovarja.
+        </p>
+        <p class="small">
+          Pri teh oblikah se najprej uporabi slovar, šele nato algoritem za natančnejši 
+          povratni prevod v slovenščino.
+        </p>
+      `;
+      meaningHtml = `
+        <p class="small">
+          <b>${q}</b> → <b>${sl}</b> (slovensko)
+        </p>
+        <p class="small">
+          Beseda je del osnovnega demonskega leksikona in je pogosto uporabljena 
+          v besedilih, kjer nastopa pekel, duša, smrt ali ljubezen.
+        </p>
+      `;
+      translationHtml = `
+        <p class="small">
+          <b>Demotika → Slovenščina:</b><br>
+          ${q} → <b>${sl}</b>
+        </p>
+        <p class="small" style="margin-top:4px;">
+          <b>Primer rabe:</b><br>
+          “${q} moja gorrrhim.” → “Moja ${sl} gori.”
+        </p>
+      `;
+    } else if (isProbablyDemotic) {
+      const slGuess = demoticToSlovenian(q);
+      const demGuessBack = slovenianToDemotic(slGuess);
+
+      ruleHtml = `
+        <p class="small">
+          Beseda <b>${q}</b> izgleda kot demotska oblika (vsebuje vsaj en od vzorcev:
+          <b>kh, gh, rr, sh, zh</b>).
+        </p>
+        <p class="small">
+          Za razlago se uporabi obratni algoritem: odstranijo se podvojeni samoglasniki
+          in demonski glasovi ter se poskuša obnoviti slovenščina.
+        </p>
+      `;
+      meaningHtml = `
+        <p class="small">
+          Približno dekodiranje: <b>${slGuess}</b>
+        </p>
+        <p class="small">
+          To dekodiranje je algoritemsko, zato morda ni vedno popolno, 
+          vendar poda dober namig, kaj je bila izvorna slovenska beseda.
+        </p>
+      `;
+      translationHtml = `
+        <p class="small">
+          <b>Demotika → Slovenščina (ocena):</b><br>
+          ${q} → <b>${slGuess}</b>
+        </p>
+        <p class="small">
+          <b>Slovenščina → Demotika (nazaj):</b><br>
+          ${slGuess} → <b>${demGuessBack}</b>
+        </p>
+      `;
+    } else {
+      const demGuess = slovenianToDemotic(q);
+      const backGuess = demoticToSlovenian(demGuess);
+
+      ruleHtml = `
+        <p class="small">
+          Beseda <b>${q}</b> se obravnava kot navadna slovenska vnosna oblika. 
+          Na njo se uporabi algoritem demotike:
+          zamenjava glasov, podaljšanje samoglasnikov, dodajanje končnic in demonski zven.
+        </p>
+      `;
+      meaningHtml = `
+        <p class="small">
+          Algoritmična demotska forma tega vnosa je:
+          <br><b>${demGuess}</b>
+        </p>
+        <p class="small">
+          To ni kanonična beseda, temveč “živa” demonska preobrazba tvoje slovenske besede.
+        </p>
+      `;
+      translationHtml = `
+        <p class="small">
+          <b>Slovenščina → Demotika (algoritem):</b><br>
+          ${q} → <b>${demGuess}</b>
+        </p>
+        <p class="small" style="margin-top:4px;">
+          <b>Demotika → Slovenščina (obrat):</b><br>
+          ${demGuess} → <b>${backGuess}</b>
+        </p>
+      `;
+    }
+
+    return {
+      rule: ruleHtml,
+      meaning: meaningHtml,
+      translation: translationHtml
+    };
+  }
+
+  // ===================== INIT =====================
+  // Build initial translate mode content
+  buildTranslateMode();
+
+</script>
+</body>
+</html>
