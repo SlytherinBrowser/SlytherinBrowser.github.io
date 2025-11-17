@@ -716,11 +716,10 @@
   const leftPageScroll = document.getElementById('leftPageScroll');
   const rightPageScroll = document.getElementById('rightPageScroll');
 
-  // Translate mode globals
   let currentMode = 'translate';
   let currentDirection = 'sl2dem';
 
-  // These will be injected into DOM in translate mode
+  // elements reused v translate modu
   const directionToggle = document.createElement('div');
   directionToggle.className = 'direction-toggle';
   directionToggle.id = 'directionToggle';
@@ -860,12 +859,9 @@
     right.appendChild(ttsHint);
 
     rightPageScroll.appendChild(right);
-
-    // nastavitev dogodkov za TTS
     setupTTS();
   }
 
-  // Direction toggle logic
   directionToggle.addEventListener('click', (ev) => {
     const pill = ev.target.closest('.direction-pill');
     if (!pill) return;
@@ -918,13 +914,14 @@
         za najpomembnejše besede (duša, ogenj, ljubezen, smrt, hvala ...).
       </p>
       <p class="small">
-        Prevajalnik uporablja dve plasti:
-        najprej preveri slovar, nato pa na preostale besede uporabi
-        algoritmično preobrazbo črk (r→rr, v→gh, h→kh, s→z, č/š→sh, ž→zh).
+        Prevajalnik ima dva nivoja:
+        najprej preveri slovar (kanonične oblike),
+        nato pa na ostale besede uporabi algoritmično zamenjavo črk
+        (r→rr, v→gh, h→kh, s→z, č/š→sh, ž→zh).
       </p>
       <p class="small" style="margin-top:6px;">
         Na desni strani so listi, ki si sledijo skozi različne sklope pravil.
-        Dotakni se oznake
+        Uporabi oznaki
         <span style="background:rgba(127,72,37,0.18);padding:1px 6px;border-radius:999px;">Nazaj / Naprej</span>
         in knjiga bo prelistala na naslednje poglavje.
       </p>
@@ -942,15 +939,15 @@
             Demotika dodaja slovenskim glasovom demonske variacije, ki dajejo bolj “pekelski” zven:
           </p>
           <ul class="small">
-            <li><b>kh</b> – grlen, oster <i>h</i> (npr. “h” → “kh”)</li>
-            <li><b>gh</b> – temni prehod med <i>g</i> in <i>v</i> (npr. “v” → “gh”)</li>
-            <li><b>rr</b> – podaljšani, vibrirajoči <i>r</i> (npr. “r” → “rr”)</li>
+            <li><b>kh</b> – grlen, oster h (npr. “h” → “kh”)</li>
+            <li><b>gh</b> – temni prehod med g in v (npr. “v” → “gh”)</li>
+            <li><b>rr</b> – podaljšani, vibrirajoči r (npr. “r” → “rr”)</li>
             <li><b>sh</b> – ostri šumeči glas (npr. “š” in “č” → “sh”)</li>
             <li><b>zh</b> – zveneči šumeči glas (npr. “ž” → “zh”)</li>
-            <li><b>z</b> – demotska zamenjava za navadni “s”</li>
+            <li><b>z</b> – demotska zamenjava za navadni “s” (npr. “s” → “z”)</li>
           </ul>
           <p class="small" style="margin-top:4px;">
-            Demotske besede so zato polne kombinacij kot so: <i>kh, gh, rr, sh, zh</i>.
+            Zaradi tega so demotske besede polne kombinacij: <i>kh, gh, rr, sh, zh</i>.
           </p>
         `
       },
@@ -958,79 +955,82 @@
         title: 'Tvorba besed',
         body: `
           <p class="small">
-            Osnovna tvorba demotskih besed je enostavna: vzame slovensko besedo in
-            na njej zamenja izbrane glasove.
+            Osnovna tvorba demotskih besed je:
           </p>
-          <ul class="small">
-            <li>Zamenjava soglasnikov:
-              <br><b>r→rr</b>, <b>v→gh</b>, <b>h→kh</b>, <b>s→z</b>,
-              <b>č/š→sh</b>, <b>ž→zh</b>.
+          <ol class="small">
+            <li>
+              Vzemi slovensko besedo (vsa ločila se ignorirajo pri obdelavi).
             </li>
             <li>
-              Samoglasniki ostanejo večinoma enaki, da je jezik lažje izgovorljiv in povraten
-              nazaj v slovenščino.
+              Preveri, ali je v slovarju kanoničnih oblik. Če je, uporabi tam zapisano demotsko obliko.
             </li>
             <li>
-              Poseben slovar določa kanonične oblike za nekatere besede:
-              <br><i>duša → dushra, ogenj → oghenn, ljubezen → ljubaer'th, smrt → smr'th, hvala → kha'rael</i>.
+              Če ni v slovarju, na besedo uporabi zamenjavo črk:
+              <br><b>r→rr</b>, <b>v→gh</b>, <b>h→kh</b>, <b>s→z</b>, <b>č/š→sh</b>, <b>ž→zh</b>.
             </li>
-          </ul>
+            <li>
+              Ohranimo samoglasnike (a,e,i,o,u), da je jezik berljiv in povraten nazaj v slovenščino.
+            </li>
+          </ol>
+          <p class="small" style="margin-top:4px;">
+            Primer: “hvala” → najprej slovar: <b>kha'rael</b> (kanonična oblika),
+            algoritmu ni treba ničesar več preračunavati.
+          </p>
         `
       },
       {
         title: 'Glagoli',
         body: `
           <p class="small">
-            Demotika ohrani slovensko logiko glagolov (čas, oseba), zvok pa spremeni
-            z zamenjavo črk.
+            Glagoli v demotiki ohranijo slovensko časovno logiko, le zvok se spremeni.
           </p>
           <ul class="small">
             <li>
-              V praksi to pomeni, da se glagol najprej prebije skozi slovar
-              (če je na seznamu), nato se preostali glasovi spremenijo
-              po pravilih (r→rr, v→gh, h→kh, s→z ...).
+              Najprej pogledamo, ali je glagol v slovarju (trenutno nekaj ključnih besed).
             </li>
             <li>
-              Zgradba glagola ostane razpoznavna, zato lahko z obratnim algoritmom
-              dobimo spet nazaj slovensko obliko.
+              Če ni, se črke v glagolu demotizirajo po istih pravilih
+              (r→rr, v→gh, h→kh, s→z, č/š→sh, ž→zh).
             </li>
             <li>
-              Demonski slog (dodatne končnice, poudarki) se lahko doda ročno,
-              npr. “gorim” → “gorrrim”, “kličem” → “khlichim”.
+              Končnice kot -am, -im, -em ostanejo enake, zato je glagol še vedno prepoznaven:
+              <br>“goriš” → “gorrizh”, “čakam” → “shakham”.
             </li>
           </ul>
+          <p class="small" style="margin-top:4px;">
+            Če želiš, lahko ročno dodaš še več “rr” ali “kh”, da poudariš intenzivnost.
+          </p>
         `
       },
       {
         title: 'Stavčna zgradba',
         body: `
           <p class="small">
-            Stavčni red ostaja večinoma slovenski (SVO: jaz te vidim),
-            le zvok besed postane demonski.
+            Stavčni red v demotiki ostaja večinoma slovenski (SVO: jaz te vidim),
+            le zvok posameznih besed je demonski.
           </p>
           <ul class="small">
             <li>
-              Negacija se lahko izrazi z dodatno besedo ali zadevnim tonom,
-              npr. z uporabo posebne besede (po želji) ali konteksta.
+              Podmet, povedek, predmet ostajajo v istem vrstnem redu kot v slovenščini:
+              <br><i>“Jaz te vidim.” → “Jaz te vidhim.” (algoritmični primer)</i>
             </li>
             <li>
-              Pridevniki lahko stojijo pred ali za samostalnikom – demotika dopušča oba,
-              slogovno pa je zanimivo, če jih včasih prestaviš za samostalnik:
-              <br><i>“temna noč” → “noč temarr”</i>.
+              Pridevniki lahko stojijo pred ali za samostalnikom:
+              <br><i>“temna noč” → “temna norč” ali “noč temarr”</i>.
             </li>
             <li>
-              Poudarek lahko nakažeš z dodatnimi <b>rr</b> ali z izbiro močnejših glasov
-              (več <b>kh, gh, rr</b>).
+              Negacijo in poudarek lahko izraziš z dodatnimi glasovi ali besedami –
+              v tej verziji prevajalnik tega ne dodaja samodejno, ampak pusti prostor za tvoj stil.
             </li>
           </ul>
         `
       },
       {
-        title: 'Slovar in posebnosti',
+        title: 'Slovar & posebnosti',
         body: `
           <p class="small">
-            Jedro Dushra Codexa je slovar, kjer so zapisane kanonične demonske oblike.
-            Te imajo prednost pred “golem” algoritmom zamenjave črk.
+            Jedro Dushra Codexa je slovar kanoničnih demonskih oblik. Te imajo
+            prednost pred algoritmom zamenjave črk.
           </p>
           <ul class="small">
             <li>duša → <b>dushra</b></li>
@@ -1041,9 +1041,72 @@
             <li>hvala → <b>kha'rael</b></li>
           </ul>
           <p class="small" style="margin-top:4px;">
-            Kadar besede ni v slovarju, prevajalnik uporabi algoritem zamenjave črk.
-            To pomeni, da se vsaka slovenska beseda lahko “demonizira”, tudi če
-            še nima uradne, kanonične oblike v codexu.
+            Če besede ni v slovarju, prevajalnik uporabi algoritem. To pomeni,
+            da se lahko vsaka slovenska beseda “demonizira”, tudi če še ni bila uradno
+            zapisana v codexu.
+          </p>
+        `
+      },
+      {
+        title: 'Smer & Oko razodetja',
+        body: `
+          <p class="small">
+            Prevajalnik podpira dve smeri:
+          </p>
+          <ul class="small">
+            <li>
+              <b>Slovenščina → Demotika</b> (privzeto): vhod je slovenska beseda ali stavek,
+              rezultat je demonska oblika.
+            </li>
+            <li>
+              <b>Demotika → Slovenščina</b>: vhod je demotska oblika,
+              rezultat je približek slovenske oblike.
+            </li>
+          </ul>
+          <p class="small" style="margin-top:4px;">
+            <b>Oko razodetja</b> (na tretjem zavihku) deluje tako:
+          </p>
+          <ol class="small">
+            <li>
+              Vzemi vnos (beseda ali stavek).
+            </li>
+            <li>
+              Če je vnos v slovarju, pokaži slovarska pravila in primere.
+            </li>
+            <li>
+              Če vsebuje demonske vzorce (kh, gh, rr, sh, zh, ’),
+              ga obravnava kot demotski vnos in skuša rekonstruirati slovenščino.
+            </li>
+            <li>
+              Če je drugače, ga obravnava kot slovenski vnos in pokaže
+              demotski algoritemski zapis ter povratek nazaj.
+            </li>
+          </ol>
+        `
+      },
+      {
+        title: 'Glas & izgovorjava',
+        body: `
+          <p class="small">
+            Dushra Codex vsebuje tudi glasovno branje (Text-to-Speech, TTS).
+          </p>
+          <ul class="small">
+            <li>
+              Gumba <b>“Preberi vnos”</b> in <b>“Preberi prevod”</b> uporabljata
+              brskalnikovo funkcijo <i>speechSynthesis</i>.
+            </li>
+            <li>
+              Jezik je nastavljen na <b>sl-SI</b> (slovenščina), ker je demotika
+              fonetično blizu slovenskemu zapisu.
+            </li>
+            <li>
+              Če želiš, lahko v kodi spremeniš jezik (npr. na <b>en-US</b>), da dobiš
+              drugačen “naglas” pri branju.
+            </li>
+          </ul>
+          <p class="small" style="margin-top:4px;">
+            TTS ne spreminja besed, samo jih prebere takšne, kot so prikazane
+            na levi/desni strani codexa.
           </p>
         `
       }
@@ -1094,7 +1157,7 @@
     });
   }
 
-  // ===================== SEARCH MODE =====================
+  // ===================== SEARCH MODE – OKO RAZODETJA =====================
   function buildSearchMode() {
     const left = document.createElement('div');
     left.className = 'eye-container';
@@ -1119,11 +1182,12 @@
 
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Vpiši besedo, pravilo ali stavek...';
+    searchInput.placeholder = 'Vpiši besedo ali cel stavek...';
 
     const hint = document.createElement('div');
     hint.className = 'eye-hint small';
-    hint.textContent = 'Pritisni Enter: oko prelista kodeks, poišče pravila, slovar, prevod in primer rabe.';
+    hint.textContent =
+      'Pritisni Enter: oko prelista kodeks, poišče pravilo, slovar, prevod in primere.';
 
     searchInputWrap.appendChild(searchInput);
     searchInputWrap.appendChild(hint);
@@ -1205,7 +1269,6 @@
   }
 
   // ===================== DICTIONARY & ALGORITHMS =====================
-
   const dictSlToDem = {
     'dusa': 'dushra',
     'duša': 'dushra',
@@ -1299,13 +1362,11 @@
     const original = word;
     let w = original.toLowerCase();
 
-    // č, š, ž
     w = w
       .replace(/č/g, 'sh')
       .replace(/š/g, 'sh')
       .replace(/ž/g, 'zh');
 
-    // soglasniki
     w = w
       .replace(/r/g, 'rr')
       .replace(/v/g, 'gh')
@@ -1318,14 +1379,12 @@
   function transformDemWordToSl(word) {
     let w = word.toLowerCase();
 
-    // najprej veččrkovne kombinacije
     w = w.replace(/sh/g, 'š');
     w = w.replace(/zh/g, 'ž');
     w = w.replace(/kh/g, 'h');
     w = w.replace(/gh/g, 'v');
     w = w.replace(/rr/g, 'r');
 
-    // navadni "z" pogosto vrnemo nazaj v "s", če ni v parih zh
     w = w.replace(/z/g, 's');
 
     return w;
@@ -1334,73 +1393,79 @@
   // ===================== SEARCH EXPLANATION ENGINE =====================
   function explainQuery(query) {
     const q = query.trim();
-    const lower = q.toLowerCase();
+    const lowerFull = q.toLowerCase();
+
+    // za večbesedni vnos vzamemo tudi "glavno" besedo (prvo ne-prazno)
+    const parts = lowerFull.split(/\s+/).filter(Boolean);
+    const main = parts[0] || lowerFull;
 
     let ruleHtml = '';
     let meaningHtml = '';
     let translationHtml = '';
 
-    const isProbablyDemotic = /kh|gh|rr|sh|zh|’/.test(lower);
+    const isProbablyDemotic =
+      /kh|gh|rr|sh|zh|’/.test(main);
 
-    if (dictSlToDem[lower]) {
-      const dem = dictSlToDem[lower];
+    if (dictSlToDem[main]) {
+      const dem = dictSlToDem[main];
       ruleHtml = `
         <p class="small">
-          Vnesena beseda <b>${q}</b> je prepoznana kot slovenska ključna beseda.
-          Za njo obstaja posebna demonska oblika, shranjena v slovarju.
+          Vnesena beseda <b>${q}</b> (glavna: <b>${main}</b>) je prepoznana kot slovenska
+          ključna beseda. Zanjo obstaja posebna demonska oblika v slovarju.
         </p>
         <p class="small">
           Pri takšnih besedah ima slovar prednost pred algoritmom zamenjave črk,
-          ker gre za “kanonične” oblike v Dushra Codexu.
+          ker gre za “kanonično” obliko v Dushra Codexu.
         </p>
       `;
       meaningHtml = `
         <p class="small">
-          <b>${q}</b> → <b>${dem}</b>
+          <b>${main}</b> → <b>${dem}</b>
         </p>
         <p class="small">
-          Ta beseda predstavlja koncept “${q}” v demonskem registru: zvok je bolj surov,
-          a magijsko nabit.
+          Ta demonska oblika predstavlja koncept “${main}” v bolj surovem, magijsko
+          nabitem registru.
         </p>
       `;
       translationHtml = `
         <p class="small">
           <b>Slovenščina → Demotika:</b><br>
-          ${q} → <b>${dem}</b>
+          ${q} → <b>${slovenianToDemotic(q)}</b>
         </p>
         <p class="small" style="margin-top:4px;">
           <b>Primer rabe:</b><br>
-          “Hvala ti.” → “Kha'rael tih.”
+          “Hvala ti, prijatelj.” → “${slovenianToDemotic('Hvala ti, prijatelj.')}”
         </p>
       `;
-    } else if (dictDemToSl[lower]) {
-      const sl = dictDemToSl[lower];
+    } else if (dictDemToSl[main]) {
+      const sl = dictDemToSl[main];
       ruleHtml = `
         <p class="small">
-          Vnesena beseda <b>${q}</b> je prepoznana kot demonska ključna beseda iz slovarja.
+          Vnesena beseda <b>${q}</b> (glavna: <b>${main}</b>) je prepoznana kot demonska
+          ključna beseda iz slovarja.
         </p>
         <p class="small">
-          Najprej se uporabi slovar, šele nato bi bil po potrebi uporabljen algoritem
+          Najprej se uporabi slovar, šele nato bi bil po potrebi vključen algoritem
           za povratni prevod v slovenščino.
         </p>
       `;
       meaningHtml = `
         <p class="small">
-          <b>${q}</b> → <b>${sl}</b> (slovenščina)
+          <b>${main}</b> → <b>${sl}</b> (slovenščina)
         </p>
         <p class="small">
-          Beseda je del osnovnega demonskega leksikona in se pojavlja v besedilih,
-          kjer nastopa duša, ogenj, ljubezen, smrt ali zahvala.
+          Beseda je del osnovnega demonskega leksikona in se pogosto pojavlja
+          v tematskih besedilih (duša, ogenj, ljubezen, smrt, zahvala).
         </p>
       `;
       translationHtml = `
         <p class="small">
           <b>Demotika → Slovenščina:</b><br>
-          ${q} → <b>${sl}</b>
+          ${q} → <b>${demoticToSlovenian(q)}</b>
         </p>
         <p class="small" style="margin-top:4px;">
           <b>Primer rabe:</b><br>
-          “${q} moja gorrrim.” → “Moja ${sl} gori.”
+          “${q} moja gorrrim.” → “${demoticToSlovenian(q)} moja gori.”
         </p>
       `;
     } else if (isProbablyDemotic) {
@@ -1409,21 +1474,22 @@
 
       ruleHtml = `
         <p class="small">
-          Beseda <b>${q}</b> izgleda kot demotska oblika (vsebuje vsaj en od vzorcev:
-          <b>kh, gh, rr, sh, zh</b>).
+          Vnos <b>${q}</b> vsebuje demonske vzorce (<b>kh, gh, rr, sh, zh, ’</b>),
+          zato ga Oko razodetja obravnava kot demotski vnos.
         </p>
         <p class="small">
-          Za razlago se uporabi obratni algoritem: kombinacije <b>kh, gh, rr, sh, zh</b>
-          se vrnejo nazaj v slovenske črke, tako dobimo približek izvorne besede.
+          Uporabi se obratni algoritem: demonske kombinacije se vrnejo
+          v slovenske črke in s tem dobimo približek izvorne slovenščine.
         </p>
       `;
       meaningHtml = `
         <p class="small">
-          Približno dekodiranje: <b>${slGuess}</b>
+          Približno dekodiranje v slovenščino:
+          <br><b>${slGuess}</b>
         </p>
         <p class="small">
-          To dekodiranje je algoritemsko in morda ni popolno, vendar poda
-          dober namig, kaj je bila izvorna slovenska beseda.
+          Ker gre za celoten stavek ali frazo, je prevod algoritemski, a dovolj
+          dober, da razkrije osnovni pomen.
         </p>
       `;
       translationHtml = `
@@ -1442,18 +1508,19 @@
 
       ruleHtml = `
         <p class="small">
-          Beseda <b>${q}</b> se obravnava kot navadna slovenska vnosna oblika.
-          Na njo se uporabi algoritem demotike: zamenjava črk
+          Vnos <b>${q}</b> je obravnavan kot slovenski stavek ali beseda.
+          Oko uporabi algoritem demotike: zamenjavo črk
           (<b>r→rr, v→gh, h→kh, s→z, č/š→sh, ž→zh</b>).
         </p>
       `;
       meaningHtml = `
         <p class="small">
-          Algoritmična demotska oblika tega vnosa je:
+          Algoritmična demotska oblika celotnega vnosa:
           <br><b>${demGuess}</b>
         </p>
         <p class="small">
-          To ni nujno kanonična beseda, temveč “živa” demonska preobrazba tvoje slovenske besede.
+          Ta oblika ni nujno “uradna” slovarska beseda, je pa jasen prikaz,
+          kako algoritem demonizira tvoj stavek.
         </p>
       `;
       translationHtml = `
@@ -1498,7 +1565,6 @@
     outputBtn.onclick = () => {
       const text = outputText.textContent;
       if (!text) return;
-      // demotika je fonetično blizu slovenščini, zato uporabljamo isti jezik
       speakText(text, 'sl-SI');
     };
   }
