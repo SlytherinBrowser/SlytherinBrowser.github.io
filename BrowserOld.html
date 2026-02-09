@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link id="favicon" rel="icon" href="Slytherin.ico">
+    <title>SlytherinBrowser</title>
+<link id="normalStylesheet" rel="stylesheet" href="indexcss.css">
+<link id="modernStylesheet" rel="stylesheet" href="indexcss1.css" disabled>
+<link id="winterStylesheet" rel="stylesheet" href="indexcss4.css" disabled>
+    <script defer src="indexjs.js"></script>
+    <style>
+    .eye-container {
+        position: fixed;
+        top: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .eye {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            position: relative;
+            margin: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .pupil {
+            width: 40px;
+            height: 40px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease;
+        }
+.popupBackup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+     @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -55%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        
+        .popupBackup button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .popupBackup button:first-of-type {
+            background: #4CAF50;
+            color: white;
+        }
+        .popupBackup button:first-of-type:hover {
+            background: #45a049;
+        }
+        
+        .popupBackup button:last-of-type {
+            background: #f44336;
+            color: white;
+        }
+        .popupBackup button:last-of-type:hover {
+            background: #d32f2f;
+        }
+        
+        #fileInput {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="eye-container">
+        <div class="eye">
+            <div class="pupil"></div>
+        </div>
+        <div class="eye">
+            <div class="pupil"></div>
+        </div>
+    </div>
+    <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
+    <img id="logo" src="Slytherin.png"></img>
+
+    <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
+        <label for="search">SlytherinBrowser:</label>
+       <input type="search" id="search" name="search" placeholder="Vnesite iskalni pojem..." oninput="checkForRotation(); checkForReminder();">
+
+        <input type="submit" id="submitBtn" value="Išči">
+    </form>
+
+    <img id="logo" src="Slytherin.png" class="lamp"></img>
+
+<button id="chatButton" style="display: none">Prikaži chatbot</button>
+
+<div id="chatPopup" style="display:none;">
+    <div id="chatArea"></div>
+    <div id="chatInputArea">
+        <input id="chatInput" type="text" placeholder="Vnesi sporočilo..." />
+        <button id="sendButton">Pošlji</button>
+    </div>
+</div>
+<button id="clickButton" onclick="window.location.href='newbrowser.html'"style="display: none">Nightmode</button>
+ <!-- Gumb za preklop -->
+    <button class="preklop" onclick="toggleElement()"style="display: none">CPS</button>
+<div id="container">
+        Domov
+    </div>
+
+    <div id="addIconForm">
+        <select id="categorySelect">
+            <option value="0">Domov</option>
+            <option value="1">Osnovno</option>
+            <option value="2">Zabava</option>
+            <option value="3">Chatbot</option>
+            <option value="4">Moje Ikone</option>
+        </select>
+        <input type="text" id="iconName" placeholder="Ime ikone">
+        <input type="text" id="iconLink" placeholder="URL povezave">
+        <button id="addIconBtn">Dodaj Ikono</button>
+    </div>
+<!-- Modalno okno -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Dodaj Ikono</h2>
+        <input type="file" id="fileInput" accept="image/png, image/jpeg" onchange="handleImage(event)">
+        <input type="text" id="urlInput" placeholder="Vnesite URL" onchange="handleUrl(event)">
+    </div>
+</div>
+<div>
+    
+<button id="backupButton" style="display: none">Save</button>
+
+<div class="taskbar-icon" onclick="toggleCalendar()" style="display: none">
+    <!-- SVG ikona (npr. ikona koledarja) -->
+    <svg viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-7h3v3h-3v-3zm1-9c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l1.59 1.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l3.59 3.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4z"/>
+    </svg>
+</div>
+<div class="calendar-container" id="calendar">
+        <div class="calendar-header">
+            <button id="prev-month">&lt;</button>
+            <div id="month-year"></div>
+            <button id="next-month">&gt;</button>
+        </div>
+        <div class="calendar-body" id="calendar-body"></div>
+    </div>
+</div>
+<button id="buttonkng" style="display: none">SWITCH</button>
+ <button id="menu"onclick="menuking()"style="display: none">MENU</button>
+  <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()" style="display: none">Calc</div>
+   <div class="calculator-container" id="calculator-container" style="display:none;">
+    <button id="al">?</button>
+    <input type="text" id="display" readonly>
+    <div>
+        <label for="aa">Izberi iz:</label>
+<select id="aa">
+    <option value="decimal">Decimal</option>
+    <option value="binary">Binary</option>
+    <option value="octal">Octal</option>
+    <option value="hex">Hex</option>
+    <option value="3">Base 3</option>
+    <option value="4">Base 4</option>
+    <option value="5">Base 5</option>
+    <option value="6">Base 6</option>
+    <option value="7">Base 7</option>
+    <option value="9">Base 9</option>
+</select>
+
+<div>
+    <label for="bb">Pretvori v:</label>
+    <select id="bb">
+        <option value="decimal">Decimal</option>
+        <option value="binary">Binary</option>
+        <option value="octal">Octal</option>
+        <option value="hex">Hex</option>
+        <option value="3">Base 3</option>
+        <option value="4">Base 4</option>
+        <option value="5">Base 5</option>
+        <option value="6">Base 6</option>
+        <option value="7">Base 7</option>
+        <option value="9">Base 9</option>
+    </select>
+</div>
+<button onclick="convert()">Pretvori</button>
+<button onclick="clearDisplay()">Počisti</button>
+</div>
+
+
+
+
+        
+
+
+
+<script>
+
+
+
+
+
+
+
+
+
+
+
+
+    function checkTime() {
+        let now = new Date();
+        let hour = now.getHours();
+        let nightMode = (hour >= 19 || hour < 6); // Noč od 19:00 do 06:00
+
+        // Prejšnje stanje v localStorage
+        let previousState = localStorage.getItem("nightMode");
+
+        if (nightMode && previousState !== "true") {
+            // Prehod v noč -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "true");
+            window.location.href = "newbrowser.html";
+        } 
+        else if (!nightMode && previousState !== "false") {
+            // Prehod v dan -> Shrani stanje in preusmeri
+            localStorage.setItem("nightMode", "false");
+            window.location.href = "index.html";
+        }
+    }
+
+    // Preveri ob nalaganju strani
+    checkTime();
+
+    // Preverja vsako minuto, če je treba osvežiti/preusmeriti
+    setInterval(checkTime, 60000);
+
+
+
+
+</script>
+              <script>
+const setLinkButton = document.querySelector('.set-link');
+const popup = document.querySelector('.popup');
+const linkInput = document.getElementById('linkInput');
+const saveLinkButton = document.getElementById('saveLink');
+const closePopupButton = document.getElementById('closePopup');
+
+// Naloži povezavo iz lokalnega shranjevanja
+const loadLink = () => {
+    const savedLink = localStorage.getItem('savedLink');
+    return savedLink || '';
+};
+
+let currentLink = loadLink();
+
+// Prikaži pop-up ali odpri povezavo
+setLinkButton.addEventListener('click', () => {
+    if (!currentLink) {
+        // Če povezava ni shranjena, pokaži pop-up
+        popup.style.display = 'block';
+    } else {
+        // Če povezava obstaja, jo odpri
+        window.open(currentLink, '_blank');
+    }
+});
+
+// Shrani povezavo in zapri pop-up
+saveLinkButton.addEventListener('click', () => {
+    const url = linkInput.value.trim();
+    if (url) {
+        currentLink = url;
+        localStorage.setItem('savedLink', currentLink);
+        popup.style.display = 'none';
+        linkInput.value = '';
+    } else {
+        alert('Prosim, vnesite veljaven URL.');
+    }
+});
+
+// Zapri pop-up ob kliku na gumb "Zapri"
+closePopupButton.addEventListener('click', () => {
+    popup.style.display = 'none';
+});
+
+
+
+
+
+
+
+
+    </script>
+
+<script>
+        const eyes = document.querySelectorAll('.eye');
+        const pupils = document.querySelectorAll('.pupil');
+
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            eyes.forEach((eye, index) => {
+                const rect = eye.getBoundingClientRect();
+                const eyeX = rect.left + rect.width / 2;
+                const eyeY = rect.top + rect.height / 2;
+
+                const angle = Math.atan2(mouseY - eyeY, mouseX - eyeX);
+                const distance = Math.min(eye.offsetWidth / 4, eye.offsetHeight / 4);
+
+                const pupil = pupils[index];
+                pupil.style.transform = `translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+            });
+        });
+    </script>
+   <script>
+        // Funkcija za prikaz backup popup okna
+function showBackupPopup() {
+    const popupBackup = document.createElement("div");
+    popupBackup.classList.add("popupBackup");
+    popupBackup.innerHTML = `
+        <h2>LocalStorage Backup & Restore</h2>
+        <button onclick="exportLocalStorage()">Izvozi LocalStorage</button>
+        <input type="file" id="fileInput" onchange="importLocalStorage(event)">
+        <button onclick="this.parentElement.remove()">Zapri</button>
+    `;
+    document.body.appendChild(popupBackup);
+    popupBackup.style.display = "block";
+}
+
+// Povezava dogodka s funkcijo
+document.getElementById("backupButton").addEventListener("click", showBackupPopup);
+
+        function exportLocalStorage() {
+            const data = JSON.stringify(localStorage);
+            const blob = new Blob([data], { type: "application/json" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "localStorageBackup.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        function importLocalStorage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    for (const key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    alert("LocalStorage uspešno obnovljen!");
+                } catch (error) {
+                    alert("Napaka pri uvozu datoteke.");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+
+       <script>
+const container = document.getElementById("container");
+const addIconForm = document.getElementById("addIconForm");
+const addIconBtn = document.getElementById("addIconBtn");
+const iconNameInput = document.getElementById("iconName");
+const iconLinkInput = document.getElementById("iconLink");
+const categorySelect = document.getElementById("categorySelect");
+
+const categories = [
+    {
+        name: "Domov",
+        icons: [
+            { name: "📂", link: "chosemenu.html" },
+            { name: "🌙", link: "newbrowser.html" },
+            { name: "🔄", link: "javascript:void(0)", action: "handleButtonClick" },
+            { name: "💾", link: "javascript:void(0)", action: "showBackupPopup" },
+            { name: "⚙️", link: "javascript:void(0)", action: "toggleElement" }
+        ],
+        color: "#9b59b6"
+    },
+    {
+        name: "Osnovno",
+        icons: [
+            { name: "📫", link: "https://mail.google.com" },
+            { name: "🗂", link: "https://drive.google.com" },
+            { name: "🔗", link: "https://drive.google.com/file/d/16-AieRI2xD1JIECT4ggHL3Xeba91FCd1/view?usp=sharing" },
+            { name: "📅", link: "https://calendar.google.com" }
+        ],
+        color: "#e67e22"
+    },
+    {
+        name: "Zabava",
+        icons: [
+            { name: "▶", link: "https://www.youtube.com" },
+            { name: "N", link: "https://www.netflix.com" },
+            { name: "V", link: "https://www.voyo.si" }
+        ],
+        color: "#e74c3c"
+    },
+    {
+        name: "Chatbot",
+        icons: [
+            { name: "💬", link: "https://chat.openai.com" },
+            { name: "🐍", link: "auth.html" },
+            { name: "👾", link: "https://slytherin.ai" }
+        ],
+        color: "#2ecc71"
+    },
+    {
+        name: "Moje Ikone",
+        icons: [
+            { name: "🤖", link: "javascript:void(0)", action: "toggleChatPopup" },
+            { name: "🗓️", link: "javascript:void(0)", action: "toggleCalendar" },
+            { name: "🧮", link: "javascript:void(0)", action: "toggleCalculator" }
+        ],
+        color: "#3498db"
+    }
+];
+
+let currentCategory = 0;
+let isDock = false;
+
+function showDockIcons() {
+    container.innerHTML = "";
+    categories[currentCategory].icons.forEach(icon => {
+        const el = document.createElement("div");
+        el.className = "icon";
+        el.textContent = icon.name;
+        el.onclick = (e) => {
+            e.stopPropagation();
+            if (icon.action) {
+                window[icon.action]?.();
+            } else {
+                window.open(icon.link, "_blank");
+            }
+        };
+        container.appendChild(el);
+    });
+
+    // Dodaj gumb za zapiranje
+    const closeIcon = document.createElement("div");
+    closeIcon.className = "icon";
+    closeIcon.textContent = "❌";
+    closeIcon.onclick = (e) => {
+        e.stopPropagation();
+        isDock = false;
+        container.classList.remove("dock");
+        showCategoryText();
+    };
+    container.appendChild(closeIcon);
+}
+
+function showCategoryText() {
+    container.innerHTML = categories[currentCategory].name;
+    container.style.background = categories[currentCategory].color;
+}
+
+function changeCategory(direction) {
+    if (direction === "up") {
+        currentCategory = (currentCategory - 1 + categories.length) % categories.length;
+    } else {
+        currentCategory = (currentCategory + 1) % categories.length;
+    }
+    if (isDock) {
+        showDockIcons();
+    } else {
+        showCategoryText();
+    }
+}
+
+function addCustomIcon(name, link, categoryIndex) {
+    categories[categoryIndex].icons.push({ name, link });
+}
+
+function addIcon() {
+    const name = iconNameInput.value;
+    const link = iconLinkInput.value;
+    const categoryIndex = categorySelect.value;
+
+    if (name && link) {
+        addCustomIcon(name, link, categoryIndex);
+        iconNameInput.value = '';
+        iconLinkInput.value = '';
+        addIconForm.style.display = 'none';
+        showDockIcons();
+    } else {
+        alert("Prosim, vnesite ime in URL ikone!");
+    }
+}
+
+addIconBtn.addEventListener("click", addIcon);
+
+// TAP za odprtje docka
+container.addEventListener("click", (e) => {
+    if (!isDock && !e.target.classList.contains("icon")) {
+        isDock = true;
+        container.classList.add("dock");
+        showDockIcons();
+    }
+});
+
+// SWIPE podpora
+let startY = 0;
+container.addEventListener("touchstart", e => {
+    startY = e.touches[0].clientY;
+});
+container.addEventListener("touchend", e => {
+    const endY = e.changedTouches[0].clientY;
+    const dy = endY - startY;
+    if (Math.abs(dy) > 30) {
+        changeCategory(dy < 0 ? "up" : "down");
+    }
+});
+
+// KOLESČEK za vse naprave
+container.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    changeCategory(e.deltaY < 0 ? "up" : "down");
+}, { passive: false });
+
+// Začetni prikaz
+showCategoryText();
+
+// Dummy funkcije za akcije
+function toggleChatPopup() { alert("Chat popup!"); }
+function toggleCalendar() { alert("Calendar opened!"); }
+function toggleCalculator() { alert("Calculator opened!"); }
+function toggleElement() { alert("Element toggled!"); }
+function showBackupPopup() { alert("Backup popup!"); }
+function handleButtonClick() { location.reload(); }
+</script>
+
+
+</body>
+</html>
