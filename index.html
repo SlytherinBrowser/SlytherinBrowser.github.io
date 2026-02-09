@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SlytherinOS</title>
-    <link id="favicon" rel="icon" href="Slytherin.png">
+    <title>HogwartsOS</title>
+    <link id="favicon" rel="icon" href="hogwarts.jpg">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -14,29 +14,63 @@
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
         
         :root {
-            --slytherin-dark: #1A472A;
-            --slytherin-green: #2A623D;
-            --slytherin-light: #50C878;
-            --slytherin-silver: #C0C0C0;
-            --slytherin-gray: #5D5D5D;
-            --slytherin-black: #0a0a0a;
+            /* Hogwarts (Default) */
+            --primary: #740001;
+            --secondary: #D3A625;
+            --accent: #F5F5F5;
+            --dark: #1a1a1a;
+            --glass: rgba(116, 0, 1, 0.85);
+            
+            /* House colors will be set dynamically */
+            --house-primary: #740001;
+            --house-secondary: #D3A625;
+            --house-accent: #F5F5F5;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--slytherin-black);
+            background: var(--dark);
             color: #fff;
             overflow: hidden;
             user-select: none;
+        }
+
+        /* HOUSE THEMES */
+        .theme-gryffindor {
+            --house-primary: #740001;
+            --house-secondary: #D3A625;
+            --house-accent: #F5F5F5;
+            --house-gradient: linear-gradient(135deg, #740001 0%, #1a1a1a 100%);
+        }
+
+        .theme-slytherin {
+            --house-primary: #1A472A;
+            --house-secondary: #C0C0C0;
+            --house-accent: #50C878;
+            --house-gradient: linear-gradient(135deg, #1A472A 0%, #0a0a0a 100%);
+        }
+
+        .theme-ravenclaw {
+            --house-primary: #0E1A40;
+            --house-secondary: #946B2D;
+            --house-accent: #5D5D5D;
+            --house-gradient: linear-gradient(135deg, #0E1A40 0%, #1a1a1a 100%);
+        }
+
+        .theme-hufflepuff {
+            --house-primary: #ECB939;
+            --house-secondary: #372E29;
+            --house-accent: #F5F5F5;
+            --house-gradient: linear-gradient(135deg, #ECB939 0%, #1a1a1a 100%);
         }
 
         /* BOOT SCREEN */
         #bootScreen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 50%, #0a0a0a 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -48,8 +82,10 @@
         .boot-logo {
             width: 200px; height: 200px;
             margin-bottom: 40px;
-            filter: drop-shadow(0 0 30px rgba(80, 200, 120, 0.5));
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.5));
             animation: pulse 2s ease-in-out infinite;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         @keyframes pulse {
@@ -60,15 +96,22 @@
         .boot-text {
             font-family: 'Cinzel', serif;
             font-size: 3rem;
-            color: var(--slytherin-silver);
-            text-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
+            color: #D3A625;
+            text-shadow: 0 0 20px rgba(211, 166, 37, 0.5);
             letter-spacing: 8px;
             margin-bottom: 20px;
         }
 
+        .boot-subtitle {
+            font-size: 1rem;
+            color: #F5F5F5;
+            opacity: 0.8;
+            letter-spacing: 4px;
+        }
+
         .boot-progress {
             width: 300px; height: 4px;
-            background: rgba(192, 192, 192, 0.2);
+            background: rgba(255,255,255,0.2);
             border-radius: 2px;
             margin-top: 40px;
             overflow: hidden;
@@ -76,23 +119,81 @@
 
         .boot-progress-bar {
             height: 100%; width: 0%;
-            background: linear-gradient(90deg, var(--slytherin-light), var(--slytherin-silver));
+            background: linear-gradient(90deg, #D3A625, #F5F5F5);
             transition: width 0.3s ease;
         }
 
         .boot-status {
             margin-top: 15px;
             font-size: 0.8rem;
-            color: var(--slytherin-silver);
+            color: #F5F5F5;
             opacity: 0.6;
             font-family: 'Courier New', monospace;
         }
 
-        /* LOGIN SCREEN */
+        /* HOUSE SELECTION */
+        #houseSelection {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+
+        .house-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 800px;
+            padding: 20px;
+        }
+
+        .house-card {
+            background: rgba(255,255,255,0.05);
+            border: 3px solid transparent;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .house-card:hover {
+            transform: scale(1.05);
+            border-color: var(--house-secondary);
+        }
+
+        .house-card.gryffindor:hover { border-color: #D3A625; box-shadow: 0 0 30px rgba(116, 0, 1, 0.5); }
+        .house-card.slytherin:hover { border-color: #C0C0C0; box-shadow: 0 0 30px rgba(26, 71, 42, 0.5); }
+        .house-card.ravenclaw:hover { border-color: #946B2D; box-shadow: 0 0 30px rgba(14, 26, 64, 0.5); }
+        .house-card.hufflepuff:hover { border-color: #372E29; box-shadow: 0 0 30px rgba(236, 185, 57, 0.5); }
+
+        .house-logo {
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            object-fit: cover;
+        }
+
+        .house-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .house-traits {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* LOGIN/REGISTER */
         #loginScreen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 100%);
+            background: var(--house-gradient);
             display: none;
             flex-direction: column;
             justify-content: center;
@@ -102,7 +203,7 @@
 
         .login-container {
             background: rgba(10, 10, 10, 0.95);
-            border: 2px solid var(--slytherin-silver);
+            border: 2px solid var(--house-secondary);
             border-radius: 30px;
             padding: 50px;
             max-width: 450px;
@@ -113,14 +214,22 @@
         .login-title {
             font-family: 'Cinzel', serif;
             font-size: 2.5rem;
-            color: var(--slytherin-silver);
+            color: var(--house-secondary);
             margin-bottom: 10px;
         }
 
-        .login-subtitle {
-            color: var(--slytherin-light);
-            margin-bottom: 30px;
-            font-size: 0.9rem;
+        .selected-house {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--house-accent);
+        }
+
+        .selected-house img {
+            width: 40px; height: 40px;
+            border-radius: 50%;
         }
 
         .input-group {
@@ -130,7 +239,7 @@
 
         .input-group label {
             display: block;
-            color: var(--slytherin-silver);
+            color: var(--house-secondary);
             margin-bottom: 8px;
             font-size: 0.9rem;
         }
@@ -138,22 +247,15 @@
         .login-input {
             width: 100%;
             padding: 15px;
-            background: rgba(26, 71, 42, 0.3);
-            border: 2px solid var(--slytherin-gray);
+            background: rgba(255,255,255,0.1);
+            border: 2px solid var(--house-secondary);
             border-radius: 12px;
             color: #fff;
             font-size: 1rem;
-            transition: all 0.3s;
         }
 
-        .login-input:focus {
-            outline: none;
-            border-color: var(--slytherin-light);
-            box-shadow: 0 0 15px rgba(80, 200, 120, 0.3);
-        }
-
-        .email-display {
-            color: var(--slytherin-gray);
+        .email-preview {
+            color: var(--house-accent);
             font-size: 0.8rem;
             margin-top: 5px;
         }
@@ -161,38 +263,26 @@
         .login-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
-            border: 2px solid var(--slytherin-silver);
+            background: var(--house-primary);
+            border: 2px solid var(--house-secondary);
             border-radius: 12px;
             color: #fff;
             font-family: 'Cinzel', serif;
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 10px;
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(80, 200, 120, 0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
 
-        .toggle-auth {
-            margin-top: 20px;
-            color: var(--slytherin-silver);
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .toggle-auth:hover {
-            text-decoration: underline;
-        }
-
-        /* DESKTOP */
+        /* DESKTOP - PC MODE */
         #desktop {
             display: none;
             width: 100%; height: 100vh;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 50%, #0a0a0a 100%);
+            background: var(--house-gradient);
             position: relative;
             overflow: hidden;
         }
@@ -201,83 +291,40 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             opacity: 0.1;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0z' fill='%23C0C0C0' fill-opacity='0.05'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E");
         }
 
-        /* Taskbar */
-        .taskbar {
+        /* House Badge in corner */
+        .house-badge {
             position: fixed;
-            bottom: 0; left: 0;
-            width: 100%; height: 60px;
-            background: rgba(10, 10, 10, 0.95);
-            border-top: 1px solid var(--slytherin-silver);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 9000;
-        }
-
-        .start-btn {
-            width: 45px; height: 45px;
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
-            border: 2px solid var(--slytherin-silver);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: all 0.3s;
-        }
-
-        .start-btn:hover { transform: scale(1.1); }
-
-        .taskbar-apps {
-            display: flex;
-            gap: 10px;
-            margin-left: 15px;
-        }
-
-        .taskbar-app {
-            width: 40px; height: 40px;
-            background: rgba(26, 71, 42, 0.5);
-            border: 1px solid var(--slytherin-gray);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        .system-tray {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--slytherin-silver);
-        }
-
-        .taskbar-avatar {
-            width: 40px; height: 40px;
+            top: 20px; right: 20px;
+            width: 60px; height: 60px;
             border-radius: 50%;
-            border: 2px solid var(--slytherin-silver);
+            border: 3px solid var(--house-secondary);
             overflow: hidden;
-            cursor: pointer;
+            z-index: 8000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Desktop Icons */
+        .house-badge img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        /* Desktop Icons - Fixed Layout */
         .desktop-icons {
             position: absolute;
             top: 20px; left: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 100px);
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             padding: 20px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
         }
 
         .desktop-icon {
-            width: 100px;
+            width: 80px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
@@ -286,51 +333,62 @@
         }
 
         .desktop-icon:hover {
-            background: rgba(192, 192, 192, 0.1);
+            background: rgba(255,255,255,0.1);
             transform: translateY(-5px);
         }
 
         .desktop-icon-img {
-            width: 60px; height: 60px;
-            margin: 0 auto 10px;
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
-            border: 2px solid var(--slytherin-silver);
-            border-radius: 15px;
+            width: 50px; height: 50px;
+            margin: 0 auto 8px;
+            background: var(--house-primary);
+            border: 2px solid var(--house-secondary);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .desktop-icon-text {
+            color: #fff;
+            font-size: 0.75rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            word-wrap: break-word;
         }
 
         /* Windows */
         .window {
             position: absolute;
             background: rgba(10, 10, 10, 0.98);
-            border: 1px solid var(--slytherin-silver);
+            border: 1px solid var(--house-secondary);
             border-radius: 15px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-            min-width: 400px;
+            min-width: 350px;
             min-height: 300px;
             display: none;
             flex-direction: column;
             overflow: hidden;
         }
 
-        .window.active { display: flex; z-index: 1000; }
+        .window.active { 
+            display: flex; 
+            z-index: 1000; 
+        }
 
         .window-header {
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            background: var(--house-primary);
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: move;
-            border-bottom: 1px solid var(--slytherin-silver);
+            border-bottom: 1px solid var(--house-secondary);
         }
 
         .window-title {
             font-family: 'Cinzel', serif;
-            color: var(--slytherin-silver);
+            color: var(--house-secondary);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -356,13 +414,92 @@
             background: rgba(10, 10, 10, 0.95);
         }
 
+        /* Taskbar with Coins */
+        .taskbar {
+            position: fixed;
+            bottom: 0; left: 0;
+            width: 100%; height: 60px;
+            background: rgba(10, 10, 10, 0.95);
+            border-top: 1px solid var(--house-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 9000;
+        }
+
+        .taskbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .start-btn {
+            width: 45px; height: 45px;
+            background: var(--house-primary);
+            border: 2px solid var(--house-secondary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover { transform: scale(1.1); }
+
+        .taskbar-coins {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(255,215,0,0.2);
+            border: 1px solid #FFD700;
+            border-radius: 20px;
+            color: #FFD700;
+            font-family: 'Cinzel', serif;
+        }
+
+        .taskbar-apps {
+            display: flex;
+            gap: 10px;
+        }
+
+        .taskbar-app {
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--house-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--house-secondary);
+        }
+
+        .taskbar-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--house-secondary);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
         /* Start Menu */
         #startMenu {
             position: fixed;
             bottom: 70px; left: 20px;
             width: 350px;
             background: rgba(10, 10, 10, 0.98);
-            border: 1px solid var(--slytherin-silver);
+            border: 1px solid var(--house-secondary);
             border-radius: 20px;
             padding: 20px;
             display: none;
@@ -381,8 +518,8 @@
 
         .start-app {
             aspect-ratio: 1;
-            background: rgba(26, 71, 42, 0.3);
-            border: 1px solid var(--slytherin-gray);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--house-secondary);
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -395,18 +532,18 @@
         }
 
         .start-app:hover {
-            background: rgba(80, 200, 120, 0.2);
-            border-color: var(--slytherin-light);
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.05);
         }
 
-        .start-app span { font-size: 0.7rem; color: var(--slytherin-silver); }
+        .start-app span { font-size: 0.7rem; color: var(--house-secondary); }
 
         /* Chat Styles */
         .chat-container { display: flex; height: 100%; gap: 15px; }
 
         .chat-sidebar {
-            width: 280px;
-            background: rgba(26, 71, 42, 0.3);
+            width: 250px;
+            background: rgba(255,255,255,0.05);
             border-radius: 15px;
             padding: 15px;
             display: flex;
@@ -415,16 +552,12 @@
             overflow-y: auto;
         }
 
-        .chat-section {
-            margin-bottom: 15px;
-        }
-
+        .chat-section { margin-bottom: 15px; }
         .chat-section h4 {
-            color: var(--slytherin-light);
+            color: var(--house-secondary);
             font-size: 0.8rem;
             margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .chat-room {
@@ -438,20 +571,20 @@
         }
 
         .chat-room:hover, .chat-room.active {
-            background: rgba(80, 200, 120, 0.2);
-            border-color: var(--slytherin-light);
+            background: rgba(255,255,255,0.1);
+            border-color: var(--house-secondary);
         }
 
-        .chat-room-name { font-weight: 600; color: var(--slytherin-silver); }
+        .chat-room-name { font-weight: 600; color: var(--house-secondary); }
         .chat-room-preview { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
 
         .new-chat-btn {
             width: 100%;
             padding: 10px;
-            background: rgba(80, 200, 120, 0.2);
-            border: 1px dashed var(--slytherin-light);
+            background: rgba(255,255,255,0.1);
+            border: 1px dashed var(--house-secondary);
             border-radius: 10px;
-            color: var(--slytherin-light);
+            color: var(--house-secondary);
             cursor: pointer;
             margin-top: 10px;
         }
@@ -460,19 +593,27 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: rgba(26, 71, 42, 0.2);
+            background: rgba(255,255,255,0.05);
             border-radius: 15px;
             overflow: hidden;
         }
 
         .chat-header {
-            padding: 15px;
+            padding: 15px 20px;
             background: rgba(0,0,0,0.3);
-            border-bottom: 1px solid var(--slytherin-gray);
+            border-bottom: 1px solid var(--house-secondary);
         }
 
-        .chat-header h3 { color: var(--slytherin-silver); margin-bottom: 5px; }
-        .chat-header p { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+        .chat-header h3 {
+            color: var(--house-secondary);
+            font-family: 'Cinzel', serif;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+        }
 
         .chat-messages {
             flex: 1;
@@ -487,31 +628,23 @@
             max-width: 70%;
             padding: 12px 16px;
             border-radius: 15px;
-            position: relative;
         }
 
         .chat-message.own {
             align-self: flex-end;
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            background: var(--house-primary);
+            border: 1px solid var(--house-secondary);
         }
 
         .chat-message.other {
             align-self: flex-start;
-            background: rgba(192, 192, 192, 0.2);
+            background: rgba(255,255,255,0.1);
         }
 
         .message-author {
             font-size: 0.75rem;
-            color: var(--slytherin-light);
+            color: var(--house-secondary);
             margin-bottom: 4px;
-            font-weight: 600;
-        }
-
-        .message-time {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.4);
-            margin-top: 4px;
-            text-align: right;
         }
 
         .chat-input-area {
@@ -525,7 +658,7 @@
             flex: 1;
             padding: 12px 20px;
             background: rgba(255,255,255,0.1);
-            border: 1px solid var(--slytherin-gray);
+            border: 1px solid var(--house-secondary);
             border-radius: 25px;
             color: #fff;
         }
@@ -533,10 +666,25 @@
         .chat-send {
             width: 45px; height: 45px;
             border-radius: 50%;
-            background: var(--slytherin-green);
-            border: 2px solid var(--slytherin-silver);
+            background: var(--house-primary);
+            border: 2px solid var(--house-secondary);
             color: #fff;
             cursor: pointer;
+        }
+
+        /* Browser Fix */
+        .browser-container {
+            width: 100%;
+            height: calc(100% - 60px);
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .browser-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         /* Calculator */
@@ -547,9 +695,8 @@
             margin-bottom: 15px;
             text-align: right;
             font-size: 2rem;
-            color: var(--slytherin-silver);
+            color: var(--house-secondary);
             min-height: 80px;
-            word-wrap: break-word;
         }
 
         .calc-buttons {
@@ -560,41 +707,27 @@
 
         .calc-btn {
             padding: 20px;
-            background: rgba(26, 71, 42, 0.5);
-            border: 1px solid var(--slytherin-gray);
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--house-secondary);
             border-radius: 12px;
             color: #fff;
             font-size: 1.2rem;
             cursor: pointer;
         }
 
-        .calc-btn:hover { background: rgba(80, 200, 120, 0.3); }
-        .calc-btn.equals { background: var(--slytherin-green); grid-column: span 2; }
-
-        /* Calendar */
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .cal-day {
-            aspect-ratio: 1;
-            background: rgba(26, 71, 42, 0.2);
-            border: 1px solid var(--slytherin-gray);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        .cal-day.today { background: var(--slytherin-green); }
+        .calc-btn:hover { background: rgba(255,255,255,0.2); }
+        .calc-btn.equals { background: var(--house-primary); grid-column: span 2; }
 
         /* Games */
-        .games-container {
+        .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 20px;
         }
 
         .game-card {
-            background: linear-gradient(135deg, rgba(26, 71, 42, 0.5), rgba(10, 10, 10, 0.8));
-            border: 2px solid var(--slytherin-gray);
+            background: rgba(255,255,255,0.05);
+            border: 2px solid var(--house-secondary);
             border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
@@ -603,65 +736,190 @@
 
         .game-card:hover {
             transform: translateY(-10px);
-            border-color: var(--slytherin-light);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
         .game-thumb {
             height: 120px;
-            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            background: var(--house-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
         }
 
-        /* User Profile */
-        .profile-section {
-            background: rgba(26, 71, 42, 0.3);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+        /* Avatar Creator */
+        .avatar-creator {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .profile-avatar-large {
-            width: 150px; height: 150px;
-            margin: 0 auto 20px;
+        .avatar-preview-large {
+            width: 200px; height: 200px;
+            margin: 0 auto;
             border-radius: 50%;
-            border: 4px solid var(--slytherin-silver);
+            border: 4px solid var(--house-secondary);
             overflow: hidden;
         }
 
-        .stat-box {
-            background: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 10px;
+        .rpm-container {
+            width: 100%;
+            height: 400px;
+            border: 2px solid var(--house-secondary);
+            border-radius: 15px;
+            overflow: hidden;
         }
 
-        .stat-value {
-            font-size: 2rem;
-            color: var(--slytherin-light);
-            font-weight: bold;
+        /* Calendar Styles - DODANO */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
         }
 
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--slytherin-silver);
-        }
-
-        /* Coins HUD */
-        #coinsHUD {
-            position: fixed;
-            top: 20px; right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 1px solid var(--slytherin-silver);
-            display: none;
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
             align-items: center;
-            gap: 10px;
-            z-index: 8000;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .cal-day:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--house-secondary);
+        }
+
+        /* Mobile OS Mode */
+        @media (max-width: 768px) {
+            #desktop {
+                display: none !important;
+            }
+            
+            #mobileDesktop {
+                display: flex !important;
+            }
+            
+            .mobile-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+                padding: 80px 20px 100px;
+                overflow-y: auto;
+                height: 100vh;
+            }
+            
+            .mobile-icon {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .mobile-icon-img {
+                width: 60px; height: 60px;
+                background: var(--house-primary);
+                border-radius: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.8rem;
+                border: 2px solid var(--house-secondary);
+            }
+            
+            .mobile-icon-text {
+                font-size: 0.7rem;
+                color: #fff;
+                text-align: center;
+            }
+            
+            .mobile-dock {
+                position: fixed;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 15px;
+                padding: 15px;
+                background: rgba(0,0,0,0.8);
+                border-radius: 25px;
+                border: 1px solid var(--house-secondary);
+            }
+            
+            .mobile-dock-icon {
+                width: 50px; height: 50px;
+                background: var(--house-primary);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                border: 2px solid var(--house-secondary);
+            }
+            
+            .mobile-status-bar {
+                position: fixed;
+                top: 0; left: 0; right: 0;
+                height: 40px;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 20px;
+                z-index: 1000;
+            }
+            
+            .mobile-time {
+                color: #fff;
+                font-weight: 600;
+            }
+            
+            .mobile-icons {
+                display: flex;
+                gap: 10px;
+                color: #fff;
+            }
+            
+            .mobile-coins {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                color: #FFD700;
+            }
+            
+            /* Mobile Windows - Full Screen */
+            .window {
+                width: 100vw !important;
+                height: 100vh !important;
+                top: 0 !important;
+                left: 0 !important;
+                border-radius: 0;
+                position: fixed !important;
+            }
+
+            /* Mobile chat sidebar fix */
+            .chat-sidebar {
+                width: 100%;
+                height: 200px;
+                flex-shrink: 0;
+            }
+
+            .chat-container {
+                flex-direction: column;
+            }
+        }
+
+        /* PC Mode - Hide Mobile */
+        @media (min-width: 769px) {
+            #mobileDesktop {
+                display: none !important;
+            }
         }
 
         /* Modals */
@@ -677,8 +935,8 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #1A472A, #0a0a0a);
-            border: 2px solid var(--slytherin-silver);
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid var(--house-secondary);
             border-radius: 20px;
             padding: 30px;
             max-width: 500px;
@@ -693,7 +951,7 @@
 
         .user-item {
             padding: 12px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
             margin-bottom: 8px;
             cursor: pointer;
@@ -703,71 +961,113 @@
         }
 
         .user-item:hover {
-            background: rgba(80, 200, 120, 0.2);
+            background: rgba(255,255,255,0.1);
         }
 
-        @media (max-width: 768px) {
-            .chat-sidebar { display: none; }
-            .window { width: 95vw !important; height: 80vh !important; left: 2.5vw !important; top: 10vh !important; }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--house-secondary);
+            border-radius: 4px;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
 
     <!-- BOOT SCREEN -->
     <div id="bootScreen">
-        <img src="Slytherin.png" class="boot-logo" alt="Slytherin">
-        <div class="boot-text">SLYTHERIN<span style="color: var(--slytherin-light);">OS</span></div>
-        <div class="boot-subtitle">Ambition • Cunning • Leadership</div>
-        <div class="boot-progress"><div class="boot-progress-bar" id="bootProgress"></div></div>
-        <div class="boot-status" id="bootStatus">Initializing system...</div>
+        <img src="hogwarts.jpg" class="boot-logo" alt="Hogwarts">
+        <div class="boot-text">HOGWARTS<span style="color: #D3A625;">OS</span></div>
+        <div class="boot-subtitle">Draco Dormiens Nunquam Titillandus</div>
+        <div class="boot-progress">
+            <div class="boot-progress-bar" id="bootProgress"></div>
+        </div>
+        <div class="boot-status" id="bootStatus">Inicializacija čarobnega sistema...</div>
     </div>
 
-    <!-- LOGIN/REGISTER SCREEN -->
+    <!-- HOUSE SELECTION -->
+    <div id="houseSelection">
+        <h2 style="font-family: 'Cinzel', serif; color: #D3A625; margin-bottom: 30px; text-align: center;">Izberite svojo hišo</h2>
+        <div class="house-grid">
+            <div class="house-card gryffindor" onclick="selectHouse('gryffindor')">
+                <img src="griffindor.jpg" class="house-logo" alt="Gryffindor">
+                <div class="house-name" style="color: #D3A625;">Gryffindor</div>
+                <div class="house-traits">Pogum, odločnost, viteštvo</div>
+            </div>
+            <div class="house-card slytherin" onclick="selectHouse('slytherin')">
+                <img src="Slytherin.png" class="house-logo" alt="Slytherin">
+                <div class="house-name" style="color: #C0C0C0;">Slytherin</div>
+                <div class="house-traits">Ambicija, prekanstvo, vodstvo</div>
+            </div>
+            <div class="house-card ravenclaw" onclick="selectHouse('ravenclaw')">
+                <img src="ravenclaw.jpg" class="house-logo" alt="Ravenclaw">
+                <div class="house-name" style="color: #946B2D;">Ravenclaw</div>
+                <div class="house-traits">Inteligenca, učenje, modrost</div>
+            </div>
+            <div class="house-card hufflepuff" onclick="selectHouse('hufflepuff')">
+                <img src="hufflepuf.jpg" class="house-logo" alt="Hufflepuff">
+                <div class="house-name" style="color: #ECB939;">Hufflepuff</div>
+                <div class="house-traits">Poštenost, potrpežljivost, zvestoba</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN/REGISTER -->
     <div id="loginScreen">
         <div class="login-container">
-            <div class="login-title">SlytherinOS</div>
-            <div class="login-subtitle" id="authSubtitle">Vpis v sistem</div>
+            <div class="login-title">HogwartsOS</div>
             
+            <div class="selected-house" id="selectedHouseDisplay">
+                <img src="" id="selectedHouseImg" style="display: none;">
+                <span id="selectedHouseName"></span>
+            </div>
+
             <div id="loginForm">
                 <div class="input-group">
-                    <label>Uporabniško ime</label>
-                    <input type="text" class="login-input" id="loginUsername" placeholder="Vnesite uporabniško ime">
-                    <div class="email-display" id="emailDisplay"></div>
+                    <label>Čarobno ime (uporabniško ime)</label>
+                    <input type="text" class="login-input" id="loginUsername" placeholder="Vnesite ime">
+                    <div class="email-preview" id="emailPreview"></div>
                 </div>
                 <div class="input-group">
                     <label>Geslo</label>
                     <input type="password" class="login-input" id="loginPassword" placeholder="Vnesite geslo">
                 </div>
-                <button class="login-btn" onclick="handleAuth()">Vpiši se</button>
-                <div class="toggle-auth" onclick="toggleAuthMode()">Še nimate računa? Registrirajte se</div>
+                <button class="login-btn" onclick="handleAuth()">Vstopi v dvorec</button>
+                <div style="margin-top: 20px; color: var(--house-secondary); cursor: pointer;" onclick="showRegister()">Nimate računa? Registrirajte se</div>
             </div>
 
             <div id="registerForm" style="display: none;">
                 <div class="input-group">
-                    <label>Uporabniško ime</label>
-                    <input type="text" class="login-input" id="regUsername" placeholder="Izberite uporabniško ime" oninput="updateEmailDisplay()">
-                    <div class="email-display" id="regEmailDisplay">@slytherin.com</div>
+                    <label>Čarobno ime</label>
+                    <input type="text" class="login-input" id="regUsername" placeholder="Izberite ime" oninput="updateEmailPreview()">
+                    <div class="email-preview" id="regEmailPreview"></div>
                 </div>
                 <div class="input-group">
-                    <label>Geslo</label>
-                    <input type="password" class="login-input" id="regPassword" placeholder="Izberite geslo (min. 6 znakov)">
+                    <label>Geslo (min. 6 znakov)</label>
+                    <input type="password" class="login-input" id="regPassword" placeholder="Izberite geslo">
                 </div>
-                <div class="input-group">
-                    <label>Avatar (opcijsko)</label>
-                    <input type="text" class="login-input" id="regAvatarUrl" placeholder="Ready Player Me URL ali pustite prazno">
-                </div>
-                <button class="login-btn" onclick="handleRegister()">Ustvari račun</button>
-                <div class="toggle-auth" onclick="toggleAuthMode()">Že imate račun? Vpišite se</div>
+                <button class="login-btn" onclick="handleRegister()">Ustvari čarobni račun</button>
+                <div style="margin-top: 20px; color: var(--house-secondary); cursor: pointer;" onclick="showLogin()">Že imate račun? Vpišite se</div>
             </div>
         </div>
     </div>
 
-    <!-- DESKTOP -->
+    <!-- PC DESKTOP -->
     <div id="desktop">
         <div class="desktop-bg"></div>
         
+        <!-- House Badge -->
+        <div class="house-badge" id="houseBadge">
+            <img src="" id="houseBadgeImg">
+        </div>
+
+        <!-- Desktop Icons - Single Column -->
         <div class="desktop-icons">
             <div class="desktop-icon" onclick="openWindow('browser')">
                 <div class="desktop-icon-img">🌐</div>
@@ -787,7 +1087,7 @@
             </div>
             <div class="desktop-icon" onclick="openWindow('calculator')">
                 <div class="desktop-icon-img">🧮</div>
-                <div class="desktop-icon-text">Kalkulator</div>
+                <div class="desktop-icon-text">Računalo</div>
             </div>
             <div class="desktop-icon" onclick="openWindow('calendar')">
                 <div class="desktop-icon-img">📅</div>
@@ -797,33 +1097,41 @@
                 <div class="desktop-icon-img">♈</div>
                 <div class="desktop-icon-text">Horoskop</div>
             </div>
+            <div class="desktop-icon" onclick="openWindow('avatar')">
+                <div class="desktop-icon-img">🎭</div>
+                <div class="desktop-icon-text">Avatar</div>
+            </div>
         </div>
 
+        <!-- WINDOWS -->
         <!-- Browser -->
         <div class="window" id="window-browser" style="width: 900px; height: 600px; top: 50px; left: 100px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-browser')">
-                <div class="window-title">🌐 Brskalnik</div>
+                <div class="window-title">🌐 Čarobni Brskalnik</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('browser')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('browser')"></button>
                     <button class="window-btn close" onclick="closeWindow('browser')"></button>
                 </div>
             </div>
-            <div class="window-content">
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <button onclick="browserBack()" style="padding: 8px 15px; background: var(--slytherin-green); border: none; border-radius: 8px; color: #fff; cursor: pointer;">←</button>
-                    <button onclick="browserForward()" style="padding: 8px 15px; background: var(--slytherin-green); border: none; border-radius: 8px; color: #fff; cursor: pointer;">→</button>
-                    <input type="text" id="browserUrl" style="flex: 1; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;" placeholder="Vnesite URL..." onkeypress="if(event.key==='Enter')navigateBrowser()">
-                    <button onclick="navigateBrowser()" style="padding: 8px 20px; background: var(--slytherin-green); border: none; border-radius: 8px; color: #fff; cursor: pointer;">Pojdi</button>
+            <div class="window-content" style="padding: 0;">
+                <div style="display: flex; gap: 10px; padding: 10px; background: rgba(0,0,0,0.3);">
+                    <button onclick="browserBack()" style="padding: 8px 15px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">←</button>
+                    <button onclick="browserForward()" style="padding: 8px 15px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">→</button>
+                    <button onclick="browserRefresh()" style="padding: 8px 15px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">↻</button>
+                    <input type="text" id="browserUrl" style="flex: 1; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff;" placeholder="Vnesite URL..." onkeypress="if(event.key==='Enter')navigateBrowser()">
+                    <button onclick="navigateBrowser()" style="padding: 8px 20px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">Pojdi</button>
                 </div>
-                <iframe id="browserFrame" style="width: 100%; height: calc(100% - 50px); border: none; border-radius: 10px; background: #fff;"></iframe>
+                <div class="browser-container">
+                    <iframe class="browser-frame" id="browserFrame" src="about:blank"></iframe>
+                </div>
             </div>
         </div>
 
         <!-- Chat -->
         <div class="window" id="window-chat" style="width: 900px; height: 600px; top: 80px; left: 150px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-chat')">
-                <div class="window-title">💬 Klepet</div>
+                <div class="window-title">💬 Sove</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('chat')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('chat')"></button>
@@ -836,23 +1144,23 @@
                         <div class="chat-section">
                             <h4>Javni klepeti</h4>
                             <div id="publicChats"></div>
-                            <button class="new-chat-btn" onclick="createPublicChat()">+ Nov javni klepet</button>
+                            <button class="new-chat-btn" onclick="createPublicChat()">+ Nov klepet</button>
                         </div>
                         <div class="chat-section">
-                            <h4>Skupinski klepeti</h4>
+                            <h4>Skupine</h4>
                             <div id="groupChats"></div>
                             <button class="new-chat-btn" onclick="createGroupChat()">+ Nova skupina</button>
                         </div>
                         <div class="chat-section">
-                            <h4>Zasebni klepeti</h4>
+                            <h4>Zasebni</h4>
                             <div id="privateChats"></div>
-                            <button class="new-chat-btn" onclick="startPrivateChat()">+ Nov zasebni klepet</button>
+                            <button class="new-chat-btn" onclick="startPrivateChat()">+ Nov pogovor</button>
                         </div>
                     </div>
                     <div class="chat-main">
                         <div class="chat-header" id="chatHeader">
-                            <h3>Izberite klepet</h3>
-                            <p>Izberite obstoječ klepet ali ustvarite novega</p>
+                            <h3>Izberite sovo</h3>
+                            <p>Izberite klepet ali ustvarite novega</p>
                         </div>
                         <div class="chat-messages" id="chatMessages"></div>
                         <div class="chat-input-area" id="chatInputArea" style="display: none;">
@@ -867,7 +1175,7 @@
         <!-- Games -->
         <div class="window" id="window-games" style="width: 900px; height: 600px; top: 60px; left: 80px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-games')">
-                <div class="window-title">🎮 Igre</div>
+                <div class="window-title">🎮 Čarobne Igre</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('games')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('games')"></button>
@@ -875,8 +1183,8 @@
                 </div>
             </div>
             <div class="window-content">
-                <div class="games-container" id="gamesContainer"></div>
-                <iframe id="gameFrame" style="width: 100%; height: 100%; border: none; border-radius: 10px; display: none;"></iframe>
+                <div class="games-grid" id="gamesContainer"></div>
+                <iframe id="gameFrame" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
             </div>
         </div>
 
@@ -891,40 +1199,46 @@
                 </div>
             </div>
             <div class="window-content">
-                <div class="profile-avatar-large">
-                    <model-viewer id="profileAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div class="avatar-preview-large">
+                        <model-viewer id="profileAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                    </div>
+                    <h2 style="color: var(--house-secondary); font-family: 'Cinzel', serif; margin: 15px 0 5px;" id="profileUsername"></h2>
+                    <p style="color: var(--house-accent);" id="profileEmail"></p>
+                    <div style="display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; padding: 5px 15px; background: rgba(255,255,255,0.1); border-radius: 20px;">
+                        <img src="" id="profileHouseBadge" style="width: 30px; height: 30px; border-radius: 50%;">
+                        <span id="profileHouseName" style="color: var(--house-secondary);"></span>
+                    </div>
                 </div>
-                <h2 style="text-align: center; color: var(--slytherin-silver); margin-bottom: 5px;" id="profileUsername"></h2>
-                <p style="text-align: center; color: var(--slytherin-light); margin-bottom: 20px;" id="profileEmail"></p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="stat-box">
-                        <div class="stat-value" id="statCoins">0</div>
-                        <div class="stat-label">Kovanci</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 2rem; color: #FFD700;" id="statCoins">0</div>
+                        <div style="font-size: 0.8rem; color: var(--house-secondary);">Galeoni</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="statMessages">0</div>
-                        <div class="stat-label">Sporočila</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 2rem; color: var(--house-accent);" id="statMessages">0</div>
+                        <div style="font-size: 0.8rem; color: var(--house-secondary);">Sporočila</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="statGames">0</div>
-                        <div class="stat-label">Odigrane igre</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 2rem; color: var(--house-accent);" id="statGames">0</div>
+                        <div style="font-size: 0.8rem; color: var(--house-secondary);">Igre</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="statJoined">0</div>
-                        <div class="stat-label">Dni članstva</div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; text-align: center;">
+                        <div style="font-size: 2rem; color: var(--house-accent);" id="statDays">0</div>
+                        <div style="font-size: 0.8rem; color: var(--house-secondary);">Dni v šoli</div>
                     </div>
                 </div>
 
-                <button class="login-btn" onclick="updateAvatar()" style="margin-top: 20px;">Posodobi avatar</button>
-                <button class="login-btn" onclick="logout()" style="margin-top: 10px; background: #c0392b;">Odjava</button>
+                <button class="login-btn" onclick="openWindow('avatar')" style="margin-top: 20px;">Uredi avatar</button>
+                <button class="login-btn" onclick="logout()" style="margin-top: 10px; background: #c0392b;">Zapusti dvorec</button>
             </div>
         </div>
 
         <!-- Calculator -->
         <div class="window" id="window-calculator" style="width: 400px; height: 550px; top: 150px; left: 300px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-calculator')">
-                <div class="window-title">🧮 Kalkulator</div>
+                <div class="window-title">🧮 Čarobno Računalo</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('calculator')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('calculator')"></button>
@@ -940,7 +1254,7 @@
         <!-- Calendar -->
         <div class="window" id="window-calendar" style="width: 600px; height: 500px; top: 90px; left: 180px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-calendar')">
-                <div class="window-title">📅 Koledar</div>
+                <div class="window-title">📅 Čarobni Koledar</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('calendar')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('calendar')"></button>
@@ -949,9 +1263,9 @@
             </div>
             <div class="window-content">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <button onclick="changeMonth(-1)" style="padding: 10px 20px; background: var(--slytherin-green); border: none; border-radius: 8px; color: #fff; cursor: pointer;">←</button>
-                    <h3 id="calMonthYear" style="font-family: 'Cinzel', serif; color: var(--slytherin-silver);"></h3>
-                    <button onclick="changeMonth(1)" style="padding: 10px 20px; background: var(--slytherin-green); border: none; border-radius: 8px; color: #fff; cursor: pointer;">→</button>
+                    <button onclick="changeMonth(-1)" style="padding: 10px 20px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">←</button>
+                    <h3 id="calMonthYear" style="font-family: 'Cinzel', serif; color: var(--house-secondary);"></h3>
+                    <button onclick="changeMonth(1)" style="padding: 10px 20px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer;">→</button>
                 </div>
                 <div class="cal-grid" id="calGrid"></div>
             </div>
@@ -960,7 +1274,7 @@
         <!-- Horoscope -->
         <div class="window" id="window-horoscope" style="width: 800px; height: 600px; top: 70px; left: 120px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-horoscope')">
-                <div class="window-title">♈ Horoskop</div>
+                <div class="window-title">♈ Zvezdno Znamenje</div>
                 <div class="window-controls">
                     <button class="window-btn minimize" onclick="minimizeWindow('horoscope')"></button>
                     <button class="window-btn maximize" onclick="maximizeWindow('horoscope')"></button>
@@ -968,26 +1282,56 @@
                 </div>
             </div>
             <div class="window-content">
-                <div id="horoSelection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                    <!-- Generated by JS -->
-                </div>
-                <div id="horoResult" style="display: none; padding: 20px; background: rgba(26, 71, 42, 0.3); border-radius: 15px; margin-top: 20px;">
-                    <h3 id="horoTitle" style="color: var(--slytherin-silver); margin-bottom: 15px;"></h3>
+                <div id="horoSelection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;"></div>
+                <div id="horoResult" style="display: none; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 15px; margin-top: 20px; border: 1px solid var(--house-secondary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 id="horoTitle" style="color: var(--house-secondary); font-family: 'Cinzel';"></h3>
+                        <button onclick="backToHoroscope()" style="padding: 8px 15px; background: var(--house-primary); border: 1px solid var(--house-secondary); border-radius: 8px; color: #fff; cursor: pointer; font-size: 0.85rem;">← Nazaj</button>
+                    </div>
                     <p id="horoText"></p>
                 </div>
             </div>
         </div>
 
-        <!-- Coins HUD -->
-        <div id="coinsHUD">
-            <span style="color: #FFD700; font-size: 1.2rem;">🪙</span>
-            <span id="userCoins">0</span>
+        <!-- Avatar Creator -->
+        <div class="window" id="window-avatar" style="width: 800px; height: 700px; top: 50px; left: 100px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-avatar')">
+                <div class="window-title">🎭 Ustvarjalec Avatarja</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('avatar')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('avatar')"></button>
+                    <button class="window-btn close" onclick="closeWindow('avatar')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="avatar-creator">
+                    <div class="avatar-preview-large">
+                        <model-viewer id="avatarPreview" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="login-btn" onclick="openRPMAvatar()" style="width: auto; padding: 15px 30px;">Ustvari z Ready Player Me</button>
+                        <button class="login-btn" onclick="document.getElementById('avatarFile').click()" style="width: auto; padding: 15px 30px; background: rgba(255,255,255,0.1);">Naloži datoteko</button>
+                        <input type="file" id="avatarFile" accept=".glb,.gltf,.vrm" style="display: none;" onchange="handleAvatarUpload(event)">
+                    </div>
+                    
+                    <div class="rpm-container" id="rpmContainer" style="display: none;">
+                        <iframe id="rpmFrame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+                    
+                    <button class="login-btn" onclick="saveAvatar()" style="margin-top: 10px;">Shrani avatar</button>
+                </div>
+            </div>
         </div>
 
         <!-- Taskbar -->
         <div class="taskbar">
-            <div style="display: flex; align-items: center;">
-                <div class="start-btn" onclick="toggleStartMenu()">🐍</div>
+            <div class="taskbar-left">
+                <div class="start-btn" onclick="toggleStartMenu()">⚡</div>
+                <div class="taskbar-coins">
+                    <span>🪙</span>
+                    <span id="userCoins">0</span>
+                </div>
                 <div class="taskbar-apps" id="taskbarApps"></div>
             </div>
             <div class="system-tray">
@@ -1000,13 +1344,13 @@
 
         <!-- Start Menu -->
         <div id="startMenu">
-            <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--slytherin-gray); margin-bottom: 15px;">
-                <div style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--slytherin-silver); overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--house-secondary); margin-bottom: 15px;">
+                <div class="taskbar-avatar" style="width: 50px; height: 50px;">
                     <model-viewer id="startAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
                 </div>
                 <div>
-                    <h3 style="color: var(--slytherin-silver); font-family: 'Cinzel', serif;" id="startUsername"></h3>
-                    <p style="color: var(--slytherin-light); font-size: 0.8rem;">Slytherin House</p>
+                    <h3 style="color: var(--house-secondary); font-family: 'Cinzel', serif;" id="startUsername"></h3>
+                    <p style="color: var(--house-accent); font-size: 0.8rem;" id="startHouse"></p>
                 </div>
             </div>
             <div class="start-apps">
@@ -1017,17 +1361,85 @@
                 <div class="start-app" onclick="openWindow('calculator'); toggleStartMenu();">🧮<span>Računalo</span></div>
                 <div class="start-app" onclick="openWindow('calendar'); toggleStartMenu();">📅<span>Koledar</span></div>
                 <div class="start-app" onclick="openWindow('horoscope'); toggleStartMenu();">♈<span>Horoskop</span></div>
-                <div class="start-app" onclick="logout(); toggleStartMenu();">🔒<span>Odjava</span></div>
+                <div class="start-app" onclick="openWindow('avatar'); toggleStartMenu();">🎭<span>Avatar</span></div>
+                <div class="start-app" onclick="logout(); toggleStartMenu();">🚪<span>Izhod</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE DESKTOP -->
+    <div id="mobileDesktop" style="display: none; width: 100%; height: 100vh; background: var(--house-gradient); position: relative; flex-direction: column;">
+        <!-- Mobile Status Bar -->
+        <div class="mobile-status-bar">
+            <span class="mobile-time" id="mobileTime">12:00</span>
+            <div class="mobile-icons">
+                <span class="mobile-coins">🪙 <span id="mobileCoins">0</span></span>
+                <span>📶</span>
+                <span>🔋</span>
             </div>
         </div>
 
-        <!-- User Selection Modal -->
-        <div class="modal-overlay" id="userModal">
-            <div class="modal-content">
-                <h3 style="color: var(--slytherin-silver); margin-bottom: 15px; font-family: 'Cinzel', serif;">Izberite uporabnika</h3>
-                <div class="user-list" id="userList"></div>
-                <button class="login-btn" onclick="closeUserModal()" style="margin-top: 10px;">Prekliči</button>
+        <!-- Mobile House Badge -->
+        <div style="position: absolute; top: 50px; right: 20px; width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--house-secondary); overflow: hidden;">
+            <img src="" id="mobileHouseBadge" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+
+        <!-- Mobile App Grid -->
+        <div class="mobile-grid">
+            <div class="mobile-icon" onclick="openWindow('browser')">
+                <div class="mobile-icon-img">🌐</div>
+                <div class="mobile-icon-text">Brskalnik</div>
             </div>
+            <div class="mobile-icon" onclick="openWindow('chat')">
+                <div class="mobile-icon-img">💬</div>
+                <div class="mobile-icon-text">Klepet</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('games')">
+                <div class="mobile-icon-img">🎮</div>
+                <div class="mobile-icon-text">Igre</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('profile')">
+                <div class="mobile-icon-img">👤</div>
+                <div class="mobile-icon-text">Profil</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('calculator')">
+                <div class="mobile-icon-img">🧮</div>
+                <div class="mobile-icon-text">Računalo</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('calendar')">
+                <div class="mobile-icon-img">📅</div>
+                <div class="mobile-icon-text">Koledar</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('horoscope')">
+                <div class="mobile-icon-img">♈</div>
+                <div class="mobile-icon-text">Horoskop</div>
+            </div>
+            <div class="mobile-icon" onclick="openWindow('avatar')">
+                <div class="mobile-icon-img">🎭</div>
+                <div class="mobile-icon-text">Avatar</div>
+            </div>
+        </div>
+
+        <!-- Mobile Dock -->
+        <div class="mobile-dock">
+            <div class="mobile-dock-icon" onclick="openWindow('browser')">🌐</div>
+            <div class="mobile-dock-icon" onclick="openWindow('chat')">💬</div>
+            <div class="mobile-dock-icon" onclick="openWindow('games')">🎮</div>
+            <div class="mobile-dock-icon" onclick="openWindow('profile')">👤</div>
+        </div>
+
+        <!-- Mobile Windows Container -->
+        <div id="mobileWindows" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5000;">
+            <!-- Windows will be moved here on mobile -->
+        </div>
+    </div>
+
+    <!-- User Selection Modal -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-content">
+            <h3 style="color: var(--house-secondary); margin-bottom: 15px; font-family: 'Cinzel', serif;">Izberite čarovnika</h3>
+            <div class="user-list" id="userList"></div>
+            <button class="login-btn" onclick="closeUserModal()" style="margin-top: 10px;">Prekliči</button>
         </div>
     </div>
 
@@ -1055,13 +1467,22 @@
         // ==========================================
         let currentUser = null;
         let userData = null;
+        let selectedHouse = null;
         let activeWindows = [];
         let currentChatId = null;
-        let currentChatType = null;
         let calcExpression = '';
         let currentDate = new Date();
         let windowZIndex = 1000;
-        let isLoginMode = true;
+        let isLogin = true;
+        let tempAvatarUrl = '';
+        let isMobile = false;
+
+        const houseData = {
+            gryffindor: { name: 'Gryffindor', color: '#D3A625', img: 'griffindor.jpg' },
+            slytherin: { name: 'Slytherin', color: '#C0C0C0', img: 'Slytherin.png' },
+            ravenclaw: { name: 'Ravenclaw', color: '#946B2D', img: 'ravenclaw.jpg' },
+            hufflepuff: { name: 'Hufflepuff', color: '#372E29', img: 'hufflepuf.jpg' }
+        };
 
         // ==========================================
         // INITIALIZATION
@@ -1072,11 +1493,11 @@
 
         function runBootSequence() {
             const steps = [
-                { progress: 20, status: "Inicializacija sistema...", delay: 600 },
-                { progress: 40, status: "Povezovanje s Slytherin omrežjem...", delay: 800 },
-                { progress: 60, status: "Nalaganje modulov...", delay: 600 },
-                { progress: 80, status: "Priprava vmesnika...", delay: 500 },
-                { progress: 100, status: "Pripravljen!", delay: 400 }
+                { progress: 20, status: "Inicializacija čarobnega sistema...", delay: 600 },
+                { progress: 40, status: "Povezovanje z Hogwarts omrežjem...", delay: 800 },
+                { progress: 60, status: "Nalaganje čarobnih modulov...", delay: 600 },
+                { progress: 80, status: "Priprava učilnic...", delay: 500 },
+                { progress: 100, status: "Dobrodošli v Hogwarts!", delay: 400 }
             ];
 
             let i = 0;
@@ -1100,93 +1521,133 @@
         }
 
         // ==========================================
+        // HOUSE SELECTION
+        // ==========================================
+        function selectHouse(house) {
+            selectedHouse = house;
+            document.getElementById('houseSelection').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            
+            // Apply house theme
+            document.body.className = 'theme-' + house;
+            
+            // Update UI
+            const houseInfo = houseData[selectedHouse];
+            document.getElementById('selectedHouseImg').src = houseInfo.img;
+            document.getElementById('selectedHouseImg').style.display = 'block';
+            document.getElementById('selectedHouseName').textContent = houseInfo.name;
+            document.getElementById('selectedHouseName').style.color = houseInfo.color;
+            
+            updateEmailPreview();
+        }
+
+        // ==========================================
         // AUTHENTICATION
         // ==========================================
         function checkAuth() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     currentUser = user;
-                    loadUserData(user.uid);
+                    db.ref('users/' + user.uid).once('value').then((snap) => {
+                        if (snap.exists()) {
+                            userData = snap.val();
+                            selectedHouse = userData.house;
+                            document.body.className = 'theme-' + selectedHouse;
+                            showDesktop();
+                        } else {
+                            showHouseSelection();
+                        }
+                    });
                 } else {
-                    showLoginScreen();
+                    showHouseSelection();
                 }
             });
         }
 
-        function showLoginScreen() {
-            document.getElementById('loginScreen').style.display = 'flex';
+        function showHouseSelection() {
+            document.getElementById('houseSelection').style.display = 'flex';
+            document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('desktop').style.display = 'none';
         }
 
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('loginForm').style.display = isLoginMode ? 'block' : 'none';
-            document.getElementById('registerForm').style.display = isLoginMode ? 'none' : 'block';
-            document.getElementById('authSubtitle').textContent = isLoginMode ? 'Vpis v sistem' : 'Ustvarite nov račun';
+        function showRegister() {
+            isLogin = false;
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
         }
 
-        function updateEmailDisplay() {
-            const username = document.getElementById('regUsername').value;
-            document.getElementById('regEmailDisplay').textContent = username ? username + '@slytherin.com' : '@slytherin.com';
+        function showLogin() {
+            isLogin = true;
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
         }
+
+        function updateEmailPreview() {
+            const username = isLogin ? 
+                document.getElementById('loginUsername').value : 
+                document.getElementById('regUsername').value;
+            
+            const email = username ? `${username}@${selectedHouse}.hogwarts` : `@${selectedHouse}.hogwarts`;
+            
+            document.getElementById(isLogin ? 'emailPreview' : 'regEmailPreview').textContent = email;
+        }
+
+        document.getElementById('loginUsername').addEventListener('input', updateEmailPreview);
+        document.getElementById('regUsername').addEventListener('input', updateEmailPreview);
 
         function handleAuth() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
             
             if (!username || !password) {
-                alert('Vnesite uporabniško ime in geslo!');
+                alert('Vnesite čarobno ime in geslo!');
                 return;
             }
 
-            const email = username + '@slytherin.com';
+            const email = `${username}@${selectedHouse}.hogwarts`;
             
             auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    // Success - handled by onAuthStateChanged
+                })
                 .catch((error) => {
-                    alert('Napaka pri prijavi: ' + error.message);
+                    alert('Napaka pri vstopu: ' + error.message);
                 });
         }
 
         function handleRegister() {
             const username = document.getElementById('regUsername').value;
             const password = document.getElementById('regPassword').value;
-            const avatarUrl = document.getElementById('regAvatarUrl').value || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
-
+            
             if (!username || !password || password.length < 6) {
-                alert('Vnesite uporabniško ime in geslo (min. 6 znakov)!');
+                alert('Vnesite ime in geslo (min. 6 znakov)!');
                 return;
             }
 
-            const email = username + '@slytherin.com';
+            const email = `${username}@${selectedHouse}.hogwarts`;
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const uid = userCredential.user.uid;
                     const now = Date.now();
                     
-                    // Create user data
                     return db.ref('users/' + uid).set({
                         username: username,
                         email: email,
-                        avatarURL2: avatarUrl,
+                        house: selectedHouse,
+                        avatarURL2: 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb',
                         coins: 100,
                         messages: 0,
                         gamesPlayed: 0,
                         joinedAt: now,
                         lastActive: now
-                    }).then(() => {
-                        // Create default public chat membership
-                        return db.ref('chat_members/public_general/' + uid).set({
-                            joinedAt: now,
-                            username: username
-                        });
                     });
                 })
                 .then(() => {
-                    // Create welcome message
-                    return db.ref('chats/public_general/messages').push({
-                        text: `Dobrodošel, ${username}! 👋`,
-                        author: 'Sistem',
+                    // Create welcome message in house chat
+                    return db.ref(`chats/house_${selectedHouse}/messages`).push({
+                        text: `Dobrodošel v ${houseData[selectedHouse].name}, ${username}! 🎉`,
+                        author: 'Dumbledore',
                         authorId: 'system',
                         timestamp: Date.now(),
                         type: 'system'
@@ -1197,46 +1658,38 @@
                 });
         }
 
-        function loadUserData(uid) {
-            db.ref('users/' + uid).on('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    userData = snapshot.val();
-                    showDesktop();
-                } else {
-                    // Create user data if missing
-                    const username = currentUser.email.split('@')[0];
-                    db.ref('users/' + uid).set({
-                        username: username,
-                        email: currentUser.email,
-                        avatarURL2: 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb',
-                        coins: 100,
-                        messages: 0,
-                        gamesPlayed: 0,
-                        joinedAt: Date.now(),
-                        lastActive: Date.now()
-                    });
-                }
-            });
-        }
-
         function showDesktop() {
             document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('desktop').style.display = 'block';
-            document.getElementById('coinsHUD').style.display = 'flex';
+            
+            // Check if mobile
+            isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                document.getElementById('mobileDesktop').style.display = 'flex';
+                moveWindowsToMobile();
+            } else {
+                document.getElementById('desktop').style.display = 'block';
+            }
 
-            // Update all avatar displays
+            // Update house badge
+            document.getElementById('houseBadgeImg').src = houseData[selectedHouse].img;
+            document.getElementById('mobileHouseBadge').src = houseData[selectedHouse].img;
+
+            // Update avatars
             const avatarUrl = userData?.avatarURL2 || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
             document.getElementById('taskbarAvatar').src = avatarUrl;
             document.getElementById('startAvatar').src = avatarUrl;
             document.getElementById('profileAvatar').src = avatarUrl;
+            document.getElementById('avatarPreview').src = avatarUrl;
+            tempAvatarUrl = avatarUrl;
 
             // Update text
-            document.getElementById('startUsername').textContent = userData?.username || 'Uporabnik';
-            document.getElementById('profileUsername').textContent = userData?.username || 'Uporabnik';
-            document.getElementById('profileEmail').textContent = userData?.email || '';
-
-            // Update stats
-            updateProfileStats();
+            document.getElementById('startUsername').textContent = userData.username;
+            document.getElementById('startHouse').textContent = houseData[userData.house].name;
+            document.getElementById('profileUsername').textContent = userData.username;
+            document.getElementById('profileEmail').textContent = userData.email;
+            document.getElementById('profileHouseBadge').src = houseData[userData.house].img;
+            document.getElementById('profileHouseName').textContent = houseData[userData.house].name;
 
             // Start clock
             updateClock();
@@ -1251,26 +1704,114 @@
 
             // Listen for coins
             db.ref('users/' + currentUser.uid + '/coins').on('value', (snap) => {
-                document.getElementById('userCoins').textContent = snap.val() || 0;
+                const coins = snap.val() || 0;
+                document.getElementById('userCoins').textContent = coins;
+                document.getElementById('mobileCoins').textContent = coins;
             });
 
-            // Update last active
-            db.ref('users/' + currentUser.uid + '/lastActive').set(Date.now());
+            // Update stats
+            updateStats();
         }
 
-        function updateProfileStats() {
+        function moveWindowsToMobile() {
+            // Move all windows to mobile container so they can be displayed properly
+            const mobileContainer = document.getElementById('mobileWindows');
+            const windows = document.querySelectorAll('.window');
+            windows.forEach(win => {
+                mobileContainer.appendChild(win);
+                win.style.pointerEvents = 'auto';
+            });
+        }
+
+        function updateStats() {
             if (!userData) return;
-            
             document.getElementById('statCoins').textContent = userData.coins || 0;
             document.getElementById('statMessages').textContent = userData.messages || 0;
             document.getElementById('statGames').textContent = userData.gamesPlayed || 0;
-            
             const days = Math.floor((Date.now() - (userData.joinedAt || Date.now())) / (1000 * 60 * 60 * 24));
-            document.getElementById('statJoined').textContent = days;
+            document.getElementById('statDays').textContent = days;
         }
 
         function logout() {
             auth.signOut().then(() => location.reload());
+        }
+
+        // ==========================================
+        // AVATAR CREATOR
+        // ==========================================
+        function openRPMAvatar() {
+            document.getElementById('rpmContainer').style.display = 'block';
+            const frame = document.getElementById('rpmFrame');
+            frame.src = 'https://readyplayer.me/avatar?frameApi';
+            
+            window.addEventListener('message', subscribe);
+            document.addEventListener('message', subscribe);
+            
+            function subscribe(event) {
+                const json = parse(event);
+                if (json?.source !== 'readyplayerme') return;
+                
+                if (json.eventName === 'v1.avatar.exported') {
+                    tempAvatarUrl = json.data.url;
+                    document.getElementById('avatarPreview').src = tempAvatarUrl;
+                    document.getElementById('rpmContainer').style.display = 'none';
+                    window.removeEventListener('message', subscribe);
+                }
+            }
+            
+            function parse(event) {
+                try {
+                    return JSON.parse(event.data);
+                } catch (error) {
+                    return null;
+                }
+            }
+        }
+
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const url = URL.createObjectURL(file);
+            tempAvatarUrl = url;
+            document.getElementById('avatarPreview').src = url;
+        }
+
+        function saveAvatar() {
+            if (!tempAvatarUrl) return;
+            
+            // If it's a URL from RPM, save directly
+            if (tempAvatarUrl.startsWith('http')) {
+                db.ref('users/' + currentUser.uid + '/avatarURL2').set(tempAvatarUrl);
+                updateAllAvatars(tempAvatarUrl);
+                alert('Avatar posodobljen!');
+                closeWindow('avatar');
+            } else {
+                // Upload file to storage
+                const file = document.getElementById('avatarFile').files[0];
+                if (!file) {
+                    alert('Napaka pri nalaganju datoteke');
+                    return;
+                }
+                
+                const path = `avatars/${currentUser.uid}/${Date.now()}_${file.name}`;
+                storage.ref().child(path).put(file).then((snapshot) => {
+                    return snapshot.ref.getDownloadURL();
+                }).then((url) => {
+                    db.ref('users/' + currentUser.uid + '/avatarURL2').set(url);
+                    updateAllAvatars(url);
+                    alert('Avatar posodobljen!');
+                    closeWindow('avatar');
+                }).catch((err) => {
+                    alert('Napaka: ' + err.message);
+                });
+            }
+        }
+
+        function updateAllAvatars(url) {
+            document.getElementById('taskbarAvatar').src = url;
+            document.getElementById('startAvatar').src = url;
+            document.getElementById('profileAvatar').src = url;
         }
 
         // ==========================================
@@ -1279,6 +1820,13 @@
         function openWindow(app) {
             const win = document.getElementById('window-' + app);
             if (!win) return;
+            
+            // Close all other windows on mobile
+            if (isMobile) {
+                document.querySelectorAll('.window.active').forEach(w => {
+                    if (w !== win) w.classList.remove('active');
+                });
+            }
             
             win.classList.add('active');
             win.style.zIndex = ++windowZIndex;
@@ -1327,6 +1875,7 @@
         let isDragging = false, dragOffset = {x:0,y:0}, dragWindow = null;
 
         function startDrag(e, id) {
+            if (isMobile) return; // Disable drag on mobile
             isDragging = true;
             dragWindow = document.getElementById(id);
             dragWindow.style.zIndex = ++windowZIndex;
@@ -1350,7 +1899,10 @@
         function updateTaskbar() {
             const container = document.getElementById('taskbarApps');
             container.innerHTML = '';
-            const icons = { browser: '🌐', chat: '💬', games: '🎮', profile: '👤', calculator: '🧮', calendar: '📅', horoscope: '♈' };
+            const icons = {
+                browser: '🌐', chat: '💬', games: '🎮', profile: '👤',
+                calculator: '🧮', calendar: '📅', horoscope: '♈', avatar: '🎭'
+            };
             
             activeWindows.forEach(app => {
                 const div = document.createElement('div');
@@ -1369,23 +1921,84 @@
         }
 
         // ==========================================
+        // BROWSER - Fixed
+        // ==========================================
+        function navigateBrowser() {
+            const url = document.getElementById('browserUrl').value.trim();
+            const frame = document.getElementById('browserFrame');
+            
+            if (!url) return;
+            
+            let finalUrl;
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                finalUrl = url;
+            } else if (url.includes('.') && !url.includes(' ')) {
+                finalUrl = 'https://' + url;
+            } else {
+                finalUrl = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            }
+            
+            frame.src = finalUrl;
+        }
+
+        function browserBack() {
+            const frame = document.getElementById('browserFrame');
+            try {
+                frame.contentWindow.history.back();
+            } catch(e) {
+                console.log('Cannot go back');
+            }
+        }
+
+        function browserForward() {
+            const frame = document.getElementById('browserFrame');
+            try {
+                frame.contentWindow.history.forward();
+            } catch(e) {
+                console.log('Cannot go forward');
+            }
+        }
+
+        function browserRefresh() {
+            const frame = document.getElementById('browserFrame');
+            frame.src = frame.src;
+        }
+
+        // ==========================================
         // CHAT SYSTEM
         // ==========================================
         function loadChats() {
-            // Load public chats
-            db.ref('chats').orderByChild('type').equalTo('public').on('value', (snapshot) => {
+            // Load house chat
+            const houseChatId = 'house_' + userData.house;
+            db.ref('chats/' + houseChatId).once('value').then((snap) => {
+                if (!snap.exists()) {
+                    // Create house chat if not exists
+                    db.ref('chats/' + houseChatId).set({
+                        name: houseData[userData.house].name + ' Common Room',
+                        type: 'house',
+                        house: userData.house,
+                        createdAt: Date.now()
+                    });
+                }
+            });
+
+            // Listen for house chat
+            db.ref('chats').orderByChild('type').equalTo('house').on('value', (snapshot) => {
                 const container = document.getElementById('publicChats');
                 container.innerHTML = '';
                 
                 snapshot.forEach((child) => {
                     const chat = child.val();
+                    // Only show user's house chat
+                    if (chat.house !== userData.house) return;
+                    
                     const div = document.createElement('div');
                     div.className = 'chat-room' + (currentChatId === child.key ? ' active' : '');
                     div.innerHTML = `
                         <div class="chat-room-name">${chat.name}</div>
-                        <div class="chat-room-preview">${chat.memberCount || 0} članov</div>
+                        <div class="chat-room-preview">Hišni klepet</div>
                     `;
-                    div.onclick = () => openChat(child.key, 'public', chat.name);
+                    div.onclick = () => openChat(child.key, 'house', chat.name, div);
                     container.appendChild(div);
                 });
             });
@@ -1421,12 +2034,12 @@
                 
                 let name = chat.name;
                 if (type === 'private') {
-                    // Get other user's name
                     const otherId = Object.keys(chat.members || {}).find(id => id !== currentUser.uid);
                     if (otherId) {
                         db.ref('users/' + otherId + '/username').once('value').then((userSnap) => {
-                            name = userSnap.val() || 'Uporabnik';
-                            div.querySelector('.chat-room-name').textContent = name;
+                            name = userSnap.val() || 'Čarovnik';
+                            const nameEl = div.querySelector('.chat-room-name');
+                            if (nameEl) nameEl.textContent = name;
                         });
                     }
                 }
@@ -1435,30 +2048,34 @@
                     <div class="chat-room-name">${name}</div>
                     <div class="chat-room-preview">${chat.lastMessage ? chat.lastMessage.substring(0, 30) + '...' : 'Brez sporočil'}</div>
                 `;
-                div.onclick = () => openChat(chatId, type, name);
+                div.onclick = () => openChat(chatId, type, name, div);
                 container.appendChild(div);
             });
         }
 
-        function openChat(chatId, type, name) {
+        function openChat(chatId, type, name, element) {
             currentChatId = chatId;
-            currentChatType = type;
             
-            // Update UI
+            // Remove active class from all chat rooms
             document.querySelectorAll('.chat-room').forEach(el => el.classList.remove('active'));
-            event.currentTarget?.classList.add('active');
+            // Add active class to clicked element if provided
+            if (element) element.classList.add('active');
             
             document.getElementById('chatHeader').innerHTML = `
                 <h3>${name}</h3>
-                <p>${type === 'public' ? 'Javni klepet' : type === 'group' ? 'Skupinski klepet' : 'Zasebni klepet'}</p>
+                <p>${type === 'house' ? 'Hišni klepet' : type === 'group' ? 'Skupina' : 'Zasebni pogovor'}</p>
             `;
             document.getElementById('chatInputArea').style.display = 'flex';
             
-            // Load messages
             document.getElementById('chatMessages').innerHTML = '';
-            db.ref('chats/' + chatId + '/messages').limitToLast(50).on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                displayMessage(msg);
+            
+            // Remove old listener if exists
+            if (window.currentChatListener) {
+                db.ref('chats/' + chatId + '/messages').off('child_added', window.currentChatListener);
+            }
+            
+            window.currentChatListener = db.ref('chats/' + chatId + '/messages').limitToLast(50).on('child_added', (snapshot) => {
+                displayMessage(snapshot.val());
             });
         }
 
@@ -1466,15 +2083,17 @@
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             const isOwn = msg.authorId === currentUser.uid;
+            const isSystem = msg.authorId === 'system';
             
             div.className = 'chat-message ' + (isOwn ? 'own' : 'other');
+            if (isSystem) div.style.background = 'rgba(255,215,0,0.2)';
             
             const time = new Date(msg.timestamp).toLocaleTimeString('sl-SL', {hour: '2-digit', minute: '2-digit'});
             
             div.innerHTML = `
-                ${!isOwn ? `<div class="message-author">${msg.author}</div>` : ''}
+                ${!isOwn && !isSystem ? `<div class="message-author">${msg.author}</div>` : ''}
                 <div>${msg.text}</div>
-                <div class="message-time">${time}</div>
+                <div style="font-size: 0.65rem; color: rgba(255,255,255,0.4); margin-top: 4px; text-align: right;">${time}</div>
             `;
             
             container.appendChild(div);
@@ -1494,48 +2113,18 @@
                 timestamp: Date.now()
             };
             
-            // Save message
             db.ref('chats/' + currentChatId + '/messages').push(msgData);
-            
-            // Update last message
             db.ref('chats/' + currentChatId).update({
                 lastMessage: text,
                 lastActivity: Date.now()
             });
             
-            // Increment user message count
             db.ref('users/' + currentUser.uid + '/messages').transaction(c => (c || 0) + 1);
             
             input.value = '';
         }
 
         function createPublicChat() {
-            const name = prompt('Ime javnega klepeta:');
-            if (!name) return;
-            
-            const chatId = 'public_' + Date.now();
-            db.ref('chats/' + chatId).set({
-                name: name,
-                type: 'public',
-                createdBy: currentUser.uid,
-                createdAt: Date.now(),
-                memberCount: 1
-            }).then(() => {
-                // Add creator as member
-                db.ref('chat_members/' + chatId + '/' + currentUser.uid).set({
-                    joinedAt: Date.now(),
-                    username: userData.username
-                });
-                
-                // Add to user's chats
-                db.ref('user_chats/' + currentUser.uid + '/' + chatId).set({
-                    type: 'public',
-                    joinedAt: Date.now()
-                });
-            });
-        }
-
-        function createGroupChat() {
             const name = prompt('Ime skupine:');
             if (!name) return;
             
@@ -1554,11 +2143,13 @@
             });
         }
 
+        function createGroupChat() {
+            createPublicChat(); // Same functionality
+        }
+
         function startPrivateChat() {
-            // Show user selection modal
             document.getElementById('userModal').style.display = 'flex';
             
-            // Load all users
             db.ref('users').once('value').then((snapshot) => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -1570,10 +2161,11 @@
                     const div = document.createElement('div');
                     div.className = 'user-item';
                     div.innerHTML = `
-                        <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
-                            <img src="${user.avatarURL2 || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb'}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="${user.avatarURL2 || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <div>
+                            <div style="color: var(--house-secondary); font-weight: 600;">${user.username}</div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${houseData[user.house]?.name || 'Hogwarts'}</div>
                         </div>
-                        <span>${user.username}</span>
                     `;
                     div.onclick = () => createPrivateChat(child.key, user.username);
                     list.appendChild(div);
@@ -1584,7 +2176,7 @@
         function createPrivateChat(otherUserId, otherUsername) {
             closeUserModal();
             
-            // Check if chat already exists
+            // Check existing
             db.ref('user_chats/' + currentUser.uid).orderByChild('type').equalTo('private').once('value').then((snapshot) => {
                 let existingChat = null;
                 
@@ -1600,7 +2192,6 @@
                     return;
                 }
                 
-                // Create new private chat
                 const chatId = 'private_' + currentUser.uid + '_' + otherUserId;
                 
                 db.ref('chats/' + chatId).set({
@@ -1611,13 +2202,11 @@
                         [otherUserId]: {username: otherUsername}
                     }
                 }).then(() => {
-                    // Add to both users
                     db.ref('user_chats/' + currentUser.uid + '/' + chatId).set({
                         type: 'private',
                         otherUser: otherUserId,
                         joinedAt: Date.now()
                     });
-                    
                     db.ref('user_chats/' + otherUserId + '/' + chatId).set({
                         type: 'private',
                         otherUser: currentUser.uid,
@@ -1649,13 +2238,14 @@
             ];
             
             const container = document.getElementById('gamesContainer');
+            container.innerHTML = ''; // Clear existing
             games.forEach(game => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
                 card.innerHTML = `
                     <div class="game-thumb">${game.icon}</div>
                     <div style="padding: 15px;">
-                        <div style="font-family: Cinzel; color: var(--slytherin-silver); margin-bottom: 5px;">${game.name}</div>
+                        <div style="font-family: Cinzel; color: var(--house-secondary); margin-bottom: 5px;">${game.name}</div>
                         <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">${game.desc}</div>
                     </div>
                 `;
@@ -1670,10 +2260,8 @@
             frame.src = url;
             frame.style.display = 'block';
             
-            // Track game play
             db.ref('users/' + currentUser.uid + '/gamesPlayed').transaction(c => (c || 0) + 1);
             
-            // Award coins
             const coins = Math.floor(Math.random() * 15) + 5;
             db.ref('users/' + currentUser.uid + '/coins').transaction(c => (c || 0) + coins);
         }
@@ -1684,12 +2272,13 @@
         function initCalculator() {
             const buttons = ['C', '⌫', '÷', '×', '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '=', '0', '.'];
             const container = document.getElementById('calcButtons');
+            container.innerHTML = ''; // Clear existing
             
             buttons.forEach(btn => {
                 const button = document.createElement('button');
                 button.className = 'calc-btn';
                 button.textContent = btn;
-                if (['÷', '×', '-', '+'].includes(btn)) button.style.color = 'var(--slytherin-light)';
+                if (['÷', '×', '-', '+'].includes(btn)) button.style.color = 'var(--house-secondary)';
                 if (btn === '=') button.classList.add('equals');
                 
                 button.onclick = () => {
@@ -1740,20 +2329,17 @@
             const grid = document.getElementById('calGrid');
             grid.innerHTML = '';
             
-            // Headers
             ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'].forEach(day => {
                 const div = document.createElement('div');
-                div.style.cssText = 'text-align: center; padding: 10px; color: var(--slytherin-light); font-weight: bold;';
+                div.style.cssText = 'text-align: center; padding: 10px; color: var(--house-secondary); font-weight: bold;';
                 div.textContent = day;
                 grid.appendChild(div);
             });
             
-            // Empty days
             for (let i = 0; i < firstDay; i++) {
                 grid.appendChild(document.createElement('div'));
             }
             
-            // Days
             const today = new Date();
             for (let i = 1; i <= daysInMonth; i++) {
                 const div = document.createElement('div');
@@ -1761,13 +2347,13 @@
                 div.textContent = i;
                 
                 if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                    div.classList.add('today');
+                    div.style.background = 'var(--house-primary)';
+                    div.style.border = '2px solid var(--house-secondary)';
                 }
                 
                 div.onclick = () => {
                     const note = prompt(`Zabeležka za ${i}. ${month + 1}. ${year}:`);
                     if (note) {
-                        // Save to Firebase
                         db.ref(`users/${currentUser.uid}/calendar/${year}/${month}/${i}`).set({
                             note: note,
                             timestamp: Date.now()
@@ -1804,12 +2390,14 @@
             ];
             
             const container = document.getElementById('horoSelection');
+            container.innerHTML = ''; // Clear existing
+            
             signs.forEach(sign => {
                 const div = document.createElement('div');
-                div.style.cssText = 'background: rgba(26, 71, 42, 0.3); border: 1px solid var(--slytherin-gray); border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s;';
-                div.innerHTML = `<div style="font-size: 2.5rem; margin-bottom: 10px;">${sign.icon}</div><div style="font-family: Cinzel; color: var(--slytherin-silver);">${sign.name}</div><div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${sign.date}</div>`;
-                div.onmouseover = () => div.style.borderColor = 'var(--slytherin-light)';
-                div.onmouseout = () => div.style.borderColor = 'var(--slytherin-gray)';
+                div.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid var(--house-secondary); border-radius: 15px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s;';
+                div.innerHTML = `<div style="font-size: 2.5rem; margin-bottom: 10px;">${sign.icon}</div><div style="font-family: Cinzel; color: var(--house-secondary);">${sign.name}</div><div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${sign.date}</div>`;
+                div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.1)';
+                div.onmouseout = () => div.style.background = 'rgba(255,255,255,0.05)';
                 div.onclick = () => showHoroscope(sign);
                 container.appendChild(div);
             });
@@ -1817,51 +2405,31 @@
 
         function showHoroscope(sign) {
             const texts = [
-                "Danes je idealen dan za nove začetke. Vaša ambicija bo na vrhuncu.",
-                "Finančne priložnosti vas čakajo. Bodite pogumni pri odločitvah.",
-                "Ljubezen je v zraku. Presenetite svojo osebo s posebnim gestom.",
-                "Karierni napredek je viden. Vaše delo bo prepoznano."
+                "Danes je idealen dan za nove čarobne začetke. Vaša moč je na vrhuncu.",
+                "Zvezde so na vaši strani. Uporabite svojo modrost.",
+                "Ljubezen je v zraku. Pokažite svoje najboljše čarobne sposobnosti.",
+                "Uspeh vas čaka v učilnicah. Bodite pogumni."
             ];
             
             document.getElementById('horoSelection').style.display = 'none';
             document.getElementById('horoResult').style.display = 'block';
-            document.getElementById('horoTitle').textContent = `${sign.icon} ${sign.name} - Dnevni horoskop`;
+            document.getElementById('horoTitle').textContent = `${sign.icon} ${sign.name}`;
             document.getElementById('horoText').textContent = texts[Math.floor(Math.random() * texts.length)];
         }
 
-        // ==========================================
-        // BROWSER
-        // ==========================================
-        function navigateBrowser() {
-            const url = document.getElementById('browserUrl').value;
-            const frame = document.getElementById('browserFrame');
-            frame.src = url.startsWith('http') ? url : 'https://www.google.com/search?q=' + encodeURIComponent(url);
-        }
-
-        function browserBack() {
-            document.getElementById('browserFrame').contentWindow.history.back();
-        }
-
-        function browserForward() {
-            document.getElementById('browserFrame').contentWindow.history.forward();
+        function backToHoroscope() {
+            document.getElementById('horoSelection').style.display = 'grid';
+            document.getElementById('horoResult').style.display = 'none';
         }
 
         // ==========================================
         // UTILITIES
         // ==========================================
         function updateClock() {
-            document.getElementById('clock').textContent = 
-                new Date().toLocaleTimeString('sl-SL', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function updateAvatar() {
-            const url = prompt('Vnesite URL za nov avatar (Ready Player Me):');
-            if (url) {
-                db.ref('users/' + currentUser.uid + '/avatarURL2').set(url);
-                document.getElementById('taskbarAvatar').src = url;
-                document.getElementById('startAvatar').src = url;
-                document.getElementById('profileAvatar').src = url;
-            }
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('sl-SL', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').textContent = timeStr;
+            document.getElementById('mobileTime').textContent = timeStr;
         }
 
         // Close menus when clicking outside
@@ -1869,6 +2437,17 @@
             const startMenu = document.getElementById('startMenu');
             if (startMenu.classList.contains('active') && !e.target.closest('#startMenu') && !e.target.closest('.start-btn')) {
                 startMenu.classList.remove('active');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (!currentUser) return;
+            const newIsMobile = window.innerWidth <= 768;
+            
+            // Only reload if switching between mobile and desktop
+            if (newIsMobile !== isMobile) {
+                location.reload();
             }
         });
     </script>
