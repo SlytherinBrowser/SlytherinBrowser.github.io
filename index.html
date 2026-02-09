@@ -6,7 +6,13 @@
     <title>SlytherinOS</title>
     <link id="favicon" rel="icon" href="Slytherin.png">
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <!-- Firebase already initialized in your files -->
+    
+    <!-- Firebase SDK - isto kot v vaših datotekah -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
         
@@ -17,8 +23,6 @@
             --slytherin-silver: #C0C0C0;
             --slytherin-gray: #5D5D5D;
             --slytherin-black: #0a0a0a;
-            --glass-bg: rgba(26, 71, 42, 0.85);
-            --glass-border: rgba(192, 192, 192, 0.3);
         }
 
         * {
@@ -35,7 +39,7 @@
             user-select: none;
         }
 
-        /* ===== BOOT SCREEN ===== */
+        /* BOOT SCREEN */
         #bootScreen {
             position: fixed;
             top: 0;
@@ -105,7 +109,7 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* ===== LOCK SCREEN ===== */
+        /* LOCK SCREEN */
         #lockScreen {
             position: fixed;
             top: 0;
@@ -118,7 +122,6 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            backdrop-filter: blur(20px);
         }
 
         .lock-container {
@@ -126,29 +129,10 @@
             border: 2px solid var(--slytherin-silver);
             border-radius: 30px;
             padding: 60px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 50px rgba(26, 71, 42, 0.5);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
             max-width: 500px;
             width: 90%;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .lock-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(192, 192, 192, 0.1), transparent);
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .avatar-showcase {
@@ -159,12 +143,6 @@
             border: 4px solid var(--slytherin-silver);
             overflow: hidden;
             background: rgba(26, 71, 42, 0.3);
-            box-shadow: 0 0 30px rgba(80, 200, 120, 0.3);
-        }
-
-        .avatar-showcase model-viewer {
-            width: 100%;
-            height: 100%;
         }
 
         .lock-title {
@@ -172,16 +150,12 @@
             font-size: 2rem;
             color: var(--slytherin-silver);
             margin-bottom: 10px;
-            position: relative;
-            z-index: 1;
         }
 
         .lock-user {
             color: var(--slytherin-light);
             font-size: 1.2rem;
             margin-bottom: 30px;
-            position: relative;
-            z-index: 1;
         }
 
         .lock-input {
@@ -195,15 +169,11 @@
             text-align: center;
             letter-spacing: 3px;
             margin-bottom: 20px;
-            transition: all 0.3s;
-            position: relative;
-            z-index: 1;
         }
 
         .lock-input:focus {
             outline: none;
             border-color: var(--slytherin-light);
-            box-shadow: 0 0 15px rgba(80, 200, 120, 0.3);
         }
 
         .lock-btn {
@@ -217,8 +187,6 @@
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s;
-            position: relative;
-            z-index: 1;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
@@ -234,9 +202,6 @@
             cursor: pointer;
             font-size: 0.9rem;
             opacity: 0.7;
-            transition: opacity 0.3s;
-            position: relative;
-            z-index: 1;
         }
 
         .register-link:hover {
@@ -244,7 +209,7 @@
             text-decoration: underline;
         }
 
-        /* ===== REGISTRATION MODAL ===== */
+        /* REGISTRATION */
         #registerModal {
             display: none;
             position: fixed;
@@ -321,7 +286,7 @@
             border: 3px solid var(--slytherin-silver);
         }
 
-        /* ===== DESKTOP ===== */
+        /* DESKTOP */
         #desktop {
             display: none;
             width: 100%;
@@ -400,22 +365,11 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: 1.2rem;
-            position: relative;
         }
 
         .taskbar-app:hover {
             background: rgba(80, 200, 120, 0.3);
             transform: translateY(-3px);
-        }
-
-        .taskbar-app.active::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            width: 20px;
-            height: 3px;
-            background: var(--slytherin-light);
-            border-radius: 2px;
         }
 
         .taskbar-right {
@@ -479,7 +433,6 @@
             color: #fff;
             font-size: 0.85rem;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            word-wrap: break-word;
         }
 
         /* Windows */
@@ -488,7 +441,7 @@
             background: rgba(10, 10, 10, 0.98);
             border: 1px solid var(--slytherin-silver);
             border-radius: 15px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(26, 71, 42, 0.3);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
             min-width: 400px;
             min-height: 300px;
             display: none;
@@ -565,7 +518,6 @@
             gap: 15px;
             z-index: 9001;
             box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-            backdrop-filter: blur(20px);
         }
 
         #startMenu.active {
@@ -653,8 +605,8 @@
             background: rgba(192, 192, 192, 0.2);
         }
 
-        /* Browser App */
-        .browser-toolbar {
+        /* Apps styling */
+        .browser-toolbar, .file-toolbar {
             display: flex;
             gap: 10px;
             padding: 10px;
@@ -677,7 +629,7 @@
             background: var(--slytherin-light);
         }
 
-        .browser-input {
+        .browser-input, .file-path {
             flex: 1;
             padding: 8px 15px;
             background: rgba(0,0,0,0.5);
@@ -687,7 +639,7 @@
             font-size: 0.9rem;
         }
 
-        .browser-frame {
+        .browser-frame, #gameFrame {
             width: 100%;
             height: calc(100% - 60px);
             border: none;
@@ -695,7 +647,6 @@
             background: #fff;
         }
 
-        /* Chat App */
         .chat-container {
             display: flex;
             height: 100%;
@@ -758,7 +709,6 @@
             max-width: 70%;
             padding: 12px 16px;
             border-radius: 15px;
-            position: relative;
             animation: messageSlide 0.3s ease;
         }
 
@@ -827,7 +777,6 @@
             transform: scale(1.1);
         }
 
-        /* Calculator */
         .calc-display {
             background: rgba(0,0,0,0.5);
             padding: 20px;
@@ -894,7 +843,6 @@
             border-color: var(--slytherin-light);
         }
 
-        /* Calendar */
         .cal-header {
             display: flex;
             justify-content: space-between;
@@ -952,7 +900,6 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            position: relative;
         }
 
         .cal-day:hover {
@@ -983,7 +930,6 @@
             margin-top: 4px;
         }
 
-        /* Horoscope */
         .horo-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1024,7 +970,6 @@
             margin-top: 5px;
         }
 
-        /* Games Portal */
         .games-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1092,26 +1037,6 @@
             transform: translate(-50%, -50%) scale(1);
         }
 
-        /* File Manager */
-        .file-toolbar {
-            display: flex;
-            gap: 10px;
-            padding: 10px;
-            background: rgba(26, 71, 42, 0.3);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .file-path {
-            flex: 1;
-            padding: 8px 15px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--slytherin-gray);
-            border-radius: 8px;
-            color: var(--slytherin-silver);
-            font-family: 'Courier New', monospace;
-        }
-
         .file-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -1144,52 +1069,77 @@
             word-break: break-word;
         }
 
-        /* Responsive */
+        .taskbar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--slytherin-silver);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .taskbar-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(80, 200, 120, 0.5);
+        }
+
+        #coinsHUD {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--slytherin-silver);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 8000;
+            font-family: 'Cinzel', serif;
+        }
+
+        .coin-icon {
+            color: #FFD700;
+            font-size: 1.2rem;
+        }
+
+        .snowflake {
+            color: #fff;
+            font-size: 1.5em;
+            position: absolute;
+            top: -10%;
+            animation: snowfall 10s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes snowfall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; }
+        }
+
         @media (max-width: 768px) {
             .desktop-icons {
                 grid-template-columns: repeat(3, 1fr);
             }
-            
             .window {
                 width: 95vw !important;
                 height: 80vh !important;
                 left: 2.5vw !important;
                 top: 10vh !important;
             }
-            
             .chat-sidebar {
                 display: none;
             }
-            
             .horo-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
             .boot-text {
                 font-size: 2rem;
             }
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .animate-slide-up {
-            animation: slideUp 0.5s ease;
-        }
-
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -1207,74 +1157,7 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--slytherin-light);
         }
-
-        /* Avatar in taskbar */
-        .taskbar-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--slytherin-silver);
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .taskbar-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(80, 200, 120, 0.5);
-        }
-
-        /* Coins HUD */
-        #coinsHUD {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 1px solid var(--slytherin-silver);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 8000;
-            font-family: 'Cinzel', serif;
-        }
-
-        .coin-icon {
-            color: #FFD700;
-            font-size: 1.2rem;
-        }
-
-        /* Snow effect for winter */
-        .snowflake {
-            color: #fff;
-            font-size: 1.5em;
-            position: absolute;
-            top: -10%;
-            animation: snowfall 10s linear infinite;
-            pointer-events: none;
-        }
-        @keyframes snowfall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(110vh) rotate(360deg);
-                opacity: 0.3;
-            }
-        }
-        .snowflake:nth-child(odd) {
-            animation-duration: 12s;
-            font-size: 1.2em;
-        }
-        .snowflake:nth-child(even) {
-            animation-duration: 8s;
-            font-size: 1.8em;
-        }
     </style>
-<base target="_blank">
 </head>
 <body>
 
@@ -1291,9 +1174,9 @@
 
     <!-- LOCK SCREEN -->
     <div id="lockScreen">
-        <div class="lock-container animate-slide-up">
+        <div class="lock-container">
             <div class="avatar-showcase">
-                <model-viewer id="lockAvatar" src="" camera-controls auto-rotate disable-zoom disable-pan disable-tap min-camera-orbit="auto 90deg auto" max-camera-orbit="auto 90deg auto" style="width: 100%; height: 100%;"></model-viewer>
+                <model-viewer id="lockAvatar" src="https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb" camera-controls auto-rotate disable-zoom disable-pan disable-tap style="width: 100%; height: 100%;"></model-viewer>
             </div>
             <h2 class="lock-title">Dobrodošli nazaj</h2>
             <p class="lock-user" id="lockUsername">Uporabnik</p>
@@ -1304,7 +1187,7 @@
     </div>
 
     <!-- REGISTRATION MODAL -->
-    <div id="registerModal">
+    <div id="registerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10001; justify-content: center; align-items: center;">
         <div class="register-container">
             <h2 style="font-family: 'Cinzel', serif; color: var(--slytherin-silver); margin-bottom: 20px; text-align: center;">Nastavitev SlytherinOS</h2>
             
@@ -1314,16 +1197,16 @@
                 <div class="step" id="step3">3</div>
             </div>
 
-            <!-- Step 1: Account -->
+            <!-- Step 1 -->
             <div class="setup-content active" id="setup1">
                 <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">1. Ustvari račun</h3>
                 <input type="text" id="regUsername" placeholder="Uporabniško ime" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
                 <input type="email" id="regEmail" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
-                <input type="password" id="regPassword" placeholder="Geslo (6 števk)" maxlength="6" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
+                <input type="password" id="regPassword" placeholder="Geslo" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
                 <button class="lock-btn" onclick="nextStep(2)" style="margin-top: 10px;">Naprej</button>
             </div>
 
-            <!-- Step 2: Avatar -->
+            <!-- Step 2 -->
             <div class="setup-content" id="setup2">
                 <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">2. Ustvari avatar</h3>
                 <div class="avatar-creator">
@@ -1340,13 +1223,12 @@
                 </div>
             </div>
 
-            <!-- Step 3: Complete -->
+            <!-- Step 3 -->
             <div class="setup-content" id="setup3">
                 <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">3. Zaključi nastavitev</h3>
                 <div style="text-align: center; padding: 30px;">
                     <div style="font-size: 4rem; margin-bottom: 20px;">🐍</div>
                     <p style="color: var(--slytherin-silver); margin-bottom: 20px;">Dobrodošli v Slytherin družino!</p>
-                    <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 30px;">Vaš operacijski sistem je pripravljen.</p>
                 </div>
                 <button class="lock-btn" onclick="completeRegistration()">Zaženi SlytherinOS</button>
             </div>
@@ -1393,7 +1275,6 @@
             </div>
         </div>
 
-        <!-- Windows -->
         <!-- Browser Window -->
         <div class="window" id="window-browser" style="width: 900px; height: 600px; top: 50px; left: 100px;">
             <div class="window-header" onmousedown="startDrag(event, 'window-browser')">
@@ -1450,7 +1331,7 @@
                         <div class="chat-messages" id="chatMessages">
                             <div class="chat-message other">
                                 <div class="author">SlytherinBot</div>
-                                Dobrodošli v Slytherin klepetalnici! Bodite spoštljivi do drugih.
+                                Dobrodošli v Slytherin klepetalnici!
                             </div>
                         </div>
                         <div class="chat-input-area">
@@ -1474,25 +1355,24 @@
             </div>
             <div class="window-content">
                 <div class="file-toolbar">
-                    <button class="browser-btn" onclick="goBack()">← Nazaj</button>
+                    <button class="browser-btn" onclick="goHome()">🏠 Domov</button>
                     <button class="browser-btn" onclick="createFolder()">📁 Nova mapa</button>
-                    <button class="browser-btn" onclick="uploadFile()">⬆ Naloži</button>
                     <div class="file-path" id="filePath">Domov /</div>
                 </div>
                 <div class="file-grid" id="fileGrid">
-                    <div class="file-item" onclick="openAppFolder('applications')">
+                    <div class="file-item" onclick="openFolder('applications')">
                         <div class="file-icon">📱</div>
                         <div class="file-name">Aplikacije</div>
                     </div>
-                    <div class="file-item" onclick="openAppFolder('documents')">
+                    <div class="file-item" onclick="openFolder('documents')">
                         <div class="file-icon">📄</div>
                         <div class="file-name">Dokumenti</div>
                     </div>
-                    <div class="file-item" onclick="openAppFolder('images')">
+                    <div class="file-item" onclick="openFolder('images')">
                         <div class="file-icon">🖼️</div>
                         <div class="file-name">Slike</div>
                     </div>
-                    <div class="file-item" onclick="openAppFolder('music')">
+                    <div class="file-item" onclick="openFolder('music')">
                         <div class="file-icon">🎵</div>
                         <div class="file-name">Glasba</div>
                     </div>
@@ -1514,11 +1394,8 @@
                 <div class="browser-toolbar">
                     <input type="text" class="browser-input" id="gameSearch" placeholder="Išči igre..." oninput="searchGames(this.value)">
                     <button class="browser-btn" onclick="showAllGames()">Vse igre</button>
-                    <button class="browser-btn" onclick="showFavorites()">Priljubljene</button>
                 </div>
-                <div class="games-container" id="gamesContainer">
-                    <!-- Games will be populated by JS -->
-                </div>
+                <div class="games-container" id="gamesContainer"></div>
                 <iframe id="gameFrame" style="width: 100%; height: calc(100% - 60px); border: none; border-radius: 10px; display: none;"></iframe>
             </div>
         </div>
@@ -1534,9 +1411,7 @@
                 </div>
             </div>
             <div class="window-content">
-                <div class="horo-grid" id="horoGrid">
-                    <!-- Horoscope signs populated by JS -->
-                </div>
+                <div class="horo-grid" id="horoGrid"></div>
                 <div id="horoDetail" style="display: none; margin-top: 20px; padding: 20px; background: rgba(26, 71, 42, 0.3); border-radius: 15px; border: 1px solid var(--slytherin-silver);">
                     <h3 id="horoTitle" style="font-family: 'Cinzel', serif; color: var(--slytherin-silver); margin-bottom: 15px;"></h3>
                     <p id="horoText" style="line-height: 1.6; color: rgba(255,255,255,0.9);"></p>
@@ -1566,9 +1441,7 @@
                     <button class="calc-mode-btn" onclick="setCalcMode('converter')">Pretvornik</button>
                 </div>
                 <div class="calc-display" id="calcDisplay">0</div>
-                <div class="calc-buttons" id="calcButtons">
-                    <!-- Buttons populated by JS -->
-                </div>
+                <div class="calc-buttons" id="calcButtons"></div>
             </div>
         </div>
 
@@ -1588,9 +1461,7 @@
                     <div class="cal-month-year" id="calMonthYear">Februar 2026</div>
                     <button class="cal-nav" onclick="changeMonth(1)">→</button>
                 </div>
-                <div class="cal-grid" id="calGrid">
-                    <!-- Calendar populated by JS -->
-                </div>
+                <div class="cal-grid" id="calGrid"></div>
             </div>
         </div>
 
@@ -1608,24 +1479,21 @@
                 <div style="display: flex; gap: 20px; height: 100%;">
                     <div style="flex: 1;">
                         <div style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; height: 400px;">
-                            <model-viewer id="avatarViewer" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                            <model-viewer id="avatarViewer" src="https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
                         </div>
                     </div>
                     <div style="width: 250px;">
                         <h3 style="color: var(--slytherin-silver); margin-bottom: 15px; font-family: 'Cinzel', serif;">Nastavitve</h3>
                         <button class="lock-btn" onclick="openAvatarCreator()" style="margin-bottom: 10px; width: 100%;">Ustvari nov avatar</button>
-                        <button class="lock-btn" onclick="uploadAvatar()" style="margin-bottom: 10px; width: 100%; background: var(--slytherin-gray);">Naloži GLB datoteko</button>
+                        <button class="lock-btn" onclick="document.getElementById('avatarFile').click()" style="margin-bottom: 10px; width: 100%; background: var(--slytherin-gray);">Naloži GLB datoteko</button>
                         <input type="file" id="avatarFile" accept=".glb,.gltf,.vrm" style="display: none;" onchange="handleAvatarUpload(event)">
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(26, 71, 42, 0.3); border-radius: 10px;">
-                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Vaš avatar se prikazuje v klepetu in na namizju.</p>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Coins HUD -->
-        <div id="coinsHUD" style="display: none;">
+        <div id="coinsHUD">
             <span class="coin-icon">🪙</span>
             <span id="userCoins">0</span>
             <span style="font-size: 0.8rem; opacity: 0.7;">kovancev</span>
@@ -1635,18 +1503,16 @@
         <div class="taskbar">
             <div class="taskbar-left">
                 <div class="start-btn" onclick="toggleStartMenu()">🐍</div>
-                <div class="taskbar-apps" id="taskbarApps">
-                    <!-- Active apps will appear here -->
-                </div>
+                <div class="taskbar-apps" id="taskbarApps"></div>
             </div>
             <div class="taskbar-right">
                 <div class="system-tray">
-                    <span id="wifiIcon">📶</span>
-                    <span id="batteryIcon">🔋</span>
+                    <span>📶</span>
+                    <span>🔋</span>
                     <span id="clock">12:00</span>
                 </div>
                 <div class="taskbar-avatar" onclick="openWindow('avatar')">
-                    <model-viewer id="taskbarAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                    <model-viewer id="taskbarAvatar" src="https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
                 </div>
             </div>
         </div>
@@ -1655,7 +1521,7 @@
         <div id="startMenu">
             <div class="start-header">
                 <div class="start-avatar">
-                    <model-viewer id="startAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                    <model-viewer id="startAvatar" src="https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
                 </div>
                 <div class="start-user-info">
                     <h3 id="startUsername">Uporabnik</h3>
@@ -1663,46 +1529,44 @@
                 </div>
             </div>
             <div class="start-apps">
-                <div class="start-app" onclick="openWindow('browser'); toggleStartMenu();">
-                    🌐<span>Brskalnik</span>
-                </div>
-                <div class="start-app" onclick="openWindow('chat'); toggleStartMenu();">
-                    💬<span>Klepet</span>
-                </div>
-                <div class="start-app" onclick="openWindow('files'); toggleStartMenu();">
-                    📁<span>Datoteke</span>
-                </div>
-                <div class="start-app" onclick="openWindow('games'); toggleStartMenu();">
-                    🎮<span>Igre</span>
-                </div>
-                <div class="start-app" onclick="openWindow('horoscope'); toggleStartMenu();">
-                    ♈<span>Horoskop</span>
-                </div>
-                <div class="start-app" onclick="openWindow('calculator'); toggleStartMenu();">
-                    🧮<span>Kalkulator</span>
-                </div>
-                <div class="start-app" onclick="openWindow('calendar'); toggleStartMenu();">
-                    📅<span>Koledar</span>
-                </div>
-                <div class="start-app" onclick="openWindow('avatar'); toggleStartMenu();">
-                    👤<span>Avatar</span>
-                </div>
-                <div class="start-app" onclick="lockSystem(); toggleStartMenu();">
-                    🔒<span>Zakleni</span>
-                </div>
+                <div class="start-app" onclick="openWindow('browser'); toggleStartMenu();">🌐<span>Brskalnik</span></div>
+                <div class="start-app" onclick="openWindow('chat'); toggleStartMenu();">💬<span>Klepet</span></div>
+                <div class="start-app" onclick="openWindow('files'); toggleStartMenu();">📁<span>Datoteke</span></div>
+                <div class="start-app" onclick="openWindow('games'); toggleStartMenu();">🎮<span>Igre</span></div>
+                <div class="start-app" onclick="openWindow('horoscope'); toggleStartMenu();">♈<span>Horoskop</span></div>
+                <div class="start-app" onclick="openWindow('calculator'); toggleStartMenu();">🧮<span>Kalkulator</span></div>
+                <div class="start-app" onclick="openWindow('calendar'); toggleStartMenu();">📅<span>Koledar</span></div>
+                <div class="start-app" onclick="openWindow('avatar'); toggleStartMenu();">👤<span>Avatar</span></div>
+                <div class="start-app" onclick="lockSystem(); toggleStartMenu();">🔒<span>Zakleni</span></div>
             </div>
             <div class="start-footer">
-                <button class="start-footer-btn" onclick="toggleStartMenu(); showSettings();">⚙ Nastavitve</button>
-                <button class="start-footer-btn" onclick="powerOff()">⏻ Izklopi</button>
+                <button class="start-footer-btn" onclick="toggleStartMenu(); alert('Nastavitve bodo na voljo kmalu!');">⚙ Nastavitve</button>
+                <button class="start-footer-btn" onclick="if(confirm('Izklopim sistem?')) document.body.innerHTML = '<div style=\'position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;justify-content:center;align-items:center;color:#C0C0C0;font-family:Cinzel;font-size:2rem;\'>Sistem izklopljen</div>';">⏻ Izklopi</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Use existing Firebase from your files - no initialization here
-        // Assuming db, auth, storage are already available globally
+        // ==========================================
+        // FIREBASE CONFIGURATION - Enako kot v vaših datotekah
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXOP6VYKpaM0Zwa_l0KPZl6Q1z-xpgzX8",
+            authDomain: "chater-cf682.firebaseapp.com",
+            databaseURL: "https://chater-cf682-default-rtdb.firebaseio.com",
+            projectId: "chater-cf682",
+            storageBucket: "chater-cf682.appspot.com",
+            messagingSenderId: "233632075480",
+            appId: "1:233632075480:web:fbf5101a3fda63fdfb51ad"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
         
-        // Global State
+        // Global variables
+        let db = firebase.database();
+        let auth = firebase.auth();
+        let storage = firebase.storage();
         let currentUser = null;
         let userData = null;
         let activeWindows = [];
@@ -1710,24 +1574,12 @@
         let calcMode = 'standard';
         let calcExpression = '';
         let currentDate = new Date();
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-        let currentDragWindow = null;
+        let windowZIndex = 1000;
 
-        // Wait for Firebase to be ready (from your existing files)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if Firebase is available
-            if (typeof firebase === 'undefined') {
-                console.error('Firebase not loaded! Make sure Firebase scripts are included before this file.');
-                return;
-            }
-            
-            // Start boot sequence
-            startBootSequence();
-        });
-
-        // Boot Sequence
-        function startBootSequence() {
+        // ==========================================
+        // BOOT SEQUENCE
+        // ==========================================
+        window.onload = function() {
             const bootSteps = [
                 { progress: 10, status: "Inicializacija jedra...", delay: 500 },
                 { progress: 25, status: "Nalaganje sistemskih modulov...", delay: 800 },
@@ -1762,11 +1614,13 @@
             }
 
             runBootStep();
-        }
+        };
 
-        // Auth Check - uses existing Firebase auth
+        // ==========================================
+        // AUTHENTICATION
+        // ==========================================
         function checkAuth() {
-            firebase.auth().onAuthStateChanged((user) => {
+            auth.onAuthStateChanged((user) => {
                 if (user) {
                     currentUser = user;
                     loadUserData(user.uid);
@@ -1777,14 +1631,16 @@
         }
 
         function loadUserData(uid) {
-            firebase.database().ref('users/' + uid).once('value').then((snapshot) => {
+            db.ref('users/' + uid).once('value').then((snapshot) => {
                 if (snapshot.exists()) {
                     userData = snapshot.val();
-                    updateUIWithUserData();
                     showDesktop();
                 } else {
                     showRegister();
                 }
+            }).catch((error) => {
+                console.error("Napaka pri nalaganju:", error);
+                showLockScreen();
             });
         }
 
@@ -1792,10 +1648,6 @@
             document.getElementById('lockScreen').style.display = 'flex';
             document.getElementById('desktop').style.display = 'none';
             document.getElementById('registerModal').style.display = 'none';
-            
-            // Load default avatar
-            const defaultAvatar = 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
-            document.getElementById('lockAvatar').src = defaultAvatar;
         }
 
         function showDesktop() {
@@ -1804,15 +1656,17 @@
             document.getElementById('registerModal').style.display = 'none';
             document.getElementById('coinsHUD').style.display = 'flex';
             
-            // Update all avatar viewers
+            // Update avatars
             const avatarUrl = userData?.avatarURL2 || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
             document.getElementById('taskbarAvatar').src = avatarUrl;
             document.getElementById('startAvatar').src = avatarUrl;
             document.getElementById('avatarViewer').src = avatarUrl;
+            document.getElementById('lockAvatar').src = avatarUrl;
             
             // Update username
-            document.getElementById('startUsername').textContent = userData?.username || 'Uporabnik';
-            document.getElementById('lockUsername').textContent = userData?.username || 'Uporabnik';
+            const username = userData?.username || 'Uporabnik';
+            document.getElementById('startUsername').textContent = username;
+            document.getElementById('lockUsername').textContent = username;
             
             // Start clock
             updateClock();
@@ -1823,51 +1677,43 @@
             initCalendar();
             initHoroscope();
             initGames();
-            initChat();
             
             // Listen for coins
-            if (currentUser) {
-                firebase.database().ref('users/' + currentUser.uid + '/coins').on('value', (snapshot) => {
-                    document.getElementById('userCoins').textContent = snapshot.val() || 0;
-                });
-            }
+            db.ref('users/' + currentUser.uid + '/coins').on('value', (snapshot) => {
+                document.getElementById('userCoins').textContent = snapshot.val() || 0;
+            });
             
-            // Add snow effect if winter
+            // Snow effect
             createSnowflakes();
         }
 
-        function updateUIWithUserData() {
-            // Additional UI updates if needed
-        }
-
-        // Lock System
+        // ==========================================
+        // LOCK SCREEN FUNCTIONS
+        // ==========================================
         function unlockSystem() {
             const password = document.getElementById('lockPassword').value;
-            if (password.length === 6) {
-                // In real app, verify against stored password
-                // For now, just check if user exists in Firebase
-                if (currentUser) {
-                    showDesktop();
-                } else {
-                    // Try anonymous auth for demo
-                    firebase.auth().signInAnonymously().then(() => {
-                        showDesktop();
-                    }).catch(() => {
-                        alert('Napačno geslo!');
-                    });
-                }
-            } else {
-                alert('Vnesite 6-mestno geslo!');
+            if (password.length < 4) {
+                alert('Vnesite geslo!');
+                return;
             }
+            
+            // For demo: anonymous login
+            auth.signInAnonymously().then(() => {
+                showDesktop();
+            }).catch((error) => {
+                alert('Napaka pri prijavi: ' + error.message);
+            });
         }
 
         function lockSystem() {
-            firebase.auth().signOut().then(() => {
+            auth.signOut().then(() => {
                 location.reload();
             });
         }
 
-        // Registration
+        // ==========================================
+        // REGISTRATION
+        // ==========================================
         function showRegister() {
             document.getElementById('registerModal').style.display = 'flex';
             document.getElementById('lockScreen').style.display = 'none';
@@ -1880,7 +1726,6 @@
             document.getElementById('setup' + step).classList.add('active');
             document.getElementById('step' + step).classList.add('active');
             
-            // Mark previous steps as completed
             for (let i = 1; i < step; i++) {
                 document.getElementById('step' + i).classList.add('completed');
                 document.getElementById('step' + i).classList.remove('active');
@@ -1892,28 +1737,17 @@
             frame.style.display = 'block';
             frame.src = 'https://readyplayer.me/avatar?frameApi';
             
-            frame.onload = () => {
-                frame.contentWindow.postMessage(
-                    JSON.stringify({
-                        target: 'readyplayerme',
-                        type: 'subscribe',
-                        eventName: 'v1.avatar.exported'
-                    }),
-                    '*'
-                );
-            };
+            window.addEventListener('message', (event) => {
+                try {
+                    const json = JSON.parse(event.data);
+                    if (json.source === 'readyplayerme' && json.eventName === 'v1.avatar.exported') {
+                        const url = json.data.url;
+                        document.getElementById('regAvatar').src = url;
+                        document.getElementById('avatarUrl').value = url;
+                    }
+                } catch (e) {}
+            });
         }
-
-        window.addEventListener('message', (event) => {
-            try {
-                const json = JSON.parse(event.data);
-                if (json.source === 'readyplayerme' && json.eventName === 'v1.avatar.exported') {
-                    const url = json.data.url;
-                    document.getElementById('regAvatar').src = url;
-                    document.getElementById('avatarUrl').value = url;
-                }
-            } catch (e) {}
-        });
 
         function completeRegistration() {
             const username = document.getElementById('regUsername').value;
@@ -1926,10 +1760,10 @@
                 return;
             }
 
-            firebase.auth().createUserWithEmailAndPassword(email, password)
+            auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const uid = userCredential.user.uid;
-                    return firebase.database().ref('users/' + uid).set({
+                    return db.ref('users/' + uid).set({
                         username: username,
                         email: email,
                         avatarURL2: avatarUrl,
@@ -1938,7 +1772,7 @@
                     });
                 })
                 .then(() => {
-                    currentUser = firebase.auth().currentUser;
+                    currentUser = auth.currentUser;
                     loadUserData(currentUser.uid);
                 })
                 .catch((error) => {
@@ -1946,7 +1780,9 @@
                 });
         }
 
-        // Window Management
+        // ==========================================
+        // WINDOW MANAGEMENT
+        // ==========================================
         function openWindow(appName) {
             const windowEl = document.getElementById('window-' + appName);
             if (!windowEl) return;
@@ -1959,7 +1795,6 @@
                 updateTaskbar();
             }
             
-            // Special init for certain apps
             if (appName === 'games') {
                 document.getElementById('gameFrame').style.display = 'none';
                 document.getElementById('gamesContainer').style.display = 'grid';
@@ -1996,7 +1831,9 @@
             }
         }
 
-        let windowZIndex = 1000;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let currentDragWindow = null;
 
         function startDrag(e, windowId) {
             isDragging = true;
@@ -2024,10 +1861,15 @@
             const container = document.getElementById('taskbarApps');
             container.innerHTML = '';
             
+            const icons = {
+                browser: '🌐', chat: '💬', files: '📁', games: '🎮',
+                horoscope: '♈', calculator: '🧮', calendar: '📅', avatar: '👤'
+            };
+            
             activeWindows.forEach(app => {
                 const btn = document.createElement('div');
                 btn.className = 'taskbar-app';
-                btn.innerHTML = getAppIcon(app);
+                btn.innerHTML = icons[app] || '📱';
                 btn.onclick = () => {
                     const win = document.getElementById('window-' + app);
                     if (win.classList.contains('active')) {
@@ -2040,27 +1882,14 @@
             });
         }
 
-        function getAppIcon(app) {
-            const icons = {
-                browser: '🌐',
-                chat: '💬',
-                files: '📁',
-                games: '🎮',
-                horoscope: '♈',
-                calculator: '🧮',
-                calendar: '📅',
-                avatar: '👤'
-            };
-            return icons[app] || '📱';
-        }
-
-        // Start Menu
         function toggleStartMenu() {
             const menu = document.getElementById('startMenu');
             menu.classList.toggle('active');
         }
 
-        // Browser
+        // ==========================================
+        // BROWSER
+        // ==========================================
         function navigateBrowser() {
             const url = document.getElementById('browserUrl').value;
             const frame = document.getElementById('browserFrame');
@@ -2084,57 +1913,49 @@
             document.getElementById('browserFrame').contentWindow.location.reload();
         }
 
-        // Chat
-        function initChat() {
-            // Listen for messages in current room
-            firebase.database().ref('chat/' + currentChatRoom).limitToLast(50).on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                addMessageToChat(msg);
-            });
-        }
-
+        // ==========================================
+        // CHAT
+        // ==========================================
         function switchRoom(room) {
             currentChatRoom = room;
             document.querySelectorAll('.chat-room').forEach(el => el.classList.remove('active'));
             event.currentTarget.classList.add('active');
             
-            // Clear and reload messages
             document.getElementById('chatMessages').innerHTML = '';
-            firebase.database().ref('chat/' + room).limitToLast(50).once('value', (snapshot) => {
-                snapshot.forEach((child) => {
-                    addMessageToChat(child.val());
-                });
-            });
-        }
-
-        function addMessageToChat(msg) {
-            const container = document.getElementById('chatMessages');
+            
+            // Add welcome message
             const div = document.createElement('div');
-            div.className = 'chat-message ' + (msg.uid === currentUser?.uid ? 'own' : 'other');
-            div.innerHTML = `
-                <div class="author">${msg.author}</div>
-                ${msg.text}
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            div.className = 'chat-message other';
+            div.innerHTML = '<div class="author">Sistem</div>Preklopili ste v sobo: ' + room;
+            document.getElementById('chatMessages').appendChild(div);
         }
 
         function sendMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
-            if (!text || !currentUser) return;
+            if (!text) return;
             
-            firebase.database().ref('chat/' + currentChatRoom).push({
-                text: text,
-                author: userData?.username || 'Anonimno',
-                uid: currentUser.uid,
-                timestamp: Date.now()
-            });
+            const div = document.createElement('div');
+            div.className = 'chat-message own';
+            div.innerHTML = '<div class="author">' + (userData?.username || 'Jaz') + '</div>' + text;
+            document.getElementById('chatMessages').appendChild(div);
             
             input.value = '';
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+            
+            // Simulate reply
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = 'chat-message other';
+                reply.innerHTML = '<div class="author">SlytherinBot</div>To je demo klepet. Povežite s Firebase za pravi klepet.';
+                document.getElementById('chatMessages').appendChild(reply);
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+            }, 1000);
         }
 
-        // Calculator
+        // ==========================================
+        // CALCULATOR
+        // ==========================================
         function initCalculator() {
             updateCalcButtons();
         }
@@ -2163,10 +1984,8 @@
                 const button = document.createElement('button');
                 button.className = 'calc-btn';
                 button.textContent = btn;
-                
                 if (['÷', '×', '-', '+', '^'].includes(btn)) button.classList.add('operator');
                 if (btn === '=') button.classList.add('equals');
-                
                 button.onclick = () => handleCalc(btn);
                 container.appendChild(button);
             });
@@ -2184,8 +2003,7 @@
             } else if (btn === '=') {
                 try {
                     let expr = calcExpression
-                        .replace(/×/g, '*')
-                        .replace(/÷/g, '/')
+                        .replace(/×/g, '*').replace(/÷/g, '/')
                         .replace(/π/g, Math.PI)
                         .replace(/sin\(/g, 'Math.sin(')
                         .replace(/cos\(/g, 'Math.cos(')
@@ -2202,35 +2020,28 @@
                     calcExpression = '';
                 }
             } else if (calcMode === 'converter') {
-                handleConverter(btn);
+                const val = parseFloat(display.textContent) || 0;
+                let result = val;
+                switch(btn) {
+                    case 'km→mi': result = val * 0.621371; break;
+                    case 'mi→km': result = val * 1.60934; break;
+                    case 'kg→lb': result = val * 2.20462; break;
+                    case 'lb→kg': result = val * 0.453592; break;
+                    case '°C→°F': result = (val * 9/5) + 32; break;
+                    case '°F→°C': result = (val - 32) * 5/9; break;
+                    case 'EUR→USD': result = val * 1.08; break;
+                    case 'USD→EUR': result = val * 0.93; break;
+                }
+                if (!['C', '⌫', '='].includes(btn)) display.textContent = result.toFixed(2);
             } else {
                 calcExpression += btn;
                 display.textContent = calcExpression;
             }
         }
 
-        function handleConverter(btn) {
-            const display = document.getElementById('calcDisplay');
-            const val = parseFloat(display.textContent) || 0;
-            let result = val;
-            
-            switch(btn) {
-                case 'km→mi': result = val * 0.621371; break;
-                case 'mi→km': result = val * 1.60934; break;
-                case 'kg→lb': result = val * 2.20462; break;
-                case 'lb→kg': result = val * 0.453592; break;
-                case '°C→°F': result = (val * 9/5) + 32; break;
-                case '°F→°C': result = (val - 32) * 5/9; break;
-                case 'EUR→USD': result = val * 1.08; break;
-                case 'USD→EUR': result = val * 0.93; break;
-            }
-            
-            if (btn !== 'C' && btn !== '⌫' && btn !== '=') {
-                display.textContent = result.toFixed(2);
-            }
-        }
-
-        // Calendar
+        // ==========================================
+        // CALENDAR
+        // ==========================================
         function initCalendar() {
             renderCalendar();
         }
@@ -2249,7 +2060,6 @@
             const grid = document.getElementById('calGrid');
             grid.innerHTML = '';
             
-            // Day headers
             ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'].forEach(day => {
                 const div = document.createElement('div');
                 div.className = 'cal-day-header';
@@ -2257,7 +2067,6 @@
                 grid.appendChild(div);
             });
             
-            // Previous month days
             for (let i = firstDay - 1; i >= 0; i--) {
                 const div = document.createElement('div');
                 div.className = 'cal-day other-month';
@@ -2265,7 +2074,6 @@
                 grid.appendChild(div);
             }
             
-            // Current month days
             const today = new Date();
             for (let i = 1; i <= daysInMonth; i++) {
                 const div = document.createElement('div');
@@ -2274,13 +2082,8 @@
                     div.classList.add('today');
                 }
                 div.innerHTML = `<div class="cal-day-number">${i}</div>`;
-                
-                // Random events for demo
-                if (Math.random() > 0.7) {
-                    div.innerHTML += '<div class="cal-day-event"></div>';
-                }
-                
-                div.onclick = () => selectDate(i);
+                if (Math.random() > 0.7) div.innerHTML += '<div class="cal-day-event"></div>';
+                div.onclick = () => alert(`Datum: ${i}. ${month + 1}. ${year}`);
                 grid.appendChild(div);
             }
         }
@@ -2290,11 +2093,9 @@
             renderCalendar();
         }
 
-        function selectDate(day) {
-            alert(`Izbran datum: ${day}. ${currentDate.getMonth() + 1}. ${currentDate.getFullYear()}`);
-        }
-
-        // Horoscope
+        // ==========================================
+        // HOROSCOPE
+        // ==========================================
         function initHoroscope() {
             const signs = [
                 { name: 'Oven', date: '21.3 - 19.4', icon: '♈' },
@@ -2330,9 +2131,7 @@
                 "Danes je idealen dan za nove začetke. Vaša ambicija bo na vrhuncu.",
                 "Finančne priložnosti vas čakajo. Bodite pogumni pri odločitvah.",
                 "Ljubezen je v zraku. Presenetite svojo osebo s posebnim gestom.",
-                "Karierni napredek je viden. Vaše delo bo prepoznano.",
-                "Zdravje je bogastvo. Posvetite čas fizični aktivnosti.",
-                "Kreativnost bo danes na vrhuncu. Ustvarjajte in sanjarite."
+                "Karierni napredek je viden. Vaše delo bo prepoznano."
             ];
             
             const text = texts[Math.floor(Math.random() * texts.length)];
@@ -2348,7 +2147,9 @@
             document.getElementById('horoDetail').style.display = 'block';
         }
 
-        // Games
+        // ==========================================
+        // GAMES
+        // ==========================================
         function initGames() {
             const games = [
                 { name: 'Cat Game', icon: '🐱', desc: 'Zabavna igra z mačko', url: 'https://slytherinbrowser.github.io/cat.html' },
@@ -2388,18 +2189,16 @@
             frame.src = url;
             frame.style.display = 'block';
             
-            // Add coins for playing
             if (currentUser) {
                 const coins = Math.floor(Math.random() * 10) + 5;
-                firebase.database().ref('users/' + currentUser.uid + '/coins').transaction(c => (c || 0) + coins);
+                db.ref('users/' + currentUser.uid + '/coins').transaction(c => (c || 0) + coins);
             }
         }
 
         function searchGames(query) {
             const cards = document.querySelectorAll('.game-card');
             cards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
+                card.style.display = card.textContent.toLowerCase().includes(query.toLowerCase()) ? 'block' : 'none';
             });
         }
 
@@ -2407,15 +2206,12 @@
             document.getElementById('gameFrame').style.display = 'none';
             document.getElementById('gamesContainer').style.display = 'grid';
             document.getElementById('gameSearch').value = '';
-            searchGames('');
         }
 
-        function showFavorites() {
-            alert('Funkcija priljubljenih bo na voljo kmalu!');
-        }
-
-        // File Manager
-        function openAppFolder(folder) {
+        // ==========================================
+        // FILE MANAGER
+        // ==========================================
+        function openFolder(folder) {
             const paths = {
                 applications: ['Microsoft Word', 'Google Translate', 'Remove.bg', 'Adobe Premiere', 'W3Schools', 'Spotify', 'Canva', 'Github', 'VSDC', 'Audacity', 'VS Code', 'Unity'],
                 documents: ['Dokument 1.txt', 'Naloge.pdf', 'Projekt.docx'],
@@ -2431,83 +2227,63 @@
             
             paths[folder].forEach(file => {
                 const ext = file.split('.').pop();
-                const icon = icons[ext] || '📄';
-                
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                item.innerHTML = `
-                    <div class="file-icon">${icon}</div>
-                    <div class="file-name">${file}</div>
-                `;
+                item.innerHTML = `<div class="file-icon">${icons[ext] || '📄'}</div><div class="file-name">${file}</div>`;
                 item.onclick = () => alert('Odpri: ' + file);
                 grid.appendChild(item);
             });
             
-            // Add back button
             const back = document.createElement('div');
             back.className = 'file-item';
-            back.innerHTML = `
-                <div class="file-icon">⬅️</div>
-                <div class="file-name">Nazaj</div>
-            `;
-            back.onclick = () => location.reload();
+            back.innerHTML = `<div class="file-icon">⬅️</div><div class="file-name">Nazaj</div>`;
+            back.onclick = goHome;
             grid.appendChild(back);
         }
 
-        function goBack() {
-            location.reload();
+        function goHome() {
+            document.getElementById('filePath').textContent = 'Domov /';
+            document.getElementById('fileGrid').innerHTML = `
+                <div class="file-item" onclick="openFolder('applications')"><div class="file-icon">📱</div><div class="file-name">Aplikacije</div></div>
+                <div class="file-item" onclick="openFolder('documents')"><div class="file-icon">📄</div><div class="file-name">Dokumenti</div></div>
+                <div class="file-item" onclick="openFolder('images')"><div class="file-icon">🖼️</div><div class="file-name">Slike</div></div>
+                <div class="file-item" onclick="openFolder('music')"><div class="file-icon">🎵</div><div class="file-name">Glasba</div></div>
+            `;
         }
 
         function createFolder() {
             const name = prompt('Ime nove mape:');
-            if (name) {
-                alert('Mapa ustvarjena: ' + name);
-            }
+            if (name) alert('Mapa ustvarjena: ' + name);
         }
 
-        function uploadFile() {
-            alert('Funkcija nalaganja datotek bo na voljo kmalu!');
-        }
-
-        // Avatar Upload
-        function uploadAvatar() {
-            document.getElementById('avatarFile').click();
-        }
-
+        // ==========================================
+        // AVATAR
+        // ==========================================
         function handleAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
             const path = `avatars/${currentUser.uid}/${Date.now()}-${file.name}`;
-            const ref = firebase.storage().ref().child(path);
+            const ref = storage.ref().child(path);
             
             ref.put(file).then(() => ref.getDownloadURL()).then(url => {
-                firebase.database().ref('users/' + currentUser.uid + '/avatarURL2').set(url);
+                db.ref('users/' + currentUser.uid + '/avatarURL2').set(url);
                 document.getElementById('avatarViewer').src = url;
                 document.getElementById('taskbarAvatar').src = url;
                 document.getElementById('startAvatar').src = url;
                 alert('Avatar posodobljen!');
-            });
+            }).catch(err => alert('Napaka: ' + err.message));
         }
 
-        // Utilities
+        // ==========================================
+        // UTILITIES
+        // ==========================================
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').textContent = now.toLocaleTimeString('sl-SL', { hour: '2-digit', minute: '2-digit' });
         }
 
-        function showSettings() {
-            alert('Nastavitve sistema bodo na voljo kmalu!');
-        }
-
-        function powerOff() {
-            if (confirm('Ali ste prepričani, da želite izklopiti sistem?')) {
-                document.body.innerHTML = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; color: var(--slytherin-silver); font-family: Cinzel; font-size: 2rem;">Sistem izklopljen</div>';
-            }
-        }
-
         function createSnowflakes() {
-            // Check if winter (Nov 20 - Feb 28)
             const now = new Date();
             const month = now.getMonth();
             const day = now.getDate();
@@ -2530,12 +2306,12 @@
         document.addEventListener('click', (e) => {
             const startMenu = document.getElementById('startMenu');
             const startBtn = document.querySelector('.start-btn');
-            if (!startMenu.contains(e.target) && !startBtn.contains(e.target)) {
+            if (startMenu.classList.contains('active') && !startMenu.contains(e.target) && !startBtn.contains(e.target)) {
                 startMenu.classList.remove('active');
             }
         });
 
-        // Initialize
+        // Enter key on lock screen
         document.getElementById('lockPassword').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') unlockSystem();
         });
