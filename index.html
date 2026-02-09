@@ -1,557 +1,2544 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link id="favicon" rel="icon" href="Slytherin.ico">
-    <title>SlytherinBrowser</title>
-<link id="normalStylesheet" rel="stylesheet" href="indexcss.css">
-<link id="modernStylesheet" rel="stylesheet" href="indexcss1.css" disabled>
-<link id="winterStylesheet" rel="stylesheet" href="indexcss4.css" disabled>
-    <script defer src="indexjs.js"></script>
+    <title>SlytherinOS</title>
+    <link id="favicon" rel="icon" href="Slytherin.png">
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <!-- Firebase already initialized in your files -->
     <style>
-    .eye-container {
-        position: fixed;
-        top: 0;
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;500;600&display=swap');
+        
+        :root {
+            --slytherin-dark: #1A472A;
+            --slytherin-green: #2A623D;
+            --slytherin-light: #50C878;
+            --slytherin-silver: #C0C0C0;
+            --slytherin-gray: #5D5D5D;
+            --slytherin-black: #0a0a0a;
+            --glass-bg: rgba(26, 71, 42, 0.85);
+            --glass-border: rgba(192, 192, 192, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--slytherin-black);
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ===== BOOT SCREEN ===== */
+        #bootScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 50%, #0a0a0a 100%);
             display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 1s ease-out;
+        }
+
+        .boot-logo {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 40px;
+            filter: drop-shadow(0 0 30px rgba(80, 200, 120, 0.5));
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        .boot-text {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            color: var(--slytherin-silver);
+            text-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+        }
+
+        .boot-subtitle {
+            font-size: 1rem;
+            color: var(--slytherin-light);
+            opacity: 0.8;
+            letter-spacing: 4px;
+        }
+
+        .boot-progress {
+            width: 300px;
+            height: 4px;
+            background: rgba(192, 192, 192, 0.2);
+            border-radius: 2px;
+            margin-top: 40px;
+            overflow: hidden;
+        }
+
+        .boot-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--slytherin-light), var(--slytherin-silver));
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--slytherin-light);
+        }
+
+        .boot-status {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: var(--slytherin-silver);
+            opacity: 0.6;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ===== LOCK SCREEN ===== */
+        #lockScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(20px);
+        }
+
+        .lock-container {
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid var(--slytherin-silver);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 50px rgba(26, 71, 42, 0.5);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lock-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(192, 192, 192, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .avatar-showcase {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            border: 4px solid var(--slytherin-silver);
+            overflow: hidden;
+            background: rgba(26, 71, 42, 0.3);
+            box-shadow: 0 0 30px rgba(80, 200, 120, 0.3);
+        }
+
+        .avatar-showcase model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        .lock-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            color: var(--slytherin-silver);
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-user {
+            color: var(--slytherin-light);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(26, 71, 42, 0.3);
+            border: 2px solid var(--slytherin-gray);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-input:focus {
+            outline: none;
+            border-color: var(--slytherin-light);
+            box-shadow: 0 0 15px rgba(80, 200, 120, 0.3);
+        }
+
+        .lock-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            border: 2px solid var(--slytherin-silver);
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .lock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(80, 200, 120, 0.3);
+        }
+
+        .register-link {
+            margin-top: 20px;
+            color: var(--slytherin-silver);
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .register-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* ===== REGISTRATION MODAL ===== */
+        #registerModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10001;
             justify-content: center;
             align-items: center;
         }
 
-        .eye {
-            width: 100px;
-            height: 100px;
-            background-color: white;
-            border-radius: 50%;
-            position: relative;
-            margin: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        .register-container {
+            background: linear-gradient(135deg, #1A472A, #0a0a0a);
+            border: 2px solid var(--slytherin-silver);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .pupil {
+        .setup-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .step {
             width: 40px;
             height: 40px;
-            background-color: black;
             border-radius: 50%;
+            background: var(--slytherin-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            background: var(--slytherin-light);
+            box-shadow: 0 0 15px var(--slytherin-light);
+        }
+
+        .step.completed {
+            background: var(--slytherin-green);
+        }
+
+        .setup-content {
+            display: none;
+        }
+
+        .setup-content.active {
+            display: block;
+        }
+
+        .avatar-creator {
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--slytherin-silver);
+        }
+
+        /* ===== DESKTOP ===== */
+        #desktop {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1A472A 50%, #0a0a0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .desktop-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0z' fill='%23C0C0C0' fill-opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(10, 10, 10, 0.95);
+            border-top: 1px solid var(--slytherin-silver);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 9000;
+            backdrop-filter: blur(20px);
+        }
+
+        .taskbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .start-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            border: 2px solid var(--slytherin-silver);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.5rem;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(80, 200, 120, 0.5);
+        }
+
+        .taskbar-apps {
+            display: flex;
+            gap: 10px;
+        }
+
+        .taskbar-app {
+            width: 40px;
+            height: 40px;
+            background: rgba(26, 71, 42, 0.5);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        .taskbar-app:hover {
+            background: rgba(80, 200, 120, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .taskbar-app.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            width: 20px;
+            height: 3px;
+            background: var(--slytherin-light);
+            border-radius: 2px;
+        }
+
+        .taskbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: var(--slytherin-silver);
+            font-size: 0.9rem;
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 8px 15px;
+            background: rgba(26, 71, 42, 0.3);
+            border-radius: 10px;
+            border: 1px solid var(--slytherin-gray);
+        }
+
+        /* Desktop Icons */
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 100px);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .desktop-icon {
+            width: 100px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 10px;
+            border-radius: 15px;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(192, 192, 192, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .desktop-icon-img {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            border: 2px solid var(--slytherin-silver);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .desktop-icon-text {
+            color: #fff;
+            font-size: 0.85rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            word-wrap: break-word;
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            background: rgba(10, 10, 10, 0.98);
+            border: 1px solid var(--slytherin-silver);
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(26, 71, 42, 0.3);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            resize: both;
+        }
+
+        .window.active {
+            display: flex;
+            z-index: 1000;
+        }
+
+        .window-header {
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            border-bottom: 1px solid var(--slytherin-silver);
+        }
+
+        .window-title {
+            font-family: 'Cinzel', serif;
+            color: var(--slytherin-silver);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .window-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .minimize { background: #f1c40f; }
+        .maximize { background: #2ecc71; }
+        .close { background: #e74c3c; }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.95);
+        }
+
+        /* Start Menu */
+        #startMenu {
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            width: 350px;
+            background: rgba(10, 10, 10, 0.98);
+            border: 1px solid var(--slytherin-silver);
+            border-radius: 20px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9001;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        #startMenu.active {
+            display: flex;
+        }
+
+        .start-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--slytherin-gray);
+        }
+
+        .start-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--slytherin-silver);
+            overflow: hidden;
+        }
+
+        .start-user-info h3 {
+            color: var(--slytherin-silver);
+            font-family: 'Cinzel', serif;
+            margin-bottom: 3px;
+        }
+
+        .start-user-info p {
+            color: var(--slytherin-light);
+            font-size: 0.8rem;
+        }
+
+        .start-apps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .start-app {
+            aspect-ratio: 1;
+            background: rgba(26, 71, 42, 0.3);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.5rem;
+            gap: 5px;
+        }
+
+        .start-app:hover {
+            background: rgba(80, 200, 120, 0.2);
+            transform: scale(1.05);
+            border-color: var(--slytherin-light);
+        }
+
+        .start-app span {
+            font-size: 0.7rem;
+            color: var(--slytherin-silver);
+        }
+
+        .start-footer {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid var(--slytherin-gray);
+        }
+
+        .start-footer-btn {
+            padding: 8px 15px;
+            background: rgba(192, 192, 192, 0.1);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 8px;
+            color: var(--slytherin-silver);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .start-footer-btn:hover {
+            background: rgba(192, 192, 192, 0.2);
+        }
+
+        /* Browser App */
+        .browser-toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(26, 71, 42, 0.3);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .browser-btn {
+            padding: 8px 15px;
+            background: var(--slytherin-green);
+            border: 1px solid var(--slytherin-silver);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .browser-btn:hover {
+            background: var(--slytherin-light);
+        }
+
+        .browser-input {
+            flex: 1;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .browser-frame {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        /* Chat App */
+        .chat-container {
+            display: flex;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .chat-sidebar {
+            width: 250px;
+            background: rgba(26, 71, 42, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-room {
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .chat-room:hover, .chat-room.active {
+            background: rgba(80, 200, 120, 0.2);
+            border-color: var(--slytherin-light);
+        }
+
+        .chat-room h4 {
+            color: var(--slytherin-silver);
+            margin-bottom: 5px;
+        }
+
+        .chat-room p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 71, 42, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            position: relative;
+            animation: messageSlide 0.3s ease;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message.own {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.other {
+            align-self: flex-start;
+            background: rgba(192, 192, 192, 0.2);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message .author {
+            font-size: 0.75rem;
+            color: var(--slytherin-light);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 25px;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--slytherin-light);
+        }
+
+        .chat-send {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--slytherin-green);
+            border: 2px solid var(--slytherin-silver);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-send:hover {
+            background: var(--slytherin-light);
+            transform: scale(1.1);
+        }
+
+        /* Calculator */
+        .calc-display {
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            text-align: right;
+            font-size: 2rem;
+            color: var(--slytherin-silver);
+            border: 1px solid var(--slytherin-gray);
+            min-height: 80px;
+            word-wrap: break-word;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calc-btn {
+            padding: 20px;
+            background: rgba(26, 71, 42, 0.5);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calc-btn:hover {
+            background: rgba(80, 200, 120, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .calc-btn.operator {
+            background: rgba(192, 192, 192, 0.2);
+            color: var(--slytherin-light);
+        }
+
+        .calc-btn.equals {
+            background: var(--slytherin-green);
+            grid-column: span 2;
+        }
+
+        .calc-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .calc-mode-btn {
+            padding: 8px 16px;
+            background: rgba(192, 192, 192, 0.1);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 8px;
+            color: var(--slytherin-silver);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calc-mode-btn.active {
+            background: var(--slytherin-green);
+            border-color: var(--slytherin-light);
+        }
+
+        /* Calendar */
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .cal-nav {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(26, 71, 42, 0.5);
+            border: 1px solid var(--slytherin-silver);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cal-nav:hover {
+            background: var(--slytherin-light);
+        }
+
+        .cal-month-year {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            color: var(--slytherin-silver);
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .cal-day-header {
+            text-align: center;
+            padding: 10px;
+            color: var(--slytherin-light);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            background: rgba(26, 71, 42, 0.2);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .cal-day:hover {
+            background: rgba(80, 200, 120, 0.2);
+            transform: scale(1.05);
+        }
+
+        .cal-day.today {
+            background: var(--slytherin-green);
+            border-color: var(--slytherin-light);
+            box-shadow: 0 0 15px rgba(80, 200, 120, 0.3);
+        }
+
+        .cal-day.other-month {
+            opacity: 0.3;
+        }
+
+        .cal-day-number {
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .cal-day-event {
+            width: 6px;
+            height: 6px;
+            background: var(--slytherin-light);
+            border-radius: 50%;
+            margin-top: 4px;
+        }
+
+        /* Horoscope */
+        .horo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .horo-sign {
+            background: rgba(26, 71, 42, 0.3);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .horo-sign:hover {
+            background: rgba(80, 200, 120, 0.2);
+            transform: translateY(-5px);
+            border-color: var(--slytherin-light);
+        }
+
+        .horo-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .horo-name {
+            font-family: 'Cinzel', serif;
+            color: var(--slytherin-silver);
+            font-size: 0.9rem;
+        }
+
+        .horo-date {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 5px;
+        }
+
+        /* Games Portal */
+        .games-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .game-card {
+            background: linear-gradient(135deg, rgba(26, 71, 42, 0.5), rgba(10, 10, 10, 0.8));
+            border: 2px solid var(--slytherin-gray);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--slytherin-light);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .game-thumb {
+            height: 120px;
+            background: linear-gradient(135deg, var(--slytherin-green), var(--slytherin-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .game-info {
+            padding: 15px;
+        }
+
+        .game-title {
+            font-family: 'Cinzel', serif;
+            color: var(--slytherin-silver);
+            margin-bottom: 5px;
+        }
+
+        .game-desc {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .game-play-btn {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.1s ease;
+            transform: translate(-50%, -50%) scale(0);
+            width: 60px;
+            height: 60px;
+            background: rgba(80, 200, 120, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s;
         }
-.popupBackup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 25px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+
+        .game-card:hover .game-play-btn {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* File Manager */
+        .file-toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(26, 71, 42, 0.3);
             border-radius: 10px;
-            width: 300px;
+            margin-bottom: 15px;
+        }
+
+        .file-path {
+            flex: 1;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--slytherin-gray);
+            border-radius: 8px;
+            color: var(--slytherin-silver);
+            font-family: 'Courier New', monospace;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .file-item {
             text-align: center;
-            font-family: Arial, sans-serif;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-     @keyframes fadeIn {
-            from { opacity: 0; transform: translate(-50%, -55%); }
-            to { opacity: 1; transform: translate(-50%, -50%); }
-        }
-        
-        .popupBackup button {
-            margin-top: 10px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
+            padding: 15px;
+            background: rgba(26, 71, 42, 0.2);
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            border: 2px solid transparent;
         }
-        
-        .popupBackup button:first-of-type {
-            background: #4CAF50;
-            color: white;
+
+        .file-item:hover {
+            background: rgba(80, 200, 120, 0.1);
+            border-color: var(--slytherin-light);
         }
-        .popupBackup button:first-of-type:hover {
-            background: #45a049;
+
+        .file-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
         }
-        
-        .popupBackup button:last-of-type {
-            background: #f44336;
-            color: white;
+
+        .file-name {
+            font-size: 0.85rem;
+            color: #fff;
+            word-break: break-word;
         }
-        .popupBackup button:last-of-type:hover {
-            background: #d32f2f;
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .desktop-icons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .window {
+                width: 95vw !important;
+                height: 80vh !important;
+                left: 2.5vw !important;
+                top: 10vh !important;
+            }
+            
+            .chat-sidebar {
+                display: none;
+            }
+            
+            .horo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .boot-text {
+                font-size: 2rem;
+            }
         }
-        
-        #fileInput {
-            margin-top: 10px;
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.5s ease;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--slytherin-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--slytherin-light);
+        }
+
+        /* Avatar in taskbar */
+        .taskbar-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--slytherin-silver);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .taskbar-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(80, 200, 120, 0.5);
+        }
+
+        /* Coins HUD */
+        #coinsHUD {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--slytherin-silver);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 8000;
+            font-family: 'Cinzel', serif;
+        }
+
+        .coin-icon {
+            color: #FFD700;
+            font-size: 1.2rem;
+        }
+
+        /* Snow effect for winter */
+        .snowflake {
+            color: #fff;
+            font-size: 1.5em;
+            position: absolute;
+            top: -10%;
+            animation: snowfall 10s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes snowfall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        .snowflake:nth-child(odd) {
+            animation-duration: 12s;
+            font-size: 1.2em;
+        }
+        .snowflake:nth-child(even) {
+            animation-duration: 8s;
+            font-size: 1.8em;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
-<div class="eye-container">
-        <div class="eye">
-            <div class="pupil"></div>
+
+    <!-- BOOT SCREEN -->
+    <div id="bootScreen">
+        <img src="Slytherin.png" class="boot-logo" alt="Slytherin">
+        <div class="boot-text">SLYTHERIN<span style="color: var(--slytherin-light);">OS</span></div>
+        <div class="boot-subtitle">Ambition • Cunning • Leadership</div>
+        <div class="boot-progress">
+            <div class="boot-progress-bar" id="bootProgress"></div>
         </div>
-        <div class="eye">
-            <div class="pupil"></div>
+        <div class="boot-status" id="bootStatus">Initializing system...</div>
+    </div>
+
+    <!-- LOCK SCREEN -->
+    <div id="lockScreen">
+        <div class="lock-container animate-slide-up">
+            <div class="avatar-showcase">
+                <model-viewer id="lockAvatar" src="" camera-controls auto-rotate disable-zoom disable-pan disable-tap min-camera-orbit="auto 90deg auto" max-camera-orbit="auto 90deg auto" style="width: 100%; height: 100%;"></model-viewer>
+            </div>
+            <h2 class="lock-title">Dobrodošli nazaj</h2>
+            <p class="lock-user" id="lockUsername">Uporabnik</p>
+            <input type="password" class="lock-input" id="lockPassword" placeholder="Vnesite geslo" maxlength="6">
+            <button class="lock-btn" onclick="unlockSystem()">Odkleni</button>
+            <p class="register-link" onclick="showRegister()">Nov račun / Registracija</p>
         </div>
     </div>
-    <div id="topBar" onclick="showCurrentTime()">&#9202;</div>
-    <img id="logo" src="Slytherin.png"></img>
 
-    <form id="searchForm" onsubmit="searchSlytherinBrowser(); return false;">
-        <label for="search">SlytherinBrowser:</label>
-       <input type="search" id="search" name="search" placeholder="Vnesite iskalni pojem..." oninput="checkForRotation(); checkForReminder();">
+    <!-- REGISTRATION MODAL -->
+    <div id="registerModal">
+        <div class="register-container">
+            <h2 style="font-family: 'Cinzel', serif; color: var(--slytherin-silver); margin-bottom: 20px; text-align: center;">Nastavitev SlytherinOS</h2>
+            
+            <div class="setup-steps">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+            </div>
 
-        <input type="submit" id="submitBtn" value="Išči">
-    </form>
+            <!-- Step 1: Account -->
+            <div class="setup-content active" id="setup1">
+                <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">1. Ustvari račun</h3>
+                <input type="text" id="regUsername" placeholder="Uporabniško ime" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
+                <input type="email" id="regEmail" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
+                <input type="password" id="regPassword" placeholder="Geslo (6 števk)" maxlength="6" style="width: 100%; padding: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff;">
+                <button class="lock-btn" onclick="nextStep(2)" style="margin-top: 10px;">Naprej</button>
+            </div>
 
-    <img id="logo" src="Slytherin.png" class="lamp"></img>
+            <!-- Step 2: Avatar -->
+            <div class="setup-content" id="setup2">
+                <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">2. Ustvari avatar</h3>
+                <div class="avatar-creator">
+                    <div class="avatar-preview">
+                        <model-viewer id="regAvatar" src="https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                    </div>
+                    <input type="text" id="avatarUrl" placeholder="Ready Player Me URL (opcijsko)" style="width: 100%; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--slytherin-gray); border-radius: 8px; color: #fff; margin-bottom: 10px;">
+                    <button class="lock-btn" onclick="openAvatarCreator()" style="margin-bottom: 10px;">Odpri Avatar Ustvarjalnik</button>
+                    <iframe id="rpmFrame" src="" style="width: 100%; height: 300px; border: none; border-radius: 10px; display: none; margin-top: 10px;"></iframe>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="lock-btn" onclick="nextStep(1)" style="flex: 1; background: var(--slytherin-gray);">Nazaj</button>
+                    <button class="lock-btn" onclick="nextStep(3)" style="flex: 1;">Naprej</button>
+                </div>
+            </div>
 
-<button id="chatButton" style="display: none">Prikaži chatbot</button>
-
-<div id="chatPopup" style="display:none;">
-    <div id="chatArea"></div>
-    <div id="chatInputArea">
-        <input id="chatInput" type="text" placeholder="Vnesi sporočilo..." />
-        <button id="sendButton">Pošlji</button>
-    </div>
-</div>
-<button id="clickButton" onclick="window.location.href='newbrowser.html'"style="display: none">Nightmode</button>
- <!-- Gumb za preklop -->
-    <button class="preklop" onclick="toggleElement()"style="display: none">CPS</button>
-<div id="container">
-        Domov
-    </div>
-
-    <div id="addIconForm">
-        <select id="categorySelect">
-            <option value="0">Domov</option>
-            <option value="1">Osnovno</option>
-            <option value="2">Zabava</option>
-            <option value="3">Chatbot</option>
-            <option value="4">Moje Ikone</option>
-        </select>
-        <input type="text" id="iconName" placeholder="Ime ikone">
-        <input type="text" id="iconLink" placeholder="URL povezave">
-        <button id="addIconBtn">Dodaj Ikono</button>
-    </div>
-<!-- Modalno okno -->
-<div id="myModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Dodaj Ikono</h2>
-        <input type="file" id="fileInput" accept="image/png, image/jpeg" onchange="handleImage(event)">
-        <input type="text" id="urlInput" placeholder="Vnesite URL" onchange="handleUrl(event)">
-    </div>
-</div>
-<div>
-    
-<button id="backupButton" style="display: none">Save</button>
-
-<div class="taskbar-icon" onclick="toggleCalendar()" style="display: none">
-    <!-- SVG ikona (npr. ikona koledarja) -->
-    <svg viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-7h3v3h-3v-3zm1-9c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l1.59 1.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4s-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v.17l3.59 3.59 1.42-1.42L12 6.17V5c0-2.21-1.79-4-4-4z"/>
-    </svg>
-</div>
-<div class="calendar-container" id="calendar">
-        <div class="calendar-header">
-            <button id="prev-month">&lt;</button>
-            <div id="month-year"></div>
-            <button id="next-month">&gt;</button>
+            <!-- Step 3: Complete -->
+            <div class="setup-content" id="setup3">
+                <h3 style="color: var(--slytherin-light); margin-bottom: 15px;">3. Zaključi nastavitev</h3>
+                <div style="text-align: center; padding: 30px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🐍</div>
+                    <p style="color: var(--slytherin-silver); margin-bottom: 20px;">Dobrodošli v Slytherin družino!</p>
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 30px;">Vaš operacijski sistem je pripravljen.</p>
+                </div>
+                <button class="lock-btn" onclick="completeRegistration()">Zaženi SlytherinOS</button>
+            </div>
         </div>
-        <div class="calendar-body" id="calendar-body"></div>
     </div>
-</div>
-<button id="buttonkng" style="display: none">SWITCH</button>
- <button id="menu"onclick="menuking()"style="display: none">MENU</button>
-  <div id="trigger-button" class="trigger-button" onclick="toggleCalculator()" style="display: none">Calc</div>
-   <div class="calculator-container" id="calculator-container" style="display:none;">
-    <button id="al">?</button>
-    <input type="text" id="display" readonly>
-    <div>
-        <label for="aa">Izberi iz:</label>
-<select id="aa">
-    <option value="decimal">Decimal</option>
-    <option value="binary">Binary</option>
-    <option value="octal">Octal</option>
-    <option value="hex">Hex</option>
-    <option value="3">Base 3</option>
-    <option value="4">Base 4</option>
-    <option value="5">Base 5</option>
-    <option value="6">Base 6</option>
-    <option value="7">Base 7</option>
-    <option value="9">Base 9</option>
-</select>
 
-<div>
-    <label for="bb">Pretvori v:</label>
-    <select id="bb">
-        <option value="decimal">Decimal</option>
-        <option value="binary">Binary</option>
-        <option value="octal">Octal</option>
-        <option value="hex">Hex</option>
-        <option value="3">Base 3</option>
-        <option value="4">Base 4</option>
-        <option value="5">Base 5</option>
-        <option value="6">Base 6</option>
-        <option value="7">Base 7</option>
-        <option value="9">Base 9</option>
-    </select>
-</div>
-<button onclick="convert()">Pretvori</button>
-<button onclick="clearDisplay()">Počisti</button>
-</div>
-
-
-
-
+    <!-- DESKTOP -->
+    <div id="desktop">
+        <div class="desktop-bg"></div>
         
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" onclick="openWindow('browser')">
+                <div class="desktop-icon-img">🌐</div>
+                <div class="desktop-icon-text">Brskalnik</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('chat')">
+                <div class="desktop-icon-img">💬</div>
+                <div class="desktop-icon-text">Klepet</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('files')">
+                <div class="desktop-icon-img">📁</div>
+                <div class="desktop-icon-text">Datoteke</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('games')">
+                <div class="desktop-icon-img">🎮</div>
+                <div class="desktop-icon-text">Igre</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('horoscope')">
+                <div class="desktop-icon-img">♈</div>
+                <div class="desktop-icon-text">Horoskop</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('calculator')">
+                <div class="desktop-icon-img">🧮</div>
+                <div class="desktop-icon-text">Kalkulator</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('calendar')">
+                <div class="desktop-icon-img">📅</div>
+                <div class="desktop-icon-text">Koledar</div>
+            </div>
+            <div class="desktop-icon" onclick="openWindow('avatar')">
+                <div class="desktop-icon-img">👤</div>
+                <div class="desktop-icon-text">Avatar</div>
+            </div>
+        </div>
 
+        <!-- Windows -->
+        <!-- Browser Window -->
+        <div class="window" id="window-browser" style="width: 900px; height: 600px; top: 50px; left: 100px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-browser')">
+                <div class="window-title">🌐 Slytherin Browser</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('browser')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('browser')"></button>
+                    <button class="window-btn close" onclick="closeWindow('browser')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="browser-toolbar">
+                    <button class="browser-btn" onclick="browserBack()">←</button>
+                    <button class="browser-btn" onclick="browserForward()">→</button>
+                    <button class="browser-btn" onclick="browserRefresh()">↻</button>
+                    <input type="text" class="browser-input" id="browserUrl" placeholder="Vnesite URL ali iskalni izraz..." onkeypress="if(event.key==='Enter')navigateBrowser()">
+                    <button class="browser-btn" onclick="navigateBrowser()">Pojdi</button>
+                </div>
+                <iframe class="browser-frame" id="browserFrame" src="about:blank"></iframe>
+            </div>
+        </div>
 
+        <!-- Chat Window -->
+        <div class="window" id="window-chat" style="width: 800px; height: 500px; top: 80px; left: 150px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-chat')">
+                <div class="window-title">💬 Slytherin Chat</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('chat')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('chat')"></button>
+                    <button class="window-btn close" onclick="closeWindow('chat')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="chat-container">
+                    <div class="chat-sidebar">
+                        <div class="chat-room active" onclick="switchRoom('public')">
+                            <h4>🌍 Javni klepet</h4>
+                            <p>120 uporabnikov online</p>
+                        </div>
+                        <div class="chat-room" onclick="switchRoom('slytherin')">
+                            <h4>🐍 Slytherin House</h4>
+                            <p>45 članov</p>
+                        </div>
+                        <div class="chat-room" onclick="switchRoom('private')">
+                            <h4>🔒 Zasebni klepet</h4>
+                            <p>Izberi prijatelja</p>
+                        </div>
+                        <div class="chat-room" onclick="switchRoom('group')">
+                            <h4>👥 Skupinski klepet</h4>
+                            <p>Ustvari skupino</p>
+                        </div>
+                    </div>
+                    <div class="chat-main">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-message other">
+                                <div class="author">SlytherinBot</div>
+                                Dobrodošli v Slytherin klepetalnici! Bodite spoštljivi do drugih.
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" class="chat-input" id="chatInput" placeholder="Napiši sporočilo..." onkeypress="if(event.key==='Enter')sendMessage()">
+                            <button class="chat-send" onclick="sendMessage()">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<script>
+        <!-- Files Window -->
+        <div class="window" id="window-files" style="width: 700px; height: 500px; top: 100px; left: 200px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-files')">
+                <div class="window-title">📁 Upravitelj datotek</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('files')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('files')"></button>
+                    <button class="window-btn close" onclick="closeWindow('files')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="file-toolbar">
+                    <button class="browser-btn" onclick="goBack()">← Nazaj</button>
+                    <button class="browser-btn" onclick="createFolder()">📁 Nova mapa</button>
+                    <button class="browser-btn" onclick="uploadFile()">⬆ Naloži</button>
+                    <div class="file-path" id="filePath">Domov /</div>
+                </div>
+                <div class="file-grid" id="fileGrid">
+                    <div class="file-item" onclick="openAppFolder('applications')">
+                        <div class="file-icon">📱</div>
+                        <div class="file-name">Aplikacije</div>
+                    </div>
+                    <div class="file-item" onclick="openAppFolder('documents')">
+                        <div class="file-icon">📄</div>
+                        <div class="file-name">Dokumenti</div>
+                    </div>
+                    <div class="file-item" onclick="openAppFolder('images')">
+                        <div class="file-icon">🖼️</div>
+                        <div class="file-name">Slike</div>
+                    </div>
+                    <div class="file-item" onclick="openAppFolder('music')">
+                        <div class="file-icon">🎵</div>
+                        <div class="file-name">Glasba</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Games Window -->
+        <div class="window" id="window-games" style="width: 900px; height: 600px; top: 60px; left: 80px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-games')">
+                <div class="window-title">🎮 Game Portal</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('games')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('games')"></button>
+                    <button class="window-btn close" onclick="closeWindow('games')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="browser-toolbar">
+                    <input type="text" class="browser-input" id="gameSearch" placeholder="Išči igre..." oninput="searchGames(this.value)">
+                    <button class="browser-btn" onclick="showAllGames()">Vse igre</button>
+                    <button class="browser-btn" onclick="showFavorites()">Priljubljene</button>
+                </div>
+                <div class="games-container" id="gamesContainer">
+                    <!-- Games will be populated by JS -->
+                </div>
+                <iframe id="gameFrame" style="width: 100%; height: calc(100% - 60px); border: none; border-radius: 10px; display: none;"></iframe>
+            </div>
+        </div>
 
+        <!-- Horoscope Window -->
+        <div class="window" id="window-horoscope" style="width: 800px; height: 600px; top: 70px; left: 120px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-horoscope')">
+                <div class="window-title">♈ Dnevni Horoskop</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('horoscope')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('horoscope')"></button>
+                    <button class="window-btn close" onclick="closeWindow('horoscope')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="horo-grid" id="horoGrid">
+                    <!-- Horoscope signs populated by JS -->
+                </div>
+                <div id="horoDetail" style="display: none; margin-top: 20px; padding: 20px; background: rgba(26, 71, 42, 0.3); border-radius: 15px; border: 1px solid var(--slytherin-silver);">
+                    <h3 id="horoTitle" style="font-family: 'Cinzel', serif; color: var(--slytherin-silver); margin-bottom: 15px;"></h3>
+                    <p id="horoText" style="line-height: 1.6; color: rgba(255,255,255,0.9);"></p>
+                    <div style="margin-top: 15px; display: flex; gap: 20px;">
+                        <span style="color: var(--slytherin-light);">❤️ Ljubezen: <span id="horoLove"></span></span>
+                        <span style="color: var(--slytherin-light);">💼 Kariera: <span id="horoCareer"></span></span>
+                        <span style="color: var(--slytherin-light);">🍀 Sreča: <span id="horoLuck"></span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Calculator Window -->
+        <div class="window" id="window-calculator" style="width: 400px; height: 550px; top: 150px; left: 300px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-calculator')">
+                <div class="window-title">🧮 Kalkulator</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('calculator')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('calculator')"></button>
+                    <button class="window-btn close" onclick="closeWindow('calculator')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="calc-mode">
+                    <button class="calc-mode-btn active" onclick="setCalcMode('standard')">Standard</button>
+                    <button class="calc-mode-btn" onclick="setCalcMode('scientific')">Znanstveni</button>
+                    <button class="calc-mode-btn" onclick="setCalcMode('converter')">Pretvornik</button>
+                </div>
+                <div class="calc-display" id="calcDisplay">0</div>
+                <div class="calc-buttons" id="calcButtons">
+                    <!-- Buttons populated by JS -->
+                </div>
+            </div>
+        </div>
 
+        <!-- Calendar Window -->
+        <div class="window" id="window-calendar" style="width: 600px; height: 500px; top: 90px; left: 180px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-calendar')">
+                <div class="window-title">📅 Koledar</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('calendar')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('calendar')"></button>
+                    <button class="window-btn close" onclick="closeWindow('calendar')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="cal-header">
+                    <button class="cal-nav" onclick="changeMonth(-1)">←</button>
+                    <div class="cal-month-year" id="calMonthYear">Februar 2026</div>
+                    <button class="cal-nav" onclick="changeMonth(1)">→</button>
+                </div>
+                <div class="cal-grid" id="calGrid">
+                    <!-- Calendar populated by JS -->
+                </div>
+            </div>
+        </div>
 
+        <!-- Avatar Window -->
+        <div class="window" id="window-avatar" style="width: 700px; height: 600px; top: 50px; left: 100px;">
+            <div class="window-header" onmousedown="startDrag(event, 'window-avatar')">
+                <div class="window-title">👤 Upravljanje Avatarja</div>
+                <div class="window-controls">
+                    <button class="window-btn minimize" onclick="minimizeWindow('avatar')"></button>
+                    <button class="window-btn maximize" onclick="maximizeWindow('avatar')"></button>
+                    <button class="window-btn close" onclick="closeWindow('avatar')"></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div style="display: flex; gap: 20px; height: 100%;">
+                    <div style="flex: 1;">
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 20px; height: 400px;">
+                            <model-viewer id="avatarViewer" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                        </div>
+                    </div>
+                    <div style="width: 250px;">
+                        <h3 style="color: var(--slytherin-silver); margin-bottom: 15px; font-family: 'Cinzel', serif;">Nastavitve</h3>
+                        <button class="lock-btn" onclick="openAvatarCreator()" style="margin-bottom: 10px; width: 100%;">Ustvari nov avatar</button>
+                        <button class="lock-btn" onclick="uploadAvatar()" style="margin-bottom: 10px; width: 100%; background: var(--slytherin-gray);">Naloži GLB datoteko</button>
+                        <input type="file" id="avatarFile" accept=".glb,.gltf,.vrm" style="display: none;" onchange="handleAvatarUpload(event)">
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(26, 71, 42, 0.3); border-radius: 10px;">
+                            <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Vaš avatar se prikazuje v klepetu in na namizju.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Coins HUD -->
+        <div id="coinsHUD" style="display: none;">
+            <span class="coin-icon">🪙</span>
+            <span id="userCoins">0</span>
+            <span style="font-size: 0.8rem; opacity: 0.7;">kovancev</span>
+        </div>
 
+        <!-- Taskbar -->
+        <div class="taskbar">
+            <div class="taskbar-left">
+                <div class="start-btn" onclick="toggleStartMenu()">🐍</div>
+                <div class="taskbar-apps" id="taskbarApps">
+                    <!-- Active apps will appear here -->
+                </div>
+            </div>
+            <div class="taskbar-right">
+                <div class="system-tray">
+                    <span id="wifiIcon">📶</span>
+                    <span id="batteryIcon">🔋</span>
+                    <span id="clock">12:00</span>
+                </div>
+                <div class="taskbar-avatar" onclick="openWindow('avatar')">
+                    <model-viewer id="taskbarAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                </div>
+            </div>
+        </div>
 
+        <!-- Start Menu -->
+        <div id="startMenu">
+            <div class="start-header">
+                <div class="start-avatar">
+                    <model-viewer id="startAvatar" src="" camera-controls auto-rotate disable-zoom style="width: 100%; height: 100%;"></model-viewer>
+                </div>
+                <div class="start-user-info">
+                    <h3 id="startUsername">Uporabnik</h3>
+                    <p>Slytherin House</p>
+                </div>
+            </div>
+            <div class="start-apps">
+                <div class="start-app" onclick="openWindow('browser'); toggleStartMenu();">
+                    🌐<span>Brskalnik</span>
+                </div>
+                <div class="start-app" onclick="openWindow('chat'); toggleStartMenu();">
+                    💬<span>Klepet</span>
+                </div>
+                <div class="start-app" onclick="openWindow('files'); toggleStartMenu();">
+                    📁<span>Datoteke</span>
+                </div>
+                <div class="start-app" onclick="openWindow('games'); toggleStartMenu();">
+                    🎮<span>Igre</span>
+                </div>
+                <div class="start-app" onclick="openWindow('horoscope'); toggleStartMenu();">
+                    ♈<span>Horoskop</span>
+                </div>
+                <div class="start-app" onclick="openWindow('calculator'); toggleStartMenu();">
+                    🧮<span>Kalkulator</span>
+                </div>
+                <div class="start-app" onclick="openWindow('calendar'); toggleStartMenu();">
+                    📅<span>Koledar</span>
+                </div>
+                <div class="start-app" onclick="openWindow('avatar'); toggleStartMenu();">
+                    👤<span>Avatar</span>
+                </div>
+                <div class="start-app" onclick="lockSystem(); toggleStartMenu();">
+                    🔒<span>Zakleni</span>
+                </div>
+            </div>
+            <div class="start-footer">
+                <button class="start-footer-btn" onclick="toggleStartMenu(); showSettings();">⚙ Nastavitve</button>
+                <button class="start-footer-btn" onclick="powerOff()">⏻ Izklopi</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
+        // Use existing Firebase from your files - no initialization here
+        // Assuming db, auth, storage are already available globally
+        
+        // Global State
+        let currentUser = null;
+        let userData = null;
+        let activeWindows = [];
+        let currentChatRoom = 'public';
+        let calcMode = 'standard';
+        let calcExpression = '';
+        let currentDate = new Date();
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let currentDragWindow = null;
 
+        // Wait for Firebase to be ready (from your existing files)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if Firebase is available
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase not loaded! Make sure Firebase scripts are included before this file.');
+                return;
+            }
+            
+            // Start boot sequence
+            startBootSequence();
+        });
 
+        // Boot Sequence
+        function startBootSequence() {
+            const bootSteps = [
+                { progress: 10, status: "Inicializacija jedra...", delay: 500 },
+                { progress: 25, status: "Nalaganje sistemskih modulov...", delay: 800 },
+                { progress: 40, status: "Povezovanje s Slytherin omrežjem...", delay: 600 },
+                { progress: 60, status: "Nalaganje avatar sistema...", delay: 700 },
+                { progress: 80, status: "Priprava uporabniškega vmesnika...", delay: 500 },
+                { progress: 100, status: "Sistem pripravljen!", delay: 400 }
+            ];
 
-    function checkTime() {
-        let now = new Date();
-        let hour = now.getHours();
-        let nightMode = (hour >= 19 || hour < 6); // Noč od 19:00 do 06:00
+            let stepIndex = 0;
+            
+            function runBootStep() {
+                if (stepIndex >= bootSteps.length) {
+                    setTimeout(() => {
+                        document.getElementById('bootScreen').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('bootScreen').style.display = 'none';
+                            checkAuth();
+                        }, 1000);
+                    }, 500);
+                    return;
+                }
 
-        // Prejšnje stanje v localStorage
-        let previousState = localStorage.getItem("nightMode");
+                const step = bootSteps[stepIndex];
+                document.getElementById('bootProgress').style.width = step.progress + '%';
+                document.getElementById('bootStatus').textContent = step.status;
+                
+                setTimeout(() => {
+                    stepIndex++;
+                    runBootStep();
+                }, step.delay);
+            }
 
-        if (nightMode && previousState !== "true") {
-            // Prehod v noč -> Shrani stanje in preusmeri
-            localStorage.setItem("nightMode", "true");
-            window.location.href = "newbrowser.html";
-        } 
-        else if (!nightMode && previousState !== "false") {
-            // Prehod v dan -> Shrani stanje in preusmeri
-            localStorage.setItem("nightMode", "false");
-            window.location.href = "index.html";
+            runBootStep();
         }
-    }
 
-    // Preveri ob nalaganju strani
-    checkTime();
+        // Auth Check - uses existing Firebase auth
+        function checkAuth() {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    loadUserData(user.uid);
+                } else {
+                    showLockScreen();
+                }
+            });
+        }
 
-    // Preverja vsako minuto, če je treba osvežiti/preusmeriti
-    setInterval(checkTime, 60000);
+        function loadUserData(uid) {
+            firebase.database().ref('users/' + uid).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    userData = snapshot.val();
+                    updateUIWithUserData();
+                    showDesktop();
+                } else {
+                    showRegister();
+                }
+            });
+        }
 
+        function showLockScreen() {
+            document.getElementById('lockScreen').style.display = 'flex';
+            document.getElementById('desktop').style.display = 'none';
+            document.getElementById('registerModal').style.display = 'none';
+            
+            // Load default avatar
+            const defaultAvatar = 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
+            document.getElementById('lockAvatar').src = defaultAvatar;
+        }
 
+        function showDesktop() {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('desktop').style.display = 'block';
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('coinsHUD').style.display = 'flex';
+            
+            // Update all avatar viewers
+            const avatarUrl = userData?.avatarURL2 || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
+            document.getElementById('taskbarAvatar').src = avatarUrl;
+            document.getElementById('startAvatar').src = avatarUrl;
+            document.getElementById('avatarViewer').src = avatarUrl;
+            
+            // Update username
+            document.getElementById('startUsername').textContent = userData?.username || 'Uporabnik';
+            document.getElementById('lockUsername').textContent = userData?.username || 'Uporabnik';
+            
+            // Start clock
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Initialize apps
+            initCalculator();
+            initCalendar();
+            initHoroscope();
+            initGames();
+            initChat();
+            
+            // Listen for coins
+            if (currentUser) {
+                firebase.database().ref('users/' + currentUser.uid + '/coins').on('value', (snapshot) => {
+                    document.getElementById('userCoins').textContent = snapshot.val() || 0;
+                });
+            }
+            
+            // Add snow effect if winter
+            createSnowflakes();
+        }
 
+        function updateUIWithUserData() {
+            // Additional UI updates if needed
+        }
 
-</script>
-              <script>
-const setLinkButton = document.querySelector('.set-link');
-const popup = document.querySelector('.popup');
-const linkInput = document.getElementById('linkInput');
-const saveLinkButton = document.getElementById('saveLink');
-const closePopupButton = document.getElementById('closePopup');
+        // Lock System
+        function unlockSystem() {
+            const password = document.getElementById('lockPassword').value;
+            if (password.length === 6) {
+                // In real app, verify against stored password
+                // For now, just check if user exists in Firebase
+                if (currentUser) {
+                    showDesktop();
+                } else {
+                    // Try anonymous auth for demo
+                    firebase.auth().signInAnonymously().then(() => {
+                        showDesktop();
+                    }).catch(() => {
+                        alert('Napačno geslo!');
+                    });
+                }
+            } else {
+                alert('Vnesite 6-mestno geslo!');
+            }
+        }
 
-// Naloži povezavo iz lokalnega shranjevanja
-const loadLink = () => {
-    const savedLink = localStorage.getItem('savedLink');
-    return savedLink || '';
-};
+        function lockSystem() {
+            firebase.auth().signOut().then(() => {
+                location.reload();
+            });
+        }
 
-let currentLink = loadLink();
+        // Registration
+        function showRegister() {
+            document.getElementById('registerModal').style.display = 'flex';
+            document.getElementById('lockScreen').style.display = 'none';
+        }
 
-// Prikaži pop-up ali odpri povezavo
-setLinkButton.addEventListener('click', () => {
-    if (!currentLink) {
-        // Če povezava ni shranjena, pokaži pop-up
-        popup.style.display = 'block';
-    } else {
-        // Če povezava obstaja, jo odpri
-        window.open(currentLink, '_blank');
-    }
-});
+        function nextStep(step) {
+            document.querySelectorAll('.setup-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('setup' + step).classList.add('active');
+            document.getElementById('step' + step).classList.add('active');
+            
+            // Mark previous steps as completed
+            for (let i = 1; i < step; i++) {
+                document.getElementById('step' + i).classList.add('completed');
+                document.getElementById('step' + i).classList.remove('active');
+            }
+        }
 
-// Shrani povezavo in zapri pop-up
-saveLinkButton.addEventListener('click', () => {
-    const url = linkInput.value.trim();
-    if (url) {
-        currentLink = url;
-        localStorage.setItem('savedLink', currentLink);
-        popup.style.display = 'none';
-        linkInput.value = '';
-    } else {
-        alert('Prosim, vnesite veljaven URL.');
-    }
-});
+        function openAvatarCreator() {
+            const frame = document.getElementById('rpmFrame');
+            frame.style.display = 'block';
+            frame.src = 'https://readyplayer.me/avatar?frameApi';
+            
+            frame.onload = () => {
+                frame.contentWindow.postMessage(
+                    JSON.stringify({
+                        target: 'readyplayerme',
+                        type: 'subscribe',
+                        eventName: 'v1.avatar.exported'
+                    }),
+                    '*'
+                );
+            };
+        }
 
-// Zapri pop-up ob kliku na gumb "Zapri"
-closePopupButton.addEventListener('click', () => {
-    popup.style.display = 'none';
-});
+        window.addEventListener('message', (event) => {
+            try {
+                const json = JSON.parse(event.data);
+                if (json.source === 'readyplayerme' && json.eventName === 'v1.avatar.exported') {
+                    const url = json.data.url;
+                    document.getElementById('regAvatar').src = url;
+                    document.getElementById('avatarUrl').value = url;
+                }
+            } catch (e) {}
+        });
 
+        function completeRegistration() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const avatarUrl = document.getElementById('avatarUrl').value || 'https://models.readyplayer.me/6690f6c8f9f77315d663e8c3.glb';
+            
+            if (!username || !email || !password) {
+                alert('Izpolnite vsa polja!');
+                return;
+            }
 
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const uid = userCredential.user.uid;
+                    return firebase.database().ref('users/' + uid).set({
+                        username: username,
+                        email: email,
+                        avatarURL2: avatarUrl,
+                        coins: 0,
+                        createdAt: Date.now()
+                    });
+                })
+                .then(() => {
+                    currentUser = firebase.auth().currentUser;
+                    loadUserData(currentUser.uid);
+                })
+                .catch((error) => {
+                    alert('Napaka: ' + error.message);
+                });
+        }
 
+        // Window Management
+        function openWindow(appName) {
+            const windowEl = document.getElementById('window-' + appName);
+            if (!windowEl) return;
+            
+            windowEl.classList.add('active');
+            windowEl.style.zIndex = ++windowZIndex;
+            
+            if (!activeWindows.includes(appName)) {
+                activeWindows.push(appName);
+                updateTaskbar();
+            }
+            
+            // Special init for certain apps
+            if (appName === 'games') {
+                document.getElementById('gameFrame').style.display = 'none';
+                document.getElementById('gamesContainer').style.display = 'grid';
+            }
+        }
 
+        function closeWindow(appName) {
+            const windowEl = document.getElementById('window-' + appName);
+            windowEl.classList.remove('active');
+            activeWindows = activeWindows.filter(w => w !== appName);
+            updateTaskbar();
+        }
 
+        function minimizeWindow(appName) {
+            const windowEl = document.getElementById('window-' + appName);
+            windowEl.classList.remove('active');
+            updateTaskbar();
+        }
 
+        function maximizeWindow(appName) {
+            const windowEl = document.getElementById('window-' + appName);
+            if (windowEl.dataset.maximized === 'true') {
+                windowEl.style.width = '900px';
+                windowEl.style.height = '600px';
+                windowEl.style.top = '50px';
+                windowEl.style.left = '100px';
+                windowEl.dataset.maximized = 'false';
+            } else {
+                windowEl.style.width = '100vw';
+                windowEl.style.height = 'calc(100vh - 60px)';
+                windowEl.style.top = '0';
+                windowEl.style.left = '0';
+                windowEl.dataset.maximized = 'true';
+            }
+        }
 
+        let windowZIndex = 1000;
 
-    </script>
-
-<script>
-        const eyes = document.querySelectorAll('.eye');
-        const pupils = document.querySelectorAll('.pupil');
+        function startDrag(e, windowId) {
+            isDragging = true;
+            currentDragWindow = document.getElementById(windowId);
+            currentDragWindow.style.zIndex = ++windowZIndex;
+            
+            const rect = currentDragWindow.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+        }
 
         document.addEventListener('mousemove', (e) => {
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-
-            eyes.forEach((eye, index) => {
-                const rect = eye.getBoundingClientRect();
-                const eyeX = rect.left + rect.width / 2;
-                const eyeY = rect.top + rect.height / 2;
-
-                const angle = Math.atan2(mouseY - eyeY, mouseX - eyeX);
-                const distance = Math.min(eye.offsetWidth / 4, eye.offsetHeight / 4);
-
-                const pupil = pupils[index];
-                pupil.style.transform = `translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
-            });
+            if (isDragging && currentDragWindow) {
+                currentDragWindow.style.left = (e.clientX - dragOffset.x) + 'px';
+                currentDragWindow.style.top = (e.clientY - dragOffset.y) + 'px';
+            }
         });
-    </script>
-   <script>
-        // Funkcija za prikaz backup popup okna
-function showBackupPopup() {
-    const popupBackup = document.createElement("div");
-    popupBackup.classList.add("popupBackup");
-    popupBackup.innerHTML = `
-        <h2>LocalStorage Backup & Restore</h2>
-        <button onclick="exportLocalStorage()">Izvozi LocalStorage</button>
-        <input type="file" id="fileInput" onchange="importLocalStorage(event)">
-        <button onclick="this.parentElement.remove()">Zapri</button>
-    `;
-    document.body.appendChild(popupBackup);
-    popupBackup.style.display = "block";
-}
 
-// Povezava dogodka s funkcijo
-document.getElementById("backupButton").addEventListener("click", showBackupPopup);
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            currentDragWindow = null;
+        });
 
-        function exportLocalStorage() {
-            const data = JSON.stringify(localStorage);
-            const blob = new Blob([data], { type: "application/json" });
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "localStorageBackup.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+        function updateTaskbar() {
+            const container = document.getElementById('taskbarApps');
+            container.innerHTML = '';
+            
+            activeWindows.forEach(app => {
+                const btn = document.createElement('div');
+                btn.className = 'taskbar-app';
+                btn.innerHTML = getAppIcon(app);
+                btn.onclick = () => {
+                    const win = document.getElementById('window-' + app);
+                    if (win.classList.contains('active')) {
+                        minimizeWindow(app);
+                    } else {
+                        openWindow(app);
+                    }
+                };
+                container.appendChild(btn);
+            });
         }
-        
-        function importLocalStorage(event) {
+
+        function getAppIcon(app) {
+            const icons = {
+                browser: '🌐',
+                chat: '💬',
+                files: '📁',
+                games: '🎮',
+                horoscope: '♈',
+                calculator: '🧮',
+                calendar: '📅',
+                avatar: '👤'
+            };
+            return icons[app] || '📱';
+        }
+
+        // Start Menu
+        function toggleStartMenu() {
+            const menu = document.getElementById('startMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Browser
+        function navigateBrowser() {
+            const url = document.getElementById('browserUrl').value;
+            const frame = document.getElementById('browserFrame');
+            
+            if (!url.startsWith('http')) {
+                frame.src = 'https://www.google.com/search?q=' + encodeURIComponent(url);
+            } else {
+                frame.src = url;
+            }
+        }
+
+        function browserBack() {
+            document.getElementById('browserFrame').contentWindow.history.back();
+        }
+
+        function browserForward() {
+            document.getElementById('browserFrame').contentWindow.history.forward();
+        }
+
+        function browserRefresh() {
+            document.getElementById('browserFrame').contentWindow.location.reload();
+        }
+
+        // Chat
+        function initChat() {
+            // Listen for messages in current room
+            firebase.database().ref('chat/' + currentChatRoom).limitToLast(50).on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                addMessageToChat(msg);
+            });
+        }
+
+        function switchRoom(room) {
+            currentChatRoom = room;
+            document.querySelectorAll('.chat-room').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Clear and reload messages
+            document.getElementById('chatMessages').innerHTML = '';
+            firebase.database().ref('chat/' + room).limitToLast(50).once('value', (snapshot) => {
+                snapshot.forEach((child) => {
+                    addMessageToChat(child.val());
+                });
+            });
+        }
+
+        function addMessageToChat(msg) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'chat-message ' + (msg.uid === currentUser?.uid ? 'own' : 'other');
+            div.innerHTML = `
+                <div class="author">${msg.author}</div>
+                ${msg.text}
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !currentUser) return;
+            
+            firebase.database().ref('chat/' + currentChatRoom).push({
+                text: text,
+                author: userData?.username || 'Anonimno',
+                uid: currentUser.uid,
+                timestamp: Date.now()
+            });
+            
+            input.value = '';
+        }
+
+        // Calculator
+        function initCalculator() {
+            updateCalcButtons();
+        }
+
+        function setCalcMode(mode) {
+            calcMode = mode;
+            document.querySelectorAll('.calc-mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateCalcButtons();
+        }
+
+        function updateCalcButtons() {
+            const container = document.getElementById('calcButtons');
+            container.innerHTML = '';
+            
+            let buttons = [];
+            if (calcMode === 'standard') {
+                buttons = ['C', '⌫', '%', '÷', '7', '8', '9', '×', '4', '5', '6', '-', '1', '2', '3', '+', '0', '.', '='];
+            } else if (calcMode === 'scientific') {
+                buttons = ['sin', 'cos', 'tan', 'π', 'log', 'ln', '√', '^', 'C', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+'];
+            } else {
+                buttons = ['km→mi', 'mi→km', 'kg→lb', 'lb→kg', '°C→°F', '°F→°C', 'EUR→USD', 'USD→EUR', 'C', '⌫', '7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.', '='];
+            }
+            
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = 'calc-btn';
+                button.textContent = btn;
+                
+                if (['÷', '×', '-', '+', '^'].includes(btn)) button.classList.add('operator');
+                if (btn === '=') button.classList.add('equals');
+                
+                button.onclick = () => handleCalc(btn);
+                container.appendChild(button);
+            });
+        }
+
+        function handleCalc(btn) {
+            const display = document.getElementById('calcDisplay');
+            
+            if (btn === 'C') {
+                calcExpression = '';
+                display.textContent = '0';
+            } else if (btn === '⌫') {
+                calcExpression = calcExpression.slice(0, -1);
+                display.textContent = calcExpression || '0';
+            } else if (btn === '=') {
+                try {
+                    let expr = calcExpression
+                        .replace(/×/g, '*')
+                        .replace(/÷/g, '/')
+                        .replace(/π/g, Math.PI)
+                        .replace(/sin\(/g, 'Math.sin(')
+                        .replace(/cos\(/g, 'Math.cos(')
+                        .replace(/tan\(/g, 'Math.tan(')
+                        .replace(/log\(/g, 'Math.log10(')
+                        .replace(/ln\(/g, 'Math.log(')
+                        .replace(/√/g, 'Math.sqrt(');
+                    
+                    const result = eval(expr);
+                    display.textContent = result;
+                    calcExpression = String(result);
+                } catch (e) {
+                    display.textContent = 'Napaka';
+                    calcExpression = '';
+                }
+            } else if (calcMode === 'converter') {
+                handleConverter(btn);
+            } else {
+                calcExpression += btn;
+                display.textContent = calcExpression;
+            }
+        }
+
+        function handleConverter(btn) {
+            const display = document.getElementById('calcDisplay');
+            const val = parseFloat(display.textContent) || 0;
+            let result = val;
+            
+            switch(btn) {
+                case 'km→mi': result = val * 0.621371; break;
+                case 'mi→km': result = val * 1.60934; break;
+                case 'kg→lb': result = val * 2.20462; break;
+                case 'lb→kg': result = val * 0.453592; break;
+                case '°C→°F': result = (val * 9/5) + 32; break;
+                case '°F→°C': result = (val - 32) * 5/9; break;
+                case 'EUR→USD': result = val * 1.08; break;
+                case 'USD→EUR': result = val * 0.93; break;
+            }
+            
+            if (btn !== 'C' && btn !== '⌫' && btn !== '=') {
+                display.textContent = result.toFixed(2);
+            }
+        }
+
+        // Calendar
+        function initCalendar() {
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('calMonthYear').textContent = 
+                new Date(year, month).toLocaleDateString('sl-SL', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            
+            const grid = document.getElementById('calGrid');
+            grid.innerHTML = '';
+            
+            // Day headers
+            ['Ned', 'Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'].forEach(day => {
+                const div = document.createElement('div');
+                div.className = 'cal-day-header';
+                div.textContent = day;
+                grid.appendChild(div);
+            });
+            
+            // Previous month days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const div = document.createElement('div');
+                div.className = 'cal-day other-month';
+                div.innerHTML = `<div class="cal-day-number">${daysInPrevMonth - i}</div>`;
+                grid.appendChild(div);
+            }
+            
+            // Current month days
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const div = document.createElement('div');
+                div.className = 'cal-day';
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    div.classList.add('today');
+                }
+                div.innerHTML = `<div class="cal-day-number">${i}</div>`;
+                
+                // Random events for demo
+                if (Math.random() > 0.7) {
+                    div.innerHTML += '<div class="cal-day-event"></div>';
+                }
+                
+                div.onclick = () => selectDate(i);
+                grid.appendChild(div);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function selectDate(day) {
+            alert(`Izbran datum: ${day}. ${currentDate.getMonth() + 1}. ${currentDate.getFullYear()}`);
+        }
+
+        // Horoscope
+        function initHoroscope() {
+            const signs = [
+                { name: 'Oven', date: '21.3 - 19.4', icon: '♈' },
+                { name: 'Bik', date: '20.4 - 20.5', icon: '♉' },
+                { name: 'Dvojčka', date: '21.5 - 20.6', icon: '♊' },
+                { name: 'Rak', date: '21.6 - 22.7', icon: '♋' },
+                { name: 'Lev', date: '23.7 - 22.8', icon: '♌' },
+                { name: 'Devica', date: '23.8 - 22.9', icon: '♍' },
+                { name: 'Tehtnica', date: '23.9 - 22.10', icon: '♎' },
+                { name: 'Škorpijon', date: '23.10 - 21.11', icon: '♏' },
+                { name: 'Strelec', date: '22.11 - 21.12', icon: '♐' },
+                { name: 'Kozorog', date: '22.12 - 19.1', icon: '♑' },
+                { name: 'Vodnar', date: '20.1 - 18.2', icon: '♒' },
+                { name: 'Ribi', date: '19.2 - 20.3', icon: '♓' }
+            ];
+            
+            const grid = document.getElementById('horoGrid');
+            signs.forEach(sign => {
+                const div = document.createElement('div');
+                div.className = 'horo-sign';
+                div.innerHTML = `
+                    <div class="horo-icon">${sign.icon}</div>
+                    <div class="horo-name">${sign.name}</div>
+                    <div class="horo-date">${sign.date}</div>
+                `;
+                div.onclick = () => showHoroscope(sign);
+                grid.appendChild(div);
+            });
+        }
+
+        function showHoroscope(sign) {
+            const texts = [
+                "Danes je idealen dan za nove začetke. Vaša ambicija bo na vrhuncu.",
+                "Finančne priložnosti vas čakajo. Bodite pogumni pri odločitvah.",
+                "Ljubezen je v zraku. Presenetite svojo osebo s posebnim gestom.",
+                "Karierni napredek je viden. Vaše delo bo prepoznano.",
+                "Zdravje je bogastvo. Posvetite čas fizični aktivnosti.",
+                "Kreativnost bo danes na vrhuncu. Ustvarjajte in sanjarite."
+            ];
+            
+            const text = texts[Math.floor(Math.random() * texts.length)];
+            const love = Math.floor(Math.random() * 5) + 1;
+            const career = Math.floor(Math.random() * 5) + 1;
+            const luck = Math.floor(Math.random() * 5) + 1;
+            
+            document.getElementById('horoTitle').textContent = `${sign.icon} ${sign.name} - Dnevni horoskop`;
+            document.getElementById('horoText').textContent = text;
+            document.getElementById('horoLove').textContent = '★'.repeat(love) + '☆'.repeat(5-love);
+            document.getElementById('horoCareer').textContent = '★'.repeat(career) + '☆'.repeat(5-career);
+            document.getElementById('horoLuck').textContent = '★'.repeat(luck) + '☆'.repeat(5-luck);
+            document.getElementById('horoDetail').style.display = 'block';
+        }
+
+        // Games
+        function initGames() {
+            const games = [
+                { name: 'Cat Game', icon: '🐱', desc: 'Zabavna igra z mačko', url: 'https://slytherinbrowser.github.io/cat.html' },
+                { name: 'Among Us', icon: '🚀', desc: 'Poišči prevaranta', url: 'https://www.onlinegames.io/games/2023/construct/234/among-impostor/index.html' },
+                { name: 'Archer Hero', icon: '🏹', desc: 'Postani lokostrelec', url: 'https://www.onlinegames.io/games/2023/unity/archer-hero/index.html' },
+                { name: 'War Strike', icon: '💥', desc: 'Vojaška akcija', url: 'https://cloud.onlinegames.io/games/2024/unity3/warstrike/index-og.html' },
+                { name: 'Drift King', icon: '🏎️', desc: 'Dirkalna simulacija', url: 'https://www.onlinegames.io/games/2024/unity/drift-king/index.html' },
+                { name: 'Bob the Robber', icon: '🦹', desc: 'Skrivnostna misija', url: 'https://html5.gamedistribution.com/18d28481ea514f3c838f9a5a355fb0f7/' },
+                { name: 'Diep.io', icon: '🔵', desc: 'Tank bitka', url: 'https://diep.io' },
+                { name: 'Wormate', icon: '🐍', desc: 'Hranite črva', url: 'https://wormate.io' },
+                { name: 'Slither.io', icon: '🐛', desc: 'Rasti in preživi', url: 'https://slither.io' },
+                { name: 'Krunker', icon: '🔫', desc: 'FPS streljanka', url: 'https://krunker.io' },
+                { name: 'Zombs Royale', icon: '⚔️', desc: 'Battle Royale', url: 'https://zombsroyale.io' },
+                { name: 'Type Racer', icon: '⌨️', desc: 'Tekmovanje v tipkanju', url: 'https://play.typeracer.com' }
+            ];
+            
+            const container = document.getElementById('gamesContainer');
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.innerHTML = `
+                    <div class="game-thumb">${game.icon}</div>
+                    <div class="game-info">
+                        <div class="game-title">${game.name}</div>
+                        <div class="game-desc">${game.desc}</div>
+                    </div>
+                    <div class="game-play-btn">▶</div>
+                `;
+                card.onclick = () => playGame(game.url, game.name);
+                container.appendChild(card);
+            });
+        }
+
+        function playGame(url, name) {
+            document.getElementById('gamesContainer').style.display = 'none';
+            const frame = document.getElementById('gameFrame');
+            frame.src = url;
+            frame.style.display = 'block';
+            
+            // Add coins for playing
+            if (currentUser) {
+                const coins = Math.floor(Math.random() * 10) + 5;
+                firebase.database().ref('users/' + currentUser.uid + '/coins').transaction(c => (c || 0) + coins);
+            }
+        }
+
+        function searchGames(query) {
+            const cards = document.querySelectorAll('.game-card');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query.toLowerCase()) ? 'block' : 'none';
+            });
+        }
+
+        function showAllGames() {
+            document.getElementById('gameFrame').style.display = 'none';
+            document.getElementById('gamesContainer').style.display = 'grid';
+            document.getElementById('gameSearch').value = '';
+            searchGames('');
+        }
+
+        function showFavorites() {
+            alert('Funkcija priljubljenih bo na voljo kmalu!');
+        }
+
+        // File Manager
+        function openAppFolder(folder) {
+            const paths = {
+                applications: ['Microsoft Word', 'Google Translate', 'Remove.bg', 'Adobe Premiere', 'W3Schools', 'Spotify', 'Canva', 'Github', 'VSDC', 'Audacity', 'VS Code', 'Unity'],
+                documents: ['Dokument 1.txt', 'Naloge.pdf', 'Projekt.docx'],
+                images: ['Slika 1.jpg', 'Avatar.png', 'Ozadje.jpg'],
+                music: ['Pesem 1.mp3', 'Playlista.m3u']
+            };
+            
+            document.getElementById('filePath').textContent = 'Domov / ' + folder;
+            const grid = document.getElementById('fileGrid');
+            grid.innerHTML = '';
+            
+            const icons = { 'txt': '📄', 'pdf': '📕', 'docx': '📘', 'jpg': '🖼️', 'png': '🖼️', 'mp3': '🎵', 'm3u': '📃' };
+            
+            paths[folder].forEach(file => {
+                const ext = file.split('.').pop();
+                const icon = icons[ext] || '📄';
+                
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-name">${file}</div>
+                `;
+                item.onclick = () => alert('Odpri: ' + file);
+                grid.appendChild(item);
+            });
+            
+            // Add back button
+            const back = document.createElement('div');
+            back.className = 'file-item';
+            back.innerHTML = `
+                <div class="file-icon">⬅️</div>
+                <div class="file-name">Nazaj</div>
+            `;
+            back.onclick = () => location.reload();
+            grid.appendChild(back);
+        }
+
+        function goBack() {
+            location.reload();
+        }
+
+        function createFolder() {
+            const name = prompt('Ime nove mape:');
+            if (name) {
+                alert('Mapa ustvarjena: ' + name);
+            }
+        }
+
+        function uploadFile() {
+            alert('Funkcija nalaganja datotek bo na voljo kmalu!');
+        }
+
+        // Avatar Upload
+        function uploadAvatar() {
+            document.getElementById('avatarFile').click();
+        }
+
+        function handleAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    for (const key in data) {
-                        localStorage.setItem(key, data[key]);
-                    }
-                    alert("LocalStorage uspešno obnovljen!");
-                } catch (error) {
-                    alert("Napaka pri uvozu datoteke.");
-                }
-            };
-            reader.readAsText(file);
+            const path = `avatars/${currentUser.uid}/${Date.now()}-${file.name}`;
+            const ref = firebase.storage().ref().child(path);
+            
+            ref.put(file).then(() => ref.getDownloadURL()).then(url => {
+                firebase.database().ref('users/' + currentUser.uid + '/avatarURL2').set(url);
+                document.getElementById('avatarViewer').src = url;
+                document.getElementById('taskbarAvatar').src = url;
+                document.getElementById('startAvatar').src = url;
+                alert('Avatar posodobljen!');
+            });
         }
-    </script>
 
-       <script>
-const container = document.getElementById("container");
-const addIconForm = document.getElementById("addIconForm");
-const addIconBtn = document.getElementById("addIconBtn");
-const iconNameInput = document.getElementById("iconName");
-const iconLinkInput = document.getElementById("iconLink");
-const categorySelect = document.getElementById("categorySelect");
+        // Utilities
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('sl-SL', { hour: '2-digit', minute: '2-digit' });
+        }
 
-const categories = [
-    {
-        name: "Domov",
-        icons: [
-            { name: "📂", link: "chosemenu.html" },
-            { name: "🌙", link: "newbrowser.html" },
-            { name: "🔄", link: "javascript:void(0)", action: "handleButtonClick" },
-            { name: "💾", link: "javascript:void(0)", action: "showBackupPopup" },
-            { name: "⚙️", link: "javascript:void(0)", action: "toggleElement" }
-        ],
-        color: "#9b59b6"
-    },
-    {
-        name: "Osnovno",
-        icons: [
-            { name: "📫", link: "https://mail.google.com" },
-            { name: "🗂", link: "https://drive.google.com" },
-            { name: "🔗", link: "https://drive.google.com/file/d/16-AieRI2xD1JIECT4ggHL3Xeba91FCd1/view?usp=sharing" },
-            { name: "📅", link: "https://calendar.google.com" }
-        ],
-        color: "#e67e22"
-    },
-    {
-        name: "Zabava",
-        icons: [
-            { name: "▶", link: "https://www.youtube.com" },
-            { name: "N", link: "https://www.netflix.com" },
-            { name: "V", link: "https://www.voyo.si" }
-        ],
-        color: "#e74c3c"
-    },
-    {
-        name: "Chatbot",
-        icons: [
-            { name: "💬", link: "https://chat.openai.com" },
-            { name: "🐍", link: "auth.html" },
-            { name: "👾", link: "https://slytherin.ai" }
-        ],
-        color: "#2ecc71"
-    },
-    {
-        name: "Moje Ikone",
-        icons: [
-            { name: "🤖", link: "javascript:void(0)", action: "toggleChatPopup" },
-            { name: "🗓️", link: "javascript:void(0)", action: "toggleCalendar" },
-            { name: "🧮", link: "javascript:void(0)", action: "toggleCalculator" }
-        ],
-        color: "#3498db"
-    }
-];
+        function showSettings() {
+            alert('Nastavitve sistema bodo na voljo kmalu!');
+        }
 
-let currentCategory = 0;
-let isDock = false;
-
-function showDockIcons() {
-    container.innerHTML = "";
-    categories[currentCategory].icons.forEach(icon => {
-        const el = document.createElement("div");
-        el.className = "icon";
-        el.textContent = icon.name;
-        el.onclick = (e) => {
-            e.stopPropagation();
-            if (icon.action) {
-                window[icon.action]?.();
-            } else {
-                window.open(icon.link, "_blank");
+        function powerOff() {
+            if (confirm('Ali ste prepričani, da želite izklopiti sistem?')) {
+                document.body.innerHTML = '<div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; color: var(--slytherin-silver); font-family: Cinzel; font-size: 2rem;">Sistem izklopljen</div>';
             }
-        };
-        container.appendChild(el);
-    });
+        }
 
-    // Dodaj gumb za zapiranje
-    const closeIcon = document.createElement("div");
-    closeIcon.className = "icon";
-    closeIcon.textContent = "❌";
-    closeIcon.onclick = (e) => {
-        e.stopPropagation();
-        isDock = false;
-        container.classList.remove("dock");
-        showCategoryText();
-    };
-    container.appendChild(closeIcon);
-}
+        function createSnowflakes() {
+            // Check if winter (Nov 20 - Feb 28)
+            const now = new Date();
+            const month = now.getMonth();
+            const day = now.getDate();
+            
+            const isWinter = (month === 10 && day >= 20) || month === 11 || month === 0 || (month === 1 && day <= 28);
+            
+            if (isWinter) {
+                for (let i = 0; i < 50; i++) {
+                    let snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = '❄';
+                    snowflake.style.left = Math.random() * 100 + 'vw';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    document.body.appendChild(snowflake);
+                }
+            }
+        }
 
-function showCategoryText() {
-    container.innerHTML = categories[currentCategory].name;
-    container.style.background = categories[currentCategory].color;
-}
+        // Close start menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const startMenu = document.getElementById('startMenu');
+            const startBtn = document.querySelector('.start-btn');
+            if (!startMenu.contains(e.target) && !startBtn.contains(e.target)) {
+                startMenu.classList.remove('active');
+            }
+        });
 
-function changeCategory(direction) {
-    if (direction === "up") {
-        currentCategory = (currentCategory - 1 + categories.length) % categories.length;
-    } else {
-        currentCategory = (currentCategory + 1) % categories.length;
-    }
-    if (isDock) {
-        showDockIcons();
-    } else {
-        showCategoryText();
-    }
-}
-
-function addCustomIcon(name, link, categoryIndex) {
-    categories[categoryIndex].icons.push({ name, link });
-}
-
-function addIcon() {
-    const name = iconNameInput.value;
-    const link = iconLinkInput.value;
-    const categoryIndex = categorySelect.value;
-
-    if (name && link) {
-        addCustomIcon(name, link, categoryIndex);
-        iconNameInput.value = '';
-        iconLinkInput.value = '';
-        addIconForm.style.display = 'none';
-        showDockIcons();
-    } else {
-        alert("Prosim, vnesite ime in URL ikone!");
-    }
-}
-
-addIconBtn.addEventListener("click", addIcon);
-
-// TAP za odprtje docka
-container.addEventListener("click", (e) => {
-    if (!isDock && !e.target.classList.contains("icon")) {
-        isDock = true;
-        container.classList.add("dock");
-        showDockIcons();
-    }
-});
-
-// SWIPE podpora
-let startY = 0;
-container.addEventListener("touchstart", e => {
-    startY = e.touches[0].clientY;
-});
-container.addEventListener("touchend", e => {
-    const endY = e.changedTouches[0].clientY;
-    const dy = endY - startY;
-    if (Math.abs(dy) > 30) {
-        changeCategory(dy < 0 ? "up" : "down");
-    }
-});
-
-// KOLESČEK za vse naprave
-container.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    changeCategory(e.deltaY < 0 ? "up" : "down");
-}, { passive: false });
-
-// Začetni prikaz
-showCategoryText();
-
-// Dummy funkcije za akcije
-function toggleChatPopup() { alert("Chat popup!"); }
-function toggleCalendar() { alert("Calendar opened!"); }
-function toggleCalculator() { alert("Calculator opened!"); }
-function toggleElement() { alert("Element toggled!"); }
-function showBackupPopup() { alert("Backup popup!"); }
-function handleButtonClick() { location.reload(); }
-</script>
-
-
+        // Initialize
+        document.getElementById('lockPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') unlockSystem();
+        });
+    </script>
 </body>
 </html>
