@@ -1736,83 +1736,188 @@
             auth.signOut().then(() => location.reload());
         }
 
-        // ==========================================
+                // ==========================================
         // AVATAR CREATOR
         // ==========================================
+        let rpmEventListener = null;
+
         function openRPMAvatar() {
             document.getElementById('rpmContainer').style.display = 'block';
             const frame = document.getElementById('rpmFrame');
-            frame.src = 'https://readyplayer.me/avatar?frameApi';
             
-            window.addEventListener('message', subscribe);
-            document.addEventListener('message', subscribe);
+            // Pravilen URL za Ready Player Me
+            const rpmUrl = 'https://demo.readyplayer.me/avatar?frameApi';
+            frame.src = rpmUrl;
             
-            function subscribe(event) {
-                const json = parse(event);
-                if (json?.source !== 'readyplayerme') return;
+            // Odstrani starega listenerja če obstaja
+            if (rpmEventListener) {
+                window.removeEventListener('message', rpmEventListener);
+            }
+            
+            // Ustvari novega listenerja
+            rpmEventListener = function(event) {
+                // Preveri če je sporočilo iz RPM
+                if (event.origin !== 'https://demo.readyplayer.me' && 
+                    event.origin !== 'https://readyplayer.me') {
+                    return;
+                }
                 
-                if (json.eventName === 'v1.avatar.exported') {
-                    tempAvatarUrl = json.data.url;
+                let data;
+                try {
+                    data = JSON.parse(event.data);
+                } catch (e) {
+                    return; // Ni JSON, ignoriraj
+                }
+                
+                // Preveri če je to RPM sporočilo
+                if (data?.source !== 'readyplayerme') return;
+                
+                console.log('RPM Event:', data.eventName);
+                
+                if (data.eventName === 'v1.avatar.exported') {
+                    tempAvatarUrl = data.data.url;
                     document.getElementById('avatarPreview').src = tempAvatarUrl;
                     document.getElementById('rpmContainer').style.display = 'none';
-                    window.removeEventListener('message', subscribe);
+                    
+                    // Počisti iframe
+                    setTimeout(() => {
+                        frame.src = '';
+                    }, 100);
+                    
+                    // Odstrani listener
+                    window.removeEventListener('message', rpmEventListener);
+                    rpmEventListener = null;
+                    
+                    alert('Avatar uspešno ustvarjen! Kliknite "Shrani avatar" za shranjevanje.');
                 }
-            }
+            };
             
-            function parse(event) {
-                try {
-                    return JSON.parse(event.data);
-                } catch (error) {
-                    return null;
-                }
-            }
+            window.addEventListener('message', rpmEventListener);
         }
 
         function handleAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
+            // Preveri velikost datoteke (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Datoteka je prevelika! Največja dovoljena velikost je 10MB.');
+                event.target.value = '';
+                return;
+            }
+            
+            // Preveri tip datoteke
+            const validTypes = ['.glb', '.gltf', '.vrm'];
+            const ext = '.' + file.name.split('.').pop().toLowerCase();
+            if (!validTypes.includes(ext)) {
+                alert('Nepravilen format! Uporabite .glb, .gltf ali .vrm datoteke.');
+                event.target.value = '';
+                return;
+            }
+            
             const url = URL.createObjectURL(file);
             tempAvatarUrl = url;
             document.getElementById('avatarPreview').src = url;
+            
+            // Skrij RPM container če je odprt
+            document.getElementById('rpmContainer').style.display = 'none';
         }
 
         function saveAvatar() {
-            if (!tempAvatarUrl) return;
+            if (!tempAvatarUrl) {
+                alert('Najprej ustvarite ali naložite avatar!');
+                return;
+            }
             
-            // If it's a URL from RPM, save directly
+            // Prikaži loading
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Shranjevanje...';
+            btn.disabled = true;
+            
+            // Če je URL iz RPM (začne se z http), shrani direktno
             if (tempAvatarUrl.startsWith('http')) {
-                db.ref('users/' + currentUser.uid + '/avatarURL2').set(tempAvatarUrl);
-                updateAllAvatars(tempAvatarUrl);
-                alert('Avatar posodobljen!');
-                closeWindow('avatar');
+                db.ref('users/' + currentUser.uid + '/avatarURL2').set(tempAvatarUrl)
+                    .then(() => {
+                        updateAllAvatars(tempAvatarUrl);
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                        alert('Avatar uspešno shranjen!');
+                        closeWindow('avatar');
+                    })
+                    .catch((err) => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                        alert('Napaka pri shranjevanju: ' + err.message);
+                    });
             } else {
-                // Upload file to storage
-                const file = document.getElementById('avatarFile').files[0];
+                // Naloži datoteko v storage
+                const fileInput = document.getElementById('avatarFile');
+                const file = fileInput.files[0];
+                
                 if (!file) {
-                    alert('Napaka pri nalaganju datoteke');
+                    alert('Napaka: Datoteka ni najdena');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
                     return;
                 }
                 
                 const path = `avatars/${currentUser.uid}/${Date.now()}_${file.name}`;
-                storage.ref().child(path).put(file).then((snapshot) => {
-                    return snapshot.ref.getDownloadURL();
-                }).then((url) => {
-                    db.ref('users/' + currentUser.uid + '/avatarURL2').set(url);
-                    updateAllAvatars(url);
-                    alert('Avatar posodobljen!');
-                    closeWindow('avatar');
-                }).catch((err) => {
-                    alert('Napaka: ' + err.message);
-                });
+                const uploadTask = storage.ref().child(path).put(file);
+                
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        // Progress
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        btn.textContent = `Nalaganje ${Math.round(progress)}%`;
+                    },
+                    (error) => {
+                        // Error
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                        alert('Napaka pri nalaganju: ' + error.message);
+                    },
+                    () => {
+                        // Success
+                        uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+                            return db.ref('users/' + currentUser.uid + '/avatarURL2').set(url);
+                        }).then(() => {
+                            updateAllAvatars(uploadTask.snapshot.ref.getDownloadURL());
+                            btn.textContent = originalText;
+                            btn.disabled = false;
+                            alert('Avatar uspešno shranjen!');
+                            closeWindow('avatar');
+                            // Reset file input
+                            fileInput.value = '';
+                        }).catch((err) => {
+                            btn.textContent = originalText;
+                            btn.disabled = false;
+                            alert('Napaka: ' + err.message);
+                        });
+                    }
+                );
             }
         }
 
         function updateAllAvatars(url) {
-            document.getElementById('taskbarAvatar').src = url;
-            document.getElementById('startAvatar').src = url;
-            document.getElementById('profileAvatar').src = url;
+            // Posodobi vse avatarje na strani
+            const avatars = [
+                document.getElementById('taskbarAvatar'),
+                document.getElementById('startAvatar'),
+                document.getElementById('profileAvatar'),
+                document.getElementById('avatarPreview')
+            ];
+            
+            avatars.forEach(avatar => {
+                if (avatar) avatar.src = url;
+            });
+            
+            // Posodobi tudi v podatkovni bazi če je potrebno
+            if (currentUser && userData) {
+                userData.avatarURL2 = url;
+            }
         }
+
 
         // ==========================================
         // WINDOW MANAGEMENT
