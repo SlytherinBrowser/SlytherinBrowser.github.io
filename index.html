@@ -2450,6 +2450,391 @@
                 location.reload();
             }
         });
+        // ==========================================
+// MOBILE CHAT FIX - Popup za pisanje sporočil
+// ==========================================
+
+(function() {
+    // Počakaj, da se stran naloži
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMobileChatFix);
+    } else {
+        initMobileChatFix();
+    }
+
+    function initMobileChatFix() {
+        // Ustvari CSS stile
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Gumb za odprtje popup-a v headerju klepeta */
+            .chat-header {
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .chat-header-content {
+                flex: 1;
+            }
+            
+            .chat-popup-btn {
+                width: 45px;
+                height: 45px;
+                background: var(--house-primary);
+                border: 2px solid var(--house-secondary);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 1.3rem;
+                margin-left: 15px;
+                transition: all 0.3s;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+            
+            .chat-popup-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            }
+            
+            .chat-popup-btn:active {
+                transform: scale(0.95);
+            }
+            
+            /* Popup overlay */
+            .chat-popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.85);
+                display: none;
+                justify-content: center;
+                align-items: flex-end;
+                z-index: 20000;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            
+            .chat-popup-overlay.active {
+                display: flex;
+            }
+            
+            /* Popup vsebnik */
+            .chat-popup-container {
+                width: 100%;
+                max-width: 500px;
+                background: rgba(10, 10, 10, 0.98);
+                border: 2px solid var(--house-secondary);
+                border-radius: 25px 25px 0 0;
+                padding: 25px;
+                animation: slideUp 0.3s ease-out;
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            }
+            
+            @keyframes slideUp {
+                from {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+            
+            /* Zapri gumb */
+            .chat-popup-close {
+                position: absolute;
+                top: 15px;
+                right: 20px;
+                width: 35px;
+                height: 35px;
+                background: rgba(255,255,255,0.1);
+                border: 1px solid var(--house-secondary);
+                border-radius: 50%;
+                color: var(--house-secondary);
+                font-size: 1.2rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Naslov popup-a */
+            .chat-popup-title {
+                font-family: 'Cinzel', serif;
+                color: var(--house-secondary);
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+                text-align: center;
+                padding-right: 40px;
+            }
+            
+            /* Textarea za pisanje */
+            .chat-popup-textarea {
+                width: 100%;
+                min-height: 120px;
+                max-height: 200px;
+                background: rgba(255,255,255,0.1);
+                border: 2px solid var(--house-secondary);
+                border-radius: 15px;
+                padding: 15px;
+                color: #fff;
+                font-size: 1rem;
+                font-family: inherit;
+                resize: vertical;
+                outline: none;
+                margin-bottom: 15px;
+            }
+            
+            .chat-popup-textarea::placeholder {
+                color: rgba(255,255,255,0.4);
+            }
+            
+            .chat-popup-textarea:focus {
+                border-color: var(--house-accent);
+                background: rgba(255,255,255,0.15);
+            }
+            
+            /* Gumbi v popup-u */
+            .chat-popup-actions {
+                display: flex;
+                gap: 10px;
+            }
+            
+            .chat-popup-send {
+                flex: 1;
+                padding: 15px;
+                background: var(--house-primary);
+                border: 2px solid var(--house-secondary);
+                border-radius: 12px;
+                color: #fff;
+                font-family: 'Cinzel', serif;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .chat-popup-send:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            }
+            
+            .chat-popup-cancel {
+                padding: 15px 25px;
+                background: rgba(255,255,255,0.1);
+                border: 1px solid var(--house-secondary);
+                border-radius: 12px;
+                color: var(--house-secondary);
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .chat-popup-cancel:hover {
+                background: rgba(255,255,255,0.2);
+            }
+            
+            /* Prikaz trenutnega klepeta v popup-u */
+            .chat-popup-info {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 10px;
+                background: rgba(255,255,255,0.05);
+                border-radius: 10px;
+            }
+            
+            .chat-popup-info-icon {
+                font-size: 1.5rem;
+            }
+            
+            .chat-popup-info-text {
+                color: var(--house-accent);
+                font-size: 0.9rem;
+            }
+            
+            /* Na PC-ju skrij popup gumb */
+            @media (min-width: 769px) {
+                .chat-popup-btn {
+                    display: none !important;
+                }
+            }
+            
+            /* Na mobilniku vedno prikaži popup gumb */
+            @media (max-width: 768px) {
+                .chat-popup-btn {
+                    display: flex !important;
+                }
+                
+                /* Opcijsko: skrij originalno vnosno vrstico če je prenizko */
+                .chat-input-area {
+                    display: flex !important; /* Ohranimo, ampak dodamo gumb zraven */
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Ustvari HTML strukturo za popup
+        const popupHTML = `
+            <div class="chat-popup-overlay" id="chatPopupOverlay">
+                <div class="chat-popup-container" style="position: relative;">
+                    <button class="chat-popup-close" onclick="closeChatPopup()">✕</button>
+                    <div class="chat-popup-title">Novo sporočilo</div>
+                    <div class="chat-popup-info">
+                        <span class="chat-popup-info-icon">💬</span>
+                        <span class="chat-popup-info-text" id="chatPopupRoomName">Izberite klepet</span>
+                    </div>
+                    <textarea 
+                        class="chat-popup-textarea" 
+                        id="chatPopupTextarea" 
+                        placeholder="Napišite svoje sporočilo tukaj..."
+                    ></textarea>
+                    <div class="chat-popup-actions">
+                        <button class="chat-popup-cancel" onclick="closeChatPopup()">Prekliči</button>
+                        <button class="chat-popup-send" onclick="sendPopupMessage()">
+                            <span>➤</span> Pošlji sporočilo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Dodaj popup v body
+        const popupDiv = document.createElement('div');
+        popupDiv.innerHTML = popupHTML;
+        document.body.appendChild(popupDiv.firstElementChild);
+
+        // Popravi chat header - dodaj gumb
+        setTimeout(() => {
+            fixChatHeader();
+        }, 1000); // Počakaj da se klepet naloži
+
+        // Opazuj spremembe v chat headerju
+        const observer = new MutationObserver((mutations) => {
+            fixChatHeader();
+        });
+
+        const chatHeader = document.getElementById('chatHeader');
+        if (chatHeader) {
+            observer.observe(chatHeader, { childList: true, subtree: true });
+        }
+
+        // Dodaj event listener za tipkanje v popup
+        const textarea = document.getElementById('chatPopupTextarea');
+        if (textarea) {
+            textarea.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendPopupMessage();
+                }
+            });
+        }
+    }
+
+    function fixChatHeader() {
+        const header = document.getElementById('chatHeader');
+        if (!header) return;
+        
+        // Preveri če že ima gumb
+        if (header.querySelector('.chat-popup-btn')) return;
+        
+        // Shrani obstoječo vsebino
+        const existingHTML = header.innerHTML;
+        
+        // Prestrukturiraj header
+        header.innerHTML = `
+            <div class="chat-header-content">
+                ${existingHTML}
+            </div>
+            <button class="chat-popup-btn" onclick="openChatPopup()" title="Odpri okno za pisanje">
+                ✉️
+            </button>
+        `;
+    }
+
+    // Globalne funkcije
+    window.openChatPopup = function() {
+        const overlay = document.getElementById('chatPopupOverlay');
+        const roomName = document.querySelector('#chatHeader h3')?.textContent || 'Klepet';
+        const roomNameEl = document.getElementById('chatPopupRoomName');
+        
+        if (roomNameEl) {
+            roomNameEl.textContent = roomName;
+        }
+        
+        if (overlay) {
+            overlay.classList.add('active');
+            // Fokusiraj textarea
+            setTimeout(() => {
+                const textarea = document.getElementById('chatPopupTextarea');
+                if (textarea) textarea.focus();
+            }, 100);
+        }
+    };
+
+    window.closeChatPopup = function() {
+        const overlay = document.getElementById('chatPopupOverlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+        // Počisti textarea
+        const textarea = document.getElementById('chatPopupTextarea');
+        if (textarea) textarea.value = '';
+    };
+
+    window.sendPopupMessage = function() {
+        const textarea = document.getElementById('chatPopupTextarea');
+        const text = textarea?.value?.trim();
+        
+        if (!text) {
+            // Zapri če je prazno
+            closeChatPopup();
+            return;
+        }
+        
+        // Kopiraj v originalni input in pošlji
+        const originalInput = document.getElementById('messageInput');
+        if (originalInput) {
+            originalInput.value = text;
+            
+            // Pokliči originalno sendMessage funkcijo
+            if (typeof sendMessage === 'function') {
+                sendMessage();
+            } else {
+                // Fallback če sendMessage ni definiran globalno
+                const event = new KeyboardEvent('keypress', { key: 'Enter' });
+                originalInput.dispatchEvent(event);
+            }
+        }
+        
+        // Zapri popup
+        closeChatPopup();
+    };
+
+    // Zapri popup ko klikneš ven
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('chatPopupOverlay');
+        if (overlay && overlay.classList.contains('active')) {
+            if (e.target === overlay) {
+                closeChatPopup();
+            }
+        }
+    });
+
+    // Zapri popup z Escape tipko
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeChatPopup();
+        }
+    });
+
+})();
+
     </script>
 </body>
 </html>
